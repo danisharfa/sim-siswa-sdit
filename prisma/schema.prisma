@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  admin
+  teacher
+  student
+}
+
+enum StatusSetoran {
+  LULUS
+  TIDAK_LULUS
+  MENGULANG
+}
+
+enum JenisKelamin {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+enum GolonganDarah {
+  A
+  B
+  AB
+  O
+}
+
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  password    String
+  namaLengkap String
+  role        Role
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  siswaProfile SiswaProfile?
+  guruProfile  GuruProfile?
+}
+
+model SiswaProfile {
+  id            String   @id @unique
+  userId        String   @unique
+  nis           String   @unique
+  kelasId       String?
+
+  tanggalLahir  DateTime 
+  tempatLahir   String
+  jenisKelamin  JenisKelamin
+  golonganDarah GolonganDarah?
+  agama         String?
+  alamat        String?
+  noTelp        String?
+  fotoProfil    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id]) 
+  kelas Kelas? @relation(fields: [kelasId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+
+  setoran      Setoran[]
+  riwayatKelas RiwayatKelas[]
+
+  @@index([nis]) // Optimasi pencarian siswa berdasarkan NIS
+}
+
+model GuruProfile {
+  id            String   @id @unique
+  userId        String   @unique
+  nip           String?  @unique
+  tanggalLahir  DateTime 
+  tempatLahir   String
+  jenisKelamin  JenisKelamin
+  golonganDarah GolonganDarah?
+  agama         String?
+  alamat        String?
+  noTelp        String?
+  fotoProfil    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  guruKelas GuruKelas[]
+  setoran   Setoran[]
+}
+
+model Kelas {
+  id         String   @id @unique
+  namaKelas  String
+  tahunAjaran String  
+
+  siswaProfiles SiswaProfile[]
+  guruKelas     GuruKelas[]
+  riwayatKelas  RiwayatKelas[]
+
+  @@unique([namaKelas, tahunAjaran])
+}
+
+model RiwayatKelas {
+  id            String   @id @default(uuid())
+  siswaId       String
+  kelasId       String
+  tahunAjaran   String
+  tanggalPindah DateTime @default(now())
+
+  siswa SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  kelas Kelas @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+}
+
+model GuruKelas {
+  id      String   @id @default(uuid())
+  guruId  String
+  kelasId String
+
+  createdAt DateTime @default(now())
+
+  guru  GuruProfile @relation(fields: [guruId], references: [id], onDelete: Cascade) // Jika guru dihapus, semua relasi guru-kelas ikut dihapus
+  kelas Kelas       @relation(fields: [kelasId], references: [id], onDelete: Cascade) // Jika kelas dihapus, semua relasi guru-kelas ikut dihapus
+}
+
+model Setoran {
+  id             String   @id @unique
+  siswaId        String?
+  guruId         String?
+  tanggal        DateTime
+  surah          String
+  ayatMulai      Int
+  ayatSelesai    Int
+  status         StatusSetoran
+  catatan        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  siswa SiswaProfile? @relation(fields: [siswaId], references: [id], onDelete: SetNull) // Setoran tetap ada meski siswa dihapus
+  guru  GuruProfile?  @relation(fields: [guruId], references: [id], onDelete: SetNull) // Jika guru dihapus, setorannya tetap ada
+}
