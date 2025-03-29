@@ -6,25 +6,22 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json(
-        { error: 'Body request tidak valid' },
-        { status: 400 }
-      );
-    }
+    const { id } = await Promise.resolve(params);
+    const { namaKelas, tahunAjaran } = await req.json();
 
-    const { namaKelas, tahunAjaran } = body;
+    const existingClass = await prisma.kelas.findUnique({
+      where: { id },
+    });
 
-    if (!namaKelas || !tahunAjaran) {
+    if (!existingClass) {
       return NextResponse.json(
-        { error: 'Nama kelas dan tahun ajaran wajib diisi' },
-        { status: 400 }
+        { error: 'Kelas tidak ditemukan' },
+        { status: 404 }
       );
     }
 
     const updatedClass = await prisma.kelas.update({
-      where: { id: params.id },
+      where: { id },
       data: { namaKelas, tahunAjaran },
     });
 

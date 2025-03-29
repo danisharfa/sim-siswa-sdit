@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,13 +11,13 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface UserAlertDialogProps {
   userId: string;
   type: 'reset' | 'delete';
-  open: boolean; // Tambahkan prop `open`
-  onOpenChange: (isOpen: boolean) => void; // Tambahkan handler untuk kontrol state
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
   onConfirm: () => void;
 }
 
@@ -26,39 +29,41 @@ export function UserAlertDialog({
   onConfirm,
 }: UserAlertDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleAction = async () => {
+  async function handleAction() {
     setLoading(true);
-    setError(null);
 
     try {
-      if (type === 'reset') {
-        const res = await fetch(`/api/users/${userId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resetPassword: true }),
-        });
+      const url = `/api/users/${userId}`;
+      const options: RequestInit =
+        type === 'reset'
+          ? {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resetPassword: true }),
+            }
+          : { method: 'DELETE' };
 
-        if (!res.ok) throw new Error('Gagal mereset password');
-      } else {
-        const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
-
-        if (!res.ok) throw new Error('Gagal menghapus user');
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Terjadi kesalahan');
       }
+
+      toast.success(
+        type === 'reset'
+          ? 'Password user berhasil direset!'
+          : 'User berhasil dihapus!'
+      );
 
       onConfirm();
-      onOpenChange(false); // Tutup dialog setelah sukses
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unknown error occurred');
-      }
+      onOpenChange(false);
+    } catch {
+      toast.error('Terjadi kesalahan jaringan.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  };
+  }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -73,7 +78,6 @@ export function UserAlertDialog({
               : 'Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan.'}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {error && <p className="text-red-500">{error}</p>}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => onOpenChange(false)}>
             Batal

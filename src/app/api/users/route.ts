@@ -25,9 +25,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { namaLengkap, username, role } = await req.json();
+    const { username, namaLengkap, role } = await req.json();
 
-    if (!namaLengkap || !username || !role) {
+    if (!username || !namaLengkap || !role) {
       return NextResponse.json(
         { error: 'Data tidak lengkap' },
         { status: 400 }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await argon2.hash(username);
 
     const newUser = await prisma.user.create({
-      data: { namaLengkap, username, role, password: hashedPassword },
+      data: { username, namaLengkap, role, password: hashedPassword },
     });
 
     return NextResponse.json(newUser, { status: 201 });

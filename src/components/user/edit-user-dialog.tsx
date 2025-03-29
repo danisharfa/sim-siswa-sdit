@@ -10,11 +10,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 interface EditUserDialogProps {
   user: { id: string; username: string; namaLengkap: string };
-  open: boolean; // Tambahkan prop `open`
-  onOpenChange: (isOpen: boolean) => void; // Tambahkan handler untuk mengontrol open state
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
   onSave: () => void;
 }
 
@@ -27,16 +28,9 @@ export function EditUserDialog({
   const [username, setUsername] = useState(user.username);
   const [namaLengkap, setNamaLengkap] = useState(user.namaLengkap);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = async () => {
-    if (!username || !namaLengkap) {
-      setError('Username dan Nama tidak boleh kosong');
-      return;
-    }
-
+  async function handleSave() {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
@@ -44,15 +38,19 @@ export function EditUserDialog({
         body: JSON.stringify({ username, namaLengkap }),
       });
 
-      if (!res.ok) throw new Error('Gagal mengupdate user');
-
-      onSave();
-      onOpenChange(false); // Tutup dialog setelah sukses
-    } catch {
-      setError('Gagal mengupdate user');
+      if (res.ok) {
+        toast.success('User berhasil diperbarui!');
+        onSave();
+        onOpenChange(false);
+      } else {
+        toast.error('Terjadi kesalahan saat menyimpan.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Terjadi kesalahan jaringan.');
     }
     setLoading(false);
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,17 +59,18 @@ export function EditUserDialog({
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {error && <p className="text-red-500">{error}</p>}
           <div>
-            <Label>Username</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
+              id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div>
-            <Label>Nama</Label>
+            <Label htmlFor="namaLengkap">Nama</Label>
             <Input
+              id="namaLengkap"
               value={namaLengkap}
               onChange={(e) => setNamaLengkap(e.target.value)}
             />

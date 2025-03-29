@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const kelasList = await prisma.kelas.findMany({
       orderBy: {
-        tahunAjaran: 'desc',
+        namaKelas: 'asc',
       },
     });
 

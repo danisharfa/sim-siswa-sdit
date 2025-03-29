@@ -12,25 +12,26 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface Props {
   onUserAdded: () => void;
 }
 
 export function AddUserForm({ onUserAdded }: Props) {
-  const [namaLengkap, setNamaLengkap] = useState('');
   const [username, setUsername] = useState('');
+  const [namaLengkap, setNamaLengkap] = useState('');
   const [role, setRole] = useState<'teacher' | 'student'>('student');
   const [loading, setLoading] = useState(false);
 
   async function handleAddUser() {
-    if (!namaLengkap || !username) {
-      alert('Nama dan Username wajib diisi');
+    if (!username || !namaLengkap) {
+      toast.warning('Nama dan Username wajib diisi');
       return;
     }
 
     setLoading(true);
-    const newUser = { namaLengkap, username, role, password: username }; // Password default = username
+    const newUser = { username, namaLengkap, role, password: username }; // Password default = username
 
     try {
       const res = await fetch('/api/users', {
@@ -40,15 +41,16 @@ export function AddUserForm({ onUserAdded }: Props) {
       });
 
       if (res.ok) {
-        setNamaLengkap('');
+        toast.success('User berhasil ditambah!');
         setUsername('');
+        setNamaLengkap('');
         onUserAdded(); // Refresh data
       } else {
         const errorData = await res.json();
-        alert(errorData.error || 'Gagal menambah pengguna');
+        toast.message(errorData.message || 'Gagal menambah user');
       }
     } catch {
-      alert('Terjadi kesalahan, coba lagi.');
+      toast.message('Terjadi kesalahan, coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -61,14 +63,14 @@ export function AddUserForm({ onUserAdded }: Props) {
       </CardHeader>
       <CardContent className="space-y-4">
         <Input
-          placeholder="Nama"
-          value={namaLengkap}
-          onChange={(e) => setNamaLengkap(e.target.value)}
-        />
-        <Input
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+        />
+        <Input
+          placeholder="Nama"
+          value={namaLengkap}
+          onChange={(e) => setNamaLengkap(e.target.value)}
         />
         <Select
           value={role}

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import {
   LayoutDashboardIcon,
   MonitorCogIcon,
+  School,
   UsersRoundIcon,
 } from 'lucide-react';
 
@@ -31,6 +32,11 @@ const menuData = {
       title: 'Manajemen Pengguna',
       url: '/dashboard/admin/users',
       icon: UsersRoundIcon,
+    },
+    {
+      title: 'Manajemen Kelas',
+      url: '/dashboard/admin/classroom',
+      icon: School,
     },
     {
       title: 'Monitoring Setoran',

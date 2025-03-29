@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AddUserForm } from '@/components/user/addUser-form';
+import { AddUserForm } from '@/components/user/add-user-form';
 import { UserTable } from '@/components/user/user-table';
 
 interface User {
@@ -12,7 +12,7 @@ interface User {
   createdAt: string;
 }
 
-export function UsersTable() {
+export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
 
   async function fetchUsers() {
@@ -28,7 +28,7 @@ export function UsersTable() {
   return (
     <div className="space-y-6">
       <AddUserForm onUserAdded={fetchUsers} />
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <UserTable
           users={users}
           title="Daftar Guru"

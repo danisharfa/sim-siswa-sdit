@@ -29,8 +29,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { EditUserDialog } from '@/components/user/editUser-dialog';
-import { UserAlertDialog } from '@/components/user/userAlert-dialog';
+import { EditUserDialog } from '@/components/user/edit-user-dialog';
+import { UserAlertDialog } from '@/components/user/user-alert-dialog';
 
 interface User {
   id: string;
@@ -76,14 +76,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
     () => [
       {
         accessorKey: 'username',
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Username <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: 'Username',
         cell: ({ row }) => <span>{row.getValue('username')}</span>,
       },
       {
