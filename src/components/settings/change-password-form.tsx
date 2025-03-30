@@ -40,7 +40,6 @@ export default function ChangePasswordForm({ userId }: { userId: string }) {
   };
 
   return (
-    // <div className="flex justify-center items-center min-h-screen p-4">
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl">Change Password</CardTitle>
@@ -88,6 +87,5 @@ export default function ChangePasswordForm({ userId }: { userId: string }) {
         {message && <p className="text-center text-sm">{message}</p>}
       </CardFooter>
     </Card>
-    // </div>
   );
 }

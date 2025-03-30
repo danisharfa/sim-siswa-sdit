@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
 
