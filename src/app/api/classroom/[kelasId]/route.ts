@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type Params = Promise<{ id: string }>;
+
+export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const { id } = await Promise.resolve(params);
+    const params = await segmentData.params;
+    const id = params.id;
+
     const { namaKelas, tahunAjaran } = await req.json();
 
     const existingClass = await prisma.kelas.findUnique({
@@ -38,10 +39,11 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  segmentData: { params: Params }
 ) {
   try {
-    const { id } = await Promise.resolve(params);
+    const params = await segmentData.params;
+    const id = params.id;
 
     const existingClass = await prisma.kelas.findUnique({
       where: { id },

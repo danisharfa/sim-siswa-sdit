@@ -233,6 +233,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
           <Table>
             <TableCaption>
               Daftar {role === 'teacher' ? 'guru' : 'siswa'} dalam sistem.
+              Total: {filteredUsers.length}
             </TableCaption>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

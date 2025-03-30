@@ -1,16 +1,34 @@
-'use client';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
-import { useParams } from 'next/navigation';
-import ClassroomDetails from '@/components/classroom/classroom-details';
+import ClassroomDetails from '@/components/classroom-details/classroom-details';
+import { getClassroomById } from '@/lib/data';
+import { AddMemberForm } from '@/components/classroom-details/add-member-form';
 
-export default function ClassroomPage() {
-  const { id } = useParams();
+type Params = Promise<{ id: string }>;
 
-  if (!id || typeof id !== 'string') return <p>Invalid class ID</p>;
+export default async function ClassroomPage(props: { params: Params }) {
+  const params = await props.params;
+  const id = params.id;
+
+  const classroom = await getClassroomById(id);
+
+  if (!classroom) return notFound();
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Detail Kelas: {id}</h1>
+      <Link href="/dashboard/admin/classroom">
+        <Button>
+          <ArrowLeft />
+        </Button>
+      </Link>
+      <h1 className="text-2xl font-bold mb-4">
+        Kelas {classroom.namaKelas}-{classroom.tahunAjaran}
+      </h1>
+      <AddMemberForm kelasId={id} />
+
       <ClassroomDetails kelasId={id} />
     </div>
   );

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -34,7 +35,8 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
   const [guruList, setGuruList] = useState<Guru[]>([]);
 
   useEffect(() => {
-    // Fetch daftar siswa dalam kelas
+    if (!kelasId) return;
+
     fetch(`/api/classroom/${kelasId}/student`)
       .then((res) => res.json())
       .then((data) => {
@@ -54,21 +56,22 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
         );
       });
 
-    // Fetch daftar guru dalam kelas
     fetch(`/api/classroom/${kelasId}/teacher`)
       .then((res) => res.json())
       .then((data) => {
         console.log('Data guru dari API:', data);
         setGuruList(
           data.map(
-            (guru: {
-              id: string;
-              nip: string;
-              user?: { namaLengkap?: string };
+            (g: {
+              guru: {
+                id: string;
+                nip: string | null;
+                user?: { namaLengkap?: string };
+              };
             }) => ({
-              id: guru.id,
-              nip: guru.nip,
-              namaLengkap: guru.user?.namaLengkap || 'Tidak diketahui',
+              id: g.guru.id,
+              nip: g.guru.nip || null,
+              namaLengkap: g.guru.user?.namaLengkap || 'Tidak diketahui',
             })
           )
         );
@@ -125,8 +128,6 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Detail Kelas</h2>
-
       {/* Tabel Siswa */}
       <Card className="mb-6">
         <CardHeader>
@@ -134,6 +135,7 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
         </CardHeader>
         <CardContent>
           <Table>
+            <TableCaption>Jumlah Siswa: {siswaList.length}</TableCaption>
             <TableHeader>
               {siswaTable.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -184,6 +186,8 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
         </CardHeader>
         <CardContent>
           <Table>
+            <TableCaption>Jumlah Guru: {guruList.length}</TableCaption>
+
             <TableHeader>
               {guruTable.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>

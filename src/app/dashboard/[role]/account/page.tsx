@@ -2,12 +2,12 @@ import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import ChangePasswordForm from '@/components/settings/change-password-form';
 
-export default async function SettingsPage({
-  params,
-}: {
-  params: { role: string };
-}) {
-  const { role } = await Promise.resolve(params);
+type Params = Promise<{ role: string }>;
+
+export default async function SettingsPage(props: { params: Params }) {
+  const params = await props.params;
+  const role = params.role;
+
   const user = await getUser();
 
   if (!role || !user || user.role !== role) {

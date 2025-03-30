@@ -22,6 +22,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -183,6 +184,10 @@ export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
         </div>
         <div className="rounded-md border">
           <Table>
+            <TableCaption>
+              Daftar Kelas dalam sistem. Total: {filteredKelas.length}
+            </TableCaption>
+
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>

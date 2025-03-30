@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import argon2 from 'argon2';
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type Params = Promise<{ id: string }>;
+
+export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const { id } = await Promise.resolve(params);
+    const params = await segmentData.params;
+    const id = params.id;
 
     const { username, namaLengkap, resetPassword } = await req.json();
 
@@ -50,10 +50,11 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  segmentData: { params: Params }
 ) {
   try {
-    const { id } = await Promise.resolve(params);
+    const params = await segmentData.params;
+    const id = params.id;
 
     const existingUser = await prisma.user.findUnique({
       where: { id },

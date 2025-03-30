@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { kelasId: string } }
-) {
+type Params = Promise<{ kelasId: string }>;
+
+export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const { kelasId } = params;
+    const params = await segmentData.params;
+    const kelasId = params.kelasId;
 
     const guruList = await prisma.guruKelas.findMany({
       where: { kelasId },
-      include: { guru: { include: { user: true } } }, // Ambil data user guru
+      include: { guru: { include: { user: true } } },
     });
 
     return NextResponse.json(guruList);
@@ -19,15 +19,12 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { kelasId: string } }
-) {
+export async function POST(req: NextRequest, segmentData: { params: Params }) {
   try {
+    const params = await segmentData.params;
+    const kelasId = params.kelasId;
     const { guruId } = await req.json();
-    const { kelasId } = params;
 
-    // Cek apakah guru ada
     const guru = await prisma.guruProfile.findUnique({
       where: { id: guruId },
     });
@@ -39,7 +36,6 @@ export async function POST(
       );
     }
 
-    // Tambahkan guru ke kelas
     await prisma.guruKelas.create({
       data: { guruId, kelasId },
     });

@@ -50,7 +50,7 @@ model SiswaProfile {
   id            String   @id @unique
   userId        String   @unique
   nis           String   @unique
-  kelasId       String?
+  kelasId       String?  @unique
 
   tanggalLahir  DateTime 
   tempatLahir   String
