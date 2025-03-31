@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 
 type Params = Promise<{ kelasId: string }>;
 
-export async function GET(segmentData: { params: Params }) {
+export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;
     const kelasId = params.kelasId;

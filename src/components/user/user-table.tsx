@@ -31,6 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { EditUserDialog } from '@/components/user/edit-user-dialog';
 import { UserAlertDialog } from '@/components/user/user-alert-dialog';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -48,6 +49,8 @@ interface Props {
 }
 
 export function UserTable({ users, title, role, fetchUsers }: Props) {
+  const router = useRouter();
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
@@ -111,6 +114,13 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/admin/users/${user.id}`)
+                    }
+                  >
+                    Detail
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       setSelectedUser(user);
@@ -200,7 +210,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
         },
       },
     ],
-    [formatDate, fetchUsers, selectedUser, dialogType]
+    [formatDate, fetchUsers, selectedUser, dialogType, router]
   );
 
   const table = useReactTable({

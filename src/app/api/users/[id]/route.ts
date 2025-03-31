@@ -4,6 +4,35 @@ import argon2 from 'argon2';
 
 type Params = Promise<{ id: string }>;
 
+export async function GET(req: NextRequest, segmentData: { params: Params }) {
+  try {
+    const params = await segmentData.params;
+    const id = params.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        siswaProfile: true,
+        guruProfile: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(user, { status: 200 });
+  } catch {
+    return NextResponse.json(
+      { error: 'Gagal mengambil data pengguna' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;

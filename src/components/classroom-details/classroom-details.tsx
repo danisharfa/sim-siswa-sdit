@@ -60,17 +60,18 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
       .then((res) => res.json())
       .then((data) => {
         console.log('Data guru dari API:', data);
+
         setGuruList(
           data.map(
             (g: {
               guru: {
                 id: string;
-                nip: string | null;
+                nip: string;
                 user?: { namaLengkap?: string };
               };
             }) => ({
               id: g.guru.id,
-              nip: g.guru.nip || null,
+              nip: g.guru.nip,
               namaLengkap: g.guru.user?.namaLengkap || 'Tidak diketahui',
             })
           )
