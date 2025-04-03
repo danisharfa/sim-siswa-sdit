@@ -101,7 +101,6 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
       },
       {
         id: 'actions',
-        enableHiding: false,
         cell: ({ row }) => {
           const user = row.original;
           return (

@@ -77,7 +77,10 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   }
 }
 
-export async function DELETE(segmentData: { params: Params }) {
+export async function DELETE(
+  req: NextRequest,
+  segmentData: { params: Params }
+) {
   try {
     const params = await segmentData.params;
     const id = params.id;

@@ -31,30 +31,11 @@ interface Guru {
 }
 
 export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
-  const [siswaList, setSiswaList] = useState<Siswa[]>([]);
   const [guruList, setGuruList] = useState<Guru[]>([]);
+  const [siswaList, setSiswaList] = useState<Siswa[]>([]);
 
   useEffect(() => {
     if (!kelasId) return;
-
-    fetch(`/api/classroom/${kelasId}/student`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Data siswa dari API:', data);
-        setSiswaList(
-          data.map(
-            (siswa: {
-              id: string;
-              nis: string;
-              user?: { namaLengkap?: string };
-            }) => ({
-              id: siswa.id,
-              nis: siswa.nis,
-              namaLengkap: siswa.user?.namaLengkap || 'Tidak diketahui',
-            })
-          )
-        );
-      });
 
     fetch(`/api/classroom/${kelasId}/teacher`)
       .then((res) => res.json())
@@ -77,26 +58,27 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
           )
         );
       });
+
+    fetch(`/api/classroom/${kelasId}/student`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('Data siswa dari API:', data);
+        setSiswaList(
+          data.map(
+            (siswa: {
+              id: string;
+              nis: string;
+              user?: { namaLengkap?: string };
+            }) => ({
+              id: siswa.id,
+              nis: siswa.nis,
+              namaLengkap: siswa.user?.namaLengkap || 'Tidak diketahui',
+            })
+          )
+        );
+      });
   }, [kelasId]);
 
-  // Kolom untuk tabel siswa
-  const siswaColumns = useMemo<ColumnDef<Siswa>[]>(
-    () => [
-      {
-        accessorKey: 'nis',
-        header: 'NIS',
-        cell: ({ row }) => <span>{row.original.nis}</span>,
-      },
-      {
-        accessorKey: 'namaLengkap',
-        header: 'Nama Lengkap',
-        cell: ({ row }) => <span>{row.original.namaLengkap}</span>,
-      },
-    ],
-    []
-  );
-
-  // Kolom untuk tabel guru
   const guruColumns = useMemo<ColumnDef<Guru>[]>(
     () => [
       {
@@ -113,75 +95,38 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
     []
   );
 
-  // TanStack Table untuk siswa
-  const siswaTable = useReactTable({
-    data: siswaList,
-    columns: siswaColumns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  const siswaColumns = useMemo<ColumnDef<Siswa>[]>(
+    () => [
+      {
+        accessorKey: 'nis',
+        header: 'NIS',
+        cell: ({ row }) => <span>{row.original.nis}</span>,
+      },
+      {
+        accessorKey: 'namaLengkap',
+        header: 'Nama Lengkap',
+        cell: ({ row }) => <span>{row.original.namaLengkap}</span>,
+      },
+    ],
+    []
+  );
 
-  // TanStack Table untuk guru
   const guruTable = useReactTable({
     data: guruList,
     columns: guruColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const siswaTable = useReactTable({
+    data: siswaList,
+    columns: siswaColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
     <div>
-      {/* Tabel Siswa */}
-      <Card className="mb-6">
-        <CardHeader>
-          <h3 className="text-lg font-semibold">Daftar Siswa</h3>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableCaption>Jumlah Siswa: {siswaList.length}</TableCaption>
-            <TableHeader>
-              {siswaTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {siswaTable.getRowModel().rows.length > 0 ? (
-                siswaTable.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={siswaColumns.length}
-                    className="text-center"
-                  >
-                    Tidak ada siswa dalam kelas ini.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
       {/* Tabel Guru */}
-      <Card>
+      <Card className="my-6">
         <CardHeader>
           <h3 className="text-lg font-semibold">Daftar Guru</h3>
         </CardHeader>
@@ -224,6 +169,57 @@ export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
                     className="text-center"
                   >
                     Tidak ada guru dalam kelas ini.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Tabel Siswa */}
+      <Card>
+        <CardHeader>
+          <h3 className="text-lg font-semibold">Daftar Siswa</h3>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableCaption>Jumlah Siswa: {siswaList.length}</TableCaption>
+            <TableHeader>
+              {siswaTable.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {siswaTable.getRowModel().rows.length > 0 ? (
+                siswaTable.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={siswaColumns.length}
+                    className="text-center"
+                  >
+                    Tidak ada siswa dalam kelas ini.
                   </TableCell>
                 </TableRow>
               )}

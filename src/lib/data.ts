@@ -11,41 +11,37 @@ export async function getClassroomById(id: string) {
   }
 }
 
-export async function getUserById(id: string) {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        siswaProfile: true,
-        guruProfile: true,
-      },
-    });
+export async function getUserDetail(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      siswaProfile: { include: { kelas: true } },
+      guruProfile: true,
+    },
+  });
 
-    if (!user) return null;
+  if (!user) return null;
 
+  if (user.siswaProfile) {
     return {
-      ...user,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
-      siswaProfile: user.siswaProfile
-        ? {
-            ...user.siswaProfile,
-            createdAt: user.siswaProfile.createdAt.toISOString(),
-            updatedAt: user.siswaProfile.updatedAt.toISOString(),
-            tanggalLahir: user.siswaProfile.tanggalLahir.toISOString(),
-          }
-        : null,
-      guruProfile: user.guruProfile
-        ? {
-            ...user.guruProfile,
-            createdAt: user.guruProfile.createdAt.toISOString(),
-            updatedAt: user.guruProfile.updatedAt.toISOString(),
-            tanggalLahir: user.guruProfile.tanggalLahir.toISOString(),
-          }
-        : null,
+      id: user.id,
+      namaLengkap: user.namaLengkap,
+      role: 'student',
+      nis: user.siswaProfile.nis,
+      kelas: user.siswaProfile.kelas?.namaKelas || 'Belum ada kelas',
+      jenisKelamin: user.siswaProfile.jenisKelamin,
+      tanggalLahir: user.siswaProfile.tanggalLahir,
     };
-  } catch (error) {
-    console.error('Error fetching user data:', error);
-    return null;
+  } else if (user.guruProfile) {
+    return {
+      id: user.id,
+      namaLengkap: user.namaLengkap,
+      role: 'teacher',
+      nip: user.guruProfile.nip,
+      jenisKelamin: user.guruProfile.jenisKelamin,
+      tanggalLahir: user.guruProfile.tanggalLahir,
+    };
   }
+
+  return null;
 }

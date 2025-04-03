@@ -40,8 +40,48 @@ export async function POST(req: NextRequest) {
       data: { username, namaLengkap, role, password: hashedPassword },
     });
 
+    const generateCustomId = (prefix: string) =>
+      `${prefix}-${crypto.randomUUID()}`;
+
+    console.log('Membuat user:', newUser);
+
+    if (role === 'student') {
+      const siswaId = generateCustomId('SISWA');
+      console.log('ID Siswa:', siswaId, 'User ID:', newUser.id);
+
+      try {
+        await prisma.siswaProfile.create({
+          data: {
+            id: siswaId,
+            userId: newUser.id,
+          },
+        });
+        console.log('Siswa Profile berhasil dibuat!');
+      } catch (error) {
+        console.error('Gagal membuat Siswa Profile:', error);
+      }
+    }
+
+    if (role === 'teacher') {
+      const guruId = generateCustomId('GURU');
+      console.log('ID Guru:', guruId, 'User ID:', newUser.id);
+
+      try {
+        await prisma.guruProfile.create({
+          data: {
+            id: guruId,
+            userId: newUser.id,
+          },
+        });
+        console.log('Guru Profile berhasil dibuat!');
+      } catch (error) {
+        console.error('Gagal membuat Guru Profile:', error);
+      }
+    }
+
     return NextResponse.json(newUser, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('Error saat membuat user:', error);
     return NextResponse.json(
       { error: 'Gagal menambah pengguna' },
       { status: 500 }

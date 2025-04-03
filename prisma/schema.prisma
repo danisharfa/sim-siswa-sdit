@@ -47,49 +47,52 @@ model User {
 }
 
 model SiswaProfile {
-  id            String   @id @unique
+  id            String   @id
   userId        String   @unique
-  nis           String   @unique
-  kelasId       String?  @unique
+  nis           String?  @unique
+  kelasId       String?  
 
-  tanggalLahir  DateTime 
-  tempatLahir   String
-  jenisKelamin  JenisKelamin
+  tanggalLahir  DateTime? 
+  tempatLahir   String?
+  jenisKelamin  JenisKelamin?
   golonganDarah GolonganDarah?
   agama         String?
   alamat        String?
   noTelp        String?
+  email         String?
   fotoProfil    String?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id]) 
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade) 
   kelas Kelas? @relation(fields: [kelasId], references: [id], onUpdate: Cascade, onDelete: SetNull)
 
   setoran      Setoran[]
   riwayatKelas RiwayatKelas[]
 
-  @@index([nis]) // Optimasi pencarian siswa berdasarkan NIS
+  @@index([nis]) 
 }
 
 model GuruProfile {
   id            String   @id @unique
   userId        String   @unique
   nip           String?  @unique
-  tanggalLahir  DateTime 
-  tempatLahir   String
-  jenisKelamin  JenisKelamin
+
+  tanggalLahir  DateTime? 
+  tempatLahir   String?
+  jenisKelamin  JenisKelamin?
   golonganDarah GolonganDarah?
   agama         String?
   alamat        String?
   noTelp        String?
+  email         String?
   fotoProfil    String?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   guruKelas GuruKelas[]
   setoran   Setoran[]
@@ -125,13 +128,13 @@ model GuruKelas {
 
   createdAt DateTime @default(now())
 
-  guru  GuruProfile @relation(fields: [guruId], references: [id], onDelete: Cascade) // Jika guru dihapus, semua relasi guru-kelas ikut dihapus
-  kelas Kelas       @relation(fields: [kelasId], references: [id], onDelete: Cascade) // Jika kelas dihapus, semua relasi guru-kelas ikut dihapus
+  guru  GuruProfile @relation(fields: [guruId], references: [id], onDelete: Cascade) 
+  kelas Kelas       @relation(fields: [kelasId], references: [id], onDelete: Cascade)
 }
 
 model Setoran {
   id             String   @id @unique
-  siswaId        String?
+  siswaId        String
   guruId         String?
   tanggal        DateTime
   surah          String
@@ -142,6 +145,8 @@ model Setoran {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  siswa SiswaProfile? @relation(fields: [siswaId], references: [id], onDelete: SetNull) // Setoran tetap ada meski siswa dihapus
-  guru  GuruProfile?  @relation(fields: [guruId], references: [id], onDelete: SetNull) // Jika guru dihapus, setorannya tetap ada
+  siswa SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade) 
+  guru  GuruProfile?  @relation(fields: [guruId], references: [id], onDelete: SetNull) 
+
+  @@index([tanggal]) // Optimasi pencarian setoran berdasarkan tanggal
 }

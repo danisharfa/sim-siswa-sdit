@@ -20,7 +20,7 @@ export default async function ClassroomPage(props: { params: Params }) {
   return (
     <div className="p-4">
       <Link href="/dashboard/admin/classroom">
-        <Button>
+        <Button variant="ghost">
           <ArrowLeft />
         </Button>
       </Link>
