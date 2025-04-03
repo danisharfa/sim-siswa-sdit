@@ -25,7 +25,7 @@ export default async function ClassroomPage(props: { params: Params }) {
         </Button>
       </Link>
       <h1 className="text-2xl font-bold mb-4">
-        Kelas {classroom.namaKelas}-{classroom.tahunAjaran}
+        Kelas {classroom.namaKelas} - {classroom.tahunAjaran}
       </h1>
       <AddMemberForm kelasId={id} />
 
