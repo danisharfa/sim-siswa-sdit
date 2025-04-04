@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, LogOutIcon, Settings2, UserCog2Icon } from 'lucide-react';
+import { ChevronDown, LogOut, Settings2, UserCog2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -54,7 +54,7 @@ export function NavActions() {
       },
       {
         title: 'Logout',
-        icon: LogOutIcon,
+        icon: LogOut,
         url: '/logout',
       },
     ],

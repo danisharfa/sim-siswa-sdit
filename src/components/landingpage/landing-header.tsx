@@ -7,7 +7,7 @@ import {
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
 import { Button } from '@/components/ui/button';
-import { GalleryVerticalEnd } from 'lucide-react';
+import { GalleryVerticalEnd, LogIn } from 'lucide-react';
 
 export function LandingHeader() {
   return (
@@ -24,8 +24,11 @@ export function LandingHeader() {
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Button asChild variant="outline">
-                <Link href="/login">Login</Link>
+              <Button asChild>
+                <Link href="/login" className="flex items-center gap-2">
+                  <LogIn className="size-4" />
+                  Login
+                </Link>
               </Button>
             </NavigationMenuItem>
           </NavigationMenuList>
