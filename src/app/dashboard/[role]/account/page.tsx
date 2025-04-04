@@ -1,6 +1,6 @@
 import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import ChangePasswordForm from '@/components/settings/change-password-form';
+import { ChangePasswordForm } from '@/components/settings/change-password-form';
 
 type Params = Promise<{ role: string }>;
 

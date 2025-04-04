@@ -23,7 +23,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
-export default function UserDetail({ userId }: { userId: string }) {
+export function UserDetail({ userId }: { userId: string }) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [updatedData, setUpdatedData] = useState<any>({}); // Store updated values here

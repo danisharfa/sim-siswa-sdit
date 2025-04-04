@@ -30,7 +30,7 @@ interface Guru {
   namaLengkap: string;
 }
 
-export default function ClassroomDetails({ kelasId }: { kelasId: string }) {
+export function ClassroomDetails({ kelasId }: { kelasId: string }) {
   const [guruList, setGuruList] = useState<Guru[]>([]);
   const [siswaList, setSiswaList] = useState<Siswa[]>([]);
 

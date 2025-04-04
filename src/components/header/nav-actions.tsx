@@ -1,10 +1,8 @@
 'use client';
 
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { ChevronDown, LogOutIcon, Settings2, UserCog2Icon } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -21,37 +19,28 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { getClientUser } from '@/lib/auth-client';
 
 interface MenuItem {
-  label: string;
+  title: string;
   icon: React.ElementType;
-  action?: (router: AppRouterInstance) => void;
+  url: string;
 }
 
 export function NavActions() {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [role, setRole] = React.useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const router = useRouter();
 
-  // Fetch user role from API /api/auth/me
-  React.useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const user = await res.json();
-          setRole(user.role);
-        } else {
-          console.error('Failed to fetch user data:', res.statusText);
-        }
-      } catch (err) {
-        console.error('Error fetching user data:', err);
-      }
-    }
-    fetchUser();
+  useEffect(() => {
+    const fetchRole = async () => {
+      const user = await getClientUser();
+      if (user) setRole(user.role);
+    };
+
+    fetchRole();
   }, []);
 
-  // Tentukan route settings berdasarkan role
   const accountPath = role
     ? `/dashboard/${role}/account`
     : '/dashboard/account';
@@ -59,28 +48,32 @@ export function NavActions() {
   const menuItems: MenuItem[][] = [
     [
       {
-        label: 'Account',
+        title: 'Account',
         icon: UserCog2Icon,
-        action: (router: AppRouterInstance) => {
-          router.push(accountPath);
-        },
+        url: accountPath,
       },
       {
-        label: 'Logout',
+        title: 'Logout',
         icon: LogOutIcon,
-        action: async (router: AppRouterInstance) => {
-          try {
-            const res = await fetch('/api/auth/logout', { method: 'POST' });
-            if (res.ok) {
-              router.push('/login');
-            }
-          } catch (err) {
-            console.error('Logout failed:', err);
-          }
-        },
+        url: '/logout',
       },
     ],
   ];
+
+  const handleClick = async (url: string) => {
+    if (url === '/logout') {
+      try {
+        const res = await fetch('/api/auth/logout', { method: 'POST' });
+        if (res.ok) {
+          router.push('/login');
+        }
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    } else {
+      router.push(url);
+    }
+  };
 
   return (
     <div className="flex items-center gap-2 text-sm">
@@ -105,9 +98,13 @@ export function NavActions() {
                       {group.map((item, index) => (
                         <SidebarMenuItem key={index}>
                           <SidebarMenuButton
-                            onClick={() => item.action?.(router)}
+                            onClick={() => {
+                              handleClick(item.url);
+                              setIsOpen(false);
+                            }}
                           >
-                            <item.icon /> <span>{item.label}</span>
+                            <item.icon />
+                            <span>{item.title}</span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       ))}

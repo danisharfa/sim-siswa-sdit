@@ -1,16 +1,7 @@
 'use client';
 
-import * as React from 'react';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import {
-  LayoutDashboardIcon,
-  MonitorCogIcon,
-  School,
-  UsersRoundIcon,
-} from 'lucide-react';
-
-import { NavMain } from '@/components/sidebar/nav-main';
+import Link from 'next/link';
 import {
   Sidebar,
   SidebarContent,
@@ -20,77 +11,20 @@ import {
   SidebarMenuButton,
   SidebarRail,
 } from '@/components/ui/sidebar';
-
-const menuData = {
-  admin: [
-    {
-      title: 'Dashboard',
-      url: '/dashboard/admin',
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: 'Manajemen Pengguna',
-      url: '/dashboard/admin/users',
-      icon: UsersRoundIcon,
-    },
-    {
-      title: 'Manajemen Kelas',
-      url: '/dashboard/admin/classroom',
-      icon: School,
-    },
-    {
-      title: 'Monitoring Setoran',
-      url: '/dashboard/admin/monitoring',
-      icon: MonitorCogIcon,
-    },
-  ],
-  teacher: [
-    {
-      title: 'Guru',
-      url: '/dashboard/teacher',
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: 'Data Siswa',
-      url: '/dashboard/teacher/students',
-      icon: UsersRoundIcon,
-    },
-    {
-      title: 'Rekap Setoran',
-      url: '/dashboard/teacher/recap',
-      icon: MonitorCogIcon,
-    },
-  ],
-  student: [
-    {
-      title: 'Siswa',
-      url: '/dashboard/student',
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: 'Setoran Saya',
-      url: '/dashboard/student/submission',
-      icon: MonitorCogIcon,
-    },
-  ],
-};
+import { NavMain } from '@/components/sidebar/nav-main';
+import { getClientUser } from '@/lib/auth-client';
+import { menuData } from '@/lib/sidebar-menu';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [role, setRole] = useState<string | null>(null);
 
-  // Fetch user role from API
   useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const res = await fetch('/api/auth/me'); // Fetch data from API
-        const data = await res.json();
-        setRole(data.role); // Set role from response
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-      }
+    const fetchRole = async () => {
+      const user = await getClientUser();
+      if (user) setRole(user.role);
     };
 
-    fetchUserRole();
+    fetchRole();
   }, []);
 
   const menuItems = role ? menuData[role as keyof typeof menuData] || [] : [];

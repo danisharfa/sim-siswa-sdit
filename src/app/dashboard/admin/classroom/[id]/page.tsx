@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-import ClassroomDetails from '@/components/classroom-details/classroom-details';
+import { ClassroomDetails } from '@/components/classroom-details/classroom-details';
 import { getClassroomById } from '@/lib/data';
 import { AddMemberForm } from '@/components/classroom-details/add-member-form';
 

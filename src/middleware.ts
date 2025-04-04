@@ -4,7 +4,10 @@ import { jwtVerify } from 'jose';
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET as string);
 
 export async function middleware(req: NextRequest) {
+  // console.log('🔍 Middleware running on:', req.nextUrl.pathname);
+
   const token = req.cookies.get('token')?.value;
+  // console.log('🔑 Token:', token);
 
   if (!token) {
     return NextResponse.redirect(new URL('/login', req.url));

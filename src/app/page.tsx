@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { LandingHeader } from '@/components/landingpage/landing-header';
+import { LandingContent } from '@/components/landingpage/landing-content';
+import { LandingFooter } from '@/components/landingpage/landing-footer';
 
 export default function HomePage() {
   return (
-    <>
-      <p>halaman awal</p>
-      <Link href="/login">
-        <Button type="submit">Login</Button>
-      </Link>
-    </>
+    <main className="flex min-h-screen flex-col">
+      <LandingHeader />
+      <LandingContent />
+      <LandingFooter />
+    </main>
   );
 }
