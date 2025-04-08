@@ -1,9 +1,14 @@
-import { ClassroomDetailsManagement } from '@/components/classroom-details/classroom-details-management';
+import { ClassroomDetailsManagement } from '@/components/classroom-members/classroom-members-management';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export default function ClassroomPage({ params }: { params: { id: string } }) {
+export default async function ClassroomPage(props: {
+  params: Promise<{ id: string }>;
+}) {
+  const params = await props.params;
+  const id = params.id;
+
   return (
     <div className="p-4">
       <Link href="/dashboard/admin/classroom">
@@ -13,7 +18,7 @@ export default function ClassroomPage({ params }: { params: { id: string } }) {
       </Link>
       <h1 className="text-2xl font-bold mb-4">Detail Kelas</h1>
 
-      <ClassroomDetailsManagement classroomId={params.id} />
+      <ClassroomDetailsManagement kelasId={id} />
     </div>
   );
 }

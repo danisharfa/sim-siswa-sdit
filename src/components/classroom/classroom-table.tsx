@@ -226,6 +226,30 @@ export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
             </TableBody>
           </Table>
         </div>
+        <div className="flex items-center justify-between space-x-2 py-4">
+          <span className="text-sm">
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount()}
+          </span>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
