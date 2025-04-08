@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { DashboardStats } from '@/components/dashboard-stats';
 
 export default async function AdminDashboard() {
   const user = await getUser();
@@ -8,10 +10,24 @@ export default async function AdminDashboard() {
     return redirect('/login');
   }
 
+  const [totalStudents, totalTeachers, totalClassroom] = await Promise.all([
+    prisma.user.count({ where: { role: 'student' } }),
+    prisma.user.count({ where: { role: 'teacher' } }),
+    prisma.kelas.count(),
+  ]);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      <p className="mt-2 text-lg">Welcome, {user.username}!</p>
+    <div className="p-6 space-y-4">
+      <div>
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="mt-2 text-lg">Welcome, {user.username}!</p>
+      </div>
+
+      <DashboardStats
+        totalStudents={totalStudents}
+        totalTeachers={totalTeachers}
+        totalClassroom={totalClassroom}
+      />
     </div>
   );
 }
