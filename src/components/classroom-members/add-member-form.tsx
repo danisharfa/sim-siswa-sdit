@@ -12,6 +12,7 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface Props {
   kelasId: string;
@@ -25,7 +26,7 @@ export function AddMemberForm({ kelasId, onMemberAdded }: Props) {
 
   async function handleAddMember() {
     if (!identifier || !role) {
-      alert('NIS/NIP dan peran wajib diisi');
+      toast.warning('NIS/NIP dan peran wajib diisi');
       return;
     }
 
@@ -39,15 +40,16 @@ export function AddMemberForm({ kelasId, onMemberAdded }: Props) {
       });
 
       if (res.ok) {
+        toast.success('Anggota berhasil ditambah!');
         setIdentifier('');
         setRole('');
         onMemberAdded();
       } else {
         const errorData = await res.json();
-        alert(errorData.error || 'Gagal menambah anggota');
+        toast.error(errorData.message || 'Gagal menambah anggota!');
       }
     } catch {
-      alert('Terjadi kesalahan, coba lagi.');
+      toast.error('Terjadi kesalahan, coba lagi.');
     } finally {
       setLoading(false);
     }

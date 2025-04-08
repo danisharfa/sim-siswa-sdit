@@ -50,7 +50,7 @@ export function AddUserForm({ onUserAdded }: Props) {
         toast.message(errorData.message || 'Gagal menambah user');
       }
     } catch {
-      toast.message('Terjadi kesalahan, coba lagi.');
+      toast.error('Terjadi kesalahan, coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,10 @@ export function AddUserForm({ onUserAdded }: Props) {
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Button onClick={handleAddUser} disabled={loading}>
+        <Button
+          onClick={handleAddUser}
+          disabled={loading || !username || !namaLengkap}
+        >
           {loading ? 'Menambahkan...' : 'Tambah Pengguna'}
         </Button>
       </CardContent>
