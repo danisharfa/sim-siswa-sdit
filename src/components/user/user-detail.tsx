@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -20,23 +22,75 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+type UpdatedUserProfile = {
+  namaLengkap?: string;
+  nis?: string;
+  nip?: string;
+  tempatLahir?: string;
+  jenisKelamin?: string;
+  golonganDarah?: string;
+  agama?: string;
+  alamat?: string;
+  noTelp?: string;
+  email?: string;
+  tanggalLahir?: string;
+};
+
+type User = {
+  role: string;
+  fotoProfil?: string;
+  namaLengkap?: string;
+  profile?: {
+    nis?: string;
+    nip?: string;
+    tempatLahir?: string;
+    jenisKelamin?: string;
+    golonganDarah?: string;
+    agama?: string;
+    alamat?: string;
+    noTelp?: string;
+    email?: string;
+    tanggalLahir?: string;
+  };
+};
 
 export function UserDetail({ userId }: { userId: string }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updatedData, setUpdatedData] = useState<any>({}); // Store updated values here
-
+  const [updatedData, setUpdatedData] = useState<UpdatedUserProfile>({});
   const [date, setDate] = useState<Date>();
 
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch(`/api/users/${userId}`);
+        const res = await fetch(`/api/users/detail/${userId}`);
         if (!res.ok) throw new Error('User not found');
         const data = await res.json();
-        setUser(data);
+
+        // Ambil profile berdasarkan role
+        const profile =
+          data.role === 'student' ? data.siswaProfile : data.guruProfile;
+
+        setUser({ ...data, profile });
+        setUpdatedData({
+          namaLengkap: data.namaLengkap || '',
+          nis: profile?.nis || '',
+          nip: profile?.nip || '',
+          tempatLahir: profile?.tempatLahir || '',
+          jenisKelamin: profile?.jenisKelamin || '',
+          golonganDarah: profile?.golonganDarah || '',
+          agama: profile?.agama || '',
+          alamat: profile?.alamat || '',
+          noTelp: profile?.noTelp || '',
+          email: profile?.email || '',
+        });
+
+        if (profile?.tanggalLahir) {
+          setDate(new Date(profile.tanggalLahir));
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {
@@ -47,34 +101,43 @@ export function UserDetail({ userId }: { userId: string }) {
   }, [userId]);
 
   const handleChange = (field: string, value: string) => {
-    setUpdatedData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
+    setUpdatedData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
+    if (!user) return;
+
     try {
-      const res = await fetch(`/api/users/${userId}`, {
+      const res = await fetch(`/api/users/detail/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedData),
+        body: JSON.stringify({
+          ...user,
+          ...updatedData,
+          tanggalLahir: date?.toISOString() ?? user.profile?.tanggalLahir, // tambahkan jika pakai kalender
+        }),
       });
+
       if (res.ok) {
-        const updatedUser = await res.json();
-        setUser(updatedUser);
+        toast.success('Detail user berhasil diperbarui!');
+        const detailRes = await fetch(`/api/users/detail/${userId}`);
+        const detailData = await detailRes.json();
+        setUser(detailData);
       } else {
-        console.error('Error updating user');
+        toast.success('Gagal memperbarui detail user!');
       }
     } catch (error) {
-      console.error('Error submitting update:', error);
+      toast.success('Gagal memperbarui detail user!');
+      console.error('Error updating user:', error);
     }
   };
 
   if (loading) return <p>Loading...</p>;
-  if (!user) return <p>User not found.</p>;
+  if (!user) return <p>User not found</p>;
+
+  const isStudent = user.role === 'student';
 
   return (
     <Card>
@@ -86,28 +149,31 @@ export function UserDetail({ userId }: { userId: string }) {
               src={user.fotoProfil}
               alt="Foto Profil"
               className="w-32 h-32 rounded-full object-cover"
+              width={128}
+              height={128}
             />
           )}
 
-          <div className="grid w-full gap-9">
+          <div className="grid w-full gap-6">
             {/* Nama Lengkap */}
             <div>
-              <Label htmlFor="name">Nama Lengkap</Label>
+              <Label htmlFor="namaLengkap">Nama Lengkap</Label>
               <Input
-                id="name"
-                value={updatedData.namaLengkap || user.namaLengkap || ''}
+                id="namaLengkap"
+                value={updatedData.namaLengkap}
                 onChange={(e) => handleChange('namaLengkap', e.target.value)}
-                placeholder={user.namaLengkap || 'Masukkan Nama Lengkap'}
               />
             </div>
 
-            {/* NIS/NIP */}
+            {/* NIS / NIP */}
             <div>
-              <Label htmlFor="nis-nip">NIS/NIP</Label>
+              <Label htmlFor="nisnip">{isStudent ? 'NIS' : 'NIP'}</Label>
               <Input
-                id="nis-nip"
-                value={user.siswaProfile?.nis || user.guruProfile?.nip || '-'}
-                readOnly
+                id="nisnip"
+                value={isStudent ? updatedData.nis : updatedData.nip}
+                onChange={(e) =>
+                  handleChange(isStudent ? 'nis' : 'nip', e.target.value)
+                }
               />
             </div>
 
@@ -117,14 +183,14 @@ export function UserDetail({ userId }: { userId: string }) {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={'outline'}
+                    variant="outline"
                     className={cn(
-                      'w-[240px] justify-start text-left font-normal',
+                      'w-full justify-start text-left font-normal',
                       !date && 'text-muted-foreground'
                     )}
                   >
-                    <CalendarIcon />
-                    {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, 'PPP') : <span>Pilih tanggal</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -141,11 +207,10 @@ export function UserDetail({ userId }: { userId: string }) {
             {/* Tempat Lahir */}
             <div>
               <Label htmlFor="tempatLahir">Tempat Lahir</Label>
-              <Input
+              <Textarea
                 id="tempatLahir"
-                value={updatedData.tempatLahir || user.tempatLahir || ''}
+                value={updatedData.tempatLahir}
                 onChange={(e) => handleChange('tempatLahir', e.target.value)}
-                placeholder={user.tempatLahir || 'Masukkan Tempat Lahir'}
               />
             </div>
 
@@ -153,16 +218,15 @@ export function UserDetail({ userId }: { userId: string }) {
             <div>
               <Label htmlFor="jenisKelamin">Jenis Kelamin</Label>
               <Select
-                onValueChange={(value) => handleChange('jenisKelamin', value)}
+                value={updatedData.jenisKelamin}
+                onValueChange={(val) => handleChange('jenisKelamin', val)}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={user.jenisKelamin || 'Pilih Jenis Kelamin'}
-                  />
+                  <SelectValue placeholder="Pilih Jenis Kelamin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                  <SelectItem value="Perempuan">Perempuan</SelectItem>
+                  <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
+                  <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -171,12 +235,11 @@ export function UserDetail({ userId }: { userId: string }) {
             <div>
               <Label htmlFor="golonganDarah">Golongan Darah</Label>
               <Select
-                onValueChange={(value) => handleChange('golonganDarah', value)}
+                value={updatedData.golonganDarah}
+                onValueChange={(val) => handleChange('golonganDarah', val)}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={user.golonganDarah || 'Pilih Golongan Darah'}
-                  />
+                  <SelectValue placeholder="Pilih Golongan Darah" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="A">A</SelectItem>
@@ -192,38 +255,39 @@ export function UserDetail({ userId }: { userId: string }) {
               <Label htmlFor="agama">Agama</Label>
               <Input
                 id="agama"
-                value={updatedData.agama || user.agama || ''}
+                value={updatedData.agama}
                 onChange={(e) => handleChange('agama', e.target.value)}
-                placeholder={user.agama || 'Masukkan Agama'}
               />
             </div>
 
             {/* Alamat */}
             <div>
               <Label htmlFor="alamat">Alamat</Label>
-              <Input
+              <Textarea
                 id="alamat"
-                value={updatedData.alamat || user.alamat || ''}
+                value={updatedData.alamat}
                 onChange={(e) => handleChange('alamat', e.target.value)}
-                placeholder={user.alamat || 'Masukkan Alamat'}
               />
             </div>
 
-            {/* No. HP */}
+            {/* No Telp */}
             <div>
-              <Label htmlFor="noHp">No. HP</Label>
+              <Label htmlFor="noTelp">No. HP</Label>
               <Input
-                id="noHp"
-                value={updatedData.noHp || user.noHp || ''}
-                onChange={(e) => handleChange('noHp', e.target.value)}
-                placeholder={user.noHp || 'Masukkan No. HP'}
+                id="noTelp"
+                value={updatedData.noTelp}
+                onChange={(e) => handleChange('noTelp', e.target.value)}
               />
             </div>
 
             {/* Email */}
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" value={user.email} readOnly />
+              <Input
+                id="email"
+                value={updatedData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+              />
             </div>
           </div>
         </div>

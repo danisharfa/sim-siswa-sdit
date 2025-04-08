@@ -1,55 +1,59 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ Import useRouter untuk refresh halaman
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface Props {
   kelasId: string;
+  onMemberAdded: () => void;
 }
 
-export function AddMemberForm({ kelasId }: Props) {
-  const [identifier, setIdentifier] = useState('');
-  const [role, setRole] = useState('');
+export function AddMemberForm({ kelasId, onMemberAdded }: Props) {
+  const [userId, setUserId] = useState('');
+  const [role, setRole] = useState<'teacher' | 'student'>('student');
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); // ✅ Gunakan useRouter untuk navigasi/refresh
 
   async function handleAddMember() {
-    if (!identifier || !role) {
-      alert('NIS/NIP dan peran wajib diisi');
+    if (!userId) {
+      toast.warning('ID pengguna wajib diisi');
       return;
     }
 
     setLoading(true);
-    const newMember = { identifier, role, kelasId };
+
+    const endpoint =
+      role === 'teacher'
+        ? `/api/classroom/${kelasId}/teacher`
+        : `/api/classroom/${kelasId}/student`;
 
     try {
-      const res = await fetch('/api/members', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newMember),
+        body: JSON.stringify({ userId }),
       });
 
       if (res.ok) {
-        setIdentifier('');
-        setRole('');
-        router.refresh(); // ✅ Refresh halaman setelah anggota ditambahkan
+        toast.success('Anggota berhasil ditambahkan!');
+        setUserId('');
+        onMemberAdded(); // refresh data
       } else {
-        const errorData = await res.json();
-        alert(errorData.error || 'Gagal menambah anggota');
+        const err = await res.json();
+        toast.error(err.message || 'Gagal menambah anggota');
       }
     } catch {
-      alert('Terjadi kesalahan, coba lagi.');
+      toast.error('Terjadi kesalahan, coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -58,22 +62,25 @@ export function AddMemberForm({ kelasId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Tambah Anggota Baru</h2>
+        <h2 className="text-xl font-semibold">Tambah Anggota Kelas</h2>
       </CardHeader>
       <CardContent className="space-y-4">
         <Input
-          placeholder="Masukkan NIS/NIP"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="Masukkan ID Pengguna"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
         />
-        <Select value={role} onValueChange={(val) => setRole(val)}>
+        <Select
+          value={role}
+          onValueChange={(val) => setRole(val as 'teacher' | 'student')}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Pilih Peran" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value="guru">Guru</SelectItem>
-              <SelectItem value="siswa">Siswa</SelectItem>
+              <SelectItem value="teacher">Guru</SelectItem>
+              <SelectItem value="student">Siswa</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
