@@ -2,6 +2,7 @@ import {
   LayoutDashboardIcon,
   MonitorCogIcon,
   School,
+  User2Icon,
   UsersRoundIcon,
 } from 'lucide-react';
 
@@ -30,29 +31,49 @@ export const menuData = {
   ],
   teacher: [
     {
-      title: 'Guru',
+      title: 'Dashboard',
       url: '/dashboard/teacher',
       icon: LayoutDashboardIcon,
     },
     {
-      title: 'Data Siswa',
+      title: 'Data Diri',
+      url: '/dashboard/teacher/profile',
+      icon: User2Icon,
+    },
+    {
+      title: 'Data Siswa Bimbingan',
       url: '/dashboard/teacher/students',
       icon: UsersRoundIcon,
     },
     {
-      title: 'Rekap Setoran',
-      url: '/dashboard/teacher/recap',
+      title: 'Kelas',
+      url: '/dashboard/teacher/classroom',
+      icon: School,
+    },
+    {
+      title: 'Setoran Hafalan',
+      url: '/dashboard/teacher/submission',
       icon: MonitorCogIcon,
     },
   ],
   student: [
     {
-      title: 'Siswa',
+      title: 'Dashboard',
       url: '/dashboard/student',
       icon: LayoutDashboardIcon,
     },
     {
-      title: 'Setoran Saya',
+      title: 'Data Diri',
+      url: '/dashboard/student/profile',
+      icon: User2Icon,
+    },
+    {
+      title: 'Kelas',
+      url: '/dashboard/student/classroom',
+      icon: School,
+    },
+    {
+      title: 'Setoran Hafalan',
       url: '/dashboard/student/submission',
       icon: MonitorCogIcon,
     },

@@ -28,7 +28,7 @@ export function NavMain({
                     tooltip={item.title}
                     className="flex items-center gap-2"
                   >
-                    {item.icon && <item.icon className="size-5" />}
+                    {item.icon && <item.icon className="size-10" />}
                     <span className="truncate">{item.title}</span>
                   </SidebarMenuButton>
                 </Link>
