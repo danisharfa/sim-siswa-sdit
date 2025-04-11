@@ -137,7 +137,7 @@ model Setoran {
   siswaId        String
   guruId         String?
   tanggal        DateTime
-  surah          String
+  surahId        Int
   ayatMulai      Int
   ayatSelesai    Int
   status         StatusSetoran
@@ -145,8 +145,17 @@ model Setoran {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  siswa SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade) 
-  guru  GuruProfile?  @relation(fields: [guruId], references: [id], onDelete: SetNull) 
+  siswa SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru  GuruProfile?  @relation(fields: [guruId], references: [id], onDelete: SetNull)
+  surah Surah         @relation(fields: [surahId], references: [id], onDelete: Restrict)
 
-  @@index([tanggal]) // Optimasi pencarian setoran berdasarkan tanggal
+  @@index([tanggal])
+}
+
+model Surah {
+  id         Int       @id @default(autoincrement())
+  nama       String    @unique
+  jumlahAyat Int
+
+  setoran    Setoran[]
 }
