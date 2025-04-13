@@ -38,8 +38,8 @@ export async function middleware(req: NextRequest) {
 
     // Redirect ke halaman yang sesuai dengan role
     return NextResponse.redirect(new URL(expectedPath, req.url));
-  } catch (err) {
-    console.error('Token invalid:', err);
+  } catch (error) {
+    console.error('Token invalid:', error);
     return NextResponse.redirect(new URL('/login', req.url));
   }
 }

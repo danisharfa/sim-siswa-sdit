@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json(users, { status: 200 });
   } catch {
     return NextResponse.json(
-      { error: 'Gagal mengambil data pengguna' },
+      { message: 'Gagal mengambil data pengguna' },
       { status: 500 }
     );
   }
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     if (!username || !namaLengkap || !role) {
       return NextResponse.json(
-        { error: 'Data tidak lengkap' },
+        { message: 'Data tidak lengkap' },
         { status: 400 }
       );
     }
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error saat membuat user:', error);
     return NextResponse.json(
-      { error: 'Gagal menambah pengguna' },
+      { message: 'Gagal menambah pengguna' },
       { status: 500 }
     );
   }

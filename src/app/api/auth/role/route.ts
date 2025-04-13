@@ -12,8 +12,10 @@ export async function GET() {
     }
 
     const { payload } = await jwtVerify(token, secretKey);
-    return NextResponse.json({ role: payload.role });
-  } catch {
+
+    return NextResponse.json({ role: payload.role }, { status: 200 });
+  } catch (error) {
+    console.error('[TOKEN_VERIFY_ERROR]', error);
     return NextResponse.json({ message: 'Invalid token' }, { status: 401 });
   }
 }

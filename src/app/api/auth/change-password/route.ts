@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     // Validasi input tidak boleh kosong
     if (!userId || !oldPassword || !newPassword) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Semua input tidak boleh kosong' },
         { status: 400 }
       );
     }
@@ -18,14 +18,17 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'User tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
     // Verifikasi password lama menggunakan argon2.verify
     const isPasswordValid = await argon2.verify(user.password, oldPassword);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Incorrect old password' },
+        { error: 'Passworld lama salah' },
         { status: 401 }
       );
     }
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
     // Cek apakah password baru sama dengan password lama
     if (oldPassword === newPassword) {
       return NextResponse.json(
-        { error: 'New password cannot be the same as the old password' },
+        { error: 'Password baru tidak boleh sama dengan password lama' },
         { status: 400 }
       );
     }
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
     // Validasi panjang password baru
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: 'New password must be at least 8 characters long' },
+        { error: 'Password harus minimal 8 karakter' },
         { status: 400 }
       );
     }
@@ -59,14 +62,13 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: 'Password updated successfully' },
+      { message: 'Password berhasil diupdate' },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error changing password:', error);
-
+    console.error('Update password error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: 'Terjadi kesalahan pada server' },
       { status: 500 }
     );
   }

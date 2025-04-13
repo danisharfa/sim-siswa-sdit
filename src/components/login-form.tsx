@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 export function LoginForm() {
   const [username, setUsername] = useState('');
@@ -29,6 +31,7 @@ export function LoginForm() {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Login gagal');
       }
+      toast.success('Berhasil login 🎉');
 
       const { role } = await res.json();
 
@@ -36,8 +39,10 @@ export function LoginForm() {
       if (role === 'admin') router.push('/dashboard/admin');
       else if (role === 'teacher') router.push('/dashboard/teacher');
       else router.push('/dashboard/student');
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
+      const message = getErrorMessage(error);
+      setError(message);
     } finally {
       setLoading(false);
     }

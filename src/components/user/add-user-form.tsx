@@ -46,8 +46,8 @@ export function AddUserForm({ onUserAdded }: Props) {
         setNamaLengkap('');
         onUserAdded(); // Refresh data
       } else {
-        const errorData = await res.json();
-        toast.message(errorData.message || 'Gagal menambah user');
+        const data = await res.json();
+        toast.message(data.message || 'Gagal menambah user');
       }
     } catch {
       toast.error('Terjadi kesalahan, coba lagi.');

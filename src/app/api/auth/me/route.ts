@@ -8,8 +8,11 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     return NextResponse.json(user);
-  } catch (err) {
-    console.error('Error in /api/auth/me:', err);
-    return NextResponse.json({ message: 'Server error' }, { status: 500 });
+  } catch (error) {
+    console.error('Error in /api/auth/me:', error);
+    return NextResponse.json(
+      { message: 'Terjadi kesalahan pada server' },
+      { status: 500 }
+    );
   }
 }
