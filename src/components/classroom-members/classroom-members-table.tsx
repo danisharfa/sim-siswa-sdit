@@ -21,80 +21,70 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ArrowUpDown } from 'lucide-react'; // pastikan sudah di-import
+import { ArrowUpDown } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-interface Member {
+interface Siswa {
   id: string;
-  identifier: string; // bisa NIP atau NIS
+  nis: string; // hanya untuk NIS
   namaLengkap: string;
-  role: 'teacher' | 'student';
 }
 
 interface Props {
-  members: Member[];
+  siswa: Siswa[];
   title: string;
-  role: 'teacher' | 'student';
 }
 
-export function ClassroomMembersTable({ members, title, role }: Props) {
+export function ClassroomMembersTable({ siswa, title }: Props) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
   const filtered = React.useMemo(() => {
-    return members.filter(
-      (m) =>
-        m.role === role &&
-        (m.identifier.toLowerCase().includes(globalFilter.toLowerCase()) ||
-          m.namaLengkap.toLowerCase().includes(globalFilter.toLowerCase()))
+    return siswa.filter(
+      (s) =>
+        s.nis.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        s.namaLengkap.toLowerCase().includes(globalFilter.toLowerCase())
     );
-  }, [members, globalFilter, role]);
+  }, [siswa, globalFilter]);
 
-  const columns = React.useMemo<ColumnDef<Member>[]>(
-    () => [
-      {
-        accessorKey: 'identifier',
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === 'asc')
-              }
-              className="p-0"
-            >
-              {role === 'teacher' ? 'NIP' : 'NIS'}
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => <span>{row.getValue('identifier')}</span>,
-        enableSorting: true,
+  const columns = React.useMemo<ColumnDef<Siswa>[]>(() => [
+    {
+      accessorKey: 'nis',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="p-0"
+          >
+            NIS
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
       },
-      {
-        accessorKey: 'namaLengkap',
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === 'asc')
-              }
-              className="p-0"
-            >
-              Nama Lengkap
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => <span>{row.getValue('namaLengkap')}</span>,
-        enableSorting: true,
+      cell: ({ row }) => <span>{row.getValue('nis')}</span>,
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'namaLengkap',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="p-0"
+          >
+            Nama Lengkap
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
       },
-    ],
-    [role]
-  );
+      cell: ({ row }) => <span>{row.getValue('namaLengkap')}</span>,
+      enableSorting: true,
+    },
+  ]);
 
   const table = useReactTable({
     data: filtered,
@@ -115,9 +105,7 @@ export function ClassroomMembersTable({ members, title, role }: Props) {
       </CardHeader>
       <CardContent>
         <Input
-          placeholder={`Cari ${
-            role === 'teacher' ? 'NIP atau nama' : 'NIS atau nama'
-          }...`}
+          placeholder="Cari NIS atau nama..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="w-full md:w-1/2 mb-4"
@@ -125,8 +113,7 @@ export function ClassroomMembersTable({ members, title, role }: Props) {
         <div className="rounded-md border">
           <Table>
             <TableCaption>
-              Daftar {role === 'teacher' ? 'guru' : 'siswa'} dalam sistem.
-              Total: {filtered.length}
+              Daftar siswa dalam sistem. Total: {filtered.length}
             </TableCaption>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

@@ -4,14 +4,6 @@ import { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
 
 interface Props {
@@ -19,34 +11,34 @@ interface Props {
   onMemberAdded: () => void;
 }
 
+// ✅ Update AddMemberForm agar hanya menangani siswa (NIS)
 export function AddMemberForm({ kelasId, onMemberAdded }: Props) {
-  const [identifier, setIdentifier] = useState('');
-  const [role, setRole] = useState('');
+  const [nis, setNis] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleAddMember() {
-    if (!identifier || !role) {
-      toast.warning('NIS/NIP dan peran wajib diisi');
+    if (!nis) {
+      toast.warning('NIS wajib diisi');
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/classroom/${kelasId}/add-member`, {
+      const res = await fetch(`/api/classroom/${kelasId}/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, role }),
+        body: JSON.stringify({ nis }),
       });
 
+      const result = await res.json();
+
       if (res.ok) {
-        toast.success('Anggota berhasil ditambah!');
-        setIdentifier('');
-        setRole('');
+        toast.success(result.message || 'Siswa berhasil ditambahkan!');
+        setNis('');
         onMemberAdded();
       } else {
-        const errorData = await res.json();
-        toast.error(errorData.message || 'Gagal menambah anggota!');
+        toast.error(result.error || 'Gagal menambahkan siswa');
       }
     } catch {
       toast.error('Terjadi kesalahan, coba lagi.');
@@ -58,31 +50,17 @@ export function AddMemberForm({ kelasId, onMemberAdded }: Props) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Tambah Anggota Baru</h2>
+        <h2 className="text-xl font-semibold">Tambah Siswa ke Kelas</h2>
       </CardHeader>
       <CardContent className="space-y-4">
         <Input
-          placeholder="Masukkan NIS/NIP"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="Masukkan NIS Siswa"
+          value={nis}
+          onChange={(e) => setNis(e.target.value)}
           disabled={loading}
         />
-        <Select value={role} onValueChange={setRole} disabled={loading}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Pilih Peran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="guru">Guru</SelectItem>
-              <SelectItem value="siswa">Siswa</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Button
-          onClick={handleAddMember}
-          disabled={loading || !identifier || !role}
-        >
-          {loading ? 'Menambahkan...' : 'Tambah Anggota'}
+        <Button onClick={handleAddMember} disabled={loading || !nis}>
+          {loading ? 'Menambahkan...' : 'Tambah Siswa'}
         </Button>
       </CardContent>
     </Card>
