@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner';
 
 interface UserAlertDialogProps {
-  userId: string;
+  user: { id: string };
   type: 'reset' | 'delete';
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -22,7 +22,7 @@ interface UserAlertDialogProps {
 }
 
 export function UserAlertDialog({
-  userId,
+  user,
   type,
   open,
   onOpenChange,
@@ -34,7 +34,7 @@ export function UserAlertDialog({
     setLoading(true);
 
     try {
-      const url = `/api/users/${userId}`;
+      const url = `/api/users/${user.id}`;
       const options: RequestInit =
         type === 'reset'
           ? {

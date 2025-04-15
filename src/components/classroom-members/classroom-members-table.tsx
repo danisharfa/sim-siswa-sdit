@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useMemo, useState } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -21,27 +21,45 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, MoreVerticalIcon } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MemberAlertDialog } from '@/components/classroom-members/member-alert-dialog'; // Ganti path sesuai struktur proyekmu
 
 interface Siswa {
   id: string;
-  nis: string; // hanya untuk NIS
+  nis: string;
   namaLengkap: string;
 }
 
 interface Props {
   siswa: Siswa[];
   title: string;
+  kelasId: string;
+  fetchMembers: () => void; // Tambahkan sebagai prop
 }
 
-export function ClassroomMembersTable({ siswa, title }: Props) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState('');
+export function ClassroomMembersTable({
+  siswa,
+  title,
+  kelasId,
+  fetchMembers,
+}: Props) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
 
-  const filtered = React.useMemo(() => {
+  const [selectedMember, setSelectedMember] = useState<Siswa | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Filter siswa berdasarkan NIS dan Nama Lengkap
+  const filtered = useMemo(() => {
     return siswa.filter(
       (s) =>
         s.nis.toLowerCase().includes(globalFilter.toLowerCase()) ||
@@ -49,11 +67,12 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
     );
   }, [siswa, globalFilter]);
 
-  const columns = React.useMemo<ColumnDef<Siswa>[]>(() => [
-    {
-      accessorKey: 'nis',
-      header: ({ column }) => {
-        return (
+  // Kolom tabel
+  const columns = useMemo<ColumnDef<Siswa>[]>(
+    () => [
+      {
+        accessorKey: 'nis',
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
@@ -62,15 +81,13 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
             NIS
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <span>{row.getValue('nis')}</span>,
+        enableSorting: true,
       },
-      cell: ({ row }) => <span>{row.getValue('nis')}</span>,
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'namaLengkap',
-      header: ({ column }) => {
-        return (
+      {
+        accessorKey: 'namaLengkap',
+        header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
@@ -79,13 +96,61 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
             Nama Lengkap
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        );
+        ),
+        cell: ({ row }) => <span>{row.getValue('namaLengkap')}</span>,
+        enableSorting: true,
       },
-      cell: ({ row }) => <span>{row.getValue('namaLengkap')}</span>,
-      enableSorting: true,
-    },
-  ]);
+      {
+        id: 'actions',
+        header: 'Aksi',
+        cell: ({ row }) => {
+          const siswa = row.original;
+          return (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex size-8">
+                    <MoreVerticalIcon />
+                    <span className="sr-only">User Option</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32 z-50">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedMember(siswa);
+                      setDialogOpen(true);
+                    }}
+                    className="text-destructive"
+                  >
+                    Hapus
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
+              {selectedMember && (
+                <MemberAlertDialog
+                  member={selectedMember}
+                  kelasId={kelasId}
+                  open={dialogOpen}
+                  onOpenChange={(isOpen) => {
+                    setDialogOpen(isOpen);
+                    if (!isOpen) setSelectedMember(null);
+                  }}
+                  onConfirm={() => {
+                    fetchMembers();
+                    setSelectedMember(null);
+                  }}
+                />
+              )}
+            </>
+          );
+        },
+      },
+    ],
+    [selectedMember, dialogOpen, fetchMembers, kelasId]
+  );
+
+  // React Table setup
   const table = useReactTable({
     data: filtered,
     columns,
@@ -93,9 +158,7 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
-    state: {
-      sorting,
-    },
+    state: { sorting },
   });
 
   return (
@@ -155,7 +218,7 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
         </div>
         <div className="flex items-center justify-between space-x-2 py-4">
           <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            Halaman {table.getState().pagination.pageIndex + 1} dari{' '}
             {table.getPageCount()}
           </span>
           <div className="flex space-x-2">
@@ -165,7 +228,7 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Previous
+              Sebelumnya
             </Button>
             <Button
               variant="outline"
@@ -173,7 +236,7 @@ export function ClassroomMembersTable({ siswa, title }: Props) {
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next
+              Berikutnya
             </Button>
           </div>
         </div>

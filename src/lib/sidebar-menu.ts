@@ -1,4 +1,5 @@
 import {
+  Group,
   LayoutDashboardIcon,
   MonitorCogIcon,
   School,
@@ -22,6 +23,11 @@ export const menuData = {
       title: 'Manajemen Kelas',
       url: '/dashboard/admin/classroom',
       icon: School,
+    },
+    {
+      title: 'Manajemen Kelompok',
+      url: '/dashboard/admin/group',
+      icon: Group,
     },
     {
       title: 'Monitoring Setoran',

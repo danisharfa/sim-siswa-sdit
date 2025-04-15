@@ -11,7 +11,6 @@ interface Props {
   onMemberAdded: () => void;
 }
 
-// ✅ Update AddMemberForm agar hanya menangani siswa (NIS)
 export function AddMemberForm({ kelasId, onMemberAdded }: Props) {
   const [nis, setNis] = useState('');
   const [loading, setLoading] = useState(false);

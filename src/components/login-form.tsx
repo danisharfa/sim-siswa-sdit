@@ -40,8 +40,8 @@ export function LoginForm() {
       else if (role === 'teacher') router.push('/dashboard/teacher');
       else router.push('/dashboard/student');
     } catch (error) {
-      console.error(error);
       const message = getErrorMessage(error);
+      console.error(message);
       setError(message);
     } finally {
       setLoading(false);

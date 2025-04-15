@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AddMemberForm } from '@/components/classroom-members/add-member-form';
-import { ClassroomMembersTable } from './classroom-members-table';
+import { ClassroomMembersTable } from '@/components/classroom-members/classroom-members-table';
 
 interface Siswa {
   id: string;
@@ -33,8 +33,8 @@ export function ClassroomDetailsManagement({ kelasId }: { kelasId: string }) {
       }));
 
       setSiswa(parsedStudents);
-    } catch (err) {
-      console.error('Gagal mengambil data siswa:', err);
+    } catch (error) {
+      console.error('Gagal mengambil data siswa:', error);
     }
   }, [kelasId]);
 
@@ -43,9 +43,14 @@ export function ClassroomDetailsManagement({ kelasId }: { kelasId: string }) {
   }, [fetchMembers]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
       <AddMemberForm kelasId={kelasId} onMemberAdded={fetchMembers} />
-      <ClassroomMembersTable siswa={siswa} title="Daftar Siswa" />
+      <ClassroomMembersTable
+        siswa={siswa}
+        title="Daftar Siswa"
+        kelasId={kelasId}
+        fetchMembers={fetchMembers}
+      />
     </div>
   );
 }

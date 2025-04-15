@@ -29,7 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { EditClassroomDialog } from '@/components/classroom/edit-classroom-dialog';
+import { ClassroomEditDialog } from '@/components/classroom/classroom-edit-dialog';
 import { ClassroomAlertDialog } from '@/components/classroom/classroom-alert-dialog';
 
 interface Kelas {
@@ -118,7 +118,7 @@ export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
               </DropdownMenu>
 
               {dialogType === 'edit' && selectedKelas && (
-                <EditClassroomDialog
+                <ClassroomEditDialog
                   kelas={selectedKelas}
                   open={true}
                   onOpenChange={(isOpen) => {
@@ -137,7 +137,7 @@ export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
 
               {dialogType === 'delete' && selectedKelas && (
                 <ClassroomAlertDialog
-                  kelasId={selectedKelas.id}
+                  kelas={selectedKelas}
                   open={true}
                   onOpenChange={(isOpen) => {
                     if (!isOpen) {

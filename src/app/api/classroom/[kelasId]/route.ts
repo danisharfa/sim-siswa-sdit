@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-type Params = Promise<{ id: string }>;
+type Params = Promise<{ kelasId: string }>;
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;
-    const id = params.id;
+    const id = params.kelasId;
 
     const { namaKelas, tahunAjaran } = await req.json();
 
@@ -37,10 +37,13 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   }
 }
 
-export async function DELETE(segmentData: { params: Params }) {
+export async function DELETE(
+  req: NextRequest,
+  segmentData: { params: Params }
+) {
   try {
     const params = await segmentData.params;
-    const id = params.id;
+    const id = params.kelasId;
 
     const existingClass = await prisma.kelas.findUnique({
       where: { id },
@@ -53,7 +56,6 @@ export async function DELETE(segmentData: { params: Params }) {
       );
     }
 
-    // Hapus kelas jika ditemukan
     await prisma.kelas.delete({ where: { id } });
 
     return NextResponse.json(

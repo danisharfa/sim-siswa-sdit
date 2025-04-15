@@ -12,24 +12,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-interface EditUserDialogProps {
+interface UserEditDialogProps {
   user: { id: string; username: string; namaLengkap: string };
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSave: () => void;
 }
 
-export function EditUserDialog({
+export function UserEditDialog({
   user,
   open,
   onOpenChange,
   onSave,
-}: EditUserDialogProps) {
+}: UserEditDialogProps) {
   const [username, setUsername] = useState(user.username);
   const [namaLengkap, setNamaLengkap] = useState(user.namaLengkap);
   const [loading, setLoading] = useState(false);
 
-  async function handleSave() {
+  async function handleEdit() {
     setLoading(true);
     try {
       const res = await fetch(`/api/users/${user.id}`, {
@@ -79,7 +79,7 @@ export function EditUserDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={loading}>
+            <Button onClick={handleEdit} disabled={loading}>
               {loading ? 'Saving...' : 'Save'}
             </Button>
           </div>

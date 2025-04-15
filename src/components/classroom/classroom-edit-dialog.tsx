@@ -13,19 +13,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-interface EditKelasDialogProps {
+interface ClassroomEditDialogProps {
   kelas: { id: string; namaKelas: string; tahunAjaran: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
 }
 
-export function EditClassroomDialog({
+export function ClassroomEditDialog({
   kelas,
   open,
   onOpenChange,
   onSave,
-}: EditKelasDialogProps) {
+}: ClassroomEditDialogProps) {
   const [namaKelas, setNamaKelas] = React.useState(kelas.namaKelas);
   const [tahunAjaran, setTahunAjaran] = React.useState(kelas.tahunAjaran);
   const [loading, setLoading] = React.useState(false);

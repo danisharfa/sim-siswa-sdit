@@ -14,14 +14,14 @@ import {
 import { toast } from 'sonner';
 
 interface KelasAlertDialogProps {
-  kelasId: string;
+  kelas: { id: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
 
 export function ClassroomAlertDialog({
-  kelasId,
+  kelas,
   open,
   onOpenChange,
   onConfirm,
@@ -31,7 +31,7 @@ export function ClassroomAlertDialog({
   async function handleDelete() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/classroom/${kelasId}`, {
+      const res = await fetch(`/api/classroom/${kelas.id}`, {
         method: 'DELETE',
       });
 

@@ -29,7 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { EditUserDialog } from '@/components/user/edit-user-dialog';
+import { UserEditDialog } from '@/components/user/user-edit-dialog';
 import { UserAlertDialog } from '@/components/user/user-alert-dialog';
 import { useRouter } from 'next/navigation';
 
@@ -150,7 +150,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
 
               {/* Dialog muncul secara otomatis saat state berubah */}
               {dialogType === 'edit' && selectedUser && (
-                <EditUserDialog
+                <UserEditDialog
                   user={selectedUser}
                   open={true} // Dialog langsung terbuka
                   onOpenChange={(isOpen) => {
@@ -169,7 +169,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
 
               {dialogType === 'reset' && selectedUser && (
                 <UserAlertDialog
-                  userId={selectedUser.id}
+                  user={selectedUser}
                   type="reset"
                   open={true} // Dialog langsung terbuka
                   onOpenChange={(isOpen) => {
@@ -188,7 +188,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
 
               {dialogType === 'delete' && selectedUser && (
                 <UserAlertDialog
-                  userId={selectedUser.id}
+                  user={selectedUser}
                   type="delete"
                   open={true} // Dialog langsung terbuka
                   onOpenChange={(isOpen) => {
