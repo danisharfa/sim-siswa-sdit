@@ -9,7 +9,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVertical } from 'lucide-react';
+import { ArrowUpDown, MoreVertical } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Button } from '../ui/button';
 
 interface Group {
   id: string;
@@ -60,13 +61,37 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
         cell: ({ row }) => <span>{row.original.nama}</span>,
       },
       {
-        header: 'Kelas',
         accessorFn: (row) => row.kelas?.namaKelas ?? '-',
+        id: 'kelas',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Kelas
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ getValue }) => <span>{String(getValue())}</span>,
+        enableSorting: true,
       },
+
       {
-        header: 'Tahun Ajaran',
         accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
+        id: 'tahunAjaran',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Tahun Ajaran
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ getValue }) => <span>{String(getValue())}</span>,
+        enableSorting: true,
       },
+
       {
         header: 'Guru',
         accessorFn: (row) =>
