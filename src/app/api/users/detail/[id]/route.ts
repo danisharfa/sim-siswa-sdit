@@ -8,6 +8,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
+    console.log('GET detail user dengan id:', id);
+
     const user = await prisma.user.findUnique({
       where: { id },
       include: {

@@ -15,12 +15,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { DatePicker } from '../ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker';
 
-type UpdatedUserProfile = {
+type TeacherProfile = {
   namaLengkap?: string;
   nis?: string;
-  nip?: string;
   tanggalLahir?: string;
   tempatLahir?: string;
   jenisKelamin?: string;
@@ -36,7 +35,6 @@ type User = {
   fotoProfil?: string;
   namaLengkap?: string;
   profile?: {
-    nis?: string;
     nip?: string;
     tempatLahir?: string;
     jenisKelamin?: string;
@@ -49,11 +47,15 @@ type User = {
   };
 };
 
-export function UserDetail({ userId }: { userId: string }) {
+export default function TeacherProfileDetail({ userId }: { userId: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updatedData, setUpdatedData] = useState<UpdatedUserProfile>({});
-  const [date, setDate] = useState<Date>();
+  const [updatedData, setUpdatedData] = useState<TeacherProfile>({});
+  const [date, setDate] = useState<Date | undefined>(
+    user?.profile?.tanggalLahir
+      ? new Date(user.profile.tanggalLahir)
+      : undefined
+  );
 
   useEffect(() => {
     async function fetchUser() {
@@ -63,14 +65,12 @@ export function UserDetail({ userId }: { userId: string }) {
         const data = await res.json();
 
         // Ambil profile berdasarkan role
-        const profile =
-          data.role === 'student' ? data.siswaProfile : data.guruProfile;
+        const profile = data.role === 'teacher' ? data.guruProfile : null;
 
         setUser({ ...data, profile });
         setUpdatedData({
           namaLengkap: data.namaLengkap || '',
           nis: profile?.nis || '',
-          nip: profile?.nip || '',
           tempatLahir: profile?.tempatLahir || '',
           jenisKelamin: profile?.jenisKelamin || '',
           golonganDarah: profile?.golonganDarah || '',
@@ -108,7 +108,7 @@ export function UserDetail({ userId }: { userId: string }) {
         body: JSON.stringify({
           ...user,
           ...updatedData,
-          tanggalLahir: date?.toISOString() ?? user.profile?.tanggalLahir, // tambahkan jika pakai kalender
+          tanggalLahir: date?.toISOString() ?? user.profile?.tanggalLahir,
         }),
       });
 
@@ -118,18 +118,16 @@ export function UserDetail({ userId }: { userId: string }) {
         const detailData = await detailRes.json();
         setUser(detailData);
       } else {
-        toast.success('Gagal memperbarui detail user!');
+        toast.error('Gagal memperbarui detail user!');
       }
     } catch (error) {
-      toast.success('Gagal memperbarui detail user!');
+      toast.error('Gagal memperbarui detail user!');
       console.error('Error updating user:', error);
     }
   };
 
   if (loading) return <p>Loading...</p>;
   if (!user) return <p>User not found</p>;
-
-  const isStudent = user.role === 'student';
 
   return (
     <Card>
@@ -150,23 +148,13 @@ export function UserDetail({ userId }: { userId: string }) {
             {/* Nama Lengkap */}
             <div>
               <Label htmlFor="namaLengkap">Nama Lengkap</Label>
-              <Input
-                id="namaLengkap"
-                value={updatedData.namaLengkap}
-                onChange={(e) => handleChange('namaLengkap', e.target.value)}
-              />
+              <Input id="namaLengkap" value={user.namaLengkap} readOnly />
             </div>
 
-            {/* NIS / NIP */}
+            {/* NIP */}
             <div>
-              <Label htmlFor="nisnip">{isStudent ? 'NIS' : 'NIP'}</Label>
-              <Input
-                id="nisnip"
-                value={isStudent ? updatedData.nis : updatedData.nip}
-                onChange={(e) =>
-                  handleChange(isStudent ? 'nis' : 'nip', e.target.value)
-                }
-              />
+              <Label htmlFor="nip">NIP</Label>
+              <Input id="nip" value={user.profile?.nip} readOnly />
             </div>
 
             {/* Tanggal Lahir */}

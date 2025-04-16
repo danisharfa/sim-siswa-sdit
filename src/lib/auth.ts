@@ -16,6 +16,7 @@ export async function getUser() {
     return {
       id: payload.id as string,
       username: payload.username as string,
+      namaLengkap: payload.namaLengkap as string,
       role: payload.role as string,
     };
   } catch (err) {
