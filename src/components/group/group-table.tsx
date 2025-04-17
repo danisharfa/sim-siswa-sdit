@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
   flexRender,
@@ -53,6 +54,7 @@ interface GroupTableProps {
 }
 
 export function GroupTable({ data, onRefresh }: GroupTableProps) {
+  const router = useRouter();
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [selectedGroup, setSelectedGroup] = React.useState<Group | null>(null);
   const [dialogType, setDialogType] = React.useState<'edit' | 'delete' | null>(
@@ -113,7 +115,7 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }) => {
-          const group = row.original;
+          const kelompok = row.original;
 
           return (
             <>
@@ -125,8 +127,15 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/admin/group/${kelompok.id}`)
+                    }
+                  >
+                    Detail
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={() => {
-                      setSelectedGroup(group);
+                      setSelectedGroup(kelompok);
                       setDialogType('edit');
                     }}
                   >
@@ -134,7 +143,7 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSelectedGroup(group);
+                      setSelectedGroup(kelompok);
                       setDialogType('delete');
                     }}
                     className="text-destructive"
@@ -184,7 +193,7 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
         },
       },
     ],
-    [onRefresh, selectedGroup, dialogType]
+    [onRefresh, selectedGroup, dialogType, router]
   );
 
   const table = useReactTable({

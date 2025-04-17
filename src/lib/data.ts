@@ -11,6 +11,17 @@ export async function getClassroomById(id: string) {
   }
 }
 
+export async function getGroupById(id: string) {
+  try {
+    return await prisma.kelompok.findUnique({
+      where: { id },
+    });
+  } catch (error) {
+    console.error('Error fetching group data:', error);
+    return null;
+  }
+}
+
 export async function getUserDetail(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
