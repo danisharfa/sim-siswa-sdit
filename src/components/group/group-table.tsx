@@ -22,6 +22,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '../ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { GroupAlertDialog } from './group-alert-dialog';
+import { GroupEditDialog } from './group-edit-dialog';
 
 interface Group {
   id: string;
@@ -46,6 +54,10 @@ interface GroupTableProps {
 
 export function GroupTable({ data, onRefresh }: GroupTableProps) {
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [selectedGroup, setSelectedGroup] = React.useState<Group | null>(null);
+  const [dialogType, setDialogType] = React.useState<'edit' | 'delete' | null>(
+    null
+  );
 
   const filteredGroups = React.useMemo(() => {
     return data.filter((group) =>
@@ -100,12 +112,79 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
       {
         id: 'actions',
         header: 'Aksi',
-        cell: () => (
-          <MoreVertical className="w-5 h-5 text-muted-foreground cursor-pointer" />
-        ),
+        cell: ({ row }) => {
+          const group = row.original;
+
+          return (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex size-8">
+                    <MoreVertical />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32 z-50">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedGroup(group);
+                      setDialogType('edit');
+                    }}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedGroup(group);
+                      setDialogType('delete');
+                    }}
+                    className="text-destructive"
+                  >
+                    Hapus
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {dialogType === 'edit' && selectedGroup && (
+                <GroupEditDialog
+                  kelompok={selectedGroup}
+                  open={true}
+                  onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                      setDialogType(null);
+                      setSelectedGroup(null);
+                    }
+                  }}
+                  onSave={() => {
+                    onRefresh();
+                    setDialogType(null);
+                    setSelectedGroup(null);
+                  }}
+                />
+              )}
+
+              {dialogType === 'delete' && selectedGroup && (
+                <GroupAlertDialog
+                  kelompok={selectedGroup}
+                  open={true}
+                  onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                      setDialogType(null);
+                      setSelectedGroup(null);
+                    }
+                  }}
+                  onConfirm={() => {
+                    onRefresh();
+                    setDialogType(null);
+                    setSelectedGroup(null);
+                  }}
+                />
+              )}
+            </>
+          );
+        },
       },
     ],
-    []
+    [onRefresh, selectedGroup, dialogType]
   );
 
   const table = useReactTable({
