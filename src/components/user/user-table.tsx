@@ -36,6 +36,7 @@ import {
 
 import { UserEditDialog } from '@/components/user/user-edit-dialog';
 import { UserAlertDialog } from '@/components/user/user-alert-dialog';
+import { DataTablePagination } from '../ui/table-pagination';
 
 interface User {
   id: string;
@@ -67,6 +68,17 @@ export function UserTable({ users, title, role, onRefresh }: Props) {
 
   const columns = React.useMemo<ColumnDef<User>[]>(
     () => [
+      {
+        id: 'no',
+        header: 'No',
+        cell: ({ row, table }) =>
+          row.index +
+          1 +
+          table.getState().pagination.pageIndex *
+            table.getState().pagination.pageSize,
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: 'username',
         cell: ({ row }) => <span>{row.getValue('username')}</span>,
@@ -243,7 +255,6 @@ export function UserTable({ users, title, role, onRefresh }: Props) {
           <Table>
             <TableCaption>
               Daftar {role === 'teacher' ? 'guru' : 'siswa'} dalam sistem.
-              Total: {table.getRowModel().rows.length}
             </TableCaption>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -283,31 +294,7 @@ export function UserTable({ users, title, role, onRefresh }: Props) {
             </TableBody>
           </Table>
         </div>
-
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of{' '}
-            {table.getPageCount()}
-          </span>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <DataTablePagination table={table} />
       </CardContent>
     </Card>
   );

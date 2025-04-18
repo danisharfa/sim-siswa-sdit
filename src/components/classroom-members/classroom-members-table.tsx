@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MemberAlertDialog } from '@/components/classroom-members/member-alert-dialog'; // Ganti path sesuai struktur proyekmu
+import { DataTablePagination } from '../ui/table-pagination';
 
 interface Siswa {
   id: string;
@@ -43,14 +44,14 @@ interface Props {
   siswa: Siswa[];
   title: string;
   kelasId: string;
-  fetchMembers: () => void; // Tambahkan sebagai prop
+  onRefresh: () => void; // Tambahkan sebagai prop
 }
 
 export function ClassroomMembersTable({
   siswa,
   title,
   kelasId,
-  fetchMembers,
+  onRefresh,
 }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -70,6 +71,17 @@ export function ClassroomMembersTable({
   // Kolom tabel
   const columns = useMemo<ColumnDef<Siswa>[]>(
     () => [
+      {
+        id: 'no',
+        header: 'No',
+        cell: ({ row, table }) =>
+          row.index +
+          1 +
+          table.getState().pagination.pageIndex *
+            table.getState().pagination.pageSize,
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: 'nis',
         header: ({ column }) => (
@@ -137,7 +149,7 @@ export function ClassroomMembersTable({
                     if (!isOpen) setSelectedMember(null);
                   }}
                   onConfirm={() => {
-                    fetchMembers();
+                    onRefresh();
                     setSelectedMember(null);
                   }}
                 />
@@ -147,7 +159,7 @@ export function ClassroomMembersTable({
         },
       },
     ],
-    [selectedMember, dialogOpen, fetchMembers, kelasId]
+    [selectedMember, dialogOpen, onRefresh, kelasId]
   );
 
   // React Table setup
@@ -175,9 +187,7 @@ export function ClassroomMembersTable({
         />
         <div className="rounded-md border">
           <Table>
-            <TableCaption>
-              Daftar siswa dalam sistem. Total: {filtered.length}
-            </TableCaption>
+            <TableCaption>Daftar siswa dalam sistem.</TableCaption>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -216,30 +226,7 @@ export function ClassroomMembersTable({
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <span className="text-sm">
-            Halaman {table.getState().pagination.pageIndex + 1} dari{' '}
-            {table.getPageCount()}
-          </span>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Sebelumnya
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Berikutnya
-            </Button>
-          </div>
-        </div>
+        <DataTablePagination table={table} />
       </CardContent>
     </Card>
   );

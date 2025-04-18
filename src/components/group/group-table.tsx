@@ -4,15 +4,24 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
+  ColumnFiltersState,
+  SortingState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import { ArrowUpDown, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -22,13 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { GroupAlertDialog } from './group-alert-dialog';
 import { GroupEditDialog } from './group-edit-dialog';
 
@@ -55,17 +58,15 @@ interface GroupTableProps {
 
 export function GroupTable({ data, onRefresh }: GroupTableProps) {
   const router = useRouter();
-  const [globalFilter, setGlobalFilter] = React.useState('');
   const [selectedGroup, setSelectedGroup] = React.useState<Group | null>(null);
   const [dialogType, setDialogType] = React.useState<'edit' | 'delete' | null>(
     null
   );
 
-  const filteredGroups = React.useMemo(() => {
-    return data.filter((group) =>
-      group.namaKelompok?.toLowerCase().includes(globalFilter.toLowerCase())
-    );
-  }, [data, globalFilter]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
 
   const columns = React.useMemo<ColumnDef<Group>[]>(
     () => [
@@ -197,11 +198,18 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
   );
 
   const table = useReactTable({
-    data: filteredGroups,
+    data,
     columns,
+    state: {
+      sorting,
+      columnFilters,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -212,16 +220,22 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
       <CardContent>
         <div className="py-2">
           <Input
-            placeholder="Cari kelompok..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Cari nama kelompok..."
+            value={
+              (table.getColumn('namaKelompok')?.getFilterValue() as string) ??
+              ''
+            }
+            onChange={(e) =>
+              table.getColumn('namaKelompok')?.setFilterValue(e.target.value)
+            }
             className="w-full md:w-1/2"
           />
         </div>
         <div className="rounded-md border">
           <Table>
             <TableCaption>
-              Daftar Kelompok dalam sistem. Total: {filteredGroups.length}
+              Daftar Kelompok dalam sistem. Total:
+              {table.getRowModel().rows.length}
             </TableCaption>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

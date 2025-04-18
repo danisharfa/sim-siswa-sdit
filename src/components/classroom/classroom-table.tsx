@@ -34,6 +34,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ClassroomEditDialog } from '@/components/classroom/classroom-edit-dialog';
 import { ClassroomAlertDialog } from '@/components/classroom/classroom-alert-dialog';
+import { DataTablePagination } from '../ui/table-pagination';
 
 interface Kelas {
   id: string;
@@ -60,6 +61,17 @@ export function ClassroomTable({ data, onRefresh }: Props) {
 
   const columns = React.useMemo<ColumnDef<Kelas>[]>(
     () => [
+      {
+        id: 'no',
+        header: 'No',
+        cell: ({ row, table }) =>
+          row.index +
+          1 +
+          table.getState().pagination.pageIndex *
+            table.getState().pagination.pageSize,
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: 'namaKelas',
         header: ({ column }) => (
@@ -203,10 +215,7 @@ export function ClassroomTable({ data, onRefresh }: Props) {
         </div>
         <div className="rounded-md border">
           <Table>
-            <TableCaption>
-              Daftar Kelas dalam sistem. Total:{' '}
-              {table.getRowModel().rows.length}
-            </TableCaption>
+            <TableCaption>Daftar Kelas dalam sistem.</TableCaption>
 
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -246,30 +255,7 @@ export function ClassroomTable({ data, onRefresh }: Props) {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of{' '}
-            {table.getPageCount()}
-          </span>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <DataTablePagination table={table} />
       </CardContent>
     </Card>
   );

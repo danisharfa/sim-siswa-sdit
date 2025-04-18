@@ -49,7 +49,7 @@ export function ClassroomDetailsManagement({ kelasId }: { kelasId: string }) {
         siswa={siswa}
         title="Daftar Siswa"
         kelasId={kelasId}
-        fetchMembers={fetchMembers}
+        onRefresh={fetchMembers}
       />
     </div>
   );
