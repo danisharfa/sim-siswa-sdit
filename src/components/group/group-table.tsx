@@ -34,7 +34,7 @@ import { GroupEditDialog } from './group-edit-dialog';
 
 interface Group {
   id: string;
-  nama: string;
+  namaKelompok: string;
   kelas: {
     namaKelas: string;
     tahunAjaran: string;
@@ -63,20 +63,20 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
 
   const filteredGroups = React.useMemo(() => {
     return data.filter((group) =>
-      group.nama?.toLowerCase().includes(globalFilter.toLowerCase())
+      group.namaKelompok?.toLowerCase().includes(globalFilter.toLowerCase())
     );
   }, [data, globalFilter]);
 
   const columns = React.useMemo<ColumnDef<Group>[]>(
     () => [
       {
-        accessorKey: 'nama',
+        accessorKey: 'namaKelompok',
         header: 'Nama Kelompok',
-        cell: ({ row }) => <span>{row.original.nama}</span>,
+        cell: ({ row }) => <span>{row.original.namaKelompok}</span>,
       },
       {
         accessorFn: (row) => row.kelas?.namaKelas ?? '-',
-        id: 'kelas',
+        id: 'namaKelas',
         header: ({ column }) => (
           <Button
             variant="ghost"

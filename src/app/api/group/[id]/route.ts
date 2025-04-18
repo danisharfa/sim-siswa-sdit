@@ -8,7 +8,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { nama } = await req.json();
+    const { namaKelompok } = await req.json();
 
     const existingGroup = await prisma.kelompok.findUnique({
       where: { id },
@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const updatedGroup = await prisma.kelompok.update({
       where: { id },
-      data: { nama },
+      data: { namaKelompok },
     });
 
     return NextResponse.json(updatedGroup);

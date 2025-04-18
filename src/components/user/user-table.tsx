@@ -3,22 +3,21 @@
 import * as React from 'react';
 import {
   ColumnDef,
+  ColumnFiltersState,
   SortingState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreVerticalIcon } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { Button } from '../ui/button';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { ArrowUpDown, MoreVertical } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -28,10 +27,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
 import { UserEditDialog } from '@/components/user/user-edit-dialog';
 import { UserAlertDialog } from '@/components/user/user-alert-dialog';
-import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -45,41 +49,26 @@ interface Props {
   users: User[];
   title: string;
   role: 'teacher' | 'student';
-  fetchUsers: () => void;
+  onRefresh: () => void;
 }
 
-export function UserTable({ users, title, role, fetchUsers }: Props) {
+export function UserTable({ users, title, role, onRefresh }: Props) {
   const router = useRouter();
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState('');
-
-  // State untuk menyimpan user yang dipilih & jenis dialog yang terbuka
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const [dialogType, setDialogType] = React.useState<
     'edit' | 'reset' | 'delete' | null
   >(null);
 
-  // Format tanggal di client
-  const formatDate = React.useCallback((dateString: string) => {
-    if (typeof window === 'undefined') return 'Loading...'; // SSR-safe
-    return new Date(dateString).toLocaleDateString();
-  }, []);
-
-  // Filter data berdasarkan role dan username
-  const filteredUsers = React.useMemo(() => {
-    return users.filter(
-      (user) =>
-        user.role === role &&
-        user.username.toLowerCase().includes(globalFilter.toLowerCase())
-    );
-  }, [users, role, globalFilter]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
 
   const columns = React.useMemo<ColumnDef<User>[]>(
     () => [
       {
         accessorKey: 'username',
-        header: 'Username',
         cell: ({ row }) => <span>{row.getValue('username')}</span>,
       },
       {
@@ -94,21 +83,27 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
-            Tangal Dibuat <ArrowUpDown className="ml-2 h-4 w-4" />
+            Tanggal Dibuat
+            <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => <span>{formatDate(row.getValue('createdAt'))}</span>,
+        cell: ({ row }) => (
+          <span>
+            {new Date(row.getValue('createdAt')).toLocaleDateString()}
+          </span>
+        ),
       },
       {
         id: 'actions',
         cell: ({ row }) => {
           const user = row.original;
+
           return (
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVerticalIcon />
+                  <Button variant="ghost" className="flex size-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
                     <span className="sr-only">User Option</span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -148,21 +143,20 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Dialog muncul secara otomatis saat state berubah */}
               {dialogType === 'edit' && selectedUser && (
                 <UserEditDialog
                   user={selectedUser}
-                  open={true} // Dialog langsung terbuka
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
+                  open={true}
+                  onOpenChange={(open) => {
+                    if (!open) {
                       setSelectedUser(null);
+                      setDialogType(null);
                     }
                   }}
                   onSave={() => {
-                    fetchUsers();
-                    setDialogType(null);
+                    onRefresh();
                     setSelectedUser(null);
+                    setDialogType(null);
                   }}
                 />
               )}
@@ -171,17 +165,17 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
                 <UserAlertDialog
                   user={selectedUser}
                   type="reset"
-                  open={true} // Dialog langsung terbuka
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
+                  open={true}
+                  onOpenChange={(open) => {
+                    if (!open) {
                       setSelectedUser(null);
+                      setDialogType(null);
                     }
                   }}
                   onConfirm={() => {
-                    fetchUsers();
-                    setDialogType(null);
+                    onRefresh();
                     setSelectedUser(null);
+                    setDialogType(null);
                   }}
                 />
               )}
@@ -190,17 +184,17 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
                 <UserAlertDialog
                   user={selectedUser}
                   type="delete"
-                  open={true} // Dialog langsung terbuka
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
+                  open={true}
+                  onOpenChange={(open) => {
+                    if (!open) {
                       setSelectedUser(null);
+                      setDialogType(null);
                     }
                   }}
                   onConfirm={() => {
-                    fetchUsers();
-                    setDialogType(null);
+                    onRefresh();
                     setSelectedUser(null);
+                    setDialogType(null);
                   }}
                 />
               )}
@@ -209,19 +203,22 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
         },
       },
     ],
-    [formatDate, fetchUsers, selectedUser, dialogType, router]
+    [onRefresh, dialogType, selectedUser, router]
   );
 
   const table = useReactTable({
-    data: filteredUsers,
+    data: users.filter((user) => user.role === role),
     columns,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     state: {
       sorting,
+      columnFilters,
     },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -232,17 +229,21 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
       <CardContent>
         <div className="py-2">
           <Input
-            placeholder="Cari username..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="w-full md:w-1/2"
+            placeholder="Filter username..."
+            value={
+              (table.getColumn('username')?.getFilterValue() as string) ?? ''
+            }
+            onChange={(event) =>
+              table.getColumn('username')?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
           />
         </div>
         <div className="rounded-md border">
           <Table>
             <TableCaption>
               Daftar {role === 'teacher' ? 'guru' : 'siswa'} dalam sistem.
-              Total: {filteredUsers.length}
+              Total: {table.getRowModel().rows.length}
             </TableCaption>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -282,6 +283,7 @@ export function UserTable({ users, title, role, fetchUsers }: Props) {
             </TableBody>
           </Table>
         </div>
+
         <div className="flex items-center justify-between space-x-2 py-4">
           <span className="text-sm">
             Page {table.getState().pagination.pageIndex + 1} of{' '}

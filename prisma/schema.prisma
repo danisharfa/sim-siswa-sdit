@@ -3,9 +3,152 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  username     String        @unique
+  password     String
+  namaLengkap  String
+  role         Role
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  guruProfile  GuruProfile?
+  siswaProfile SiswaProfile?
+}
+
+model SiswaProfile {
+  id              String            @id @unique
+  userId          String            @unique
+  nis             String?           @unique
+  kelasId         String?
+  tanggalLahir    DateTime?
+  tempatLahir     String?
+  jenisKelamin    JenisKelamin?
+  golonganDarah   GolonganDarah?
+  alamat          String?
+  noTelp          String?
+  fotoProfil      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  email           String?
+  kelompokId      String?
+  riwayatKelas    RiwayatKelas[]
+  riwayatKelompok RiwayatKelompok[]
+  setoran         Setoran[]
+  kelas           Kelas?            @relation(fields: [kelasId], references: [id])
+  kelompok        Kelompok?         @relation(fields: [kelompokId], references: [id])
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([nis])
+}
+
+model GuruProfile {
+  id              String            @id @unique
+  userId          String            @unique
+  nip             String?           @unique
+  tanggalLahir    DateTime?
+  tempatLahir     String?
+  jenisKelamin    JenisKelamin?
+  golonganDarah   GolonganDarah?
+  alamat          String?
+  noTelp          String?
+  fotoProfil      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  email           String?
+  guruKelompok    GuruKelompok[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  riwayatKelompok RiwayatKelompok[]
+  setoran         Setoran[]
+}
+
+model Kelas {
+  id            String         @id @unique
+  namaKelas     String
+  tahunAjaran   String
+  kelompok      Kelompok[]
+  riwayatKelas  RiwayatKelas[]
+  siswaProfiles SiswaProfile[]
+
+  @@unique([namaKelas, tahunAjaran])
+}
+
+model RiwayatKelas {
+  id            String       @id @default(uuid())
+  siswaId       String
+  kelasId       String
+  tahunAjaran   String
+  tanggalPindah DateTime     @default(now())
+  kelas         Kelas        @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  siswa         SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+}
+
+model GuruKelompok {
+  id         String      @id @default(uuid())
+  guruId     String
+  kelompokId String
+  createdAt  DateTime    @default(now())
+  guru       GuruProfile @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelompok   Kelompok    @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
+}
+
+model Kelompok {
+  id              String            @id @unique
+  namaKelompok    String
+  kelasId         String
+  tahunAjaran     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  guruKelompok    GuruKelompok[]
+  kelas           Kelas             @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  riwayatKelompok RiwayatKelompok[]
+  siswaProfiles   SiswaProfile[]
+
+  @@unique([namaKelompok, kelasId, tahunAjaran])
+}
+
+model RiwayatKelompok {
+  id            String       @id @default(uuid())
+  siswaId       String
+  kelompokId    String
+  guruId        String?
+  tahunAjaran   String
+  tanggalGabung DateTime     @default(now())
+  guru          GuruProfile? @relation(fields: [guruId], references: [id])
+  kelompok      Kelompok     @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
+  siswa         SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+}
+
+model Setoran {
+  id           String        @id @unique
+  siswaId      String
+  guruId       String
+  tanggal      DateTime
+  ayatMulai    Int
+  ayatSelesai  Int
+  status       StatusSetoran
+  catatan      String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  surahId      Int
+  adab         String?
+  jenisSetoran JenisSetoran?
+  guru         GuruProfile   @relation(fields: [guruId], references: [id])
+  siswa        SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  surah        Surah         @relation(fields: [surahId], references: [id])
+
+  @@index([tanggal])
+}
+
+model Surah {
+  id         Int       @id @default(autoincrement())
+  nama       String    @unique
+  jumlahAyat Int
+  setoran    Setoran[]
 }
 
 enum Role {
@@ -35,167 +178,4 @@ enum StatusSetoran {
 enum JenisSetoran {
   TAHFIDZ
   TAHSIN
-}
-
-model User {
-  id          String   @id @default(uuid())
-  username    String   @unique
-  password    String
-  namaLengkap String
-  role        Role
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  siswaProfile SiswaProfile?
-  guruProfile  GuruProfile?
-}
-
-model SiswaProfile {
-  id            String   @id @unique
-  userId        String   @unique
-  nis           String?  @unique
-  kelasId       String?  
-  kelompokId    String?
-
-  tanggalLahir  DateTime? 
-  tempatLahir   String?
-  jenisKelamin  JenisKelamin?
-  golonganDarah GolonganDarah?
-  agama         String?
-  alamat        String?
-  noTelp        String?
-  email         String?
-  fotoProfil    String?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade) 
-  setoran           Setoran[] 
-  kelas             Kelas?            @relation(fields: [kelasId], references: [id], onUpdate: Cascade, onDelete: SetNull)
-  riwayatKelas      RiwayatKelas[] 
-  kelompok          Kelompok?         @relation(fields: [kelompokId], references: [id], onDelete: SetNull)
-  riwayatKelompok   RiwayatKelompok[]
-
-  @@index([nis]) 
-}
-
-model GuruProfile {
-  id            String   @id @unique
-  userId        String   @unique
-  nip           String?  @unique
-
-  tanggalLahir  DateTime? 
-  tempatLahir   String?
-  jenisKelamin  JenisKelamin?
-  golonganDarah GolonganDarah?
-  agama         String?
-  alamat        String?
-  noTelp        String?
-  email         String?
-  fotoProfil    String?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  guruKelompok   GuruKelompok[]
-  setoran        Setoran[]
-  riwayatKelompok RiwayatKelompok[]
-}
-
-model Kelas {
-  id          String   @id @unique
-  namaKelas   String
-  tahunAjaran String  
-
-  siswaProfiles SiswaProfile[]
-  riwayatKelas  RiwayatKelas[]
-  kelompok      Kelompok[]
-
-  @@unique([namaKelas, tahunAjaran])
-}
-
-model RiwayatKelas {
-  id            String   @id @default(uuid())
-  siswaId       String
-  kelasId       String
-  tahunAjaran   String
-  tanggalPindah DateTime @default(now())
-
-  siswa SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  kelas Kelas         @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-}
-
-model GuruKelompok {
-  id         String   @id @default(uuid())
-  guruId     String
-  kelompokId String
-
-  guru       GuruProfile @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  kelompok   Kelompok    @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
-
-  createdAt  DateTime @default(now())
-}
-
-model Kelompok {
-  id            String   @id @unique
-  nama          String
-  kelasId       String
-  tahunAjaran   String
-
-  kelas             Kelas             @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-  siswaProfiles     SiswaProfile[]
-  guruKelompok      GuruKelompok[]
-  riwayatKelompok   RiwayatKelompok[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([nama, kelasId, tahunAjaran])
-}
-
-model RiwayatKelompok {
-  id            String   @id @default(uuid())
-  siswaId       String
-  kelompokId    String
-  guruId        String?
-  tahunAjaran   String
-  tanggalGabung DateTime @default(now())
-
-  siswa    SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  kelompok Kelompok     @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
-  guru     GuruProfile? @relation(fields: [guruId], references: [id], onDelete: SetNull)
-}
-
-model Setoran {
-  id             String   @id @unique
-  siswaId        String
-  guruId         String
-  tanggal        DateTime
-  jenisSetoran   JenisSetoran?
-  surahId        Int
-  ayatMulai      Int
-  ayatSelesai    Int
-  adab           String?
-  status         StatusSetoran
-  catatan        String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  siswa SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  guru  GuruProfile  @relation(fields: [guruId], references: [id], onDelete: Restrict)
-  surah Surah        @relation(fields: [surahId], references: [id], onDelete: Restrict)
-
-  @@index([tanggal])
-}
-
-model Surah {
-  id         Int       @id @default(autoincrement())
-  nama       String    @unique
-  jumlahAyat Int
-
-  setoran    Setoran[]
 }

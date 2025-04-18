@@ -6,7 +6,7 @@ import { AddGroupForm } from '@/components/group/add-group-form';
 
 interface Group {
   id: string;
-  nama: string;
+  namaKelompok: string;
   kelas: {
     namaKelas: string;
     tahunAjaran: string;

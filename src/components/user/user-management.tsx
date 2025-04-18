@@ -33,13 +33,13 @@ export function UserManagement() {
           users={users}
           title="Daftar Guru"
           role="teacher"
-          fetchUsers={fetchUsers}
+          onRefresh={fetchUsers}
         />
         <UserTable
           users={users}
           title="Daftar Siswa"
           role="student"
-          fetchUsers={fetchUsers}
+          onRefresh={fetchUsers}
         />
       </div>
     </div>

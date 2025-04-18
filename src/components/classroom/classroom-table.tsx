@@ -4,8 +4,11 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
+  ColumnFiltersState,
+  SortingState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -38,30 +41,35 @@ interface Kelas {
   tahunAjaran: string;
 }
 
-interface KelasTableTanstackProps {
+interface Props {
   data: Kelas[];
   onRefresh: () => void;
 }
 
-export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
+export function ClassroomTable({ data, onRefresh }: Props) {
   const router = useRouter();
-  const [globalFilter, setGlobalFilter] = React.useState('');
   const [selectedKelas, setSelectedKelas] = React.useState<Kelas | null>(null);
   const [dialogType, setDialogType] = React.useState<'edit' | 'delete' | null>(
     null
   );
 
-  const filteredKelas = React.useMemo(() => {
-    return data.filter((kelas) =>
-      kelas.namaKelas.toLowerCase().includes(globalFilter.toLowerCase())
-    );
-  }, [data, globalFilter]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
 
   const columns = React.useMemo<ColumnDef<Kelas>[]>(
     () => [
       {
         accessorKey: 'namaKelas',
-        header: 'Nama Kelas',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Nama Kelas <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => <span>{row.getValue('namaKelas')}</span>,
       },
       {
@@ -161,11 +169,18 @@ export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
   );
 
   const table = useReactTable({
-    data: filteredKelas,
+    data,
     columns,
+    state: {
+      sorting,
+      columnFilters,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -176,16 +191,21 @@ export function ClassroomTable({ data, onRefresh }: KelasTableTanstackProps) {
       <CardContent>
         <div className="py-2">
           <Input
-            placeholder="Cari kelas..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Cari nama kelas..."
+            value={
+              (table.getColumn('namaKelas')?.getFilterValue() as string) ?? ''
+            }
+            onChange={(e) =>
+              table.getColumn('namaKelas')?.setFilterValue(e.target.value)
+            }
             className="w-full md:w-1/2"
           />
         </div>
         <div className="rounded-md border">
           <Table>
             <TableCaption>
-              Daftar Kelas dalam sistem. Total: {filteredKelas.length}
+              Daftar Kelas dalam sistem. Total:{' '}
+              {table.getRowModel().rows.length}
             </TableCaption>
 
             <TableHeader>

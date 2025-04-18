@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Pastikan namaKelas dan tahunAjaran bersifat unik
+    // Pastikan nama dan tahunAjaran bersifat unik
     const existingClass = await prisma.kelas.findFirst({
       where: { namaKelas, tahunAjaran },
     });

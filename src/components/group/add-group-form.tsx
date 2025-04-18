@@ -12,21 +12,21 @@ interface Props {
 }
 
 export function AddGroupForm({ onGroupAdded }: Props) {
-  const [nama, setNama] = useState('');
+  const [namaKelompok, setNamaKelompok] = useState('');
   const [namaKelas, setNamaKelas] = useState('');
   const [tahunAjaran, setTahunAjaran] = useState('');
   const [nip, setNip] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleAddGroup() {
-    if (!nama || !namaKelas || !tahunAjaran || !nip) {
+    if (!namaKelompok || !namaKelas || !tahunAjaran || !nip) {
       toast.warning('Semua field wajib diisi');
       return;
     }
 
     setLoading(true);
 
-    const newGroup = { nama, namaKelas, tahunAjaran, nip };
+    const newGroup = { namaKelompok, namaKelas, tahunAjaran, nip };
 
     try {
       const res = await fetch('/api/group', {
@@ -39,7 +39,7 @@ export function AddGroupForm({ onGroupAdded }: Props) {
 
       if (data.success) {
         toast.success(data.message || 'Kelompok berhasil ditambahkan');
-        setNama('');
+        setNamaKelompok('');
         setNamaKelas('');
         setTahunAjaran('');
         setNip('');
@@ -64,8 +64,8 @@ export function AddGroupForm({ onGroupAdded }: Props) {
       <CardContent className="space-y-4">
         <Input
           placeholder="Nama Kelompok"
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
+          value={namaKelompok}
+          onChange={(e) => setNamaKelompok(e.target.value)}
         />
         <Input
           placeholder="Nama Kelas"

@@ -67,15 +67,15 @@ async function main() {
   // Create Class
   const kelas = await prisma.kelas.upsert({
     where: {
-      namaKelas_tahunAjaran: {
-        namaKelas: 'Kelas 1A',
+      nama_tahunAjaran: {
+        nama: 'Kelas 1A',
         tahunAjaran: '2024/2025',
       },
     }, // Sesuai dengan unique constraint
     update: {},
     create: {
       id: kelasId,
-      namaKelas: 'Kelas 1A',
+      nama: 'Kelas 1A',
       tahunAjaran: '2024/2025',
     },
   });

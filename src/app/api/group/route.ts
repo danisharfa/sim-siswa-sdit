@@ -43,9 +43,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { nama, namaKelas, tahunAjaran, nip } = body;
+    const { namaKelompok, namaKelas, tahunAjaran, nip } = body;
 
-    if (!nama || !namaKelas || !tahunAjaran || !nip) {
+    if (!namaKelompok || !namaKelas || !tahunAjaran || !nip) {
       return NextResponse.json(
         { success: false, message: 'Semua field wajib diisi' },
         { status: 400 }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     const existingGroup = await prisma.kelompok.findFirst({
       where: {
-        nama,
+        namaKelompok,
         kelasId: kelas.id,
         tahunAjaran,
       },
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     const newGroup = await prisma.kelompok.create({
       data: {
         id: kelompokId,
-        nama,
+        namaKelompok,
         kelasId: kelas.id,
         tahunAjaran,
       },

@@ -22,10 +22,10 @@ export default async function GroupDetailPage(props: {
         </Button>
       </Link>
       <h1 className="text-2xl font-bold mb-4">
-        Kelas {kelompok.nama} - {kelompok.kelasId}
+        {kelompok.namaKelompok} - Kelas {kelompok.kelas.namaKelas} -{' '}
+        {kelompok.kelas.tahunAjaran}
       </h1>
 
-      {/* <ClassroomDetailsManagement kelasId={id} /> */}
       {/* <GroupDetailManagement kelompok={id} /> */}
     </div>
   );

@@ -15,6 +15,9 @@ export async function getGroupById(id: string) {
   try {
     return await prisma.kelompok.findUnique({
       where: { id },
+      include: {
+        kelas: true,
+      },
     });
   } catch (error) {
     console.error('Error fetching group data:', error);

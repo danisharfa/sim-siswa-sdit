@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 interface GroupEditDialogProps {
-  kelompok: { id: string; nama: string };
+  kelompok: { id: string; namaKelompok: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
@@ -26,11 +26,11 @@ export function GroupEditDialog({
   onOpenChange,
   onSave,
 }: GroupEditDialogProps) {
-  const [nama, setNama] = React.useState(kelompok.nama);
+  const [namaKelompok, setNamaKelompok] = React.useState(kelompok.namaKelompok);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    setNama(kelompok.nama);
+    setNamaKelompok(kelompok.namaKelompok);
   }, [kelompok]);
 
   async function handleSave() {
@@ -39,7 +39,7 @@ export function GroupEditDialog({
       const res = await fetch(`/api/group/${kelompok.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama }),
+        body: JSON.stringify({ namaKelompok }),
       });
 
       if (res.ok) {
@@ -64,11 +64,11 @@ export function GroupEditDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="nama">Nama Kelompok</Label>
+            <Label htmlFor="namaKelompok">Nama Kelompok</Label>
             <Input
-              id="nama"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
+              id="namaKelompok"
+              value={namaKelompok}
+              onChange={(e) => setNamaKelompok(e.target.value)}
             />
           </div>
         </div>
