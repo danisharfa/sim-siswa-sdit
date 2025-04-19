@@ -59,6 +59,16 @@ export function ClassroomTable({ data, onRefresh }: Props) {
     []
   );
 
+  const handleOpenEditDialog = (kelas: Kelas) => {
+    setSelectedKelas(kelas);
+    setDialogType('edit');
+  };
+
+  const handleOpenDeleteDialog = (kelas: Kelas) => {
+    setSelectedKelas(kelas);
+    setDialogType('delete');
+  };
+
   const columns = React.useMemo<ColumnDef<Kelas>[]>(
     () => [
       {
@@ -102,82 +112,36 @@ export function ClassroomTable({ data, onRefresh }: Props) {
         cell: ({ row }) => {
           const kelas = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVertical />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/admin/classroom/${kelas.id}`)
-                    }
-                  >
-                    Detail
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setSelectedKelas(kelas);
-                      setDialogType('edit');
-                    }}
-                  >
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setSelectedKelas(kelas);
-                      setDialogType('delete');
-                    }}
-                    className="text-destructive"
-                  >
-                    Hapus
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {dialogType === 'edit' && selectedKelas && (
-                <ClassroomEditDialog
-                  kelas={selectedKelas}
-                  open={true}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
-                      setSelectedKelas(null);
-                    }
-                  }}
-                  onSave={() => {
-                    onRefresh();
-                    setDialogType(null);
-                    setSelectedKelas(null);
-                  }}
-                />
-              )}
-
-              {dialogType === 'delete' && selectedKelas && (
-                <ClassroomAlertDialog
-                  kelas={selectedKelas}
-                  open={true}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
-                      setSelectedKelas(null);
-                    }
-                  }}
-                  onConfirm={() => {
-                    onRefresh();
-                    setDialogType(null);
-                    setSelectedKelas(null);
-                  }}
-                />
-              )}
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex size-8">
+                  <MoreVertical />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32 z-50">
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(`/dashboard/admin/classroom/${kelas.id}`)
+                  }
+                >
+                  Detail
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleOpenEditDialog(kelas)}>
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleOpenDeleteDialog(kelas)}
+                  className="text-destructive"
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
     ],
-    [onRefresh, selectedKelas, dialogType, router]
+    [router]
   );
 
   const table = useReactTable({
@@ -196,67 +160,104 @@ export function ClassroomTable({ data, onRefresh }: Props) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">Daftar Kelas</h2>
-      </CardHeader>
-      <CardContent>
-        <div className="py-2">
-          <Input
-            placeholder="Cari nama kelas..."
-            value={
-              (table.getColumn('namaKelas')?.getFilterValue() as string) ?? ''
-            }
-            onChange={(e) =>
-              table.getColumn('namaKelas')?.setFilterValue(e.target.value)
-            }
-            className="w-full md:w-1/2"
-          />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableCaption>Daftar Kelas dalam sistem.</TableCaption>
-
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+    <>
+      <Card>
+        <CardHeader>
+          <h2 className="text-xl font-semibold">Daftar Kelas</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="py-2">
+            <Input
+              placeholder="Cari nama kelas..."
+              value={
+                (table.getColumn('namaKelas')?.getFilterValue() as string) ?? ''
+              }
+              onChange={(e) =>
+                table.getColumn('namaKelas')?.setFilterValue(e.target.value)
+              }
+              className="w-full md:w-1/2"
+            />
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableCaption>Daftar Kelas dalam sistem.</TableCaption>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
                         {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
+                          header.column.columnDef.header,
+                          header.getContext()
                         )}
-                      </TableCell>
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center">
-                    Tidak ada kelas tersedia.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <DataTablePagination table={table} />
-      </CardContent>
-    </Card>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center">
+                      Tidak ada kelas tersedia.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <DataTablePagination table={table} />
+        </CardContent>
+      </Card>
+
+      {dialogType === 'edit' && selectedKelas && (
+        <ClassroomEditDialog
+          kelas={selectedKelas}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedKelas(null);
+            }
+          }}
+          onSave={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedKelas(null);
+          }}
+        />
+      )}
+
+      {dialogType === 'delete' && selectedKelas && (
+        <ClassroomAlertDialog
+          kelas={selectedKelas}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedKelas(null);
+            }
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedKelas(null);
+          }}
+        />
+      )}
+    </>
   );
 }

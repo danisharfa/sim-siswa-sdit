@@ -10,11 +10,13 @@ export default async function AdminDashboard() {
     return redirect('/login');
   }
 
-  const [totalStudents, totalTeachers, totalClassroom] = await Promise.all([
-    prisma.user.count({ where: { role: 'student' } }),
-    prisma.user.count({ where: { role: 'teacher' } }),
-    prisma.kelas.count(),
-  ]);
+  const [totalStudents, totalTeachers, totalClassrooms, totalGroups] =
+    await Promise.all([
+      prisma.user.count({ where: { role: 'student' } }),
+      prisma.user.count({ where: { role: 'teacher' } }),
+      prisma.kelas.count(),
+      prisma.kelompok.count(), // Placeholder for total groups
+    ]);
 
   return (
     <div className="p-6 space-y-4">
@@ -26,7 +28,8 @@ export default async function AdminDashboard() {
       <DashboardStats
         totalStudents={totalStudents}
         totalTeachers={totalTeachers}
-        totalClassroom={totalClassroom}
+        totalClassrooms={totalClassrooms}
+        totalGroups={totalGroups} // Placeholder for total groups
       />
     </div>
   );

@@ -49,11 +49,10 @@ interface User {
 interface Props {
   users: User[];
   title: string;
-  role: 'teacher' | 'student';
   onRefresh: () => void;
 }
 
-export function UserTable({ users, title, role, onRefresh }: Props) {
+export function UserTable({ users, title, onRefresh }: Props) {
   const router = useRouter();
 
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
@@ -154,72 +153,16 @@ export function UserTable({ users, title, role, onRefresh }: Props) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {dialogType === 'edit' && selectedUser && (
-                <UserEditDialog
-                  user={selectedUser}
-                  open={true}
-                  onOpenChange={(open) => {
-                    if (!open) {
-                      setSelectedUser(null);
-                      setDialogType(null);
-                    }
-                  }}
-                  onSave={() => {
-                    onRefresh();
-                    setSelectedUser(null);
-                    setDialogType(null);
-                  }}
-                />
-              )}
-
-              {dialogType === 'reset' && selectedUser && (
-                <UserAlertDialog
-                  user={selectedUser}
-                  type="reset"
-                  open={true}
-                  onOpenChange={(open) => {
-                    if (!open) {
-                      setSelectedUser(null);
-                      setDialogType(null);
-                    }
-                  }}
-                  onConfirm={() => {
-                    onRefresh();
-                    setSelectedUser(null);
-                    setDialogType(null);
-                  }}
-                />
-              )}
-
-              {dialogType === 'delete' && selectedUser && (
-                <UserAlertDialog
-                  user={selectedUser}
-                  type="delete"
-                  open={true}
-                  onOpenChange={(open) => {
-                    if (!open) {
-                      setSelectedUser(null);
-                      setDialogType(null);
-                    }
-                  }}
-                  onConfirm={() => {
-                    onRefresh();
-                    setSelectedUser(null);
-                    setDialogType(null);
-                  }}
-                />
-              )}
             </>
           );
         },
       },
     ],
-    [onRefresh, dialogType, selectedUser, router]
+    [router]
   );
 
   const table = useReactTable({
-    data: users.filter((user) => user.role === role),
+    data: users,
     columns,
     state: {
       sorting,
@@ -234,68 +177,123 @@ export function UserTable({ users, title, role, onRefresh }: Props) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">{title}</h2>
-      </CardHeader>
-      <CardContent>
-        <div className="py-2">
-          <Input
-            placeholder="Filter username..."
-            value={
-              (table.getColumn('username')?.getFilterValue() as string) ?? ''
-            }
-            onChange={(event) =>
-              table.getColumn('username')?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableCaption>
-              Daftar {role === 'teacher' ? 'guru' : 'siswa'} dalam sistem.
-            </TableCaption>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+    <>
+      <Card>
+        <CardHeader>
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="py-2">
+            <Input
+              placeholder="Filter username..."
+              value={
+                (table.getColumn('username')?.getFilterValue() as string) ?? ''
+              }
+              onChange={(event) =>
+                table.getColumn('username')?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableCaption>Daftar {title} dalam sistem.</TableCaption>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
                         {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
+                          header.column.columnDef.header,
+                          header.getContext()
                         )}
-                      </TableCell>
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center">
-                    Tidak ada hasil.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <DataTablePagination table={table} />
-      </CardContent>
-    </Card>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center">
+                      Tidak ada hasil.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <DataTablePagination table={table} />
+        </CardContent>
+      </Card>
+      {dialogType === 'edit' && selectedUser && (
+        <UserEditDialog
+          user={selectedUser}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedUser(null);
+              setDialogType(null);
+            }
+          }}
+          onSave={() => {
+            onRefresh();
+            setSelectedUser(null);
+            setDialogType(null);
+          }}
+        />
+      )}
+
+      {dialogType === 'reset' && selectedUser && (
+        <UserAlertDialog
+          user={selectedUser}
+          type="reset"
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedUser(null);
+              setDialogType(null);
+            }
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setSelectedUser(null);
+            setDialogType(null);
+          }}
+        />
+      )}
+
+      {dialogType === 'delete' && selectedUser && (
+        <UserAlertDialog
+          user={selectedUser}
+          type="delete"
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedUser(null);
+              setDialogType(null);
+            }
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setSelectedUser(null);
+            setDialogType(null);
+          }}
+        />
+      )}
+    </>
   );
 }

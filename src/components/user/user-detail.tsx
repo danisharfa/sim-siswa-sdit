@@ -25,7 +25,6 @@ type UpdatedUserProfile = {
   tempatLahir?: string;
   jenisKelamin?: string;
   golonganDarah?: string;
-  agama?: string;
   alamat?: string;
   noTelp?: string;
   email?: string;
@@ -41,7 +40,6 @@ type User = {
     tempatLahir?: string;
     jenisKelamin?: string;
     golonganDarah?: string;
-    agama?: string;
     alamat?: string;
     noTelp?: string;
     email?: string;
@@ -74,7 +72,6 @@ export function UserDetail({ userId }: { userId: string }) {
           tempatLahir: profile?.tempatLahir || '',
           jenisKelamin: profile?.jenisKelamin || '',
           golonganDarah: profile?.golonganDarah || '',
-          agama: profile?.agama || '',
           alamat: profile?.alamat || '',
           noTelp: profile?.noTelp || '',
           email: profile?.email || '',
@@ -219,16 +216,6 @@ export function UserDetail({ userId }: { userId: string }) {
                   <SelectItem value="O">O</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Agama */}
-            <div>
-              <Label htmlFor="agama">Agama</Label>
-              <Input
-                id="agama"
-                value={updatedData.agama}
-                onChange={(e) => handleChange('agama', e.target.value)}
-              />
             </div>
 
             {/* Alamat */}

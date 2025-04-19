@@ -25,20 +25,21 @@ export function UserManagement() {
     fetchUsers();
   }, []);
 
+  const teachers = users.filter((user) => user.role === 'teacher');
+  const students = users.filter((user) => user.role === 'student');
+
   return (
     <div className="space-y-6">
       <AddUserForm onUserAdded={fetchUsers} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <UserTable
-          users={users}
+          users={teachers}
           title="Daftar Guru"
-          role="teacher"
           onRefresh={fetchUsers}
         />
         <UserTable
-          users={users}
+          users={students}
           title="Daftar Siswa"
-          role="student"
           onRefresh={fetchUsers}
         />
       </div>
