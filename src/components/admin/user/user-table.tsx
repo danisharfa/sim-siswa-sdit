@@ -34,9 +34,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { UserEditDialog } from '@/components/user/user-edit-dialog';
-import { UserAlertDialog } from '@/components/user/user-alert-dialog';
-import { DataTablePagination } from '../ui/table-pagination';
+import { UserEditDialog } from '@/components/admin/user/user-edit-dialog';
+import { UserAlertDialog } from '@/components/admin/user/user-alert-dialog';
+import { DataTablePagination } from '../../ui/table-pagination';
 
 interface User {
   id: string;

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ClassroomTable } from '@/components/classroom/classroom-table';
-import { AddClassroomForm } from '@/components/classroom/add-classroom-form';
+import { ClassroomTable } from '@/components/admin/classroom/classroom-table';
+import { AddClassroomForm } from '@/components/admin/classroom/add-classroom-form';
 
 interface Kelas {
   id: string;

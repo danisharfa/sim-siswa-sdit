@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { DatePicker } from '../ui/date-picker';
+import { DatePicker } from '../../ui/date-picker';
 
 type UpdatedUserProfile = {
   namaLengkap?: string;

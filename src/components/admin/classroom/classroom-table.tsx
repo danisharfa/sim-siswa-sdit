@@ -32,9 +32,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { ClassroomEditDialog } from '@/components/classroom/classroom-edit-dialog';
-import { ClassroomAlertDialog } from '@/components/classroom/classroom-alert-dialog';
-import { DataTablePagination } from '../ui/table-pagination';
+import { ClassroomEditDialog } from '@/components/admin/classroom/classroom-edit-dialog';
+import { ClassroomAlertDialog } from '@/components/admin/classroom/classroom-alert-dialog';
+import { DataTablePagination } from '../../ui/table-pagination';
 
 interface Kelas {
   id: string;

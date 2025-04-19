@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { UserDetail } from '@/components/user/user-detail';
+import { UserDetail } from '@/components/admin/user/user-detail';
 import { getUserDetail } from '@/lib/data';
 
 type Params = Promise<{ id: string }>;

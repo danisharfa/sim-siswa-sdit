@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AddMemberForm } from '@/components/classroom-members/add-member-form';
-import { ClassroomMembersTable } from '@/components/classroom-members/classroom-members-table';
+import { AddMemberForm } from '@/components/admin/classroom-members/add-member-form';
+import { ClassroomMembersTable } from '@/components/admin/classroom-members/classroom-members-table';
 
 interface Kelompok {
   id: string;

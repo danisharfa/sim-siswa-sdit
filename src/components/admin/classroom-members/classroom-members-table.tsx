@@ -31,8 +31,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MemberAlertDialog } from '@/components/classroom-members/member-alert-dialog'; // Ganti path sesuai struktur proyekmu
-import { DataTablePagination } from '../ui/table-pagination';
+import { MemberAlertDialog } from '@/components/admin/classroom-members/member-alert-dialog'; // Ganti path sesuai struktur proyekmu
+import { DataTablePagination } from '../../ui/table-pagination';
 
 interface Siswa {
   id: string;

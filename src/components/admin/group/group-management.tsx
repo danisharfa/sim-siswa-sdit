@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { GroupTable } from '@/components/group/group-table';
-import { AddGroupForm } from '@/components/group/add-group-form';
+import { GroupTable } from '@/components/admin/group/group-table';
+import { AddGroupForm } from '@/components/admin/group/add-group-form';
 
 interface Group {
   id: string;

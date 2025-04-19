@@ -2,7 +2,7 @@
 
 import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import TeacherProfileDetail from './TeacherProfileDetail';
+import TeacherProfileDetail from '@/components/teacher/profile/detail';
 
 export default async function StudentProfilePage() {
   const user = await getUser();

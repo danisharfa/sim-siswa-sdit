@@ -1,6 +1,6 @@
 // dashboard/student/profile/page.tsx
 
-import StudentProfileDetail from './StudentProfileDetail';
+import StudentProfileDetail from '@/components/student/profile/detail';
 import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AddUserForm } from '@/components/user/add-user-form';
-import { UserTable } from '@/components/user/user-table';
+import { AddUserForm } from '@/components/admin/user/add-user-form';
+import { UserTable } from '@/components/admin/user/user-table';
 
 interface User {
   id: string;

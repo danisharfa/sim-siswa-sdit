@@ -1,4 +1,4 @@
-import { ClassroomDetailsManagement } from '@/components/classroom-members/classroom-members-management';
+import { ClassroomDetailsManagement } from '@/components/admin/classroom-members/classroom-members-management';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
