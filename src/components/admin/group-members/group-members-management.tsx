@@ -1,21 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AddMemberForm } from '@/components/admin/classroom-members/add-member-form';
-import { ClassroomMembersTable } from '@/components/admin/classroom-members/classroom-members-table';
+import { AddMemberForm } from '@/components/admin/group-members/add-member-form';
+import { GroupMembersTable } from '@/components/admin/group-members/group-members-table';
 
-interface Kelompok {
+interface Siswa {
   id: string;
-  namaKelompok: string;
-  kelasId: string;
+  nis: string;
+  namaLengkap: string;
 }
 
-export function ClassroomDetailsManagement({ id }: { id: string }) {
-  const [kelompok, setKelompok] = useState<Kelompok[]>([]);
+export function GroupDetailsManagement({ groupId }: { groupId: string }) {
+  const [siswa, setSiswa] = useState<Siswa[]>([]);
 
   const fetchMembers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/group/${id}/members`);
+      const res = await fetch(`/api/group/${groupId}/member`);
       const students = await res.json();
 
       interface Student {
@@ -34,9 +34,9 @@ export function ClassroomDetailsManagement({ id }: { id: string }) {
 
       setSiswa(parsedStudents);
     } catch (error) {
-      console.error('Gagal mengambil data siswa:', error);
+      console.error('Gagal mengambil data siswa kelompok:', error);
     }
-  }, [kelasId]);
+  }, [groupId]);
 
   useEffect(() => {
     fetchMembers();
@@ -44,12 +44,12 @@ export function ClassroomDetailsManagement({ id }: { id: string }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-      <AddMemberForm kelasId={kelasId} onMemberAdded={fetchMembers} />
-      <ClassroomMembersTable
+      <AddMemberForm groupId={groupId} onMemberAdded={fetchMembers} />
+      <GroupMembersTable
         siswa={siswa}
-        title="Daftar Siswa"
-        kelasId={kelasId}
-        fetchMembers={fetchMembers}
+        title="Daftar Anggota Kelompok"
+        groupId={groupId}
+        onRefresh={fetchMembers}
       />
     </div>
   );

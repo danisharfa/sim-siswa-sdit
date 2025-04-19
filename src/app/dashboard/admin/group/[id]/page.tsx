@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { getGroupById } from '@/lib/data';
 import { notFound } from 'next/navigation';
+import { GroupDetailsManagement } from '@/components/admin/group-members/group-members-management';
 
 export default async function GroupDetailPage(props: {
   params: Promise<{ id: string }>;
@@ -26,7 +27,7 @@ export default async function GroupDetailPage(props: {
         {kelompok.kelas.tahunAjaran}
       </h1>
 
-      {/* <GroupDetailManagement kelompok={id} /> */}
+      <GroupDetailsManagement groupId={id} />
     </div>
   );
 }
