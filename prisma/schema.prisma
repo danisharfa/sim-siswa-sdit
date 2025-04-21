@@ -142,7 +142,7 @@ model Setoran {
   id           String        @id @unique
   siswaId      String
   guruId       String
-  kelompokId    String?
+  kelompokId   String?
   tanggal      DateTime
   jenisSetoran JenisSetoran
   surahId      Int
