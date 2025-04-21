@@ -10,23 +10,31 @@ interface Siswa {
   namaLengkap: string;
 }
 
+interface MemberApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    nis: string;
+    user: {
+      namaLengkap: string | null;
+    } | null;
+  }[];
+}
+
 export function GroupDetailsManagement({ groupId }: { groupId: string }) {
   const [siswa, setSiswa] = useState<Siswa[]>([]);
 
   const fetchMembers = useCallback(async () => {
     try {
       const res = await fetch(`/api/group/${groupId}/member`);
-      const students = await res.json();
+      const resJson: MemberApiResponse = await res.json();
 
-      interface Student {
-        id: string;
-        nis: string;
-        user?: {
-          namaLengkap?: string;
-        };
+      if (!resJson.success) {
+        throw new Error(resJson.message || 'Gagal mengambil data');
       }
 
-      const parsedStudents = students.map((s: Student) => ({
+      const parsedStudents: Siswa[] = resJson.data.map((s) => ({
         id: s.id,
         nis: s.nis,
         namaLengkap: s.user?.namaLengkap || 'Tidak diketahui',

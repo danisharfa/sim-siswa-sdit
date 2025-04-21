@@ -8,7 +8,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
   const id = params.id;
 
   if (!id) {
-    return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    return NextResponse.json(
+      { success: false, message: 'id is required' },
+      { status: 400 }
+    );
   }
 
   try {
@@ -17,10 +20,15 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       include: { user: true },
     });
 
-    return NextResponse.json(members);
-  } catch {
+    return NextResponse.json({
+      success: true,
+      message: 'Data anggota kelompok berhasil diambil',
+      data: members,
+    });
+  } catch (error) {
+    console.error('Error get members:', error);
     return NextResponse.json(
-      { error: 'Gagal mengambil data anggota kelompok' },
+      { success: false, error: 'Gagal mengambil data anggota kelompok' },
       { status: 500 }
     );
   }
@@ -34,7 +42,7 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
 
     if (!nis || !id) {
       return NextResponse.json(
-        { error: 'NIS dan id wajib diisi' },
+        { success: false, message: 'NIS dan id wajib diisi' },
         { status: 400 }
       );
     }
@@ -43,14 +51,14 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
 
     if (!siswa) {
       return NextResponse.json(
-        { error: 'Siswa tidak ditemukan' },
+        { success: false, message: 'Siswa tidak ditemukan' },
         { status: 404 }
       );
     }
     const kelompok = await prisma.kelompok.findUnique({ where: { id } });
     if (!kelompok) {
       return NextResponse.json(
-        { error: 'Kelompok tidak ditemukan' },
+        { success: false, message: 'Kelompok tidak ditemukan' },
         { status: 404 }
       );
     }
@@ -59,7 +67,8 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     if (siswa.kelasId !== kelompok.kelasId) {
       return NextResponse.json(
         {
-          error:
+          success: false,
+          message:
             'Siswa harus berada di kelas yang sama dengan kelas kelompok ini',
         },
         { status: 400 }
@@ -69,7 +78,7 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     // Cek apakah siswa sudah tergabung dalam kelompok yang sama
     if (siswa.kelompokId === id) {
       return NextResponse.json(
-        { error: 'Siswa sudah tergabung dalam kelompok ini' },
+        { success: false, message: 'Siswa sudah tergabung dalam kelompok ini' },
         { status: 409 }
       );
     }
@@ -81,6 +90,7 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     });
 
     return NextResponse.json({
+      success: true,
       message: 'Siswa berhasil ditambahkan ke kelompok',
     });
   } catch (error) {
@@ -103,7 +113,7 @@ export async function DELETE(
 
     if (!id || !nis) {
       return NextResponse.json(
-        { error: 'ID dan NIS wajib diisi' },
+        { success: false, message: 'ID dan NIS wajib diisi' },
         { status: 400 }
       );
     }
@@ -112,7 +122,7 @@ export async function DELETE(
 
     if (!siswa || siswa.kelompokId !== id) {
       return NextResponse.json(
-        { error: 'Siswa tidak ditemukan di kelompok ini' },
+        { success: false, message: 'Siswa tidak ditemukan di kelompok ini' },
         { status: 404 }
       );
     }
@@ -123,12 +133,13 @@ export async function DELETE(
     });
 
     return NextResponse.json({
+      success: true,
       message: 'Siswa berhasil dikeluarkan dari kelompok',
     });
   } catch (error) {
     console.error('Error removing member:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { success: false, error: 'Internal Server Error' },
       { status: 500 }
     );
   }

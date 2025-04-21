@@ -30,16 +30,15 @@ export function AddMemberForm({ groupId, onMemberAdded }: Props) {
         body: JSON.stringify({ nis }),
       });
 
-      const result = await res.json();
-
-      if (res.ok) {
+      const resData = await res.json();
+      if (resData.success) {
         toast.success(
-          result.message || 'Siswa berhasil ditambahkan ke kelompok!'
+          resData.message || 'Siswa berhasil ditambahkan ke kelompok!'
         );
         setNis('');
         onMemberAdded();
       } else {
-        toast.error(result.error || 'Gagal menambahkan siswa ke kelompok');
+        toast.message(resData.message || 'Gagal menambahkan siswa ke kelompok');
       }
     } catch {
       toast.error('Terjadi kesalahan, coba lagi.');

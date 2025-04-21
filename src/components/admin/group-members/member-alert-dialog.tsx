@@ -45,9 +45,9 @@ export function MemberAlertDialog({
 
       const data = await res.json();
 
-      if (!res.ok) {
+      if (!data.success) {
         throw new Error(
-          data?.error || 'Terjadi kesalahan saat menghapus anggota.'
+          data?.message || 'Terjadi kesalahan saat menghapus anggota.'
         );
       }
 
@@ -56,6 +56,7 @@ export function MemberAlertDialog({
       onOpenChange(false);
     } catch (error) {
       console.error(error);
+
       const message = getErrorMessage(error);
       toast.error(message || 'Terjadi kesalahan jaringan.');
     } finally {

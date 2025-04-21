@@ -1,10 +1,8 @@
-// dashboard/student/profile/page.tsx
-
 import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import TeacherProfileDetail from '@/components/teacher/profile/detail';
 
-export default async function StudentProfilePage() {
+export default async function TeacherProfilePage() {
   const user = await getUser();
 
   if (!user || user.role !== 'teacher') {

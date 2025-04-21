@@ -142,13 +142,13 @@ model Setoran {
   id           String        @id @unique
   siswaId      String
   guruId       String
-  kelompokId   String?
+  kelompokId   String
   tanggal      DateTime
   jenisSetoran JenisSetoran
   surahId      Int
   ayatMulai    Int
   ayatSelesai  Int
-  adab         String?
+  adab         Adab
   status       StatusSetoran
   catatan      String?
 
@@ -158,7 +158,7 @@ model Setoran {
   surah        Surah         @relation(fields: [surahId], references: [id])
   siswa        SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
   guru         GuruProfile   @relation(fields: [guruId], references: [id])
-  kelompok    Kelompok?      @relation(fields: [kelompokId], references: [id])
+  kelompok     Kelompok      @relation(fields: [kelompokId], references: [id])
 
   @@index([tanggal])
 }
@@ -211,4 +211,10 @@ enum StatusSetoran {
 enum JenisSetoran {
   TAHFIDZ
   TAHSIN
+}
+
+enum Adab{
+  BAIK
+  KURANG_BAIK
+  TIDAK_BAIK
 }
