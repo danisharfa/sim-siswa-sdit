@@ -9,13 +9,19 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 
-export function NavMain({
-  items = [],
-}: {
-  items?: { title: string; url: string; icon?: LucideIcon }[];
-}) {
+type NavItem = {
+  title: string;
+  url?: string;
+  icon?: LucideIcon;
+  children?: { title: string; url: string }[];
+};
+
+export function NavMain({ items = [] }: { items?: NavItem[] }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -23,15 +29,35 @@ export function NavMain({
           {items.length > 0 ? (
             items.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <Link href={item.url} passHref>
-                  <SidebarMenuButton
-                    tooltip={item.title}
-                    className="flex items-center gap-2"
-                  >
-                    {item.icon && <item.icon className="size-10" />}
-                    <span className="truncate">{item.title}</span>
+                {item.children && item.children.length > 0 ? (
+                  <>
+                    <SidebarMenuButton className="flex items-center gap-2">
+                      {item.icon && <item.icon className="size-5" />}
+                      <span className="truncate">{item.title}</span>
+                    </SidebarMenuButton>
+                    <SidebarMenuSub>
+                      {item.children.map((child) => (
+                        <SidebarMenuSubItem key={child.title}>
+                          <SidebarMenuSubButton asChild>
+                            <Link href={child.url} className="truncate">
+                              {child.title}
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </>
+                ) : (
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <Link
+                      href={item.url ?? '#'}
+                      className="flex items-center gap-2"
+                    >
+                      {item.icon && <item.icon className="size-5" />}
+                      <span className="truncate">{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
-                </Link>
+                )}
               </SidebarMenuItem>
             ))
           ) : (

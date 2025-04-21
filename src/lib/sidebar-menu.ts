@@ -1,5 +1,6 @@
 import {
   Group,
+  GroupIcon,
   LayoutDashboardIcon,
   MonitorCogIcon,
   School,
@@ -47,19 +48,24 @@ export const menuData = {
       icon: User2Icon,
     },
     {
-      title: 'Data Siswa Bimbingan',
-      url: '/dashboard/teacher/students',
-      icon: UsersRoundIcon,
-    },
-    {
-      title: 'Kelas',
-      url: '/dashboard/teacher/classroom',
-      icon: School,
+      title: 'Kelompok Bimbingan',
+      url: '/dashboard/teacher/group',
+      icon: GroupIcon,
     },
     {
       title: 'Setoran Hafalan',
       url: '/dashboard/teacher/submission',
       icon: MonitorCogIcon,
+      children: [
+        {
+          title: 'Input Setoran',
+          url: '/dashboard/teacher/submission/input',
+        },
+        {
+          title: 'Riwayat Setoran',
+          url: '/dashboard/teacher/submission/history',
+        },
+      ],
     },
   ],
   student: [

@@ -121,6 +121,7 @@ model Kelompok {
   guruKelompok    GuruKelompok[]
   kelas           Kelas             @relation(fields: [kelasId], references: [id], onDelete: Cascade)
   siswaProfiles   SiswaProfile[]
+  setoran         Setoran[]
 
   @@unique([namaKelompok, kelasId, tahunAjaran])
 }
@@ -141,6 +142,7 @@ model Setoran {
   id           String        @id @unique
   siswaId      String
   guruId       String
+  kelompokId    String?
   tanggal      DateTime
   jenisSetoran JenisSetoran
   surahId      Int
@@ -156,6 +158,7 @@ model Setoran {
   surah        Surah         @relation(fields: [surahId], references: [id])
   siswa        SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
   guru         GuruProfile   @relation(fields: [guruId], references: [id])
+  kelompok    Kelompok?      @relation(fields: [kelompokId], references: [id])
 
   @@index([tanggal])
 }
