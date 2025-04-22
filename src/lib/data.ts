@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getUser } from '@/lib/auth';
 
 export async function getClassroomById(id: string) {
   try {
@@ -58,4 +59,36 @@ export async function getUserDetail(userId: string) {
   }
 
   return null;
+}
+
+export async function getGroupByIdForTeacher(id: string) {
+  try {
+    const user = await getUser();
+    if (!user) return null;
+
+    const guru = await prisma.guruProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!guru) return null;
+
+    const group = await prisma.kelompok.findFirst({
+      where: {
+        id,
+        guruKelompok: {
+          some: {
+            guruId: guru.id,
+          },
+        },
+      },
+      include: {
+        kelas: true,
+      },
+    });
+
+    return group;
+  } catch (error) {
+    console.error('Error fetching teacher group:', error);
+    return null;
+  }
 }

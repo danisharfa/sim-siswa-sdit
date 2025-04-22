@@ -9,15 +9,25 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
   if (!id) {
     return NextResponse.json(
-      { success: false, message: 'id is required' },
+      { success: false, message: 'Group Id is required' },
       { status: 400 }
     );
   }
 
   try {
     const members = await prisma.siswaProfile.findMany({
-      where: { kelompokId: id },
-      include: { user: true },
+      where: {
+        kelompokId: id,
+      },
+      select: {
+        id: true,
+        nis: true,
+        user: {
+          select: {
+            namaLengkap: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json({
