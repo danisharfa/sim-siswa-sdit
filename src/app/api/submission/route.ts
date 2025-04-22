@@ -1,16 +1,102 @@
-import { NextResponse } from 'next/server';
-import { getUser } from '@/lib/auth'; // Assumed to get the logged-in user
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getUser } from '@/lib/auth';
 
-export async function POST(req: Request) {
+export async function GET() {
   try {
     // Get the current user
     const user = await getUser();
 
-    // Ensure the user is authenticated and has the 'teacher' role
     if (!user || user.role !== 'teacher') {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Retrieve the teacher profile
+    const guru = await prisma.guruProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!guru) {
+      return NextResponse.json(
+        { success: false, message: 'Profil guru tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    // Ambil semua kelompok yang dibimbing oleh guru
+    const kelompokBinaan = await prisma.guruKelompok.findMany({
+      where: { guruId: guru.id },
+      select: { kelompokId: true },
+    });
+
+    const kelompokIds = kelompokBinaan.map((item) => item.kelompokId);
+
+    // Ambil data setoran dari kelompok yang dibimbing guru
+    const setoranList = await prisma.setoran.findMany({
+      where: {
+        guruId: guru.id,
+        kelompokId: {
+          in: kelompokIds,
+        },
+      },
+      orderBy: {
+        tanggal: 'desc',
+      },
+      include: {
+        siswa: {
+          select: {
+            nis: true,
+            user: {
+              select: {
+                namaLengkap: true,
+              },
+            },
+          },
+        },
+        kelompok: {
+          select: {
+            namaKelompok: true,
+          },
+        },
+        guru: {
+          select: {
+            user: {
+              select: {
+                namaLengkap: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Data setoran berhasil diambil',
+      data: setoranList,
+    });
+  } catch (error) {
+    console.error('[SUBMISSION_GET]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Terjadi kesalahan saat mengambil data setoran',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const user = await getUser();
+
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -40,24 +126,22 @@ export async function POST(req: Request) {
       !adab // Ensure adab is provided
     ) {
       return NextResponse.json(
-        { success: false, error: 'Data tidak lengkap' },
+        { success: false, message: 'Data tidak lengkap' },
         { status: 400 }
       );
     }
 
-    // Retrieve the teacher profile
     const guru = await prisma.guruProfile.findUnique({
       where: { userId: user.id },
     });
 
     if (!guru) {
       return NextResponse.json(
-        { success: false, error: 'Profil guru tidak ditemukan' },
+        { success: false, message: 'Profil guru tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    // Check if the teacher is assigned to the group
     const isGuruMembimbing = await prisma.guruKelompok.findFirst({
       where: {
         guruId: guru.id,
@@ -67,12 +151,11 @@ export async function POST(req: Request) {
 
     if (!isGuruMembimbing) {
       return NextResponse.json(
-        { success: false, error: 'Guru tidak membimbing kelompok ini' },
+        { success: false, message: 'Guru tidak membimbing kelompok ini' },
         { status: 403 }
       );
     }
 
-    // Check if the student is in the specified group
     const siswa = await prisma.siswaProfile.findFirst({
       where: {
         id: siswaId,
@@ -82,14 +165,13 @@ export async function POST(req: Request) {
 
     if (!siswa) {
       return NextResponse.json(
-        { success: false, error: 'Siswa tidak berada di kelompok ini' },
+        { success: false, message: 'Siswa tidak berada di kelompok ini' },
         { status: 400 }
       );
     }
 
     const setoranId = `SETORAN-${crypto.randomUUID()}`;
 
-    // Save the submission data, including adab
     const setoran = await prisma.setoran.create({
       data: {
         id: setoranId,
@@ -102,7 +184,7 @@ export async function POST(req: Request) {
         ayatSelesai,
         jenisSetoran,
         status: statusSetoran,
-        adab, // Store adab value
+        adab,
         catatan,
       },
     });

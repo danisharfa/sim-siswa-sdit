@@ -67,6 +67,7 @@ export function GroupTable({ data }: GroupTableProps) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className={'-ml-3'}
           >
             Kelas
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -82,6 +83,7 @@ export function GroupTable({ data }: GroupTableProps) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className={'-ml-3'}
           >
             Tahun Ajaran
             <ArrowUpDown className="ml-2 h-4 w-4" />

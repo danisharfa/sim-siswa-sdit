@@ -61,6 +61,7 @@ export function SubmissionInputManagement() {
     'LULUS' | 'TIDAK_LULUS' | 'MENGULANG'
   >('LULUS');
   const [catatan, setCatatan] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
   async function fetchGroups() {
     try {
@@ -94,9 +95,11 @@ export function SubmissionInputManagement() {
 
   const handleSubmit = async () => {
     if (!kelompokId || !siswaId || !surahId || !ayatMulai || !ayatSelesai) {
-      toast.error('Semua field harus diisi');
+      toast.message('Semua field harus diisi');
       return;
     }
+
+    setLoading(true);
 
     const formData: FormData = {
       kelompokId,
@@ -119,25 +122,13 @@ export function SubmissionInputManagement() {
         body: JSON.stringify(formData),
       });
 
-      // Log the response status and body for debugging
-      console.log('Response Status:', res.status);
       const resData = await res.json();
-      console.log('Response Data:', resData);
-
-      if (!res.ok) {
-        // Log specific error message from response if available
-        toast.error(
-          resData.message || 'Terjadi kesalahan saat menyimpan setoran'
-        );
-        throw new Error('Request failed');
-      }
 
       if (!resData.success) {
-        toast.error(resData.error || 'Gagal menambahkan setoran');
+        toast.message(resData.message || 'Gagal menambahkan setoran');
         throw new Error('Submission not successful');
       }
 
-      // Reset form fields on successful submission
       toast.success('Setoran berhasil ditambahkan!');
       setSiswaId('');
       setSurahId('');
@@ -146,7 +137,9 @@ export function SubmissionInputManagement() {
       setCatatan('');
     } catch (error) {
       console.error('Error during submission:', error);
-      toast.error('Gagal menambahkan setoran');
+      toast.error('Terjadi kesalahan saat menyimpan setoran');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -278,14 +271,17 @@ export function SubmissionInputManagement() {
         </div>
 
         <div>
-          <Label>Catatan</Label>
+          <Label htmlFor="catatan">Catatan</Label>
           <Textarea
+            id="catatan"
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
           />
         </div>
 
-        <Button onClick={handleSubmit}>Simpan</Button>
+        <Button onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Menginput setoran...' : 'Input Setoran'}
+        </Button>
       </CardContent>
     </Card>
   );
