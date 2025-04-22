@@ -1,5 +1,5 @@
-import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getUser } from '@/lib/auth';
 import TeacherProfileDetail from '@/components/teacher/profile/detail';
 
 export default async function TeacherProfilePage() {

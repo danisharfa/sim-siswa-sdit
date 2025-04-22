@@ -1,6 +1,6 @@
-import StudentProfileDetail from '@/components/student/profile/detail';
-import { getUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getUser } from '@/lib/auth';
+import StudentProfileDetail from '@/components/student/profile/detail';
 
 export default async function StudentProfilePage() {
   const user = await getUser();

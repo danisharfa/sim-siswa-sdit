@@ -86,7 +86,7 @@ export function DatePicker({
         <Button
           variant={'outline'}
           className={cn(
-            'w-[250px] justify-start text-left font-normal',
+            'w-full justify-start text-left font-normal',
             !internalDate && 'text-muted-foreground'
           )}
         >
@@ -99,12 +99,12 @@ export function DatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-        <div className="flex justify-between p-2">
+        <div className="flex justify-between p-2 gap-2">
           <Select
             onValueChange={handleMonthChange}
             value={months[getMonth(internalDate)]}
           >
-            <SelectTrigger className="w-[110px]">
+            <SelectTrigger className="w-1/2">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent>
@@ -119,7 +119,7 @@ export function DatePicker({
             onValueChange={handleYearChange}
             value={getYear(internalDate).toString()}
           >
-            <SelectTrigger className="w-[110px]">
+            <SelectTrigger className="w-1/2">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>

@@ -5,9 +5,9 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Card,
+  CardHeader,
   CardContent,
   CardFooter,
-  CardHeader,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,7 +29,6 @@ type StudentProfile = {
   tempatLahir?: string;
   jenisKelamin?: string;
   golonganDarah?: string;
-  agama?: string;
   alamat?: string;
   noTelp?: string;
   email?: string;
@@ -44,7 +43,6 @@ type User = {
     tempatLahir?: string;
     jenisKelamin?: string;
     golonganDarah?: string;
-    agama?: string;
     alamat?: string;
     noTelp?: string;
     email?: string;
@@ -79,7 +77,6 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
           tempatLahir: profile?.tempatLahir || '',
           jenisKelamin: profile?.jenisKelamin || '',
           golonganDarah: profile?.golonganDarah || '',
-          agama: profile?.agama || '',
           alamat: profile?.alamat || '',
           noTelp: profile?.noTelp || '',
           email: profile?.email || '',
@@ -155,7 +152,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
           )}
 
           {/* Grid dua kolom */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Kolom kiri */}
             <div className="space-y-4">
               {/* Nama Lengkap */}
@@ -166,13 +163,41 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
                 <Input id="namaLengkap" value={user.namaLengkap} readOnly />
               </div>
 
+              {/* NIS */}
+              <div>
+                <Label className="py-2" htmlFor="nis">
+                  NIS
+                </Label>
+                <Input id="nis" value={user.profile?.nis} readOnly />
+              </div>
+
+              {/* Tempat Lahir */}
+              <div>
+                <Label className="py-2" htmlFor="tempatLahir">
+                  Tempat Lahir
+                </Label>
+                <Textarea
+                  id="tempatLahir"
+                  value={updatedData.tempatLahir ?? ''}
+                  onChange={(e) => handleChange('tempatLahir', e.target.value)}
+                />
+              </div>
+
+              {/* Tanggal Lahir */}
+              <div>
+                <Label className="py-2" htmlFor="tanggalLahir">
+                  Tanggal Lahir
+                </Label>
+                <DatePicker value={date} onChange={setDate} />
+              </div>
+
               {/* Jenis Kelamin */}
               <div>
                 <Label className="py-2" htmlFor="jenisKelamin">
                   Jenis Kelamin
                 </Label>
                 <Select
-                  value={updatedData.jenisKelamin}
+                  value={updatedData.jenisKelamin ?? ''}
                   onValueChange={(val) => handleChange('jenisKelamin', val)}
                 >
                   <SelectTrigger>
@@ -191,7 +216,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
                   Golongan Darah
                 </Label>
                 <Select
-                  value={updatedData.golonganDarah}
+                  value={updatedData.golonganDarah ?? ''}
                   onValueChange={(val) => handleChange('golonganDarah', val)}
                 >
                   <SelectTrigger>
@@ -205,50 +230,10 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Tanggal Lahir */}
-              <div>
-                <Label className="py-2" htmlFor="tanggalLahir">
-                  Tanggal Lahir
-                </Label>
-                <DatePicker value={date} onChange={setDate} />
-              </div>
-
-              {/* Tempat Lahir */}
-              <div>
-                <Label className="py-2" htmlFor="tempatLahir">
-                  Tempat Lahir
-                </Label>
-                <Textarea
-                  id="tempatLahir"
-                  value={updatedData.tempatLahir}
-                  onChange={(e) => handleChange('tempatLahir', e.target.value)}
-                />
-              </div>
-
-              {/* Agama
-              <div>
-                <Label className="py-2" htmlFor="agama">
-                  Agama
-                </Label>
-                <Input
-                  id="agama"
-                  value={updatedData.agama}
-                  onChange={(e) => handleChange('agama', e.target.value)}
-                />
-              </div> */}
             </div>
 
             {/* Kolom kanan */}
             <div className="space-y-4">
-              {/* NIS */}
-              <div>
-                <Label className="py-2" htmlFor="nis">
-                  NIS
-                </Label>
-                <Input id="nis" value={user.profile?.nis} readOnly />
-              </div>
-
               {/* Alamat */}
               <div>
                 <Label className="py-2" htmlFor="alamat">
@@ -256,7 +241,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
                 </Label>
                 <Textarea
                   id="alamat"
-                  value={updatedData.alamat}
+                  value={updatedData.alamat ?? ''}
                   onChange={(e) => handleChange('alamat', e.target.value)}
                 />
               </div>
@@ -268,7 +253,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
                 </Label>
                 <Input
                   id="email"
-                  value={updatedData.email}
+                  value={updatedData.email ?? ''}
                   onChange={(e) => handleChange('email', e.target.value)}
                 />
               </div>
@@ -280,7 +265,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
                 </Label>
                 <Input
                   id="noTelp"
-                  value={updatedData.noTelp}
+                  value={updatedData.noTelp ?? ''}
                   onChange={(e) => handleChange('noTelp', e.target.value)}
                 />
               </div>
