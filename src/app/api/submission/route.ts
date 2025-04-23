@@ -4,7 +4,6 @@ import { getUser } from '@/lib/auth';
 
 export async function GET() {
   try {
-    // Get the current user
     const user = await getUser();
 
     if (!user || user.role !== 'teacher') {
@@ -14,7 +13,6 @@ export async function GET() {
       );
     }
 
-    // Retrieve the teacher profile
     const guru = await prisma.guruProfile.findUnique({
       where: { userId: user.id },
     });
@@ -26,7 +24,6 @@ export async function GET() {
       );
     }
 
-    // Ambil semua kelompok yang dibimbing oleh guru
     const kelompokBinaan = await prisma.guruKelompok.findMany({
       where: { guruId: guru.id },
       select: { kelompokId: true },
@@ -46,6 +43,12 @@ export async function GET() {
         tanggal: 'desc',
       },
       include: {
+        surah: {
+          select: {
+            id: true,
+            nama: true,
+          },
+        },
         siswa: {
           select: {
             nis: true,
@@ -59,6 +62,12 @@ export async function GET() {
         kelompok: {
           select: {
             namaKelompok: true,
+            kelas: {
+              select: {
+                namaKelas: true,
+                tahunAjaran: true,
+              },
+            },
           },
         },
         guru: {
@@ -72,6 +81,8 @@ export async function GET() {
         },
       },
     });
+
+    console.log('Setoran List:', setoranList);
 
     return NextResponse.json({
       success: true,

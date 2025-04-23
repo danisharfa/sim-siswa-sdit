@@ -8,6 +8,9 @@ type Submission = {
   tanggal: string;
   jenisSetoran: string;
   surahId: number;
+  surah: {
+    nama: string;
+  };
   ayatMulai: number;
   ayatSelesai: number;
   status: string;
@@ -21,6 +24,10 @@ type Submission = {
   };
   kelompok: {
     namaKelompok: string;
+    kelas: {
+      namaKelas: string;
+      tahunAjaran: string;
+    };
   };
 };
 

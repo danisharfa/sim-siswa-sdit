@@ -33,7 +33,7 @@ interface Props<T> {
 export function DataTable<T>({
   title,
   table,
-  filterColumn = 'username',
+  filterColumn,
   emptyMessage = 'Tidak ada hasil.',
 }: Props<T>) {
   return (
@@ -43,16 +43,19 @@ export function DataTable<T>({
       </CardHeader>
       <CardContent>
         <div className="flex items-center py-4">
-          <Input
-            placeholder={`Cari ${filterColumn}...`}
-            value={
-              (table.getColumn(filterColumn)?.getFilterValue() as string) ?? ''
-            }
-            onChange={(event) =>
-              table.getColumn(filterColumn)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+          {filterColumn ? (
+            table.getColumn(filterColumn) ? (
+              <Input
+                placeholder={`Cari ${filterColumn}...`}
+                onChange={(event) =>
+                  table
+                    .getColumn(filterColumn)
+                    ?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+            ) : null
+          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">

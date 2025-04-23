@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
-
+import { useMemo, useState } from 'react';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -10,6 +9,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+// import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { useDataTableState } from '@/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -19,6 +27,9 @@ type Submission = {
   tanggal: string;
   jenisSetoran: string;
   surahId: number;
+  surah: {
+    nama: string;
+  };
   ayatMulai: number;
   ayatSelesai: number;
   status: string;
@@ -32,6 +43,10 @@ type Submission = {
   };
   kelompok: {
     namaKelompok: string;
+    kelas: {
+      namaKelas: string;
+      tahunAjaran: string;
+    };
   };
 };
 
@@ -53,11 +68,42 @@ export function SubmissionHistoryTable({
     setColumnVisibility,
   } = useDataTableState<Submission, string>();
 
+  const [selectedKelompok, setSelectedKelompok] = useState<string | 'all'>(
+    'all'
+  );
+  const [selectedSiswa, setSelectedSiswa] = useState<string | 'all'>('all');
+
+  const kelompokList = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          data.map((d) => [
+            d.kelompok.namaKelompok,
+            {
+              namaKelompok: d.kelompok.namaKelompok,
+              namaKelas: d.kelompok.kelas.namaKelas,
+              tahunAjaran: d.kelompok.kelas.tahunAjaran,
+            },
+          ])
+        ).values()
+      ),
+    [data]
+  );
+
+  const siswaByKelompok = useMemo(() => {
+    if (selectedKelompok === 'all') return [];
+    return data
+      .filter((d) => d.kelompok.namaKelompok === selectedKelompok)
+      .map((d) => d.siswa.user.namaLengkap);
+  }, [selectedKelompok, data]);
+
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
         accessorKey: 'tanggal',
-        header: 'Tanggal',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Tanggal" />
+        ),
         cell: ({ row }) => (
           <span>
             {new Date(row.getValue('tanggal')).toLocaleDateString('id-ID', {
@@ -69,12 +115,6 @@ export function SubmissionHistoryTable({
         ),
       },
       {
-        accessorKey: 'siswa.user.namaLengkap',
-        id: 'siswa',
-        header: 'Nama Siswa',
-        cell: ({ row }) => row.original.siswa.user.namaLengkap,
-      },
-      {
         accessorKey: 'siswa.nis',
         id: 'nis',
         header: ({ column }) => (
@@ -82,10 +122,22 @@ export function SubmissionHistoryTable({
         ),
       },
       {
+        accessorKey: 'siswa.user.namaLengkap',
+        id: 'siswa',
+        header: 'Nama Siswa',
+        cell: ({ row }) => row.original.siswa.user.namaLengkap,
+      },
+      {
         accessorKey: 'kelompok.namaKelompok',
+        id: 'namaKelompok',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Kelompok" />
         ),
+        cell: ({ row }) => {
+          const kelompok = row.original.kelompok;
+          const kelas = kelompok.kelas;
+          return `${kelompok.namaKelompok} - ${kelas.namaKelas} (${kelas.tahunAjaran})`;
+        },
       },
       {
         accessorKey: 'jenisSetoran',
@@ -94,13 +146,16 @@ export function SubmissionHistoryTable({
         ),
       },
       {
-        accessorKey: 'surahId',
+        accessorKey: 'surah.nama',
+        header: 'Surah',
       },
       {
         accessorKey: 'ayatMulai',
+        header: 'Ayat Mulai',
       },
       {
         accessorKey: 'ayatSelesai',
+        header: 'Ayat Selesai',
       },
       {
         accessorKey: 'status',
@@ -133,7 +188,83 @@ export function SubmissionHistoryTable({
   });
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="siswa" />
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-4 mb-4 w-full">
+        {/* Filter Kelompok */}
+        <Select
+          onValueChange={(value) => {
+            setSelectedKelompok(value);
+            table
+              .getColumn('namaKelompok')
+              ?.setFilterValue(value === 'all' ? undefined : value);
+            setSelectedSiswa('all');
+            table.getColumn('siswa')?.setFilterValue(undefined);
+          }}
+        >
+          <SelectTrigger className="min-w-[200px] w-full sm:w-[300px]">
+            <SelectValue placeholder="Pilih Kelompok" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Kelompok</SelectItem>
+            {kelompokList.map((kelompok) => (
+              <SelectItem
+                key={`${kelompok.namaKelompok}-${kelompok.namaKelas}-${kelompok.tahunAjaran}`}
+                value={kelompok.namaKelompok}
+              >
+                {`${kelompok.namaKelompok} - ${kelompok.namaKelas} (${kelompok.tahunAjaran})`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filter Siswa (tergantung kelompok) */}
+        <Select
+          disabled={selectedKelompok === 'all'}
+          value={selectedSiswa}
+          onValueChange={(value) => {
+            setSelectedSiswa(value);
+            table
+              .getColumn('siswa')
+              ?.setFilterValue(value === 'all' ? undefined : value);
+          }}
+        >
+          <SelectTrigger className="min-w-[200px] w-full sm:w-[250px]">
+            <SelectValue placeholder="Pilih Siswa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Siswa</SelectItem>
+            {Array.from(new Set(siswaByKelompok)).map((siswa) => (
+              <SelectItem key={siswa} value={siswa}>
+                {siswa}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filter Jenis Setoran */}
+        <Select
+          onValueChange={(value) =>
+            table
+              .getColumn('jenisSetoran')
+              ?.setFilterValue(value === 'all' ? undefined : value)
+          }
+        >
+          <SelectTrigger className="min-w-[200px] w-full sm:w-[200px]">
+            <SelectValue placeholder="Jenis Setoran" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Jenis</SelectItem>
+            {Array.from(new Set(data.map((d) => d.jenisSetoran))).map(
+              (jenis) => (
+                <SelectItem key={jenis} value={jenis}>
+                  {jenis}
+                </SelectItem>
+              )
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <DataTable title={title} table={table} filterColumn="nis" />
     </>
   );
 }
