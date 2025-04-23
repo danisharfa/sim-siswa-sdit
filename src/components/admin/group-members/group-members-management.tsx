@@ -54,7 +54,7 @@ export function GroupDetailsManagement({ groupId }: { groupId: string }) {
     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
       <AddMemberForm groupId={groupId} onMemberAdded={fetchMembers} />
       <GroupMembersTable
-        siswa={siswa}
+        data={siswa}
         title="Daftar Anggota Kelompok"
         groupId={groupId}
         onRefresh={fetchMembers}

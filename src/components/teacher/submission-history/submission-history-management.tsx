@@ -50,5 +50,5 @@ export function SubmissionHistoryManagement() {
 
   if (loading) return <p>Loading...</p>;
 
-  return <SubmissionHistoryTable data={data} />;
+  return <SubmissionHistoryTable data={data} title="History Setoran Siswa" />;
 }

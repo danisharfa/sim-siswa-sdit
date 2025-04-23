@@ -40,9 +40,9 @@ export function GroupManagement() {
   }, []);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+    <div className="space-y-6">
       <AddGroupForm onGroupAdded={fetchGroups} />
-      <GroupTable data={groups} onRefresh={fetchGroups} />
+      <GroupTable data={groups} title="Daftar Siswa" onRefresh={fetchGroups} />
     </div>
   );
 }

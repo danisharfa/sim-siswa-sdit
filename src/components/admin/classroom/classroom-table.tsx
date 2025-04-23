@@ -1,19 +1,16 @@
 'use client';
 
-import * as React from 'react';
+import { useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreVertical } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,20 +18,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { ClassroomEditDialog } from '@/components/admin/classroom/classroom-edit-dialog';
 import { ClassroomAlertDialog } from '@/components/admin/classroom/classroom-alert-dialog';
-import { DataTablePagination } from '../../ui/table-pagination';
+import { useDataTableState } from '@/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
 
 interface Kelas {
   id: string;
@@ -44,71 +32,61 @@ interface Kelas {
 
 interface Props {
   data: Kelas[];
+  title: string;
   onRefresh: () => void;
 }
 
-export function ClassroomTable({ data, onRefresh }: Props) {
+export function ClassroomTable({ data, title, onRefresh }: Props) {
   const router = useRouter();
-  const [selectedKelas, setSelectedKelas] = React.useState<Kelas | null>(null);
-  const [dialogType, setDialogType] = React.useState<'edit' | 'delete' | null>(
-    null
+
+  const {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    columnVisibility,
+    setColumnVisibility,
+    selectedItem: selectedKelas,
+    setSelectedItem: setSelectedKelas,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<Kelas, 'edit' | 'delete'>();
+
+  const handleOpenEditDialog = useCallback(
+    (kelas: Kelas) => {
+      setSelectedKelas(kelas);
+      setDialogType('edit');
+    },
+    [setDialogType, setSelectedKelas]
   );
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+  const handleOpenDeleteDialog = useCallback(
+    (kelas: Kelas) => {
+      setSelectedKelas(kelas);
+      setDialogType('delete');
+    },
+    [setDialogType, setSelectedKelas]
   );
 
-  const handleOpenEditDialog = (kelas: Kelas) => {
-    setSelectedKelas(kelas);
-    setDialogType('edit');
-  };
-
-  const handleOpenDeleteDialog = (kelas: Kelas) => {
-    setSelectedKelas(kelas);
-    setDialogType('delete');
-  };
-
-  const columns = React.useMemo<ColumnDef<Kelas>[]>(
+  const columns = useMemo<ColumnDef<Kelas>[]>(
     () => [
       {
-        id: 'no',
-        header: 'No',
-        cell: ({ row, table }) =>
-          row.index +
-          1 +
-          table.getState().pagination.pageIndex *
-            table.getState().pagination.pageSize,
-        enableSorting: false,
-        enableHiding: false,
-      },
-      {
         accessorKey: 'namaKelas',
+        id: 'kelas',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Nama Kelas <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="Kelas" />
         ),
-        cell: ({ row }) => <span>{row.getValue('namaKelas')}</span>,
       },
       {
         accessorKey: 'tahunAjaran',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Tahun Ajaran <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="Tahun Ajaran" />
         ),
-        cell: ({ row }) => <span>{row.getValue('tahunAjaran')}</span>,
       },
       {
         id: 'actions',
         enableHiding: false,
+        header: 'Aksi',
         cell: ({ row }) => {
           const kelas = row.original;
           return (
@@ -141,7 +119,7 @@ export function ClassroomTable({ data, onRefresh }: Props) {
         },
       },
     ],
-    [router]
+    [router, handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -150,6 +128,7 @@ export function ClassroomTable({ data, onRefresh }: Props) {
     state: {
       sorting,
       columnFilters,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -157,71 +136,12 @@ export function ClassroomTable({ data, onRefresh }: Props) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Daftar Kelas</h2>
-        </CardHeader>
-        <CardContent>
-          <div className="py-2">
-            <Input
-              placeholder="Cari nama kelas..."
-              value={
-                (table.getColumn('namaKelas')?.getFilterValue() as string) ?? ''
-              }
-              onChange={(e) =>
-                table.getColumn('namaKelas')?.setFilterValue(e.target.value)
-              }
-              className="w-full md:w-1/2"
-            />
-          </div>
-          <div className="rounded-md border">
-            <Table>
-              <TableCaption>Daftar Kelas dalam sistem.</TableCaption>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center">
-                      Tidak ada kelas tersedia.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <DataTablePagination table={table} />
-        </CardContent>
-      </Card>
+      <DataTable title={title} table={table} filterColumn="kelas" />
 
       {dialogType === 'edit' && selectedKelas && (
         <ClassroomEditDialog

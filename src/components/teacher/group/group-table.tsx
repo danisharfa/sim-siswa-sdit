@@ -1,37 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUpDown, MoreVertical } from 'lucide-react';
 import {
   ColumnDef,
-  SortingState,
-  useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
-  flexRender,
+  getSortedRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
+import { MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-// import { GroupAlertDialog } from './group-alert-dialog';
-// import { GroupEditDialog } from './group-edit-dialog';
+import { Button } from '@/components/ui/button';
+import { useDataTableState } from '@/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
 
 interface Group {
   id: string;
@@ -45,64 +34,50 @@ interface Group {
 
 interface GroupTableProps {
   data: Group[];
-  onRefresh: () => void;
+  title: string;
 }
 
-export function GroupTable({ data }: GroupTableProps) {
+export function GroupTable({ data, title }: GroupTableProps) {
   const router = useRouter();
+  const {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    columnVisibility,
+    setColumnVisibility,
+  } = useDataTableState<Group, string>();
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-
-  const columns = React.useMemo<ColumnDef<Group>[]>(
+  const columns = useMemo<ColumnDef<Group>[]>(
     () => [
       {
         accessorKey: 'namaKelompok',
         header: 'Nama Kelompok',
-        cell: ({ row }) => <span>{row.original.namaKelompok}</span>,
       },
       {
         accessorFn: (row) => row.kelas?.namaKelas ?? '-',
-        id: 'namaKelas',
+        id: 'kelas',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className={'-ml-3'}
-          >
-            Kelas
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="Nama Kelas" />
         ),
-        cell: ({ getValue }) => <span>{String(getValue())}</span>,
-        enableSorting: true,
       },
       {
         accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
         id: 'tahunAjaran',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className={'-ml-3'}
-          >
-            Tahun Ajaran
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="Tahun Ajaran" />
         ),
-        cell: ({ getValue }) => <span>{String(getValue())}</span>,
-        enableSorting: true,
       },
       {
         accessorKey: 'totalAnggota',
         header: 'Jumlah Siswa',
-        cell: ({ row }) => <span>{row.original.totalAnggota}</span>,
       },
       {
         id: 'actions',
+        enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
           const kelompok = row.original;
-
           return (
             <>
               <DropdownMenu>
@@ -132,77 +107,23 @@ export function GroupTable({ data }: GroupTableProps) {
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+    },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">Daftar Kelompok</h2>
-      </CardHeader>
-      <CardContent>
-        <div className="py-2">
-          <Input
-            placeholder="Cari nama kelompok..."
-            value={
-              (table.getColumn('namaKelompok')?.getFilterValue() as string) ??
-              ''
-            }
-            onChange={(e) =>
-              table.getColumn('namaKelompok')?.setFilterValue(e.target.value)
-            }
-            className="w-full md:w-1/2"
-          />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableCaption>
-              Daftar Kelompok dalam sistem. Total:
-              {table.getRowModel().rows.length}
-            </TableCaption>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center">
-                    Tidak ada kelompok tersedia.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <DataTable title={title} table={table} filterColumn="kelas" />
+    </>
   );
 }

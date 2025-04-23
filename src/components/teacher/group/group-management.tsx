@@ -40,7 +40,7 @@ export function GroupManagement() {
 
   return (
     <div className="space-y-6">
-      <GroupTable data={groups} onRefresh={fetchGroups} />
+      <GroupTable data={groups} title="Daftar Kelompok" />
     </div>
   );
 }

@@ -32,13 +32,9 @@ export function UserManagement() {
     <div className="space-y-6">
       <AddUserForm onUserAdded={fetchUsers} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <UserTable data={teachers} title="Daftar Guru" onRefresh={fetchUsers} />
         <UserTable
-          users={teachers}
-          title="Daftar Guru"
-          onRefresh={fetchUsers}
-        />
-        <UserTable
-          users={students}
+          data={students}
           title="Daftar Siswa"
           onRefresh={fetchUsers}
         />

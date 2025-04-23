@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -70,8 +75,8 @@ export function UserDetail({ userId }: { userId: string }) {
           nis: profile?.nis || '',
           nip: profile?.nip || '',
           tempatLahir: profile?.tempatLahir || '',
-          jenisKelamin: profile?.jenisKelamin || '',
-          golonganDarah: profile?.golonganDarah || '',
+          jenisKelamin: profile?.jenisKelamin || 'PILIH',
+          golonganDarah: profile?.golonganDarah || 'PILIH',
           alamat: profile?.alamat || '',
           noTelp: profile?.noTelp || '',
           email: profile?.email || '',
@@ -130,122 +135,150 @@ export function UserDetail({ userId }: { userId: string }) {
 
   return (
     <Card>
+      <CardHeader>
+        <h2 className="text-xl font-semibold">Pribadi</h2>
+      </CardHeader>
       <CardContent>
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-x-4">
           {/* Foto Profil */}
           {user.fotoProfil && (
-            <Image
-              src={user.fotoProfil}
-              alt="Foto Profil"
-              className="w-32 h-32 rounded-full object-cover"
-              width={128}
-              height={128}
-            />
+            <div className="flex justify-center">
+              <Image
+                src={user.fotoProfil}
+                alt="Foto Profil"
+                className="w-32 h-32 rounded-full object-cover"
+                width={128}
+                height={128}
+              />
+            </div>
           )}
 
-          <div className="grid w-full gap-6">
-            {/* Nama Lengkap */}
-            <div>
-              <Label htmlFor="namaLengkap">Nama Lengkap</Label>
-              <Input
-                id="namaLengkap"
-                value={updatedData.namaLengkap}
-                onChange={(e) => handleChange('namaLengkap', e.target.value)}
-              />
+          {/* Grid dua kolom */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Kolom kiri */}
+            <div className="space-y-4">
+              {/* Nama Lengkap */}
+              <div>
+                <Label htmlFor="namaLengkap">Nama Lengkap</Label>
+                <Input
+                  id="namaLengkap"
+                  value={updatedData.namaLengkap ?? ''}
+                  onChange={(e) => handleChange('namaLengkap', e.target.value)}
+                />
+              </div>
+
+              {/* NIS / NIP */}
+              <div>
+                <Label htmlFor="nisnip">{isStudent ? 'NIS' : 'NIP'}</Label>
+                <Input
+                  id="nisnip"
+                  value={isStudent ? updatedData.nis : updatedData.nip ?? ''}
+                  onChange={(e) =>
+                    handleChange(isStudent ? 'nis' : 'nip', e.target.value)
+                  }
+                />
+              </div>
+
+              {/* Tempat Lahir */}
+              <div>
+                <Label className="py-2" htmlFor="tempatLahir">
+                  Tempat Lahir
+                </Label>
+                <Textarea
+                  id="tempatLahir"
+                  value={updatedData.tempatLahir ?? ''}
+                  onChange={(e) => handleChange('tempatLahir', e.target.value)}
+                />
+              </div>
+
+              {/* Tanggal Lahir */}
+              <div>
+                <Label className="py-2" htmlFor="tanggalLahir">
+                  Tanggal Lahir
+                </Label>
+                <DatePicker value={date} onChange={setDate} />
+              </div>
+
+              {/* Jenis Kelamin */}
+              <div>
+                <Label className="py-2" htmlFor="jenisKelamin">
+                  Jenis Kelamin
+                </Label>
+                <Select
+                  value={updatedData.jenisKelamin || 'PILIH'}
+                  onValueChange={(val) => handleChange('jenisKelamin', val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Jenis Kelamin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PILIH">--Pilih--</SelectItem>
+                    <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
+                    <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Golongan Darah */}
+              <div>
+                <Label className="py-2" htmlFor="golonganDarah">
+                  Golongan Darah
+                </Label>
+                <Select
+                  value={updatedData.golonganDarah || 'PILIH'}
+                  onValueChange={(val) => handleChange('golonganDarah', val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Golongan Darah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PILIH">--Pilih--</SelectItem>
+                    <SelectItem value="A">A</SelectItem>
+                    <SelectItem value="B">B</SelectItem>
+                    <SelectItem value="AB">AB</SelectItem>
+                    <SelectItem value="O">O</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* NIS / NIP */}
-            <div>
-              <Label htmlFor="nisnip">{isStudent ? 'NIS' : 'NIP'}</Label>
-              <Input
-                id="nisnip"
-                value={isStudent ? updatedData.nis : updatedData.nip}
-                onChange={(e) =>
-                  handleChange(isStudent ? 'nis' : 'nip', e.target.value)
-                }
-              />
-            </div>
+            {/* Kolom kanan */}
+            <div className="space-y-4">
+              {/* Alamat */}
+              <div>
+                <Label className="py-2" htmlFor="alamat">
+                  Alamat
+                </Label>
+                <Textarea
+                  id="alamat"
+                  value={updatedData.alamat ?? ''}
+                  onChange={(e) => handleChange('alamat', e.target.value)}
+                />
+              </div>
 
-            {/* Tanggal Lahir */}
-            <div>
-              <Label htmlFor="tanggalLahir">Tanggal Lahir</Label>
-              <DatePicker value={date} onChange={setDate} />
-            </div>
+              {/* Email */}
+              <div>
+                <Label className="py-2" htmlFor="email">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  value={updatedData.email ?? ''}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                />
+              </div>
 
-            {/* Tempat Lahir */}
-            <div>
-              <Label htmlFor="tempatLahir">Tempat Lahir</Label>
-              <Textarea
-                id="tempatLahir"
-                value={updatedData.tempatLahir}
-                onChange={(e) => handleChange('tempatLahir', e.target.value)}
-              />
-            </div>
-
-            {/* Jenis Kelamin */}
-            <div>
-              <Label htmlFor="jenisKelamin">Jenis Kelamin</Label>
-              <Select
-                value={updatedData.jenisKelamin}
-                onValueChange={(val) => handleChange('jenisKelamin', val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Jenis Kelamin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
-                  <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Golongan Darah */}
-            <div>
-              <Label htmlFor="golonganDarah">Golongan Darah</Label>
-              <Select
-                value={updatedData.golonganDarah}
-                onValueChange={(val) => handleChange('golonganDarah', val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Golongan Darah" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="AB">AB</SelectItem>
-                  <SelectItem value="O">O</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Alamat */}
-            <div>
-              <Label htmlFor="alamat">Alamat</Label>
-              <Textarea
-                id="alamat"
-                value={updatedData.alamat}
-                onChange={(e) => handleChange('alamat', e.target.value)}
-              />
-            </div>
-
-            {/* No Telp */}
-            <div>
-              <Label htmlFor="noTelp">No. HP</Label>
-              <Input
-                id="noTelp"
-                value={updatedData.noTelp}
-                onChange={(e) => handleChange('noTelp', e.target.value)}
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={updatedData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-              />
+              {/* No Telp */}
+              <div>
+                <Label className="py-2" htmlFor="noTelp">
+                  No. HP
+                </Label>
+                <Input
+                  id="noTelp"
+                  value={updatedData.noTelp ?? ''}
+                  onChange={(e) => handleChange('noTelp', e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </div>

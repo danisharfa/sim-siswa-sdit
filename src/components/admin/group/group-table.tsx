@@ -1,19 +1,16 @@
 'use client';
 
-import * as React from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreVertical } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,19 +18,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { GroupAlertDialog } from './group-alert-dialog';
 import { GroupEditDialog } from './group-edit-dialog';
+import { useDataTableState } from '@/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
 
 interface Group {
   id: string;
@@ -53,58 +42,65 @@ interface Group {
 
 interface GroupTableProps {
   data: Group[];
+  title: string;
   onRefresh: () => void;
 }
 
-export function GroupTable({ data, onRefresh }: GroupTableProps) {
+export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
   const router = useRouter();
-  const [selectedGroup, setSelectedGroup] = React.useState<Group | null>(null);
-  const [dialogType, setDialogType] = React.useState<'edit' | 'delete' | null>(
-    null
+
+  const {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    columnVisibility,
+    setColumnVisibility,
+    selectedItem: selectedGroup,
+    setSelectedItem: setSelectedGroup,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<Group, 'edit' | 'delete'>();
+
+  const handleOpenEditDialog = useCallback(
+    (kelompok: Group) => {
+      setSelectedGroup(kelompok);
+      setDialogType('edit');
+    },
+    [setDialogType, setSelectedGroup]
   );
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+  const handleOpenDeleteDialog = useCallback(
+    (kelompok: Group) => {
+      setSelectedGroup(kelompok);
+      setDialogType('delete');
+    },
+    [setDialogType, setSelectedGroup]
   );
 
-  const columns = React.useMemo<ColumnDef<Group>[]>(
+  const columns = useMemo<ColumnDef<Group>[]>(
     () => [
       {
         accessorKey: 'namaKelompok',
-        header: 'Nama Kelompok',
-        cell: ({ row }) => <span>{row.original.namaKelompok}</span>,
-      },
-      {
-        accessorFn: (row) => row.kelas?.namaKelas ?? '-',
-        id: 'namaKelas',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Kelas
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="Nama Kelompok" />
         ),
-        cell: ({ getValue }) => <span>{String(getValue())}</span>,
-        enableSorting: true,
       },
-
       {
-        accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
+        accessorKey: 'kelas.namaKelas',
+        id: 'kelas',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Nama Kelas" />
+        ),
+      },
+      {
+        accessorKey: 'kelas.tahunAjaran',
         id: 'tahunAjaran',
+
+        accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Tahun Ajaran
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="Tahun Ajaran" />
         ),
-        cell: ({ getValue }) => <span>{String(getValue())}</span>,
-        enableSorting: true,
       },
 
       {
@@ -114,10 +110,10 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
       },
       {
         id: 'actions',
+        enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
           const kelompok = row.original;
-
           return (
             <>
               <DropdownMenu>
@@ -136,16 +132,14 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSelectedGroup(kelompok);
-                      setDialogType('edit');
+                      handleOpenEditDialog(kelompok);
                     }}
                   >
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSelectedGroup(kelompok);
-                      setDialogType('delete');
+                      handleOpenDeleteDialog(kelompok);
                     }}
                     className="text-destructive"
                   >
@@ -153,48 +147,12 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {dialogType === 'edit' && selectedGroup && (
-                <GroupEditDialog
-                  kelompok={selectedGroup}
-                  open={true}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
-                      setSelectedGroup(null);
-                    }
-                  }}
-                  onSave={() => {
-                    onRefresh();
-                    setDialogType(null);
-                    setSelectedGroup(null);
-                  }}
-                />
-              )}
-
-              {dialogType === 'delete' && selectedGroup && (
-                <GroupAlertDialog
-                  kelompok={selectedGroup}
-                  open={true}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setDialogType(null);
-                      setSelectedGroup(null);
-                    }
-                  }}
-                  onConfirm={() => {
-                    onRefresh();
-                    setDialogType(null);
-                    setSelectedGroup(null);
-                  }}
-                />
-              )}
             </>
           );
         },
       },
     ],
-    [onRefresh, selectedGroup, dialogType, router]
+    [router, handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -203,6 +161,7 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
     state: {
       sorting,
       columnFilters,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -210,72 +169,48 @@ export function GroupTable({ data, onRefresh }: GroupTableProps) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">Daftar Kelompok</h2>
-      </CardHeader>
-      <CardContent>
-        <div className="py-2">
-          <Input
-            placeholder="Cari nama kelompok..."
-            value={
-              (table.getColumn('namaKelompok')?.getFilterValue() as string) ??
-              ''
+    <>
+      <DataTable title={title} table={table} filterColumn="kelas" />
+
+      {dialogType === 'edit' && selectedGroup && (
+        <GroupEditDialog
+          kelompok={selectedGroup}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedGroup(null);
             }
-            onChange={(e) =>
-              table.getColumn('namaKelompok')?.setFilterValue(e.target.value)
+          }}
+          onSave={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedGroup(null);
+          }}
+        />
+      )}
+
+      {dialogType === 'delete' && selectedGroup && (
+        <GroupAlertDialog
+          kelompok={selectedGroup}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedGroup(null);
             }
-            className="w-full md:w-1/2"
-          />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableCaption>
-              Daftar Kelompok dalam sistem. Total:
-              {table.getRowModel().rows.length}
-            </TableCaption>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center">
-                    Tidak ada kelompok tersedia.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedGroup(null);
+          }}
+        />
+      )}
+    </>
   );
 }

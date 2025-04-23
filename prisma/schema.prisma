@@ -191,11 +191,13 @@ enum Role {
 }
 
 enum JenisKelamin {
+  PILIH
   LAKI_LAKI
   PEREMPUAN
 }
 
 enum GolonganDarah {
+  PILIH
   A
   B
   AB

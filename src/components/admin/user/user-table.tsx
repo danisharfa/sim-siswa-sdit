@@ -1,42 +1,28 @@
 'use client';
 
-import * as React from 'react';
+import { useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreVertical } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
+import { Button } from '@/components/ui/button';
 import { UserEditDialog } from '@/components/admin/user/user-edit-dialog';
 import { UserAlertDialog } from '@/components/admin/user/user-alert-dialog';
-import { DataTablePagination } from '../../ui/table-pagination';
+import { useDataTableState } from '@/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
 
 interface User {
   id: string;
@@ -47,68 +33,81 @@ interface User {
 }
 
 interface Props {
-  users: User[];
+  data: User[];
   title: string;
   onRefresh: () => void;
 }
 
-export function UserTable({ users, title, onRefresh }: Props) {
+export function UserTable({ data, title, onRefresh }: Props) {
   const router = useRouter();
 
-  const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
-  const [dialogType, setDialogType] = React.useState<
-    'edit' | 'reset' | 'delete' | null
-  >(null);
+  const {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    columnVisibility,
+    setColumnVisibility,
+    selectedItem: selectedUser,
+    setSelectedItem: setSelectedUser,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<User, 'edit' | 'reset' | 'delete'>();
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+  const handleOpenEditDialog = useCallback(
+    (user: User) => {
+      setSelectedUser(user);
+      setDialogType('edit');
+    },
+    [setSelectedUser, setDialogType]
   );
 
-  const columns = React.useMemo<ColumnDef<User>[]>(
+  const handleOpenResetDialog = useCallback(
+    (user: User) => {
+      setSelectedUser(user);
+      setDialogType('edit');
+    },
+    [setSelectedUser, setDialogType]
+  );
+
+  const handleOpenDeleteDialog = useCallback(
+    (user: User) => {
+      setSelectedUser(user);
+      setDialogType('delete');
+    },
+    [setSelectedUser, setDialogType]
+  );
+
+  const columns = useMemo<ColumnDef<User>[]>(
     () => [
       {
-        id: 'no',
-        header: 'No',
-        cell: ({ row, table }) =>
-          row.index +
-          1 +
-          table.getState().pagination.pageIndex *
-            table.getState().pagination.pageSize,
-        enableSorting: false,
-        enableHiding: false,
-      },
-      {
         accessorKey: 'username',
-        cell: ({ row }) => <span>{row.getValue('username')}</span>,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Username" />
+        ),
       },
       {
         accessorKey: 'namaLengkap',
-        header: 'Nama Lengkap',
-        cell: ({ row }) => <span>{row.getValue('namaLengkap')}</span>,
+        id: 'nama',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Nama Lengkap" />
+        ),
       },
       {
         accessorKey: 'createdAt',
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Tanggal Dibuat
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: 'Created At',
         cell: ({ row }) => (
           <span>
-            {new Date(row.getValue('createdAt')).toLocaleDateString()}
+            {new Date(row.getValue('createdAt')).toLocaleDateString('id-ID')}
           </span>
         ),
       },
       {
         id: 'actions',
+        enableHiding: false,
+        header: 'Aksi',
         cell: ({ row }) => {
           const user = row.original;
-
           return (
             <>
               <DropdownMenu>
@@ -128,24 +127,21 @@ export function UserTable({ users, title, onRefresh }: Props) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSelectedUser(user);
-                      setDialogType('edit');
+                      handleOpenEditDialog(user);
                     }}
                   >
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSelectedUser(user);
-                      setDialogType('reset');
+                      handleOpenResetDialog(user);
                     }}
                   >
                     Reset Password
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSelectedUser(user);
-                      setDialogType('delete');
+                      handleOpenDeleteDialog(user);
                     }}
                     className="text-destructive"
                   >
@@ -158,15 +154,21 @@ export function UserTable({ users, title, onRefresh }: Props) {
         },
       },
     ],
-    [router]
+    [
+      router,
+      handleOpenEditDialog,
+      handleOpenResetDialog,
+      handleOpenDeleteDialog,
+    ]
   );
 
   const table = useReactTable({
-    data: users,
+    data,
     columns,
     state: {
       sorting,
       columnFilters,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -174,71 +176,13 @@ export function UserTable({ users, title, onRefresh }: Props) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">{title}</h2>
-        </CardHeader>
-        <CardContent>
-          <div className="py-2">
-            <Input
-              placeholder="Filter username..."
-              value={
-                (table.getColumn('username')?.getFilterValue() as string) ?? ''
-              }
-              onChange={(event) =>
-                table.getColumn('username')?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            />
-          </div>
-          <div className="rounded-md border">
-            <Table>
-              <TableCaption>Daftar {title} dalam sistem.</TableCaption>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center">
-                      Tidak ada hasil.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <DataTablePagination table={table} />
-        </CardContent>
-      </Card>
+      <DataTable title={title} table={table} filterColumn="nama" />
+
       {dialogType === 'edit' && selectedUser && (
         <UserEditDialog
           user={selectedUser}

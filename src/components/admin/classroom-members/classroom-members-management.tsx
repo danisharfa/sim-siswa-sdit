@@ -46,7 +46,7 @@ export function ClassroomDetailsManagement({ kelasId }: { kelasId: string }) {
     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
       <AddMemberForm kelasId={kelasId} onMemberAdded={fetchMembers} />
       <ClassroomMembersTable
-        siswa={siswa}
+        data={siswa}
         title="Daftar Siswa"
         kelasId={kelasId}
         onRefresh={fetchMembers}

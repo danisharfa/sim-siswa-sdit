@@ -158,7 +158,7 @@ export function SubmissionInputManagement() {
             <SelectContent>
               {data.map((k) => (
                 <SelectItem key={k.id} value={k.id}>
-                  {k.namaKelompok} - {k.kelas.namaKelas} ({k.kelas.tahunAjaran})
+                  {k.namaKelompok} - {k.kelas.namaKelas}({k.kelas.tahunAjaran})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -203,7 +203,7 @@ export function SubmissionInputManagement() {
           </Select>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <div>
             <Label>Surah ID</Label>
             <Input

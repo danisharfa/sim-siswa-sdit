@@ -1,28 +1,18 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useMemo } from 'react';
 
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   ColumnDef,
-  SortingState,
-  useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
-  flexRender,
+  getSortedRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useDataTableState } from '@/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
 
 type Submission = {
   id: string;
@@ -47,27 +37,40 @@ type Submission = {
 
 interface SubmissionHistoryTableProps {
   data: Submission[];
+  title: string;
 }
 
-export function SubmissionHistoryTable({ data }: SubmissionHistoryTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+export function SubmissionHistoryTable({
+  data,
+  title,
+}: SubmissionHistoryTableProps) {
+  const {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    columnVisibility,
+    setColumnVisibility,
+  } = useDataTableState<Submission, string>();
 
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
         accessorKey: 'tanggal',
         header: 'Tanggal',
-        cell: ({ row }) => {
-          const date = new Date(row.original.tanggal);
-          return date.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          });
-        },
+        cell: ({ row }) => (
+          <span>
+            {new Date(row.getValue('tanggal')).toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        ),
       },
       {
         accessorKey: 'siswa.user.namaLengkap',
+        id: 'siswa',
         header: 'Nama Siswa',
         cell: ({ row }) => row.original.siswa.user.namaLengkap,
       },
@@ -75,58 +78,38 @@ export function SubmissionHistoryTable({ data }: SubmissionHistoryTableProps) {
         accessorKey: 'siswa.nis',
         id: 'nis',
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className={'-ml-3'}
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            NIS
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <DataTableColumnHeader column={column} title="NIS" />
         ),
-        cell: ({ getValue }) => <span>{String(getValue())}</span>,
-        enableSorting: true,
       },
       {
         accessorKey: 'kelompok.namaKelompok',
-        header: 'Kelompok',
-        cell: ({ row }) => row.original.kelompok.namaKelompok,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Kelompok" />
+        ),
       },
       {
         accessorKey: 'jenisSetoran',
-        header: 'Jenis Setoran',
-        cell: ({ row }) => row.original.jenisSetoran,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Jenis Setoran" />
+        ),
       },
       {
         accessorKey: 'surahId',
-        header: 'Surah',
-        cell: ({ row }) => row.original.surahId,
       },
       {
         accessorKey: 'ayatMulai',
-        header: 'Ayat Mulai',
-        cell: ({ row }) => row.original.ayatMulai,
       },
       {
         accessorKey: 'ayatSelesai',
-        header: 'Ayat Selesai',
-        cell: ({ row }) => row.original.ayatSelesai,
       },
       {
         accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => row.original.status,
       },
       {
         accessorKey: 'adab',
-        header: 'Adab',
-        cell: ({ row }) => row.original.adab,
       },
       {
         accessorKey: 'catatan',
-        header: 'Catatan',
-        cell: ({ row }) => row.original.catatan,
       },
     ],
     []
@@ -135,64 +118,22 @@ export function SubmissionHistoryTable({ data }: SubmissionHistoryTableProps) {
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+    },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
   });
-
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">History Setoran</h2>
-      </CardHeader>
-      <CardContent>
-        <div className="roundend-md border">
-          <Table>
-            <TableCaption>
-              Daftar Setoran dalam sistem. Total:
-              {table.getRowModel().rows.length}
-            </TableCaption>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <td colSpan={columns.length} className="text-center">
-                    Tidak ada data
-                  </td>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <DataTable title={title} table={table} filterColumn="siswa" />
+    </>
   );
 }
