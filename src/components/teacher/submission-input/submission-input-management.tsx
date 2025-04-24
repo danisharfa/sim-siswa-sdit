@@ -31,6 +31,11 @@ interface Siswa {
   };
 }
 
+interface Surah {
+  id: string;
+  nama: string;
+}
+
 interface FormData {
   kelompokId: string;
   siswaId: string;
@@ -45,12 +50,14 @@ interface FormData {
 
 export function SubmissionInputManagement() {
   const [data, setData] = useState<Kelompok[]>([]);
-  const [kelompokId, setKelompokId] = useState<string>('');
+  const [kelompokId, setKelompokId] = useState('');
   const [siswaList, setSiswaList] = useState<Siswa[]>([]);
-  const [siswaId, setSiswaId] = useState<string>('');
-  const [surahId, setSurahId] = useState<string>('');
-  const [ayatMulai, setAyatMulai] = useState<string>('');
-  const [ayatSelesai, setAyatSelesai] = useState<string>('');
+  const [siswaId, setSiswaId] = useState('');
+  const [surahList, setSurahList] = useState<Surah[]>([]);
+  const [selectedSurahId, setSelectedSurahId] = useState('');
+  const [selectedJuz, setSelectedJuz] = useState('');
+  const [ayatMulai, setAyatMulai] = useState('');
+  const [ayatSelesai, setAyatSelesai] = useState('');
   const [jenisSetoran, setJenisSetoran] = useState<'TAHFIDZ' | 'TAHSIN'>(
     'TAHFIDZ'
   );
@@ -60,23 +67,22 @@ export function SubmissionInputManagement() {
   const [statusSetoran, setStatusSetoran] = useState<
     'LULUS' | 'TIDAK_LULUS' | 'MENGULANG'
   >('LULUS');
-  const [catatan, setCatatan] = useState<string>('');
+  const [catatan, setCatatan] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function fetchGroups() {
-    try {
-      const res = await fetch('/api/group/teacher');
-      const resData = await res.json();
-      if (resData.success) {
-        setData(resData.data);
-      }
-    } catch (error) {
-      console.error('Gagal mengambil data kelompok:', error);
-      toast.error('Gagal mengambil data kelompok');
-    }
-  }
-
   useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const res = await fetch('/api/group/teacher');
+        const resData = await res.json();
+        if (resData.success) {
+          setData(resData.data);
+        }
+      } catch (error) {
+        console.error('Gagal mengambil data kelompok:', error);
+        toast.error('Gagal mengambil data kelompok');
+      }
+    };
     fetchGroups();
   }, []);
 
@@ -93,18 +99,36 @@ export function SubmissionInputManagement() {
       });
   }, [kelompokId]);
 
+  useEffect(() => {
+    const fetchSurahs = async () => {
+      try {
+        const response = await fetch('/api/surah');
+        const data = await response.json();
+        setSurahList(data);
+      } catch (error) {
+        console.error('Gagal mengambil daftar surah:', error);
+        toast.error('Gagal mengambil daftar surah');
+      }
+    };
+    fetchSurahs();
+  }, []);
+
   const handleSubmit = async () => {
-    if (!kelompokId || !siswaId || !surahId || !ayatMulai || !ayatSelesai) {
+    if (
+      !kelompokId ||
+      !siswaId ||
+      !selectedSurahId ||
+      !ayatMulai ||
+      !ayatSelesai
+    ) {
       toast.message('Semua field harus diisi');
       return;
     }
 
-    setLoading(true);
-
     const formData: FormData = {
       kelompokId,
       siswaId,
-      surahId: parseInt(surahId),
+      surahId: parseInt(selectedSurahId),
       ayatMulai: parseInt(ayatMulai),
       ayatSelesai: parseInt(ayatSelesai),
       jenisSetoran,
@@ -113,15 +137,13 @@ export function SubmissionInputManagement() {
       catatan,
     };
 
+    setLoading(true);
     try {
       const res = await fetch('/api/submission', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       const resData = await res.json();
 
       if (!resData.success) {
@@ -131,7 +153,7 @@ export function SubmissionInputManagement() {
 
       toast.success('Setoran berhasil ditambahkan!');
       setSiswaId('');
-      setSurahId('');
+      setSelectedSurahId('');
       setAyatMulai('');
       setAyatSelesai('');
       setCatatan('');
@@ -158,7 +180,7 @@ export function SubmissionInputManagement() {
             <SelectContent>
               {data.map((k) => (
                 <SelectItem key={k.id} value={k.id}>
-                  {k.namaKelompok} - {k.kelas.namaKelas}({k.kelas.tahunAjaran})
+                  {k.namaKelompok} - {k.kelas.namaKelas} ({k.kelas.tahunAjaran})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -189,12 +211,12 @@ export function SubmissionInputManagement() {
           <Label>Jenis Setoran</Label>
           <Select
             value={jenisSetoran}
-            onValueChange={(value) =>
-              setJenisSetoran(value as 'TAHFIDZ' | 'TAHSIN')
+            onValueChange={(value: 'TAHFIDZ' | 'TAHSIN') =>
+              setJenisSetoran(value)
             }
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Pilih jenis setoran" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TAHFIDZ">Tahfidz</SelectItem>
@@ -205,13 +227,37 @@ export function SubmissionInputManagement() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <div>
-            <Label>Surah ID</Label>
-            <Input
-              type="number"
-              value={surahId}
-              onChange={(e) => setSurahId(e.target.value)}
-            />
+            <Label>Juz</Label>
+            <Select value={selectedJuz} onValueChange={setSelectedJuz}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih Juz" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 30 }, (_, i) => (
+                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                    Juz {i + 1}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          <div>
+            <Label>Surah</Label>
+            <Select value={selectedSurahId} onValueChange={setSelectedSurahId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih Surah" />
+              </SelectTrigger>
+              <SelectContent>
+                {surahList.map((surah) => (
+                  <SelectItem key={surah.id} value={surah.id}>
+                    {surah.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label>Ayat Mulai</Label>
             <Input
@@ -220,6 +266,7 @@ export function SubmissionInputManagement() {
               onChange={(e) => setAyatMulai(e.target.value)}
             />
           </div>
+
           <div>
             <Label>Ayat Selesai</Label>
             <Input
@@ -235,12 +282,12 @@ export function SubmissionInputManagement() {
             <Label>Adab</Label>
             <Select
               value={adab}
-              onValueChange={(value) =>
-                setAdab(value as 'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK')
+              onValueChange={(value: 'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK') =>
+                setAdab(value)
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Pilih adab" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="BAIK">Baik</SelectItem>
@@ -254,12 +301,12 @@ export function SubmissionInputManagement() {
             <Label>Status</Label>
             <Select
               value={statusSetoran}
-              onValueChange={(value) =>
-                setStatusSetoran(value as 'LULUS' | 'TIDAK_LULUS' | 'MENGULANG')
+              onValueChange={(value: 'LULUS' | 'TIDAK_LULUS' | 'MENGULANG') =>
+                setStatusSetoran(value)
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Pilih status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="LULUS">Lulus</SelectItem>

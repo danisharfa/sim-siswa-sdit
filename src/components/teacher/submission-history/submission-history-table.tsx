@@ -264,7 +264,7 @@ export function SubmissionHistoryTable({
         </Select>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="nis" />
+      <DataTable title={title} table={table} filterColumn="tanggal" />
     </>
   );
 }

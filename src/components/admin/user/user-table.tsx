@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVertical } from 'lucide-react';
+import { Eye, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,7 +65,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
   const handleOpenResetDialog = useCallback(
     (user: User) => {
       setSelectedUser(user);
-      setDialogType('edit');
+      setDialogType('reset');
     },
     [setSelectedUser, setDialogType]
   );
@@ -117,34 +117,35 @@ export function UserTable({ data, title, onRefresh }: Props) {
                     <span className="sr-only">User Option</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
+                <DropdownMenuContent align="end" className="w-50 z-50">
                   <DropdownMenuItem
                     onClick={() =>
                       router.push(`/dashboard/admin/users/${user.id}`)
                     }
+                    className="flex items-center gap-2"
                   >
+                    <Eye className="w-4 h-4" />
                     Detail
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenEditDialog(user);
-                    }}
+                    onClick={() => handleOpenEditDialog(user)}
+                    className="flex items-center gap-2"
                   >
+                    <Pencil className="w-4 h-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenResetDialog(user);
-                    }}
+                    onClick={() => handleOpenResetDialog(user)}
+                    className="flex items-center gap-2"
                   >
+                    <KeyRound className="w-4 h-4" />
                     Reset Password
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenDeleteDialog(user);
-                    }}
-                    className="text-destructive"
+                    onClick={() => handleOpenDeleteDialog(user)}
+                    className="flex items-center gap-2 text-destructive"
                   >
+                    <Trash2 className="w-4 h-4" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>

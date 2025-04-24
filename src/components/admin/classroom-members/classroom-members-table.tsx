@@ -76,7 +76,6 @@ export function ClassroomMembersTable({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Nama Lengkap" />
         ),
-        cell: ({ row }) => <span>{row.getValue('namaLengkap')}</span>,
       },
       {
         id: 'actions',
