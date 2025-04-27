@@ -20,7 +20,7 @@ export function GroupManagement() {
   async function fetchGroups() {
     setLoading(true);
     try {
-      const res = await fetch('/api/group/teacher');
+      const res = await fetch('/api/teacher/group');
       const data = await res.json();
       if (data.success) {
         setGroups(data.data);

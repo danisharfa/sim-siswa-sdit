@@ -35,7 +35,7 @@ export function MemberAlertDialog({
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/group/${groupId}/member`, {
+      const res = await fetch(`/api/admin/group/${groupId}/member`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

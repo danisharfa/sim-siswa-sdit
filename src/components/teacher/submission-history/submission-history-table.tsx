@@ -159,12 +159,15 @@ export function SubmissionHistoryTable({
       },
       {
         accessorKey: 'status',
+        header: 'Status',
       },
       {
         accessorKey: 'adab',
+        header: 'Adab',
       },
       {
         accessorKey: 'catatan',
+        header: 'Catatan',
       },
     ],
     []

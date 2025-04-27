@@ -38,7 +38,7 @@ export function ClassroomEditDialog({
   async function handleSave() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/classroom/${kelas.id}`, {
+      const res = await fetch(`/api/admin/classroom/${kelas.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaKelas, tahunAjaran }),

@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
           data: {
             id: siswaId,
             userId: newUser.id,
+            nis: newUser.username,
           },
         });
         console.log('Siswa Profile berhasil dibuat!');
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
           data: {
             id: guruId,
             userId: newUser.id,
+            nip: newUser.username,
           },
         });
         console.log('Guru Profile berhasil dibuat!');

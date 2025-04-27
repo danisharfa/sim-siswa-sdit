@@ -28,7 +28,7 @@ export function DataTablePagination<TData>({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-8">
         <div className="flex items-center gap-2">
           <Label htmlFor="rows-per-page" className="text-sm font-medium">
-            Rows per page
+            Baris per halaman
           </Label>
           <Select
             value={`${table.getState().pagination.pageSize}`}
@@ -49,7 +49,7 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
         <div className="text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
+          Halaman {table.getState().pagination.pageIndex + 1} dari{' '}
           {table.getPageCount()}
         </div>
       </div>
@@ -62,7 +62,7 @@ export function DataTablePagination<TData>({
           onClick={() => table.setPageIndex(0)}
           disabled={!table.getCanPreviousPage()}
         >
-          <span className="sr-only">Go to first page</span>
+          <span className="sr-only">Pergi ke halaman pertama</span>
           <ChevronsLeft />
         </Button>
         <Button
@@ -72,7 +72,7 @@ export function DataTablePagination<TData>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          <span className="sr-only">Go to previous page</span>
+          <span className="sr-only">Kembali ke halaman sebelumnya</span>
           <ChevronLeft />
         </Button>
         <Button
@@ -82,7 +82,7 @@ export function DataTablePagination<TData>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          <span className="sr-only">Go to next page</span>
+          <span className="sr-only">Pergi ke halaman berikutnya</span>
           <ChevronRight />
         </Button>
         <Button
@@ -92,7 +92,7 @@ export function DataTablePagination<TData>({
           onClick={() => table.setPageIndex(table.getPageCount() - 1)}
           disabled={!table.getCanNextPage()}
         >
-          <span className="sr-only">Go to last page</span>
+          <span className="sr-only">Pergi ke halaman terakhir</span>
           <ChevronsRight />
         </Button>
       </div>

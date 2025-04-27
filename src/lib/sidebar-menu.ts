@@ -1,4 +1,5 @@
 import {
+  Clipboard,
   Group,
   GroupIcon,
   LayoutDashboardIcon,
@@ -53,7 +54,7 @@ export const menuData = {
       icon: GroupIcon,
     },
     {
-      title: 'Setoran Hafalan',
+      title: 'Setoran Siswa',
       url: '/dashboard/teacher/submission',
       icon: MonitorCogIcon,
       children: [
@@ -64,6 +65,21 @@ export const menuData = {
         {
           title: 'Riwayat Setoran',
           url: '/dashboard/teacher/submission/history',
+        },
+      ],
+    },
+    {
+      title: 'Ujian Siswa',
+      url: '/dashboard/teacher',
+      icon: Clipboard,
+      children: [
+        {
+          title: 'Daftar Ujian',
+          url: '/dashboard/teacher/',
+        },
+        {
+          title: 'Jadwal Ujian',
+          url: '/dashboard/teacher/',
         },
       ],
     },

@@ -25,7 +25,7 @@ export function GroupManagement() {
 
   async function fetchGroups() {
     try {
-      const res = await fetch('/api/group');
+      const res = await fetch('/api/admin/group');
       const data = await res.json();
       if (data.success) {
         setGroups(data.data);

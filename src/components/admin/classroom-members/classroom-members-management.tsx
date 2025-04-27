@@ -15,7 +15,7 @@ export function ClassroomDetailsManagement({ kelasId }: { kelasId: string }) {
 
   const fetchMembers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/classroom/${kelasId}/members`);
+      const res = await fetch(`/api/admin/classroom/${kelasId}/members`);
       const students = await res.json();
 
       interface Student {

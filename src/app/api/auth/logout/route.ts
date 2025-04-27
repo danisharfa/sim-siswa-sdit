@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST() {
-  const response = NextResponse.json(
-    { message: 'Logged out' },
-    { status: 200 }
-  );
-
-  response.headers.set(
-    'Set-Cookie',
-    'token=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict'
-  );
-
-  return response;
+  (await cookies()).delete('token');
+  return NextResponse.json({ message: 'Berhasil logout' });
 }

@@ -33,7 +33,7 @@ export function NavMain({ items = [] }: { items?: NavItem[] }) {
                   <>
                     <SidebarMenuButton className="flex items-center gap-2">
                       {item.icon && <item.icon className="size-5" />}
-                      <span className="truncate">{item.title}</span>
+                      <span className="truncate ">{item.title}</span>
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       {item.children.map((child) => (

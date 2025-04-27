@@ -43,8 +43,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const anggota = await prisma.siswaProfile.findMany({
-      where: { kelompokId: params.id },
+    const members = await prisma.siswaProfile.findMany({
+      where: {
+        kelompokId: id,
+      },
       select: {
         id: true,
         nis: true,
@@ -56,16 +58,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
     });
 
-    const formattedAnggota = anggota.map((siswa) => ({
-      id: siswa.id,
-      nis: siswa.nis,
-      namaLengkap: siswa.user?.namaLengkap || 'Tidak diketahui',
-    }));
-
     return NextResponse.json({
       success: true,
       message: 'Data anggota kelompok berhasil diambil',
-      data: formattedAnggota,
+      data: members,
     });
   } catch (error) {
     console.error('[GET Teacher Group Members]', error);

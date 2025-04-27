@@ -27,7 +27,7 @@ export function GroupDetailsManagement({ groupId }: { groupId: string }) {
 
   const fetchMembers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/group/${groupId}/member`);
+      const res = await fetch(`/api/admin/group/${groupId}/member`);
       const resJson: MemberApiResponse = await res.json();
 
       if (!resJson.success) {

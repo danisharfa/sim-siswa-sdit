@@ -48,12 +48,12 @@ export function NavActions() {
   const menuItems: MenuItem[][] = [
     [
       {
-        title: 'Account',
+        title: 'Akun',
         icon: UserCog2Icon,
         url: accountPath,
       },
       {
-        title: 'Logout',
+        title: 'Keluar',
         icon: LogOut,
         url: '/logout',
       },
@@ -81,7 +81,7 @@ export function NavActions() {
         <PopoverTrigger asChild>
           <Button variant="ghost">
             <Settings2 />
-            Settings
+            Pengaturan
             <ChevronDown />
           </Button>
         </PopoverTrigger>

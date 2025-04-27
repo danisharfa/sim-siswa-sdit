@@ -11,81 +11,123 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+
+const formSchema = z.object({
+  oldPassword: z
+    .string()
+    .min(6, { message: 'Kata sandi lama minimal 6 karakter.' }),
+  newPassword: z
+    .string()
+    .min(6, { message: 'Kata sandi baru minimal 6 karakter.' }),
+});
 
 export function ChangePasswordForm({ userId }: { userId: string }) {
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      oldPassword: '',
+      newPassword: '',
+    },
+  });
+
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     setMessage('');
 
     const res = await fetch('/api/auth/change-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, oldPassword, newPassword }),
+      body: JSON.stringify({ userId, ...values }),
     });
 
     if (res.ok) {
-      setMessage('✅ Password successfully changed!');
+      setMessage('✅ Kata sandi berhasil diubah!');
     } else {
-      setMessage('❌ Failed to change password. Please try again.');
+      setMessage('❌ Gagal mengubah kata sandi. Silakan coba lagi.');
     }
     setLoading(false);
   };
 
   return (
-    <Card className="w-full max-w-md shadow-lg">
+    <Card className="shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl">Change Password</CardTitle>
+        <CardTitle className="text-2xl">Ganti Kata Sandi</CardTitle>
         <CardDescription>
-          Ensure your account security by updating your password.
+          Masukkan kata sandi lama Anda untuk mengganti kata sandi. Jika lupa,
+          hubungi admin.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="old-password">Old Password</Label>
-            <Input
-              id="old-password"
-              type="password"
-              placeholder="Enter your old password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              required
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="oldPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kata Sandi Lama</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Masukkan kata sandi lama"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="new-password">New Password</Label>
-            <Input
-              id="new-password"
-              type="password"
-              placeholder="Enter your new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
+            <FormField
+              control={form.control}
+              name="newPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kata Sandi Baru</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Masukkan kata sandi baru"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-2">
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Save />
+                  Simpan
+                </>
+              )}
+            </Button>
+            {message && <p className="text-center text-sm">{message}</p>}
+          </CardFooter>
         </form>
-      </CardContent>
-      <CardFooter className="flex flex-col gap-2">
-        <Button onClick={handleSubmit} className="w-full" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Changing...
-            </>
-          ) : (
-            'Change Password'
-          )}
-        </Button>
-        {message && <p className="text-center text-sm">{message}</p>}
-      </CardFooter>
+      </Form>
     </Card>
   );
 }

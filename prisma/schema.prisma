@@ -32,8 +32,8 @@ model SiswaProfile {
 
   tanggalLahir    DateTime?
   tempatLahir     String?
-  jenisKelamin    JenisKelamin?
-  golonganDarah   GolonganDarah?
+  jenisKelamin    JenisKelamin?     @default(PILIH)
+  golonganDarah   GolonganDarah?    @default(PILIH)
   alamat          String?
   noTelp          String?
   email           String?
@@ -60,8 +60,8 @@ model GuruProfile {
 
   tanggalLahir    DateTime?
   tempatLahir     String?
-  jenisKelamin    JenisKelamin?
-  golonganDarah   GolonganDarah?
+  jenisKelamin    JenisKelamin?     @default(PILIH)
+  golonganDarah   GolonganDarah?    @default(PILIH)
   alamat          String?
   noTelp          String?
   email           String?
@@ -74,6 +74,8 @@ model GuruProfile {
   guruKelompok    GuruKelompok[]
   riwayatKelompok RiwayatKelompok[]
   setoran         Setoran[]
+
+  @@index([nip])
 }
 
 model Kelas {
@@ -133,39 +135,49 @@ model RiwayatKelompok {
   guruId        String?
   tahunAjaran   String
   tanggalGabung DateTime     @default(now())
+
   guru          GuruProfile? @relation(fields: [guruId], references: [id])
   kelompok      Kelompok     @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
   siswa         SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
 }
 
 model Setoran {
-  id           String        @id @unique
-  siswaId      String
-  guruId       String
-  kelompokId   String
-  tanggal      DateTime
-  jenisSetoran JenisSetoran
-  surahId      Int
-  ayatMulai    Int
-  ayatSelesai  Int
-  adab         Adab
-  status       StatusSetoran
-  catatan      String?
+  id              String        @id @unique
+  siswaId         String
+  guruId          String
+  kelompokId      String
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  tanggal         DateTime
+  jenisSetoran    JenisSetoran
   
-  surah        Surah         @relation(fields: [surahId], references: [id])
-  siswa        SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  guru         GuruProfile   @relation(fields: [guruId], references: [id])
-  kelompok     Kelompok      @relation(fields: [kelompokId], references: [id])
+  juz             Int?
+  surahId         Int?
+  ayatMulai       Int?
+  ayatSelesai     Int?
+  
+  wafaId          Int?
+  halamanMulai    Int?
+  halamanSelesai  Int? 
+  
+  adab            Adab
+  status          StatusSetoran
+  catatan         String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  wafa            Wafa?         @relation(fields: [wafaId], references: [id])
+  surah           Surah?        @relation(fields: [surahId], references: [id])
+  siswa           SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru            GuruProfile   @relation(fields: [guruId], references: [id])
+  kelompok        Kelompok      @relation(fields: [kelompokId], references: [id])
 
   @@index([tanggal])
 }
 
 model Surah {
   id         Int       @id @default(autoincrement())
-  nama       String    @unique
+  namaSurah  String    @unique
   jumlahAyat Int
   
   setoran    Setoran[]
@@ -174,14 +186,21 @@ model Surah {
 
 model SurahJuz{
   id         Int       @id @default(autoincrement())
-  juz        Int
+  juz        Int       
   surahId    Int
   ayatAwal   Int
   ayatAkhir  Int
 
-  surah Surah @relation(fields: [surahId], references: [id], onDelete: Cascade)
+  surah      Surah @relation(fields: [surahId], references: [id], onDelete: Cascade)
 
   @@index([juz])
+}
+
+model Wafa {
+  id             Int     @id @default(autoincrement())
+  namaBuku       String  @unique
+
+  setoran        Setoran[]
 }
 
 enum Role {
@@ -212,7 +231,8 @@ enum StatusSetoran {
 
 enum JenisSetoran {
   TAHFIDZ
-  TAHSIN
+  TAHSIN_WAFA
+  TAHSIN_ALQURAN
 }
 
 enum Adab{

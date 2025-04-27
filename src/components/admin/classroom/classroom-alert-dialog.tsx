@@ -31,7 +31,7 @@ export function ClassroomAlertDialog({
   async function handleDelete() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/classroom/${kelas.id}`, {
+      const res = await fetch(`/api/admin/classroom/${kelas.id}`, {
         method: 'DELETE',
       });
 

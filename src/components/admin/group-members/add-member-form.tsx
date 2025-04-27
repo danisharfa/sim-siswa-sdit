@@ -24,7 +24,7 @@ export function AddMemberForm({ groupId, onMemberAdded }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/group/${groupId}/member`, {
+      const res = await fetch(`/api/admin/group/${groupId}/member`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nis }),

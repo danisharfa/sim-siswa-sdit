@@ -35,10 +35,9 @@ export function LoginForm() {
 
       const { role } = await res.json();
 
-      // Redirect berdasarkan role
-      if (role === 'admin') router.push('/dashboard/admin');
-      else if (role === 'teacher') router.push('/dashboard/teacher');
-      else router.push('/dashboard/student');
+      if (role === 'admin') router.replace('/dashboard/admin');
+      else if (role === 'teacher') router.replace('/dashboard/teacher');
+      else router.replace('/dashboard/student');
     } catch (error) {
       const message = getErrorMessage(error);
       console.error(message);
@@ -51,14 +50,14 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login</h1>
+        <h1 className="text-2xl font-bold">Masuk</h1>
         <p className="text-muted-foreground text-sm">
           Logo sekolah bisa disini
         </p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-3">
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="username">Nama akun</Label>
           <Input
             id="username"
             type="text"
@@ -69,12 +68,12 @@ export function LoginForm() {
         </div>
         <div className="grid gap-3">
           <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Kata sandi</Label>
             <a
               href="#"
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
-              Forgot your password?
+              Lupa kata sandi Anda?
             </a>
           </div>
           <Input
@@ -87,7 +86,7 @@ export function LoginForm() {
         </div>
         {error && <p className="text-destructive text-sm">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Masuk...' : 'Masuk'}
         </Button>
       </div>
     </form>

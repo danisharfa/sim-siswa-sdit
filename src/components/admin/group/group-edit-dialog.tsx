@@ -36,7 +36,7 @@ export function GroupEditDialog({
   async function handleSave() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/group/${kelompok.id}`, {
+      const res = await fetch(`/api/admin/group/${kelompok.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaKelompok }),

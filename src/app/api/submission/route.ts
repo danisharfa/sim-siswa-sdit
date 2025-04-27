@@ -46,7 +46,7 @@ export async function GET() {
         surah: {
           select: {
             id: true,
-            nama: true,
+            namaSurah: true,
           },
         },
         siswa: {
@@ -112,30 +112,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse the JSON data from the request
     const {
       kelompokId,
       siswaId,
+      jenisSetoran,
+      statusSetoran,
+      adab,
+      catatan,
+      juz,
       surahId,
       ayatMulai,
       ayatSelesai,
-      jenisSetoran,
-      statusSetoran,
-      adab, // Include adab here
-      catatan,
+      wafaId,
+      halamanMulai,
+      halamanSelesai,
     } = await req.json();
 
-    // Validate required fields
-    if (
-      !kelompokId ||
-      !siswaId ||
-      !surahId ||
-      !ayatMulai ||
-      !ayatSelesai ||
-      !jenisSetoran ||
-      !statusSetoran ||
-      !adab // Ensure adab is provided
-    ) {
+    if (!kelompokId || !siswaId || !jenisSetoran) {
       return NextResponse.json(
         { success: false, message: 'Data tidak lengkap' },
         { status: 400 }
@@ -190,15 +183,21 @@ export async function POST(req: NextRequest) {
         guruId: guru.id,
         kelompokId,
         tanggal: new Date(),
-        surahId,
-        ayatMulai,
-        ayatSelesai,
         jenisSetoran,
         status: statusSetoran,
         adab,
         catatan,
+        juz,
+        surahId,
+        ayatMulai,
+        ayatSelesai,
+        wafaId,
+        halamanMulai,
+        halamanSelesai,
       },
     });
+
+    console.log('Setoran Created:', setoran);
 
     return NextResponse.json({ success: true, data: setoran });
   } catch (error) {

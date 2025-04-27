@@ -31,7 +31,7 @@ export function AddUserForm({ onUserAdded }: Props) {
     }
 
     setLoading(true);
-    const newUser = { username, namaLengkap, role, password: username }; // Password default = username
+    const newUser = { username, namaLengkap, role, password: username };
 
     try {
       const res = await fetch('/api/users', {
@@ -44,7 +44,7 @@ export function AddUserForm({ onUserAdded }: Props) {
         toast.success('User berhasil ditambah!');
         setUsername('');
         setNamaLengkap('');
-        onUserAdded(); // Refresh data
+        onUserAdded();
       } else {
         const data = await res.json();
         toast.message(data.message || 'Gagal menambah user');

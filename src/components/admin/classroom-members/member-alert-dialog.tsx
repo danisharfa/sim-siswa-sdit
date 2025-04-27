@@ -35,7 +35,7 @@ export function MemberAlertDialog({
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/classroom/${kelasId}/members`, {
+      const res = await fetch(`/api/admin/classroom/${kelasId}/members`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

@@ -16,7 +16,9 @@ export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
 
   async function fetchUsers() {
-    const res = await fetch('/api/users');
+    const res = await fetch('/api/users', {
+      method: 'GET',
+    });
     const data = await res.json();
     setUsers(data);
   }

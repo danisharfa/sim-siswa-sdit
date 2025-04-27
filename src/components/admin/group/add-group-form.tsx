@@ -29,7 +29,7 @@ export function AddGroupForm({ onGroupAdded }: Props) {
     const newGroup = { namaKelompok, namaKelas, tahunAjaran, nip };
 
     try {
-      const res = await fetch('/api/group', {
+      const res = await fetch('/api/admin/group', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newGroup),

@@ -57,9 +57,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
       {
         accessorFn: (row) => row.kelas?.namaKelas ?? '-',
         id: 'kelas',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nama Kelas" />
-        ),
+        header: 'Kelas',
       },
       {
         accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',

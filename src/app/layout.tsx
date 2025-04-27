@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
-import { Overpass_Mono } from 'next/font/google';
+import { Nunito } from 'next/font/google';
 
-export const overpass_Mono = Overpass_Mono({
+export const font = Nunito({
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -23,7 +24,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={overpass_Mono.className}
+      className={`${font.className} antialiased`}
       suppressHydrationWarning
     >
       <body>

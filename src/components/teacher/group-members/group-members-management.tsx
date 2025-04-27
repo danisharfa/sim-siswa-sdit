@@ -6,7 +6,9 @@ import { GroupMembersTable } from '@/components/teacher/group-members/group-memb
 interface Siswa {
   id: string;
   nis: string;
-  namaLengkap: string;
+  user: {
+    namaLengkap: string;
+  };
 }
 
 export function GroupDetailsManagement({ groupId }: { groupId: string }) {

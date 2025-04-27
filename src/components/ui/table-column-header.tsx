@@ -36,9 +36,9 @@ export function DataTableColumnHeader<TData, TValue>({
             className="-ml-3 h-8 data-[state=open]:bg-accent"
           >
             <span>{title}</span>
-            {column.getIsSorted() === 'desc' ? (
+            {column.getIsSorted() === 'asc' ? (
               <ArrowDown />
-            ) : column.getIsSorted() === 'asc' ? (
+            ) : column.getIsSorted() === 'desc' ? (
               <ArrowUp />
             ) : (
               <ChevronsUpDown />
@@ -48,16 +48,16 @@ export function DataTableColumnHeader<TData, TValue>({
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
             <ArrowUp className="h-3.5 w-3.5 text-muted-foreground/70" />
-            Asc
+            A-Z
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
             <ArrowDown className="h-3.5 w-3.5 text-muted-foreground/70" />
-            Desc
+            Z-A
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
             <EyeOff className="h-3.5 w-3.5 text-muted-foreground/70" />
-            Hide
+            Sembunyikan
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

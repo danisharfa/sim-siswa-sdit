@@ -15,7 +15,7 @@ export function ClassroomManagement() {
 
   async function fetchKelas() {
     try {
-      const res = await fetch('/api/classroom');
+      const res = await fetch('/api/admin/classroom');
       if (!res.ok) throw new Error('Failed to fetch kelas data');
       const data = await res.json();
       setKelas(data);

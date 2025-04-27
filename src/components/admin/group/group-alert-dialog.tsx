@@ -31,7 +31,7 @@ export function GroupAlertDialog({
   async function handleDelete() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/group/${kelompok.id}`, {
+      const res = await fetch(`/api/admin/group/${kelompok.id}`, {
         method: 'DELETE',
       });
       if (res.ok) {

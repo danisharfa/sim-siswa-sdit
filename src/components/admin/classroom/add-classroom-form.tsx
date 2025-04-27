@@ -24,7 +24,7 @@ export function AddClassroomForm({ onKelasAdded }: Props) {
     const newKelas = { namaKelas, tahunAjaran };
 
     try {
-      const res = await fetch('/api/classroom', {
+      const res = await fetch('/api/admin/classroom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newKelas),
