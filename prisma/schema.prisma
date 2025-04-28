@@ -74,6 +74,7 @@ model GuruProfile {
   guruKelompok    GuruKelompok[]
   riwayatKelompok RiwayatKelompok[]
   setoran         Setoran[]
+  guruTes         GuruTes[]
 
   @@index([nip])
 }
@@ -202,6 +203,18 @@ model Wafa {
 
   setoran        Setoran[]
 }
+
+model GuruTes {
+  id        String       @id @default(uuid())
+  guruId    String
+
+  aktif     Boolean      @default(true)
+
+  createdAt DateTime     @default(now())
+
+  guru      GuruProfile  @relation(fields: [guruId], references: [id], onDelete: Cascade)
+}
+
 
 enum Role {
   admin

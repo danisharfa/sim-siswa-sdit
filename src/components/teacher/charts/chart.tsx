@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp } from 'lucide-react';
+// import { TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from 'recharts';
 
 import {
@@ -18,18 +18,17 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 const chartData = [
-  { month: 'January', desktop: 186 },
-  { month: 'February', desktop: 305 },
-  { month: 'March', desktop: 237 },
-  { month: 'April', desktop: 73 },
-  { month: 'May', desktop: 209 },
-  { month: 'June', desktop: 214 },
+  { juz: '30', siswa: 35 },
+  { juz: '29', siswa: 20 },
+  { juz: '28', siswa: 10 },
+  { juz: '27', siswa: 10 },
+  { juz: '26', siswa: 3 },
 ];
 
 const chartConfig = {
-  desktop: {
-    label: 'Desktop',
-    color: 'hsl(var(--chart-1))',
+  siswa: {
+    label: 'Siswa',
+    color: 'var(--chart-1)',
   },
 } satisfies ChartConfig;
 
@@ -37,8 +36,8 @@ export function Chart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bar Chart - Label</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Progress Hafalan Siswa</CardTitle>
+        <CardDescription>Tahun Ajaran 2024/2025</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -51,7 +50,7 @@ export function Chart() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="juz"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
@@ -61,7 +60,7 @@ export function Chart() {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8}>
+            <Bar dataKey="siswa" fill="var(--color-siswa)" radius={8}>
               <LabelList
                 position="top"
                 offset={12}
@@ -73,11 +72,11 @@ export function Chart() {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 font-medium leading-none">
+        {/* <div className="flex gap-2 font-medium leading-none">
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
+        </div> */}
         <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
+          Chart hafalan siswa bimbingan
         </div>
       </CardFooter>
     </Card>

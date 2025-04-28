@@ -55,6 +55,7 @@ export function AddClassroomForm({ onKelasAdded }: Props) {
           placeholder="Nama Kelas"
           value={namaKelas}
           onChange={(e) => setNamaKelas(e.target.value)}
+          className="focus:ring-2 focus:ring-amber-500"
         />
         <Input
           placeholder="Tahun Ajaran (contoh: 2024/2025)"

@@ -7,12 +7,19 @@ type Submission = {
   id: string;
   tanggal: string;
   jenisSetoran: string;
+  juz: number;
   surahId: number;
   surah: {
-    nama: string;
+    namaSurah: string;
+  };
+  wafaId: number;
+  wafa: {
+    namaBuku: string;
   };
   ayatMulai: number;
   ayatSelesai: number;
+  halamanMulai: number;
+  halamanSelesai: number;
   status: string;
   adab: string;
   catatan: string;
@@ -57,5 +64,5 @@ export function SubmissionHistoryManagement() {
 
   if (loading) return <p>Loading...</p>;
 
-  return <SubmissionHistoryTable data={data} title="History Setoran Siswa" />;
+  return <SubmissionHistoryTable data={data} title="Riwayat Setoran Siswa" />;
 }

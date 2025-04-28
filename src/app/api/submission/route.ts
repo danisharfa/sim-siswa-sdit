@@ -31,7 +31,6 @@ export async function GET() {
 
     const kelompokIds = kelompokBinaan.map((item) => item.kelompokId);
 
-    // Ambil data setoran dari kelompok yang dibimbing guru
     const setoranList = await prisma.setoran.findMany({
       where: {
         guruId: guru.id,
@@ -87,8 +86,6 @@ export async function GET() {
         },
       },
     });
-
-    console.log('Setoran List:', setoranList);
 
     return NextResponse.json({
       success: true,
@@ -202,8 +199,6 @@ export async function POST(req: NextRequest) {
         halamanSelesai,
       },
     });
-
-    console.log('Setoran Created:', setoran);
 
     return NextResponse.json({ success: true, data: setoran });
   } catch (error) {

@@ -32,6 +32,11 @@ export const menuData = {
       icon: Group,
     },
     {
+      title: 'Manajemen Tes',
+      url: '/dashboard/admin/exam',
+      icon: Clipboard,
+    },
+    {
       title: 'Monitoring Setoran',
       url: '/dashboard/admin/monitoring',
       icon: MonitorCogIcon,

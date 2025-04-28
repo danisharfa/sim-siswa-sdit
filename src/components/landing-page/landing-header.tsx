@@ -27,7 +27,7 @@ export function LandingHeader() {
               <Button asChild>
                 <Link href="/login" className="flex items-center gap-2">
                   <LogIn className="size-4" />
-                  Login
+                  Masuk
                 </Link>
               </Button>
             </NavigationMenuItem>

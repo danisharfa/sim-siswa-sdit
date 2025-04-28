@@ -14,11 +14,17 @@ export async function POST(req: NextRequest) {
       sameSite: 'strict',
       path: '/',
     });
+    (await cookies()).set('role', role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
+    console.log('Token set in cookies:', token);
+    console.log('Role set in cookies:', role);
+
     return NextResponse.json({ role });
   } catch (error) {
-    return NextResponse.json(
-      { message: getErrorMessage(error) },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: getErrorMessage(error) }, { status: 401 });
   }
 }
