@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
+import { ChevronDown } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -13,15 +12,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { flexRender, Table as TanStackTable } from '@tanstack/react-table';
-import { DataTablePagination } from './table-pagination';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from './dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Button } from './button';
-import { ChevronDown } from 'lucide-react';
+import { DataTablePagination } from './table-pagination';
 
 interface Props<T> {
   title: string;
@@ -65,7 +64,11 @@ export function DataTable<T>({
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
+                .filter(
+                  (column) =>
+                    typeof column.accessorFn !== 'undefined' &&
+                    column.getCanHide()
+                )
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem

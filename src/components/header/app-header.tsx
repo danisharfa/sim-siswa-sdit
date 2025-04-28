@@ -1,14 +1,19 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { NavActions } from './nav-actions';
+import { Separator } from '../ui/separator';
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-2 px-4 shadow-md border-b bg-background">
-      <div className="flex items-center gap-2">
+    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
+      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
-      </div>
-      <div className="ml-auto">
-        <NavActions />
+        <Separator
+          orientation="vertical"
+          className="mx-2 data-[orientation=vertical]:h-4"
+        />
+        <div className="ml-auto">
+          <NavActions />
+        </div>
       </div>
     </header>
   );

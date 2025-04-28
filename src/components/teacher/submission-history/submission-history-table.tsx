@@ -21,17 +21,33 @@ import {
 import { useDataTableState } from '@/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
+import {
+  CheckCircle2Icon,
+  MinusCircle,
+  RefreshCcw,
+  ThumbsDown,
+  ThumbsUp,
+  XCircle,
+} from 'lucide-react';
 
 type Submission = {
   id: string;
   tanggal: string;
   jenisSetoran: string;
+  juz: number;
   surahId: number;
   surah: {
-    nama: string;
+    namaSurah: string;
+  };
+  wafaId: number;
+  wafa: {
+    namaBuku: string;
   };
   ayatMulai: number;
   ayatSelesai: number;
+  halamanMulai: number;
+  halamanSelesai: number;
   status: string;
   adab: string;
   catatan: string;
@@ -116,20 +132,19 @@ export function SubmissionHistoryTable({
       },
       {
         accessorKey: 'siswa.nis',
-        id: 'nis',
+        id: 'NIS',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="NIS" />
         ),
       },
       {
         accessorKey: 'siswa.user.namaLengkap',
-        id: 'siswa',
+        id: 'Nama Siswa',
         header: 'Nama Siswa',
-        cell: ({ row }) => row.original.siswa.user.namaLengkap,
       },
       {
         accessorKey: 'kelompok.namaKelompok',
-        id: 'namaKelompok',
+        id: 'Nama Kelompok',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Kelompok" />
         ),
@@ -141,29 +156,98 @@ export function SubmissionHistoryTable({
       },
       {
         accessorKey: 'jenisSetoran',
+        id: 'Jenis Setoran',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Jenis Setoran" />
         ),
+        cell: ({ row }) => (
+          <div className="w-32">
+            <Badge variant="outline" className="px-1.5 text-muted-foreground">
+              {row.original.jenisSetoran.replaceAll('_', ' ')}
+            </Badge>
+          </div>
+        ),
       },
       {
-        accessorKey: 'surah.nama',
+        accessorKey: 'juz',
+        header: 'Juz',
+        cell: ({ row }) => row.original.juz ?? '-',
+      },
+      {
+        accessorKey: 'surah.namaSurah',
+        id: 'Surah',
         header: 'Surah',
+        cell: ({ row }) => row.original.surah?.namaSurah ?? '-',
       },
       {
         accessorKey: 'ayatMulai',
+        id: 'Ayat Mulai',
         header: 'Ayat Mulai',
+        cell: ({ row }) => row.original.ayatMulai ?? '-',
       },
       {
         accessorKey: 'ayatSelesai',
+        id: 'Ayat Selesai',
         header: 'Ayat Selesai',
+        cell: ({ row }) => row.original.ayatSelesai ?? '-',
+      },
+      {
+        accessorKey: 'wafa.namaBuku',
+        id: 'Wafa',
+        header: 'Wafa',
+        cell: ({ row }) => row.original.wafa?.namaBuku ?? '-',
+      },
+      {
+        accessorKey: 'halamanMulai',
+        id: 'Halaman Mulai',
+        header: 'Halaman Mulai',
+        cell: ({ row }) => row.original.halamanMulai ?? '-',
+      },
+      {
+        accessorKey: 'halamanSelesai',
+        id: 'Halaman Selesai',
+        header: 'Halaman Selesai',
+        cell: ({ row }) => row.original.halamanSelesai ?? '-',
       },
       {
         accessorKey: 'status',
         header: 'Status',
+        cell: ({ row }) => (
+          <Badge
+            variant="outline"
+            className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
+          >
+            {row.original.status === 'LULUS' ? (
+              <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
+            ) : row.original.status === 'MENGULANG' ? (
+              <RefreshCcw className="text-yellow-500 dark:text-yellow-400" />
+            ) : (
+              <XCircle className="text-red-500 dark:text-red-400" />
+            )}
+
+            {row.original.status.replaceAll('_', ' ')}
+          </Badge>
+        ),
       },
       {
         accessorKey: 'adab',
         header: 'Adab',
+        cell: ({ row }) => (
+          <Badge
+            variant="outline"
+            className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
+          >
+            {row.original.adab === 'BAIK' ? (
+              <ThumbsUp className="text-green-500 dark:text-green-400" />
+            ) : row.original.adab === 'KURANG_BAIK' ? (
+              <MinusCircle className="text-yellow-500 dark:text-yellow-400" />
+            ) : (
+              <ThumbsDown className="text-red-500 dark:text-red-400" />
+            )}
+
+            {row.original.adab.replaceAll('_', ' ')}
+          </Badge>
+        ),
       },
       {
         accessorKey: 'catatan',

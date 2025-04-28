@@ -49,6 +49,12 @@ export async function GET() {
             namaSurah: true,
           },
         },
+        wafa: {
+          select: {
+            id: true,
+            namaBuku: true,
+          },
+        },
         siswa: {
           select: {
             nis: true,

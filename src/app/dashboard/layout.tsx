@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar role={user.role} />
-      <SidebarInset>
+      <SidebarInset className="w-full sm:w-[calc(100vw-4rem)] md:w-[calc(100vw-6rem)] lg:w-[calc(100vw-20rem)]">
         <AppHeader />
         <main className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</main>
       </SidebarInset>
