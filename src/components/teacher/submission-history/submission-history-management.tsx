@@ -1,68 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SubmissionHistoryTable } from '@/components/teacher/submission-history/submission-history-table';
 
-type Submission = {
-  id: string;
-  tanggal: string;
-  jenisSetoran: string;
-  juz: number;
-  surahId: number;
-  surah: {
-    namaSurah: string;
-  };
-  wafaId: number;
-  wafa: {
-    namaBuku: string;
-  };
-  ayatMulai: number;
-  ayatSelesai: number;
-  halamanMulai: number;
-  halamanSelesai: number;
-  status: string;
-  adab: string;
-  catatan: string;
-  siswa: {
-    nis: string;
-    user: {
-      namaLengkap: string;
-    };
-  };
-  kelompok: {
-    namaKelompok: string;
-    kelas: {
-      namaKelas: string;
-      tahunAjaran: string;
-    };
-  };
-};
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function SubmissionHistoryManagement() {
-  const [data, setData] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, error, isLoading } = useSWR('/api/submission', fetcher);
 
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        const res = await fetch('/api/submission');
-        const redData = await res.json();
-        if (redData.success) {
-          setData(redData.data);
-        } else {
-          console.error(redData.error);
-        }
-      } catch (error) {
-        console.error('Gagal memuat data setoran', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (isLoading) {
+    return (
+      <div className="p-4">
+        <Skeleton className="h-8 w-1/3 mb-4" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
 
-    fetchSubmissions();
-  }, []);
+  if (error) return <p>Gagal memuat data setoran</p>;
 
-  if (loading) return <p>Loading...</p>;
-
-  return <SubmissionHistoryTable data={data} title="Riwayat Setoran Siswa" />;
+  return <SubmissionHistoryTable data={data.data} title="Riwayat Setoran Siswa" />;
 }

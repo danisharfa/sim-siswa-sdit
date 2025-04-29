@@ -1,9 +1,11 @@
+'use client';
+
 import { redirect } from 'next/navigation';
-import { getUser } from '@/lib/auth';
+import { useUser } from '@/lib/context/user-context';
 import TeacherProfileDetail from '@/components/teacher/profile/detail';
 
-export default async function TeacherProfilePage() {
-  const user = await getUser();
+export default function TeacherProfilePage() {
+  const user = useUser();
 
   if (!user || user.role !== 'teacher') {
     return redirect('/login');

@@ -1,14 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, LogOut, Settings2, UserCog2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +15,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { getClientUser } from '@/lib/auth-client';
+import { signOut, useSession } from 'next-auth/react';
 
 interface MenuItem {
   title: string;
@@ -29,21 +25,12 @@ interface MenuItem {
 
 export function NavActions() {
   const [isOpen, setIsOpen] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
+  const { data: session } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchRole = async () => {
-      const user = await getClientUser();
-      if (user) setRole(user.role);
-    };
+  const role = session?.user.role || null;
 
-    fetchRole();
-  }, []);
-
-  const accountPath = role
-    ? `/dashboard/${role}/account`
-    : '/dashboard/account';
+  const accountPath = role ? `/dashboard/${role}/account` : '/dashboard/account';
 
   const menuItems: MenuItem[][] = [
     [
@@ -62,14 +49,7 @@ export function NavActions() {
 
   const handleClick = async (url: string) => {
     if (url === '/logout') {
-      try {
-        const res = await fetch('/api/auth/logout', { method: 'POST' });
-        if (res.ok) {
-          router.push('/login');
-        }
-      } catch (err) {
-        console.error('Logout failed:', err);
-      }
+      await signOut({ callbackUrl: '/login' });
     } else {
       router.push(url);
     }
@@ -85,10 +65,7 @@ export function NavActions() {
             <ChevronDown />
           </Button>
         </PopoverTrigger>
-        <PopoverContent
-          className="w-56 overflow-hidden rounded-lg p-0"
-          align="end"
-        >
+        <PopoverContent className="w-56 overflow-hidden rounded-lg p-0" align="end">
           <Sidebar collapsible="none" className="bg-transparent">
             <SidebarContent>
               {menuItems.map((group, index) => (

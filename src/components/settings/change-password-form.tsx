@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ChangePasswordSchema } from '@/lib/zod';
 import { z } from 'zod';
 import {
   Form,
@@ -24,28 +25,19 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-const formSchema = z.object({
-  oldPassword: z
-    .string()
-    .min(6, { message: 'Kata sandi lama minimal 6 karakter.' }),
-  newPassword: z
-    .string()
-    .min(6, { message: 'Kata sandi baru minimal 6 karakter.' }),
-});
-
 export function ChangePasswordForm({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof ChangePasswordSchema>>({
+    resolver: zodResolver(ChangePasswordSchema),
     defaultValues: {
       oldPassword: '',
       newPassword: '',
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: z.infer<typeof ChangePasswordSchema>) => {
     setLoading(true);
     setMessage('');
 
@@ -68,8 +60,7 @@ export function ChangePasswordForm({ userId }: { userId: string }) {
       <CardHeader>
         <CardTitle className="text-2xl">Ganti Kata Sandi</CardTitle>
         <CardDescription>
-          Masukkan kata sandi lama Anda untuk mengganti kata sandi. Jika lupa,
-          hubungi admin.
+          Masukkan kata sandi lama Anda untuk mengganti kata sandi. Jika lupa, hubungi admin.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -82,11 +73,7 @@ export function ChangePasswordForm({ userId }: { userId: string }) {
                 <FormItem>
                   <FormLabel>Kata Sandi Lama</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Masukkan kata sandi lama"
-                      {...field}
-                    />
+                    <Input type="password" placeholder="Masukkan kata sandi lama" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -99,11 +86,7 @@ export function ChangePasswordForm({ userId }: { userId: string }) {
                 <FormItem>
                   <FormLabel>Kata Sandi Baru</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Masukkan kata sandi baru"
-                      {...field}
-                    />
+                    <Input type="password" placeholder="Masukkan kata sandi baru" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

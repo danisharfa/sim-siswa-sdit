@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,86 +11,87 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
+import { useEffect, useState, useActionState } from 'react';
 import { toast } from 'sonner';
+import { Loader2, Save } from 'lucide-react';
+import { addUserCredentials } from '@/lib/actions';
 
 interface Props {
   onUserAdded: () => void;
 }
 
+const initialRole = 'student';
+
 export function AddUserForm({ onUserAdded }: Props) {
-  const [username, setUsername] = useState('');
-  const [namaLengkap, setNamaLengkap] = useState('');
-  const [role, setRole] = useState<'teacher' | 'student'>('student');
-  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<'teacher' | 'student'>(initialRole);
 
-  async function handleAddUser() {
-    if (!username || !namaLengkap) {
-      toast.warning('Nama dan Username wajib diisi');
-      return;
+  const [state, formAction] = useActionState(addUserCredentials, null);
+
+  useEffect(() => {
+    if (!state) return;
+
+    if (state.success) {
+      toast.success(state.message || 'User berhasil ditambah!');
+      onUserAdded();
+      // Reset role setelah berhasil tambah
+      setRole(initialRole);
+    } else if (state.error) {
+      const first = Object.values(state.error)[0]?.[0];
+      toast.error(first || 'Validasi gagal');
+    } else if (state.message && !state.success) {
+      toast.error(state.message);
     }
+  }, [state, onUserAdded]);
 
-    setLoading(true);
-    const newUser = { username, namaLengkap, role, password: username };
+  const [submitting, setSubmitting] = useState(false);
 
-    try {
-      const res = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser),
-      });
-
-      if (res.ok) {
-        toast.success('User berhasil ditambah!');
-        setUsername('');
-        setNamaLengkap('');
-        onUserAdded();
-      } else {
-        const data = await res.json();
-        toast.message(data.message || 'Gagal menambah user');
-      }
-    } catch {
-      toast.error('Terjadi kesalahan, coba lagi.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    setSubmitting(true);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    formData.set('role', role); // Force inject role yang dipilih
+    await formAction(formData);
+    setSubmitting(false);
+  };
 
   return (
-    <Card>
+    <Card className="shadow-xl">
       <CardHeader>
-        <h2 className="text-xl font-semibold">Tambah Pengguna Baru</h2>
+        <CardTitle className="text-2xl">Tambah User</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <Input
-          placeholder="Nama"
-          value={namaLengkap}
-          onChange={(e) => setNamaLengkap(e.target.value)}
-        />
-        <Select
-          value={role}
-          onValueChange={(val) => setRole(val as 'teacher' | 'student')}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Pilih Peran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="teacher">Guru</SelectItem>
-              <SelectItem value="student">Siswa</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Button
-          onClick={handleAddUser}
-          disabled={loading || !username || !namaLengkap}
-        >
-          {loading ? 'Menambahkan...' : 'Tambah Pengguna'}
-        </Button>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input name="username" placeholder="Username" required />
+          <Input name="namaLengkap" placeholder="Nama Lengkap" required />
+
+          <Select value={role} onValueChange={(val) => setRole(val as 'teacher' | 'student')}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Pilih role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="teacher">Guru</SelectItem>
+                <SelectItem value="student">Siswa</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <CardFooter className="flex flex-col gap-2">
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Simpan
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </form>
       </CardContent>
     </Card>
   );

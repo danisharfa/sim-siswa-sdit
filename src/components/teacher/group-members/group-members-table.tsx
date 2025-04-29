@@ -9,7 +9,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useDataTableState } from '@/hooks/use-data-table';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 
@@ -40,9 +40,7 @@ export function GroupMembersTable({ data, title }: Props) {
     () => [
       {
         accessorKey: 'nis',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="NIS" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
         accessorKey: 'user.namaLengkap',

@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUser } from '@/lib/auth';
+import { auth } from '@/auth';
 
 export async function GET() {
   try {
-    const user = await getUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user || user.role !== 'teacher') {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const guru = await prisma.guruProfile.findUnique({
@@ -75,15 +73,6 @@ export async function GET() {
             },
           },
         },
-        guru: {
-          select: {
-            user: {
-              select: {
-                namaLengkap: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -106,13 +95,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user || user.role !== 'teacher') {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const {
@@ -132,10 +119,7 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     if (!kelompokId || !siswaId || !jenisSetoran) {
-      return NextResponse.json(
-        { success: false, message: 'Data tidak lengkap' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
     const guru = await prisma.guruProfile.findUnique({

@@ -5,8 +5,9 @@ import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
 
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useIsTablet } from '@/hooks/use-tablet';
+import { useIsMobile } from '@/lib/hooks/use-mobile';
+import { useIsTablet } from '@/lib/hooks/use-tablet';
+import { useHasMounted } from '@/lib/hooks/use-has-mounted';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,18 +20,13 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = '20rem';
 const SIDEBAR_WIDTH_MOBILE = '16rem';
-const SIDEBAR_WIDTH_TABLET = '18rem'; // Tambahkan lebar untuk mode tablet
+const SIDEBAR_WIDTH_TABLET = '18rem';
 const SIDEBAR_WIDTH_ICON = '3rem';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
@@ -41,7 +37,7 @@ type SidebarContextProps = {
   openMobile: boolean;
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
-  isTablet: boolean; // Tambahkan properti untuk mendeteksi mode tablet
+  isTablet: boolean;
   toggleSidebar: () => void;
 };
 
@@ -69,8 +65,9 @@ function SidebarProvider({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const hasMounted = useHasMounted();
   const isMobile = useIsMobile();
-  const isTablet = useIsTablet(); // Menambahkan kondisi untuk tablet
+  const isTablet = useIsTablet();
   const [openMobile, setOpenMobile] = React.useState(false);
 
   const [_open, _setOpen] = React.useState(defaultOpen);
@@ -90,17 +87,12 @@ function SidebarProvider({
   );
 
   const toggleSidebar = React.useCallback(() => {
-    return isMobile || isTablet
-      ? setOpenMobile((open) => !open)
-      : setOpen((open) => !open);
+    return isMobile || isTablet ? setOpenMobile((open) => !open) : setOpen((open) => !open);
   }, [isMobile, isTablet, setOpen, setOpenMobile]);
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
+      if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         toggleSidebar();
       }
@@ -118,22 +110,17 @@ function SidebarProvider({
       open,
       setOpen,
       isMobile,
-      isTablet, // Menambahkan nilai isTablet ke dalam context
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
-    }),
-    [
-      state,
-      open,
-      setOpen,
-      isMobile,
       isTablet,
       openMobile,
       setOpenMobile,
       toggleSidebar,
-    ]
+    }),
+    [state, open, setOpen, isMobile, isTablet, openMobile, setOpenMobile, toggleSidebar]
   );
+
+  if (!hasMounted) {
+    return null;
+  }
 
   return (
     <SidebarContext.Provider value={contextValue}>
@@ -142,9 +129,7 @@ function SidebarProvider({
           data-slot="sidebar-wrapper"
           style={
             {
-              '--sidebar-width': isTablet
-                ? SIDEBAR_WIDTH_TABLET
-                : SIDEBAR_WIDTH, // Sesuaikan dengan mode tablet
+              '--sidebar-width': isTablet ? SIDEBAR_WIDTH_TABLET : SIDEBAR_WIDTH,
               '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
@@ -201,9 +186,7 @@ function Sidebar({
           className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
           style={
             {
-              '--sidebar-width': isTablet
-                ? SIDEBAR_WIDTH_TABLET
-                : SIDEBAR_WIDTH_MOBILE,
+              '--sidebar-width': isTablet ? SIDEBAR_WIDTH_TABLET : SIDEBAR_WIDTH_MOBILE,
             } as React.CSSProperties
           }
           side={side}
@@ -265,11 +248,7 @@ function Sidebar({
   );
 }
 
-function SidebarTrigger({
-  className,
-  onClick,
-  ...props
-}: React.ComponentProps<typeof Button>) {
+function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -330,10 +309,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
   );
 }
 
-function SidebarInput({
-  className,
-  ...props
-}: React.ComponentProps<typeof Input>) {
+function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input>) {
   return (
     <Input
       data-slot="sidebar-input"
@@ -366,10 +342,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-function SidebarSeparator({
-  className,
-  ...props
-}: React.ComponentProps<typeof Separator>) {
+function SidebarSeparator({ className, ...props }: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
       data-slot="sidebar-separator"
@@ -449,10 +422,7 @@ function SidebarGroupAction({
   );
 }
 
-function SidebarGroupContent({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+function SidebarGroupContent({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-group-content"
@@ -589,10 +559,7 @@ function SidebarMenuAction({
   );
 }
 
-function SidebarMenuBadge({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+function SidebarMenuBadge({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-menu-badge"
@@ -630,12 +597,7 @@ function SidebarMenuSkeleton({
       className={cn('flex h-8 items-center gap-2 rounded-md px-2', className)}
       {...props}
     >
-      {showIcon && (
-        <Skeleton
-          className="size-4 rounded-md"
-          data-sidebar="menu-skeleton-icon"
-        />
-      )}
+      {showIcon && <Skeleton className="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />}
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
@@ -664,10 +626,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<'ul'>) {
   );
 }
 
-function SidebarMenuSubItem({
-  className,
-  ...props
-}: React.ComponentProps<'li'>) {
+function SidebarMenuSubItem({ className, ...props }: React.ComponentProps<'li'>) {
   return (
     <li
       data-slot="sidebar-menu-sub-item"

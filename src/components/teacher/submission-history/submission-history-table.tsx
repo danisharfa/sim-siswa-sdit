@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { useDataTableState } from '@/hooks/use-data-table';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -70,10 +70,7 @@ interface SubmissionHistoryTableProps {
   title: string;
 }
 
-export function SubmissionHistoryTable({
-  data,
-  title,
-}: SubmissionHistoryTableProps) {
+export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTableProps) {
   const {
     sorting,
     setSorting,
@@ -83,9 +80,7 @@ export function SubmissionHistoryTable({
     setColumnVisibility,
   } = useDataTableState<Submission, string>();
 
-  const [selectedKelompok, setSelectedKelompok] = useState<string | 'all'>(
-    'all'
-  );
+  const [selectedKelompok, setSelectedKelompok] = useState<string | 'all'>('all');
   const [selectedSiswa, setSelectedSiswa] = useState<string | 'all'>('all');
 
   const kelompokList = useMemo(
@@ -116,12 +111,11 @@ export function SubmissionHistoryTable({
     () => [
       {
         accessorKey: 'tanggal',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Tanggal" />
-        ),
+        id: 'Tanggal',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => (
           <span>
-            {new Date(row.getValue('tanggal')).toLocaleDateString('id-ID', {
+            {new Date(row.getValue('Tanggal')).toLocaleDateString('id-ID', {
               day: 'numeric',
               month: 'short',
               year: 'numeric',
@@ -132,9 +126,7 @@ export function SubmissionHistoryTable({
       {
         accessorKey: 'siswa.nis',
         id: 'NIS',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="NIS" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
         accessorKey: 'siswa.user.namaLengkap',
@@ -144,9 +136,7 @@ export function SubmissionHistoryTable({
       {
         accessorKey: 'kelompok.namaKelompok',
         id: 'Nama Kelompok',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Kelompok" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Kelompok" />,
         cell: ({ row }) => {
           const kelompok = row.original.kelompok;
           const kelas = kelompok.kelas;
@@ -156,9 +146,7 @@ export function SubmissionHistoryTable({
       {
         accessorKey: 'jenisSetoran',
         id: 'Jenis Setoran',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Jenis Setoran" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Jenis Setoran" />,
         cell: ({ row }) => (
           <div className="w-32">
             <Badge variant="outline" className="px-1.5 text-muted-foreground">
@@ -279,9 +267,7 @@ export function SubmissionHistoryTable({
         <Select
           onValueChange={(value) => {
             setSelectedKelompok(value);
-            table
-              .getColumn('namaKelompok')
-              ?.setFilterValue(value === 'all' ? undefined : value);
+            table.getColumn('namaKelompok')?.setFilterValue(value === 'all' ? undefined : value);
             setSelectedSiswa('all');
             table.getColumn('siswa')?.setFilterValue(undefined);
           }}
@@ -308,9 +294,7 @@ export function SubmissionHistoryTable({
           value={selectedSiswa}
           onValueChange={(value) => {
             setSelectedSiswa(value);
-            table
-              .getColumn('siswa')
-              ?.setFilterValue(value === 'all' ? undefined : value);
+            table.getColumn('siswa')?.setFilterValue(value === 'all' ? undefined : value);
           }}
         >
           <SelectTrigger className="min-w-[200px] w-full sm:w-[250px]">
@@ -329,9 +313,7 @@ export function SubmissionHistoryTable({
         {/* Filter Jenis Setoran */}
         <Select
           onValueChange={(value) =>
-            table
-              .getColumn('jenisSetoran')
-              ?.setFilterValue(value === 'all' ? undefined : value)
+            table.getColumn('jenisSetoran')?.setFilterValue(value === 'all' ? undefined : value)
           }
         >
           <SelectTrigger className="min-w-[200px] w-full sm:w-[200px]">
@@ -339,18 +321,16 @@ export function SubmissionHistoryTable({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Jenis</SelectItem>
-            {Array.from(new Set(data.map((d) => d.jenisSetoran))).map(
-              (jenis) => (
-                <SelectItem key={jenis} value={jenis}>
-                  {jenis}
-                </SelectItem>
-              )
-            )}
+            {Array.from(new Set(data.map((d) => d.jenisSetoran))).map((jenis) => (
+              <SelectItem key={jenis} value={jenis}>
+                {jenis}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="tanggal" />
+      <DataTable title={title} table={table} filterColumn="Tanggal" />
     </>
   );
 }

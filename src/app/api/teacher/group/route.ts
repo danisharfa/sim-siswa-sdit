@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUser } from '@/lib/auth';
+import { auth } from '@/auth';
 
 export async function GET() {
   try {
-    const user = await getUser();
+    const session = await auth();
+    const user = session?.user;
+
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const guru = await prisma.guruProfile.findUnique({
@@ -17,10 +16,7 @@ export async function GET() {
     });
 
     if (!guru) {
-      return NextResponse.json(
-        { success: false, error: 'Guru tidak ditemukan' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
     const groups = await prisma.kelompok.findMany({

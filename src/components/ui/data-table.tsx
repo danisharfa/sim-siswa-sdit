@@ -47,9 +47,7 @@ export function DataTable<T>({
               <Input
                 placeholder={`Cari ${filterColumn}...`}
                 onChange={(event) =>
-                  table
-                    .getColumn(filterColumn)
-                    ?.setFilterValue(event.target.value)
+                  table.getColumn(filterColumn)?.setFilterValue(event.target.value)
                 }
                 className="max-w-sm"
               />
@@ -64,20 +62,14 @@ export function DataTable<T>({
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== 'undefined' &&
-                    column.getCanHide()
-                )
+                .filter((column) => typeof column.accessorFn !== 'undefined' && column.getCanHide())
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
                       {column.id}
                     </DropdownMenuCheckboxItem>
@@ -95,16 +87,9 @@ export function DataTable<T>({
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className={
-                        header.column.id === table.getAllColumns()[0].id
-                          ? 'pl-4'
-                          : ''
-                      }
+                      className={header.column.id === table.getAllColumns()[0].id ? 'pl-4' : ''}
                     >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                      {flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -117,26 +102,16 @@ export function DataTable<T>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={
-                          cell.column.id === table.getAllColumns()[0].id
-                            ? 'pl-4'
-                            : ''
-                        }
+                        className={cell.column.id === table.getAllColumns()[0].id ? 'pl-4' : ''}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={table.getAllColumns().length}
-                    className="text-center"
-                  >
+                  <TableCell colSpan={table.getAllColumns().length} className="text-center">
                     {emptyMessage}
                   </TableCell>
                 </TableRow>

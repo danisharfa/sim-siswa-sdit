@@ -1,14 +1,16 @@
 import { redirect } from 'next/navigation';
-import { getUser } from '@/lib/auth';
+import { getSession } from '@/lib/auth/get-session';
 
 export default async function DashboardRedirect() {
-  const user = await getUser();
+  const session = await getSession();
 
-  if (!user) {
-    return redirect('/login');
-  }
+  if (!session) return redirect('/login');
 
-  if (user.role === 'admin') return redirect('/dashboard/admin');
-  if (user.role === 'teacher') return redirect('/dashboard/teacher');
-  return redirect('/dashboard/student');
+  const { role } = session.user;
+
+  if (role === 'admin') return redirect('/dashboard/admin');
+  if (role === 'teacher') return redirect('/dashboard/teacher');
+  if (role === 'student') return redirect('/dashboard/student');
+
+  return redirect('/dashboard');
 }

@@ -3,12 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -55,9 +50,7 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
   const [updatedData, setUpdatedData] = useState<TeacherProfile>({});
   const [date, setDate] = useState<Date | undefined>(
-    user?.profile?.tanggalLahir
-      ? new Date(user.profile.tanggalLahir)
-      : undefined
+    user?.profile?.tanggalLahir ? new Date(user.profile.tanggalLahir) : undefined
   );
 
   useEffect(() => {
@@ -160,7 +153,7 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
                 <Label className="py-2" htmlFor="namaLengkap">
                   Nama Lengkap
                 </Label>
-                <Input id="namaLengkap" value={user.namaLengkap} readOnly />
+                <Input id="namaLengkap" value={user.namaLengkap ?? ''} readOnly />
               </div>
 
               {/* NIS */}
@@ -168,7 +161,7 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
                 <Label className="py-2" htmlFor="nip">
                   NIP
                 </Label>
-                <Input id="nip" value={user.profile?.nip} readOnly />
+                <Input id="nip" value={user.profile?.nip ?? ''} readOnly />
               </div>
 
               {/* Tempat Lahir */}

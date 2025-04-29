@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserDetail } from '@/components/admin/user/user-detail';
-import { getUserDetail } from '@/lib/data';
+import { getUserDetail } from '@/lib/datas/user';
 
 type Params = Promise<{ id: string }>;
 

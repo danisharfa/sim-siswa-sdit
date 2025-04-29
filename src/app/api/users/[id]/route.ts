@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import argon2 from 'argon2';
+import { hash } from 'bcryptjs';
 
 type Params = Promise<{ id: string }>;
 
@@ -26,12 +26,9 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     if (namaLengkap) updateData.namaLengkap = namaLengkap;
     if (resetPassword) {
       if (!existingUser.username) {
-        return NextResponse.json(
-          { error: 'Invalid username for password reset' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid username for password reset' }, { status: 400 });
       }
-      updateData.password = await argon2.hash(existingUser.username);
+      updateData.password = await hash(existingUser.username, 10);
     }
 
     await prisma.user.update({
@@ -41,17 +38,11 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({ message: 'User updated successfully' });
   } catch {
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  segmentData: { params: Params }
-) {
+export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;
     const id = params.id;
@@ -68,9 +59,6 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'User deleted successfully' });
   } catch {
-    return NextResponse.json(
-      { error: 'Failed to delete user' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }

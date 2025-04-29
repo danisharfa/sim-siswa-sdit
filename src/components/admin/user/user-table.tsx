@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { UserEditDialog } from '@/components/admin/user/user-edit-dialog';
 import { UserAlertDialog } from '@/components/admin/user/user-alert-dialog';
-import { useDataTableState } from '@/hooks/use-data-table';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 

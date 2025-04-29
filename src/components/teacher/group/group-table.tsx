@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { useDataTableState } from '@/hooks/use-data-table';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 
@@ -52,22 +52,22 @@ export function GroupTable({ data, title }: GroupTableProps) {
     () => [
       {
         accessorKey: 'namaKelompok',
+        id: 'Nama Kelompok',
         header: 'Nama Kelompok',
       },
       {
         accessorFn: (row) => row.kelas?.namaKelas ?? '-',
-        id: 'kelas',
+        id: 'Kelas',
         header: 'Kelas',
       },
       {
         accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
-        id: 'tahunAjaran',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Tahun Ajaran" />
-        ),
+        id: 'Tahun Ajaran',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
       {
         accessorKey: 'totalAnggota',
+        id: 'Total Anggota',
         header: 'Jumlah Siswa',
       },
       {
@@ -86,9 +86,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/teacher/group/${kelompok.id}`)
-                    }
+                    onClick={() => router.push(`/dashboard/teacher/group/${kelompok.id}`)}
                   >
                     Detail
                   </DropdownMenuItem>
@@ -121,7 +119,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="kelas" />
+      <DataTable title={title} table={table} filterColumn="Kelas" />
     </>
   );
 }

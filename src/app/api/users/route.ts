@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import argon2 from 'argon2';
+import { hash } from 'bcryptjs';
 
 export async function GET() {
   try {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const hashedPassword = await argon2.hash(username);
+    const hashedPassword = await hash(username, 10);
 
     const newUser = await prisma.user.create({
       data: { username, namaLengkap, role, password: hashedPassword },

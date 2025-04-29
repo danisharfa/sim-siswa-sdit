@@ -1,22 +1,16 @@
-import { redirect } from 'next/navigation';
-import { getUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth/require-role';
 import { prisma } from '@/lib/prisma';
 import { DashboardStats } from '@/components/dashboard-stats';
 
 export default async function AdminDashboard() {
-  const user = await getUser();
+  const user = await requireRole('admin');
 
-  if (!user || user.role !== 'admin') {
-    return redirect('/login');
-  }
-
-  const [totalStudents, totalTeachers, totalClassrooms, totalGroups] =
-    await Promise.all([
-      prisma.user.count({ where: { role: 'student' } }),
-      prisma.user.count({ where: { role: 'teacher' } }),
-      prisma.kelas.count(),
-      prisma.kelompok.count(), // Placeholder for total groups
-    ]);
+  const [totalStudents, totalTeachers, totalClassrooms, totalGroups] = await Promise.all([
+    prisma.user.count({ where: { role: 'student' } }),
+    prisma.user.count({ where: { role: 'teacher' } }),
+    prisma.kelas.count(),
+    prisma.kelompok.count(),
+  ]);
 
   return (
     <div className="p-6 space-y-4">
@@ -29,7 +23,7 @@ export default async function AdminDashboard() {
         totalStudents={totalStudents}
         totalTeachers={totalTeachers}
         totalClassrooms={totalClassrooms}
-        totalGroups={totalGroups} // Placeholder for total groups
+        totalGroups={totalGroups}
       />
     </div>
   );

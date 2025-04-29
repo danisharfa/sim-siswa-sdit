@@ -1,10 +1,5 @@
 import { Table } from '@tanstack/react-table';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,9 +15,7 @@ interface DataTablePaginationProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTablePagination<TData>({
-  table,
-}: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
   return (
     <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-8">
@@ -49,8 +42,7 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
         <div className="text-sm font-medium">
-          Halaman {table.getState().pagination.pageIndex + 1} dari{' '}
-          {table.getPageCount()}
+          Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
         </div>
       </div>
 

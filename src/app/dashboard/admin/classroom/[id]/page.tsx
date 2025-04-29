@@ -2,12 +2,10 @@ import { ClassroomDetailsManagement } from '@/components/admin/classroom-members
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { getClassroomById } from '@/lib/data';
+import { getClassroomById } from '@/lib/datas/classroom';
 import { notFound } from 'next/navigation';
 
-export default async function ClassroomPage(props: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ClassroomPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = params.id;
 
