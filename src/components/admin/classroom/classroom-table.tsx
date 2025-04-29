@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVertical } from 'lucide-react';
+import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,16 +72,13 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
     () => [
       {
         accessorKey: 'namaKelas',
-        id: 'kelas',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Kelas" />
-        ),
+        id: 'Nama Kelas',
+        header: 'Nama Kelas',
       },
       {
         accessorKey: 'tahunAjaran',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Tahun Ajaran" />
-        ),
+        id: 'Tahun Ajaran',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
       {
         id: 'actions',
@@ -98,19 +95,25 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32 z-50">
                 <DropdownMenuItem
-                  onClick={() =>
-                    router.push(`/dashboard/admin/classroom/${kelas.id}`)
-                  }
+                  onClick={() => router.push(`/dashboard/admin/classroom/${kelas.id}`)}
+                  className="flex items-center gap-2"
                 >
+                  <Eye className="w-4 h-4" />
                   Detail
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleOpenEditDialog(kelas)}>
+                <DropdownMenuItem
+                  onClick={() => handleOpenEditDialog(kelas)}
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleOpenDeleteDialog(kelas)}
-                  className="text-destructive"
+                  className="flex items-center gap-2"
+                  variant="destructive"
                 >
+                  <Trash2 className="w-4 h-4" />
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -141,7 +144,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="kelas" />
+      <DataTable title={title} table={table} filterColumn="Nama Kelas" />
 
       {dialogType === 'edit' && selectedKelas && (
         <ClassroomEditDialog

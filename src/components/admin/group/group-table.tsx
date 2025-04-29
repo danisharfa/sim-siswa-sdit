@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVertical } from 'lucide-react';
+import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,31 +82,25 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
     () => [
       {
         accessorKey: 'namaKelompok',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nama Kelompok" />
-        ),
+        id: 'Nama Kelompok',
+        header: 'Nama Kelompok',
       },
       {
         accessorKey: 'kelas.namaKelas',
-        id: 'kelas',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nama Kelas" />
-        ),
+        id: 'Nama Kelas',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Kelas" />,
       },
       {
         accessorKey: 'kelas.tahunAjaran',
-        id: 'tahunAjaran',
-
+        id: 'Tahun Ajaran',
         accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Tahun Ajaran" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
 
       {
-        header: 'Guru',
-        accessorFn: (row) =>
-          row.guruKelompok?.[0]?.guru?.user?.namaLengkap ?? '-',
+        header: 'Nama Guru',
+        id: 'Nama Guru',
+        accessorFn: (row) => row.guruKelompok?.[0]?.guru?.user?.namaLengkap ?? '-',
       },
       {
         id: 'actions',
@@ -124,25 +118,29 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/admin/group/${kelompok.id}`)
-                    }
+                    onClick={() => router.push(`/dashboard/admin/group/${kelompok.id}`)}
+                    className="flex items-center gap-2"
                   >
+                    <Eye className="w-4 h-4" />
                     Detail
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       handleOpenEditDialog(kelompok);
                     }}
+                    className="flex items-center gap-2"
                   >
+                    <Pencil className="w-4 h-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       handleOpenDeleteDialog(kelompok);
                     }}
-                    className="text-destructive"
+                    className="flex items-center gap-2"
+                    variant="destructive"
                   >
+                    <Trash2 className="w-4 h-4" />
                     Hapus
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -174,7 +172,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="kelas" />
+      <DataTable title={title} table={table} filterColumn="Nama Kelompok" />
 
       {dialogType === 'edit' && selectedGroup && (
         <GroupEditDialog

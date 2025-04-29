@@ -9,7 +9,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVerticalIcon } from 'lucide-react';
+import { MoreVerticalIcon, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,12 +35,7 @@ interface Props {
   onRefresh: () => void;
 }
 
-export function ClassroomMembersTable({
-  data,
-  title,
-  kelasId,
-  onRefresh,
-}: Props) {
+export function ClassroomMembersTable({ data, title, kelasId, onRefresh }: Props) {
   const {
     sorting,
     setSorting,
@@ -66,16 +61,12 @@ export function ClassroomMembersTable({
     () => [
       {
         accessorKey: 'nis',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="NIS" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
         accessorKey: 'namaLengkap',
         id: 'siswa',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nama Lengkap" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Lengkap" />,
       },
       {
         id: 'actions',
@@ -97,8 +88,10 @@ export function ClassroomMembersTable({
                     onClick={() => {
                       handleOpenDeleteDialog(siswa);
                     }}
-                    className="text-destructive"
+                    className="flex items-center gap-2"
+                    variant="destructive"
                   >
+                    <Trash2 className="h-4 w-4" />
                     Hapus
                   </DropdownMenuItem>
                 </DropdownMenuContent>

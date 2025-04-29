@@ -30,6 +30,7 @@ interface User {
   namaLengkap: string;
   role: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface Props {
@@ -82,24 +83,27 @@ export function UserTable({ data, title, onRefresh }: Props) {
     () => [
       {
         accessorKey: 'username',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Username" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Username" />,
       },
       {
         accessorKey: 'namaLengkap',
-        id: 'nama',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nama Lengkap" />
-        ),
+        id: 'Nama Lengkap',
+        header: 'Nama Lengkap',
       },
       {
         accessorKey: 'createdAt',
-        header: 'Created At',
+        id: 'Created At',
+        header: 'Dibuat Pada',
         cell: ({ row }) => (
-          <span>
-            {new Date(row.getValue('createdAt')).toLocaleDateString('id-ID')}
-          </span>
+          <span>{new Date(row.getValue('Created At')).toLocaleDateString('id-ID')}</span>
+        ),
+      },
+      {
+        accessorKey: 'updatedAt',
+        id: 'Updated At',
+        header: 'Diperbarui Pada',
+        cell: ({ row }) => (
+          <span>{new Date(row.getValue('Updated At')).toLocaleDateString('id-ID')}</span>
         ),
       },
       {
@@ -119,9 +123,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-50 z-50">
                   <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/admin/users/${user.id}`)
-                    }
+                    onClick={() => router.push(`/dashboard/admin/users/${user.id}`)}
                     className="flex items-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
@@ -143,7 +145,8 @@ export function UserTable({ data, title, onRefresh }: Props) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleOpenDeleteDialog(user)}
-                    className="flex items-center gap-2 text-destructive"
+                    variant="destructive"
+                    className="flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete
@@ -155,12 +158,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
         },
       },
     ],
-    [
-      router,
-      handleOpenEditDialog,
-      handleOpenResetDialog,
-      handleOpenDeleteDialog,
-    ]
+    [router, handleOpenEditDialog, handleOpenResetDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -182,7 +180,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="nama" />
+      <DataTable title={title} table={table} filterColumn="Nama Lengkap" />
 
       {dialogType === 'edit' && selectedUser && (
         <UserEditDialog

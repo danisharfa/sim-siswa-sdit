@@ -10,6 +10,7 @@ interface User {
   namaLengkap: string;
   role: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export function UserManagement() {
@@ -35,11 +36,7 @@ export function UserManagement() {
       <AddUserForm onUserAdded={fetchUsers} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <UserTable data={teachers} title="Daftar Guru" onRefresh={fetchUsers} />
-        <UserTable
-          data={students}
-          title="Daftar Siswa"
-          onRefresh={fetchUsers}
-        />
+        <UserTable data={students} title="Daftar Siswa" onRefresh={fetchUsers} />
       </div>
     </div>
   );

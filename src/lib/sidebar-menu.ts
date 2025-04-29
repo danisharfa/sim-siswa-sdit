@@ -1,7 +1,6 @@
 import {
-  Clipboard,
+  ClipboardPenLine,
   Group,
-  GroupIcon,
   LayoutDashboardIcon,
   MonitorCogIcon,
   School,
@@ -34,7 +33,7 @@ export const menuData = {
     {
       title: 'Manajemen Tes',
       url: '/dashboard/admin/exam',
-      icon: Clipboard,
+      icon: ClipboardPenLine,
     },
     {
       title: 'Monitoring Setoran',
@@ -56,7 +55,7 @@ export const menuData = {
     {
       title: 'Kelompok Bimbingan',
       url: '/dashboard/teacher/group',
-      icon: GroupIcon,
+      icon: Group,
     },
     {
       title: 'Setoran Siswa',
@@ -76,7 +75,7 @@ export const menuData = {
     {
       title: 'Ujian Siswa',
       url: '/dashboard/teacher',
-      icon: Clipboard,
+      icon: ClipboardPenLine,
       children: [
         {
           title: 'Daftar Ujian',

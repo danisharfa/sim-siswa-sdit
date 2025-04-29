@@ -9,7 +9,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVerticalIcon } from 'lucide-react';
+import { MoreVerticalIcon, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,16 +61,12 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
     () => [
       {
         accessorKey: 'nis',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="NIS" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
         accessorKey: 'namaLengkap',
-        id: 'siswa',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nama Lengkap" />
-        ),
+        id: 'Nama Lengkap',
+        header: 'Nama Lengkap',
       },
       {
         id: 'actions',
@@ -92,8 +88,10 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
                     onClick={() => {
                       handleOpenDeleteDialog(siswa);
                     }}
-                    className="text-destructive"
+                    className="flex items-center gap-2"
+                    variant="destructive"
                   >
+                    <Trash2 className="w-4 h-4" />
                     Hapus
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -125,7 +123,7 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="siswa" />
+      <DataTable title={title} table={table} filterColumn="Nama Lengkap" />
 
       {dialogType === 'delete' && selectedMember && (
         <MemberAlertDialog

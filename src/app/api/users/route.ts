@@ -11,15 +11,14 @@ export async function GET() {
         namaLengkap: true,
         role: true,
         createdAt: true,
+        updatedAt: true,
       },
+      orderBy: { username: 'asc' },
     });
 
     return NextResponse.json(users, { status: 200 });
   } catch {
-    return NextResponse.json(
-      { message: 'Gagal mengambil data pengguna' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Gagal mengambil data pengguna' }, { status: 500 });
   }
 }
 
@@ -28,10 +27,7 @@ export async function POST(req: NextRequest) {
     const { username, namaLengkap, role } = await req.json();
 
     if (!username || !namaLengkap || !role) {
-      return NextResponse.json(
-        { message: 'Data tidak lengkap' },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: 'Data tidak lengkap' }, { status: 400 });
     }
 
     const hashedPassword = await argon2.hash(username);
@@ -40,8 +36,7 @@ export async function POST(req: NextRequest) {
       data: { username, namaLengkap, role, password: hashedPassword },
     });
 
-    const generateCustomId = (prefix: string) =>
-      `${prefix}-${crypto.randomUUID()}`;
+    const generateCustomId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
     console.log('Membuat user:', newUser);
 
@@ -84,9 +79,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(newUser, { status: 201 });
   } catch (error) {
     console.error('Error saat membuat user:', error);
-    return NextResponse.json(
-      { message: 'Gagal menambah pengguna' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Gagal menambah pengguna' }, { status: 500 });
   }
 }

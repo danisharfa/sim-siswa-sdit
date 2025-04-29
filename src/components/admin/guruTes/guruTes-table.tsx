@@ -101,7 +101,7 @@ export default function GuruTesTable({ data, title }: GuruTesTableProps) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="nip" />
+      <DataTable title={title} table={table} filterColumn="NIP" />
     </>
   );
 }

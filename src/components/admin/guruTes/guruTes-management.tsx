@@ -34,9 +34,7 @@ export function GuruTesManagement() {
   return (
     <div className="space-y-6">
       <AddGuruTesForm onUserAdded={fetchGuruTes} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GuruTesTable data={guruTes} title="Daftar Guru Tes" onRefresh={fetchGuruTes} />
-      </div>
+      <GuruTesTable data={guruTes} title="Daftar Guru Tes" onRefresh={fetchGuruTes} />
     </div>
   );
 }
