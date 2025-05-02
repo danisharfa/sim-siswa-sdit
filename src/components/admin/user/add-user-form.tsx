@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState, useActionState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +12,8 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
-import { useEffect, useState, useActionState } from 'react';
-import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { addUserCredentials } from '@/lib/actions';
 
 interface Props {
@@ -23,8 +23,7 @@ interface Props {
 const initialRole = 'student';
 
 export function AddUserForm({ onUserAdded }: Props) {
-  const [role, setRole] = useState<'teacher' | 'student'>(initialRole);
-
+  const [role, setRole] = useState<'coordinator' | 'teacher' | 'student'>(initialRole);
   const [state, formAction] = useActionState(addUserCredentials, null);
 
   useEffect(() => {
@@ -33,7 +32,6 @@ export function AddUserForm({ onUserAdded }: Props) {
     if (state.success) {
       toast.success(state.message || 'User berhasil ditambah!');
       onUserAdded();
-      // Reset role setelah berhasil tambah
       setRole(initialRole);
     } else if (state.error) {
       const first = Object.values(state.error)[0]?.[0];
@@ -49,7 +47,7 @@ export function AddUserForm({ onUserAdded }: Props) {
     setSubmitting(true);
     const form = e.currentTarget;
     const formData = new FormData(form);
-    formData.set('role', role); // Force inject role yang dipilih
+    formData.set('role', role);
     await formAction(formData);
     setSubmitting(false);
   };
@@ -62,14 +60,18 @@ export function AddUserForm({ onUserAdded }: Props) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input name="username" placeholder="Username" required />
-          <Input name="namaLengkap" placeholder="Nama Lengkap" required />
+          <Input name="fullName" placeholder="Nama Lengkap" required />
 
-          <Select value={role} onValueChange={(val) => setRole(val as 'teacher' | 'student')}>
+          <Select
+            value={role}
+            onValueChange={(val) => setRole(val as 'coordinator' | 'teacher' | 'student')}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Pilih role" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
+                <SelectItem value="coordinator">Koordinator</SelectItem>
                 <SelectItem value="teacher">Guru</SelectItem>
                 <SelectItem value="student">Siswa</SelectItem>
               </SelectGroup>

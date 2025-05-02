@@ -8,10 +8,10 @@ export async function GET() {
         id: true,
         juz: true,
         surahId: true,
-        ayatAwal: true,
-        ayatAkhir: true,
+        startVerse: true,
+        endVerse: true,
       },
-      orderBy: { id: 'asc' },
+      orderBy: { id: 'desc' },
     });
 
     return NextResponse.json({

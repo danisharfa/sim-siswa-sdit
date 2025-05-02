@@ -1,16 +1,18 @@
-import { requireRole } from '@/lib/auth/require-role';
 import { prisma } from '@/lib/prisma';
+import { requireRole } from '@/lib/auth/require-role';
 import { DashboardStats } from '@/components/dashboard-stats';
 
-export default async function AdminDashboard() {
+export default async function AdminDashboardPage() {
   const user = await requireRole('admin');
 
-  const [totalStudents, totalTeachers, totalClassrooms, totalGroups] = await Promise.all([
-    prisma.user.count({ where: { role: 'student' } }),
-    prisma.user.count({ where: { role: 'teacher' } }),
-    prisma.kelas.count(),
-    prisma.kelompok.count(),
-  ]);
+  const [totalCoordinator, totalTeachers, totalStudents, totalClassrooms, totalGroups] =
+    await Promise.all([
+      prisma.user.count({ where: { role: 'coordinator' } }),
+      prisma.user.count({ where: { role: 'teacher' } }),
+      prisma.user.count({ where: { role: 'student' } }),
+      prisma.classroom.count(),
+      prisma.group.count(),
+    ]);
 
   return (
     <div className="p-6 space-y-4">
@@ -20,8 +22,9 @@ export default async function AdminDashboard() {
       </div>
 
       <DashboardStats
-        totalStudents={totalStudents}
+        totalCoordinator={totalCoordinator}
         totalTeachers={totalTeachers}
+        totalStudents={totalStudents}
         totalClassrooms={totalClassrooms}
         totalGroups={totalGroups}
       />

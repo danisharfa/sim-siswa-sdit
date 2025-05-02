@@ -3,10 +3,10 @@ import { auth } from '@/auth';
 
 export async function getGroupById(id: string) {
   try {
-    return await prisma.kelompok.findUnique({
+    return await prisma.group.findUnique({
       where: { id },
       include: {
-        kelas: true,
+        classroom: true,
       },
     });
   } catch (error) {
@@ -21,23 +21,23 @@ export async function getGroupByIdForTeacher(id: string) {
 
     if (!session?.user) return null;
 
-    const guru = await prisma.guruProfile.findUnique({
+    const guru = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
 
     if (!guru) return null;
 
-    const group = await prisma.kelompok.findFirst({
+    const group = await prisma.group.findFirst({
       where: {
         id,
-        guruKelompok: {
+        teacherGroup: {
           some: {
-            guruId: guru.id,
+            teacherId: guru.id,
           },
         },
       },
       include: {
-        kelas: true,
+        classroom: true,
       },
     });
 

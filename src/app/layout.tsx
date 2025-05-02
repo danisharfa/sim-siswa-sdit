@@ -5,7 +5,7 @@ import { SessionProvider } from '@/lib/providers/session-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { Nunito } from 'next/font/google';
 
-export const font = Nunito({
+const nunito = Nunito({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${font.className} antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${nunito.className} antialiased`} suppressHydrationWarning={true}>
       <body>
         <SessionProvider>
           <ThemeProvider

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
   }
 
   try {
-    const guru = await prisma.guruProfile.findUnique({
+    const guru = await prisma.teacherProfile.findUnique({
       where: { userId: user.id },
     });
 
@@ -27,10 +27,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const isGroupBimbingan = await prisma.guruKelompok.findFirst({
+    const isGroupBimbingan = await prisma.teacherGroup.findFirst({
       where: {
-        kelompokId: id,
-        guruId: guru.id,
+        groupId: id,
+        teacherId: guru.id,
       },
     });
 
@@ -41,25 +41,34 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const members = await prisma.siswaProfile.findMany({
+    const members = await prisma.studentProfile.findMany({
       where: {
-        kelompokId: id,
+        groupId: id,
+      },
+      orderBy: {
+        nis: 'asc',
       },
       select: {
         id: true,
         nis: true,
         user: {
           select: {
-            namaLengkap: true,
+            fullName: true,
           },
         },
       },
     });
 
+    const formattedMembers = members.map((m) => ({
+      id: m.id,
+      nis: m.nis,
+      fullName: m.user?.fullName || 'Tidak diketahui',
+    }));
+
     return NextResponse.json({
       success: true,
       message: 'Data anggota kelompok berhasil diambil',
-      data: members,
+      data: formattedMembers,
     });
   } catch (error) {
     console.error('[GET Teacher Group Members]', error);

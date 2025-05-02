@@ -5,7 +5,7 @@ import { createContext, useContext } from 'react';
 interface User {
   id: string;
   username: string;
-  namaLengkap: string;
+  fullName: string;
   role: string;
 }
 

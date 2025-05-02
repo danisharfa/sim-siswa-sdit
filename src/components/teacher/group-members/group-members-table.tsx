@@ -16,9 +16,7 @@ import { DataTable } from '@/components/ui/data-table';
 interface Siswa {
   id: string;
   nis: string;
-  user: {
-    namaLengkap: string;
-  };
+  fullName: string;
 }
 
 interface Props {
@@ -40,12 +38,12 @@ export function GroupMembersTable({ data, title }: Props) {
     () => [
       {
         accessorKey: 'nis',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
+        header: 'NIS',
       },
       {
-        accessorKey: 'user.namaLengkap',
+        accessorKey: 'fullName',
         id: 'siswa',
-        header: 'Nama Lengkap',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Lengkap" />,
       },
     ],
     []
@@ -70,7 +68,7 @@ export function GroupMembersTable({ data, title }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="siswa" />
+      <DataTable title={title} table={table} filterColumn="nis" />
     </>
   );
 }

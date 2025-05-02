@@ -1,47 +1,56 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AddClassroomSchema, AddClassroomInput } from '@/lib/validations/classroom';
 
 interface Props {
-  onKelasAdded: () => void;
+  onClassroomAdded: () => void;
 }
 
-export function AddClassroomForm({ onKelasAdded }: Props) {
-  const [namaKelas, setNamaKelas] = useState('');
-  const [tahunAjaran, setTahunAjaran] = useState('');
-  const [loading, setLoading] = useState(false);
+export function AddClassroomForm({ onClassroomAdded }: Props) {
+  const form = useForm<AddClassroomInput>({
+    resolver: zodResolver(AddClassroomSchema),
+    defaultValues: {
+      name: '',
+      academicYear: '',
+    },
+  });
 
-  async function handleAddKelas() {
-    if (!namaKelas || !tahunAjaran) {
-      alert('Nama kelas dan tahun ajaran wajib diisi');
-      return;
-    }
+  const isLoading = form.formState.isSubmitting;
 
-    setLoading(true);
-    const newKelas = { namaKelas, tahunAjaran };
-
+  async function onSubmit(values: AddClassroomInput) {
     try {
       const res = await fetch('/api/admin/classroom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newKelas),
+        body: JSON.stringify(values),
       });
 
-      if (res.ok) {
-        setNamaKelas('');
-        setTahunAjaran('');
-        onKelasAdded();
-      } else {
-        const errorData = await res.json();
-        alert(errorData.error || 'Gagal menambah kelas');
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        toast.error(data?.message || 'Gagal menambah kelas');
+        return;
       }
+
+      toast.success(data.message || 'Kelas berhasil ditambahkan');
+      form.reset();
+      onClassroomAdded();
     } catch {
-      alert('Terjadi kesalahan, coba lagi.');
-    } finally {
-      setLoading(false);
+      toast.error('Terjadi kesalahan saat mengirim data.');
     }
   }
 
@@ -50,21 +59,40 @@ export function AddClassroomForm({ onKelasAdded }: Props) {
       <CardHeader>
         <h2 className="text-xl font-semibold">Tambah Kelas Baru</h2>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Input
-          placeholder="Nama Kelas"
-          value={namaKelas}
-          onChange={(e) => setNamaKelas(e.target.value)}
-          className="focus:ring-2 focus:ring-amber-500"
-        />
-        <Input
-          placeholder="Tahun Ajaran (contoh: 2024/2025)"
-          value={tahunAjaran}
-          onChange={(e) => setTahunAjaran(e.target.value)}
-        />
-        <Button onClick={handleAddKelas} disabled={loading}>
-          {loading ? 'Menambahkan...' : 'Tambah Kelas'}
-        </Button>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nama Kelas</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Contoh: 6 Ahmad" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="academicYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tahun Ajaran</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Contoh: 2024/2025" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Menambahkan...' : 'Tambah Kelas'}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

@@ -6,7 +6,7 @@ export async function GET() {
     const data = await prisma.wafa.findMany({
       select: {
         id: true,
-        namaBuku: true,
+        name: true,
       },
       orderBy: { id: 'asc' },
     });

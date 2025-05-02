@@ -6,8 +6,8 @@ export async function GET() {
     const data = await prisma.surah.findMany({
       select: {
         id: true,
-        namaSurah: true,
-        jumlahAyat: true,
+        name: true,
+        verseCount: true,
       },
       orderBy: { id: 'asc' },
     });

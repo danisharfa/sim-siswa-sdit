@@ -9,226 +9,273 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  username     String        @unique
-  password     String
-  namaLengkap  String
-  role         Role
+  id            String        @id @default(uuid())
+  username      String        @unique
+  password      String
+  fullName      String
+  role          Role
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
 
-  siswaProfile SiswaProfile?
-  guruProfile  GuruProfile?
+  teacher       TeacherProfile?
+  coordinator   CoordinatorProfile?
+  student       StudentProfile?
+
+  @@map("users")
 }
 
-model SiswaProfile {
-  id              String            @id @unique
-  userId          String            @unique
-  nis             String?           @unique
+model CoordinatorProfile {
+  id              String        @id @unique
+  userId          String        @unique
+  nip             String        @unique
 
-  kelasId         String?
-  kelompokId      String?
-
-  tanggalLahir    DateTime?
-  tempatLahir     String?
-  jenisKelamin    JenisKelamin?     @default(PILIH)
-  golonganDarah   GolonganDarah?    @default(PILIH)
-  alamat          String?
-  noTelp          String?
+  birthDate       DateTime?
+  birthPlace      String?
+  gender          Gender?       @default(PILIH)
+  bloodType       BloodType?    @default(PILIH)
+  address         String?
+  phoneNumber     String?
   email           String?
-  fotoProfil      String?
-
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kelas           Kelas?            @relation(fields: [kelasId], references: [id])
-  riwayatKelas    RiwayatKelas[]
-  kelompok        Kelompok?         @relation(fields: [kelompokId], references: [id])
-  riwayatKelompok RiwayatKelompok[]
-  setoran         Setoran[]
-
-  @@index([nis])
-}
-
-model GuruProfile {
-  id              String            @id @unique
-  userId          String            @unique
-  nip             String?           @unique
-
-  tanggalLahir    DateTime?
-  tempatLahir     String?
-  jenisKelamin    JenisKelamin?     @default(PILIH)
-  golonganDarah   GolonganDarah?    @default(PILIH)
-  alamat          String?
-  noTelp          String?
-  email           String?
-  fotoProfil      String?
-
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
   
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  guruKelompok    GuruKelompok[]
-  riwayatKelompok RiwayatKelompok[]
-  setoran         Setoran[]
-  guruTes         GuruTes[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([nip])
+  @@map("coordinator_profiles")
 }
 
-model Kelas {
-  id            String         @id @unique
-  namaKelas     String
-  tahunAjaran   String
-  kelompok      Kelompok[]
-  riwayatKelas  RiwayatKelas[]
-  siswaProfiles SiswaProfile[]
-
-  @@unique([namaKelas, tahunAjaran])
-}
-
-model RiwayatKelas {
-  id            String       @id @default(uuid())
-  siswaId       String
-  kelasId       String
-  tahunAjaran   String
-  tanggalPindah DateTime     @default(now())
-  kelas         Kelas        @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-  siswa         SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-}
-
-model GuruKelompok {
-  id         String      @id @default(uuid())
-  guruId     String
-  kelompokId String
-
-  createdAt  DateTime    @default(now())
-  
-  guru       GuruProfile @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  kelompok   Kelompok    @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
-}
-
-model Kelompok {
-  id              String            @id @unique
-  namaKelompok    String
-  kelasId         String
-  tahunAjaran     String
-
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  
-  riwayatKelompok RiwayatKelompok[]
-  guruKelompok    GuruKelompok[]
-  kelas           Kelas             @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-  siswaProfiles   SiswaProfile[]
-  setoran         Setoran[]
-
-  @@unique([namaKelompok, kelasId, tahunAjaran])
-}
-
-model RiwayatKelompok {
-  id            String       @id @default(uuid())
-  siswaId       String
-  kelompokId    String
-  guruId        String?
-  tahunAjaran   String
-  tanggalGabung DateTime     @default(now())
-
-  guru          GuruProfile? @relation(fields: [guruId], references: [id])
-  kelompok      Kelompok     @relation(fields: [kelompokId], references: [id], onDelete: Cascade)
-  siswa         SiswaProfile @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-}
-
-model Setoran {
+model TeacherProfile {
   id              String        @id @unique
-  siswaId         String
-  guruId          String
-  kelompokId      String
+  userId          String        @unique
+  nip             String        @unique
 
-  tanggal         DateTime
-  jenisSetoran    JenisSetoran
+  birthDate       DateTime?
+  birthPlace      String?
+  gender          Gender?       @default(PILIH)
+  bloodType       BloodType?    @default(PILIH)
+  address         String?
+  phoneNumber     String?
+  email           String?
   
-  juz             Int?
-  surahId         Int?
-  ayatMulai       Int?
-  ayatSelesai     Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
   
-  wafaId          Int?
-  halamanMulai    Int?
-  halamanSelesai  Int? 
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teacherGroup    TeacherGroup[]
+  groupHistory    GroupHistory[]
+  submission      Submission[]
+
+  @@index([nip])
+  @@map("teacher_profiles")
+}
+
+model StudentProfile {
+  id              String        @id @unique
+  userId          String        @unique
+  nis             String        @unique
+  classroomId     String?
+  groupId         String?
+
+  birthDate       DateTime?
+  birthPlace      String?
+  gender          Gender?       @default(PILIH)
+  bloodType       BloodType?    @default(PILIH)
+  address         String?
+  phoneNumber     String?
+  email           String?
   
-  adab            Adab
-  status          StatusSetoran
-  catatan         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroom           Classroom?            @relation(fields: [classroomId], references: [id])
+  classroomHistory    ClassroomHistory[]
+  group               Group?                @relation(fields: [groupId], references: [id])
+  groupHistory        GroupHistory[]
+  submission          Submission[]
+
+  @@index([nis])
+  @@map("student_profiles")
+}
+
+model Classroom {
+  id              String         @id @unique
+  name            String
+  academicYear    String
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  
-  wafa            Wafa?         @relation(fields: [wafaId], references: [id])
-  surah           Surah?        @relation(fields: [surahId], references: [id])
-  siswa           SiswaProfile  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  guru            GuruProfile   @relation(fields: [guruId], references: [id])
-  kelompok        Kelompok      @relation(fields: [kelompokId], references: [id])
+  deletedAt       DateTime?
 
-  @@index([tanggal])
+  classroomHistory    ClassroomHistory[]
+  group               Group[]
+  student             StudentProfile[]
+
+  @@unique([name, academicYear])
+  @@map("classrooms")
+}
+
+model ClassroomHistory {
+  id              String            @id @default(uuid())
+  studentId       String
+  classroomId     String
+  academicYear    String
+  
+  movedAt         DateTime          @default(now())
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  classroom       Classroom         @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  student         StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("classroom_histories")
+}
+
+model TeacherGroup {
+  id          String      @id @default(uuid())
+  teacherId   String
+  groupId     String
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  
+  teacher    TeacherProfile    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  group      Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_groups")
+}
+
+model Group {
+  id              String      @id @unique
+  name            String
+  classroomId     String
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  
+  groupHistory      GroupHistory[]
+  classroom         Classroom           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  teacherGroup      TeacherGroup[]
+  student           StudentProfile[]
+  submission        Submission[]
+
+  @@unique([name, classroomId])
+  @@map("groups")
+}
+
+model GroupHistory {
+  id              String       @id @default(uuid())
+  groupId         String
+  teacherId       String?
+  studentId       String
+  academicYear    String
+  joinedAt        DateTime     @default(now())
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  group      Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher    TeacherProfile?   @relation(fields: [teacherId], references: [id])
+  student    StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("group_histories")
+}
+
+model Submission {
+  id                  String              @id @unique
+  studentId           String
+  teacherId           String
+  groupId             String
+
+  date                DateTime
+  submissionType      SubmissionType
+  
+  juz                 Int?
+  surahId             Int?
+  startVerse          Int?
+  endVerse            Int?
+  
+  wafaId              Int?
+  startPage           Int?
+  endPage             Int? 
+  
+  adab                Adab
+  submissionStatus    SubmissionStatus
+  note                String?
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  deletedAt           DateTime?
+  
+  surah     Surah?            @relation(fields: [surahId], references: [id])
+  wafa      Wafa?             @relation(fields: [wafaId], references: [id])
+  group     Group             @relation(fields: [groupId], references: [id])
+  teacher   TeacherProfile    @relation(fields: [teacherId], references: [id])
+  student   StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@map("submissions")
 }
 
 model Surah {
-  id         Int       @id @default(autoincrement())
-  namaSurah  String    @unique
-  jumlahAyat Int
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  verseCount    Int
   
-  setoran    Setoran[]
-  surahJuz   SurahJuz[]
+  surahJuz      SurahJuz[]
+  submission    Submission[]
+
+  @@map("surah")
 }
 
 model SurahJuz{
-  id         Int       @id @default(autoincrement())
-  juz        Int       
-  surahId    Int
-  ayatAwal   Int
-  ayatAkhir  Int
+  id            Int     @id @default(autoincrement())
+  juz           Int       
+  surahId       Int
+  startVerse    Int
+  endVerse      Int
 
-  surah      Surah @relation(fields: [surahId], references: [id], onDelete: Cascade)
+  surah         Surah   @relation(fields: [surahId], references: [id], onDelete: Cascade)
 
   @@index([juz])
+  @@map("surah_juz")
 }
 
 model Wafa {
-  id             Int     @id @default(autoincrement())
-  namaBuku       String  @unique
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
 
-  setoran        Setoran[]
+  submission        Submission[]
+
+  @@map("wafa")
 }
-
-model GuruTes {
-  id        String       @id @default(uuid())
-  guruId    String
-
-  aktif     Boolean      @default(true)
-
-  createdAt DateTime     @default(now())
-
-  guru      GuruProfile  @relation(fields: [guruId], references: [id], onDelete: Cascade)
-}
-
 
 enum Role {
   admin
+  coordinator
   teacher
   student
 }
 
-enum JenisKelamin {
+enum Gender {
   PILIH
   LAKI_LAKI
   PEREMPUAN
 }
 
-enum GolonganDarah {
+enum BloodType {
   PILIH
   A
   B
@@ -236,13 +283,13 @@ enum GolonganDarah {
   O
 }
 
-enum StatusSetoran {
+enum SubmissionStatus {
   LULUS
   TIDAK_LULUS
   MENGULANG
 }
 
-enum JenisSetoran {
+enum SubmissionType {
   TAHFIDZ
   TAHSIN_WAFA
   TAHSIN_ALQURAN

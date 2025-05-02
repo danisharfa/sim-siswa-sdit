@@ -34,7 +34,7 @@ export function UserAlertDialog({
     setLoading(true);
 
     try {
-      const url = `/api/users/${user.id}`;
+      const url = `/api/admin/user/${user.id}`;
       const options: RequestInit =
         type === 'reset'
           ? {
@@ -51,9 +51,7 @@ export function UserAlertDialog({
       }
 
       toast.success(
-        type === 'reset'
-          ? 'Password user berhasil direset!'
-          : 'User berhasil dihapus!'
+        type === 'reset' ? 'Password user berhasil direset!' : 'User berhasil dihapus!'
       );
 
       onConfirm();
@@ -69,9 +67,7 @@ export function UserAlertDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            {type === 'reset' ? 'Reset Password' : 'Hapus User'}
-          </AlertDialogTitle>
+          <AlertDialogTitle>{type === 'reset' ? 'Reset Password' : 'Hapus User'}</AlertDialogTitle>
           <AlertDialogDescription>
             {type === 'reset'
               ? 'Apakah Anda yakin ingin mereset password user ini?'
@@ -79,9 +75,7 @@ export function UserAlertDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>
-            Batal
-          </AlertDialogCancel>
+          <AlertDialogCancel onClick={() => onOpenChange(false)}>Batal</AlertDialogCancel>
           <AlertDialogAction onClick={handleAction} disabled={loading}>
             {loading ? 'Loading...' : type === 'reset' ? 'Reset' : 'Hapus'}
           </AlertDialogAction>

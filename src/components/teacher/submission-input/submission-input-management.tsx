@@ -16,83 +16,79 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
 
-interface Kelompok {
-  id: string;
-  namaKelompok: string;
-  kelas: {
-    namaKelas: string;
-    tahunAjaran: string;
-  };
+interface Group {
+  groupId: string;
+  groupName: string;
+  classroomName: string;
+  classroomAcademicYear: string;
+  totalMember: number;
 }
 
-interface Siswa {
+interface Student {
   id: string;
-  user: {
-    namaLengkap: string;
-  };
+  nis: string;
+  fullName: string;
 }
 
 interface Surah {
   id: number;
-  namaSurah: string;
-  jumlahAyat: number;
+  name: string;
+  verseCount: number;
 }
 
 interface SurahJuz {
   id: number;
   juz: number;
   surahId: number;
-  ayatAwal: number;
-  ayatAkhir: number;
+  startVerse: number;
+  endVerse: number;
 }
 
 interface Wafa {
   id: number;
-  namaBuku: string;
+  name: string;
 }
 
 interface FormData {
-  kelompokId: string;
-  siswaId: string;
-  jenisSetoran: 'TAHFIDZ' | 'TAHSIN_WAFA' | 'TAHSIN_ALQURAN';
-  statusSetoran: 'LULUS' | 'TIDAK_LULUS' | 'MENGULANG';
+  groupId: string;
+  studentId: string;
+  submissionType: 'TAHFIDZ' | 'TAHSIN_WAFA' | 'TAHSIN_ALQURAN';
+  submissionStatus: 'LULUS' | 'TIDAK_LULUS' | 'MENGULANG';
   adab: 'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK';
-  catatan: string;
+  note: string;
   juz?: number;
   surahId?: number;
-  ayatMulai?: number;
-  ayatSelesai?: number;
+  startVerse?: number;
+  endVerse?: number;
   wafaId?: number;
-  halamanMulai?: number;
-  halamanSelesai?: number;
+  startPage?: number;
+  endPage?: number;
 }
 
 export function SubmissionInputManagement() {
-  const [kelompokList, setKelompokList] = useState<Kelompok[]>([]);
-  const [siswaList, setSiswaList] = useState<Siswa[]>([]);
+  const [groupList, setGroupList] = useState<Group[]>([]);
+  const [studentList, setStudentList] = useState<Student[]>([]);
   const [surahList, setSurahList] = useState<Surah[]>([]);
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
 
-  const [kelompokId, setKelompokId] = useState('');
-  const [siswaId, setSiswaId] = useState('');
-  const [jenisSetoran, setJenisSetoran] = useState<
+  const [groupId, setGroupId] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [submissionType, setSubmissionType] = useState<
     'TAHFIDZ' | 'TAHSIN_WAFA' | 'TAHSIN_ALQURAN'
   >('TAHFIDZ');
   const [selectedJuz, setSelectedJuz] = useState('');
   const [selectedSurahId, setSelectedSurahId] = useState('');
-  const [ayatMulai, setAyatMulai] = useState('');
-  const [ayatSelesai, setAyatSelesai] = useState('');
+  const [startVerse, setStartVerse] = useState('');
+  const [endVerse, setEndVerse] = useState('');
   const [selectedWafaId, setSelectedWafaId] = useState('');
-  const [halamanMulai, setHalamanMulai] = useState('');
-  const [halamanSelesai, setHalamanSelesai] = useState('');
-  const [statusSetoran, setStatusSetoran] = useState<
-    'LULUS' | 'TIDAK_LULUS' | 'MENGULANG'
-  >('LULUS');
-  const [adab, setAdab] = useState<'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK'>(
-    'BAIK'
+  const [startPage, setStartPage] = useState('');
+  const [endPage, setEndPage] = useState('');
+  const [submissionStatus, setSubmissionStatus] = useState<'LULUS' | 'TIDAK_LULUS' | 'MENGULANG'>(
+    'LULUS'
   );
-  const [catatan, setCatatan] = useState('');
+  const [adab, setAdab] = useState<'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK'>('BAIK');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -110,7 +106,7 @@ export function SubmissionInputManagement() {
         const surahJuzData = await surahJuzRes.json();
         const wafaData = await wafaRes.json();
 
-        if (groupData.success) setKelompokList(groupData.data);
+        if (groupData.success) setGroupList(groupData.data);
         if (surahData.success) setSurahList(surahData.data);
         if (surahJuzData.success) setSurahJuzList(surahJuzData.data);
         if (wafaData.success) setWafaList(wafaData.data);
@@ -123,46 +119,44 @@ export function SubmissionInputManagement() {
   }, []);
 
   useEffect(() => {
-    if (!kelompokId) return;
+    if (!groupId) return;
     const fetchMembers = async () => {
       try {
-        const res = await fetch(`/api/teacher/group/${kelompokId}/member`);
+        const res = await fetch(`/api/teacher/group/${groupId}/member`);
         const resData = await res.json();
-        if (resData.success) setSiswaList(resData.data);
+        if (resData.success) setStudentList(resData.data);
       } catch (error) {
         console.error('Gagal mengambil siswa:', error);
         toast.error('Gagal mengambil siswa');
       }
     };
     fetchMembers();
-  }, [kelompokId]);
+  }, [groupId]);
 
   const handleSubmit = async () => {
-    if (!kelompokId || !siswaId || !jenisSetoran) {
+    if (!groupId || !studentId || !submissionType) {
       toast.error('Lengkapi semua field terlebih dahulu');
       return;
     }
 
     const formData: FormData = {
-      kelompokId,
-      siswaId,
-      jenisSetoran,
-      statusSetoran,
+      groupId,
+      studentId,
+      submissionType,
+      submissionStatus,
       adab,
-      catatan,
-      ...(jenisSetoran === 'TAHFIDZ' || jenisSetoran === 'TAHSIN_ALQURAN'
+      note,
+      ...(submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN'
         ? {
             juz: selectedJuz ? parseInt(selectedJuz) : undefined,
             surahId: selectedSurahId ? parseInt(selectedSurahId) : undefined,
-            ayatMulai: ayatMulai ? parseInt(ayatMulai) : undefined,
-            ayatSelesai: ayatSelesai ? parseInt(ayatSelesai) : undefined,
+            startVerse: startVerse ? parseInt(startVerse) : undefined,
+            endVerse: endVerse ? parseInt(endVerse) : undefined,
           }
         : {
             wafaId: selectedWafaId ? parseInt(selectedWafaId) : undefined,
-            halamanMulai: halamanMulai ? parseInt(halamanMulai) : undefined,
-            halamanSelesai: halamanSelesai
-              ? parseInt(halamanSelesai)
-              : undefined,
+            startPage: startPage ? parseInt(startPage) : undefined,
+            endPage: endPage ? parseInt(endPage) : undefined,
           }),
     };
 
@@ -190,24 +184,22 @@ export function SubmissionInputManagement() {
   };
 
   const resetForm = () => {
-    setSiswaId('');
+    setStudentId('');
     setSelectedJuz('');
     setSelectedSurahId('');
-    setAyatMulai('');
-    setAyatSelesai('');
+    setStartVerse('');
+    setEndVerse('');
     setSelectedWafaId('');
-    setHalamanMulai('');
-    setHalamanSelesai('');
-    setCatatan('');
+    setStartPage('');
+    setEndPage('');
+    setNote('');
   };
 
-  const filteredSurahJuz = surahJuzList.filter(
-    (s) => s.juz.toString() === selectedJuz
-  );
+  const filteredSurahJuz = surahJuzList.filter((s) => s.juz.toString() === selectedJuz);
 
   const getSurahName = (surahId: number) => {
     const surah = surahList.find((s) => s.id === surahId);
-    return surah ? surah.namaSurah : 'Surah tidak ditemukan';
+    return surah ? surah.name : 'Surah tidak ditemukan';
   };
 
   return (
@@ -220,15 +212,14 @@ export function SubmissionInputManagement() {
           {/* Pilih Kelompok */}
           <div>
             <Label>Kelompok</Label>
-            <Select value={kelompokId} onValueChange={setKelompokId}>
+            <Select value={groupId} onValueChange={setGroupId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Kelompok" />
               </SelectTrigger>
               <SelectContent>
-                {kelompokList.map((k) => (
-                  <SelectItem key={k.id} value={k.id}>
-                    {k.namaKelompok} - {k.kelas.namaKelas} (
-                    {k.kelas.tahunAjaran})
+                {groupList.map((k) => (
+                  <SelectItem key={k.groupId} value={k.groupId}>
+                    {k.groupName} - {k.classroomName} ({k.classroomAcademicYear})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -238,14 +229,14 @@ export function SubmissionInputManagement() {
           {/* Pilih Siswa */}
           <div>
             <Label>Siswa</Label>
-            <Select value={siswaId} onValueChange={setSiswaId}>
+            <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Siswa" />
               </SelectTrigger>
               <SelectContent>
-                {siswaList.map((s) => (
+                {studentList.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.user.namaLengkap}
+                    {s.fullName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -257,8 +248,8 @@ export function SubmissionInputManagement() {
         <div>
           <Label>Jenis Setoran</Label>
           <Select
-            value={jenisSetoran}
-            onValueChange={(val) => setJenisSetoran(val as typeof jenisSetoran)}
+            value={submissionType}
+            onValueChange={(val) => setSubmissionType(val as typeof submissionType)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Pilih Jenis Setoran" />
@@ -272,7 +263,7 @@ export function SubmissionInputManagement() {
         </div>
 
         {/* Tampilkan opsi berdasarkan Jenis Setoran */}
-        {jenisSetoran === 'TAHFIDZ' || jenisSetoran === 'TAHSIN_ALQURAN' ? (
+        {submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN' ? (
           <div className="flex flex-col lg:flex-row gap-6">
             <div>
               <Label>Juz</Label>
@@ -281,9 +272,7 @@ export function SubmissionInputManagement() {
                   <SelectValue placeholder="Pilih Juz" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from(
-                    new Set(surahJuzList.map((s) => s.juz.toString()))
-                  ).map((j) => (
+                  {Array.from(new Set(surahJuzList.map((s) => s.juz.toString()))).map((j) => (
                     <SelectItem key={j} value={j}>
                       Juz {j}
                     </SelectItem>
@@ -315,8 +304,8 @@ export function SubmissionInputManagement() {
               <Label>Ayat Mulai</Label>
               <Input
                 type="number"
-                value={ayatMulai}
-                onChange={(e) => setAyatMulai(e.target.value)}
+                value={startVerse}
+                onChange={(e) => setStartVerse(e.target.value)}
                 min={1}
               />
             </div>
@@ -325,28 +314,25 @@ export function SubmissionInputManagement() {
               <Label>Ayat Selesai</Label>
               <Input
                 type="number"
-                value={ayatSelesai}
-                onChange={(e) => setAyatSelesai(e.target.value)}
+                value={endVerse}
+                onChange={(e) => setEndVerse(e.target.value)}
                 min={1}
               />
             </div>
           </div>
         ) : (
-          jenisSetoran === 'TAHSIN_WAFA' && (
+          submissionType === 'TAHSIN_WAFA' && (
             <div className="flex flex-col lg:flex-row gap-6">
               <div>
                 <Label>Wafa</Label>
-                <Select
-                  value={selectedWafaId}
-                  onValueChange={setSelectedWafaId}
-                >
+                <Select value={selectedWafaId} onValueChange={setSelectedWafaId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Wafa" />
                   </SelectTrigger>
                   <SelectContent>
                     {wafaList.map((w) => (
                       <SelectItem key={w.id} value={w.id.toString()}>
-                        {w.namaBuku}
+                        {w.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -357,8 +343,8 @@ export function SubmissionInputManagement() {
                 <Label>Halaman Mulai</Label>
                 <Input
                   type="number"
-                  value={halamanMulai}
-                  onChange={(e) => setHalamanMulai(e.target.value)}
+                  value={startPage}
+                  onChange={(e) => setStartPage(e.target.value)}
                   min={1}
                 />
               </div>
@@ -367,8 +353,8 @@ export function SubmissionInputManagement() {
                 <Label>Halaman Selesai</Label>
                 <Input
                   type="number"
-                  value={halamanSelesai}
-                  onChange={(e) => setHalamanSelesai(e.target.value)}
+                  value={endPage}
+                  onChange={(e) => setEndPage(e.target.value)}
                   min={1}
                 />
               </div>
@@ -381,10 +367,8 @@ export function SubmissionInputManagement() {
           <div>
             <Label>Status Setoran</Label>
             <Select
-              value={statusSetoran}
-              onValueChange={(val) =>
-                setStatusSetoran(val as typeof statusSetoran)
-              }
+              value={submissionStatus}
+              onValueChange={(val) => setSubmissionStatus(val as typeof submissionStatus)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Status" />
@@ -400,10 +384,7 @@ export function SubmissionInputManagement() {
           {/* Adab */}
           <div>
             <Label>Adab</Label>
-            <Select
-              value={adab}
-              onValueChange={(val) => setAdab(val as typeof adab)}
-            >
+            <Select value={adab} onValueChange={(val) => setAdab(val as typeof adab)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Adab" />
               </SelectTrigger>
@@ -420,8 +401,8 @@ export function SubmissionInputManagement() {
         <div>
           <Label>Catatan</Label>
           <Textarea
-            value={catatan}
-            onChange={(e) => setCatatan(e.target.value)}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
             placeholder="Masukkan catatan"
           />
         </div>

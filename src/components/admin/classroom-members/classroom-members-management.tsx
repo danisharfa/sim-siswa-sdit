@@ -1,55 +1,32 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AddMemberForm } from '@/components/admin/classroom-members/add-member-form';
 import { ClassroomMembersTable } from '@/components/admin/classroom-members/classroom-members-table';
 
-interface Siswa {
-  id: string;
-  nis: string;
-  namaLengkap: string;
-}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function ClassroomDetailsManagement({ kelasId }: { kelasId: string }) {
-  const [siswa, setSiswa] = useState<Siswa[]>([]);
+export function ClassroomDetailsManagement({ classroomId }: { classroomId: string }) {
+  const { data, isLoading, mutate } = useSWR(`/api/admin/classroom/${classroomId}/member`, fetcher);
 
-  const fetchMembers = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/admin/classroom/${kelasId}/members`);
-      const students = await res.json();
-
-      interface Student {
-        id: string;
-        nis: string;
-        user?: {
-          namaLengkap?: string;
-        };
-      }
-
-      const parsedStudents = students.map((s: Student) => ({
-        id: s.id,
-        nis: s.nis,
-        namaLengkap: s.user?.namaLengkap || 'Tidak diketahui',
-      }));
-
-      setSiswa(parsedStudents);
-    } catch (error) {
-      console.error('Gagal mengambil data siswa:', error);
-    }
-  }, [kelasId]);
-
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-      <AddMemberForm kelasId={kelasId} onMemberAdded={fetchMembers} />
+      <AddMemberForm classroomId={classroomId} onMemberAdded={mutate} />
       <ClassroomMembersTable
-        data={siswa}
+        data={data.data}
         title="Daftar Siswa"
-        kelasId={kelasId}
-        onRefresh={fetchMembers}
+        classroomId={classroomId}
+        onRefresh={mutate}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function getClassroomById(id: string) {
   try {
-    return await prisma.kelas.findUnique({
+    return await prisma.classroom.findUnique({
       where: { id },
     });
   } catch (error) {

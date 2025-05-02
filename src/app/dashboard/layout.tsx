@@ -3,10 +3,10 @@ import { AppHeader } from '@/components/header/app-header';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { UserContextProvider } from '@/lib/context/user-context';
-import { getSession } from '@/lib/auth/get-session';
+import { auth } from '@/auth';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
+  const session = await auth();
 
   if (!session?.user) {
     return redirect('/login');

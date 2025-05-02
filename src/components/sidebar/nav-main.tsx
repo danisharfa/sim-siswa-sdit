@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { LucideIcon } from 'lucide-react';
 
 import {
   SidebarGroup,
@@ -17,7 +16,7 @@ import {
 type NavItem = {
   title: string;
   url?: string;
-  icon?: LucideIcon;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   children?: { title: string; url: string }[];
 };
 
@@ -49,10 +48,7 @@ export function NavMain({ items = [] }: { items?: NavItem[] }) {
                   </>
                 ) : (
                   <SidebarMenuButton asChild tooltip={item.title}>
-                    <Link
-                      href={item.url ?? '#'}
-                      className="flex items-center gap-2"
-                    >
+                    <Link href={item.url ?? '#'} className="flex items-center gap-2">
                       {item.icon && <item.icon className="size-5" />}
                       <span className="truncate">{item.title}</span>
                     </Link>

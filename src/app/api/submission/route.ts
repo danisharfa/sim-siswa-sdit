@@ -11,64 +11,64 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const guru = await prisma.guruProfile.findUnique({
+    const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: user.id },
     });
 
-    if (!guru) {
+    if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Profil guru tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    const kelompokBinaan = await prisma.guruKelompok.findMany({
-      where: { guruId: guru.id },
-      select: { kelompokId: true },
+    const kelompokBinaan = await prisma.teacherGroup.findMany({
+      where: { teacherId: teacher.id },
+      select: { groupId: true },
     });
 
-    const kelompokIds = kelompokBinaan.map((item) => item.kelompokId);
+    const groupIds = kelompokBinaan.map((item) => item.groupId);
 
-    const setoranList = await prisma.setoran.findMany({
+    const setoranList = await prisma.submission.findMany({
       where: {
-        guruId: guru.id,
-        kelompokId: {
-          in: kelompokIds,
+        teacherId: teacher.id,
+        groupId: {
+          in: groupIds,
         },
       },
       orderBy: {
-        tanggal: 'desc',
+        date: 'desc',
       },
       include: {
         surah: {
           select: {
             id: true,
-            namaSurah: true,
+            name: true,
           },
         },
         wafa: {
           select: {
             id: true,
-            namaBuku: true,
+            name: true,
           },
         },
-        siswa: {
+        student: {
           select: {
             nis: true,
             user: {
               select: {
-                namaLengkap: true,
+                fullName: true,
               },
             },
           },
         },
-        kelompok: {
+        group: {
           select: {
-            namaKelompok: true,
-            kelas: {
+            name: true,
+            classroom: {
               select: {
-                namaKelas: true,
-                tahunAjaran: true,
+                name: true,
+                academicYear: true,
               },
             },
           },
@@ -103,40 +103,40 @@ export async function POST(req: NextRequest) {
     }
 
     const {
-      kelompokId,
-      siswaId,
-      jenisSetoran,
-      statusSetoran,
+      groupId,
+      studentId,
+      submissionType,
+      submissionStatus,
       adab,
-      catatan,
+      note,
       juz,
       surahId,
-      ayatMulai,
-      ayatSelesai,
+      startVerse,
+      endVerse,
       wafaId,
-      halamanMulai,
-      halamanSelesai,
+      startPage,
+      endPage,
     } = await req.json();
 
-    if (!kelompokId || !siswaId || !jenisSetoran) {
+    if (!groupId || !studentId || !submissionType) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const guru = await prisma.guruProfile.findUnique({
+    const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: user.id },
     });
 
-    if (!guru) {
+    if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Profil guru tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    const isGuruMembimbing = await prisma.guruKelompok.findFirst({
+    const isGuruMembimbing = await prisma.teacherGroup.findFirst({
       where: {
-        guruId: guru.id,
-        kelompokId,
+        teacherId: teacher.id,
+        groupId,
       },
     });
 
@@ -147,10 +147,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const siswa = await prisma.siswaProfile.findFirst({
+    const siswa = await prisma.studentProfile.findFirst({
       where: {
-        id: siswaId,
-        kelompokId,
+        id: studentId,
+        groupId,
       },
     });
 
@@ -163,24 +163,24 @@ export async function POST(req: NextRequest) {
 
     const setoranId = `SETORAN-${crypto.randomUUID()}`;
 
-    const setoran = await prisma.setoran.create({
+    const setoran = await prisma.submission.create({
       data: {
         id: setoranId,
-        siswaId,
-        guruId: guru.id,
-        kelompokId,
-        tanggal: new Date(),
-        jenisSetoran,
-        status: statusSetoran,
+        studentId,
+        teacherId: teacher.id,
+        groupId,
+        date: new Date(),
+        submissionType,
+        submissionStatus,
         adab,
-        catatan,
+        note,
         juz,
         surahId,
-        ayatMulai,
-        ayatSelesai,
+        startVerse,
+        endVerse,
         wafaId,
-        halamanMulai,
-        halamanSelesai,
+        startPage,
+        endPage,
       },
     });
 

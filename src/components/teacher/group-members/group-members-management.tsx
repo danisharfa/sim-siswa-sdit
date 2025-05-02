@@ -1,48 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
 import { GroupMembersTable } from '@/components/teacher/group-members/group-members-table';
 
-interface Siswa {
-  id: string;
-  nis: string;
-  user: {
-    namaLengkap: string;
-  };
-}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function GroupDetailsManagement({ groupId }: { groupId: string }) {
-  const [siswa, setSiswa] = useState<Siswa[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useSWR(`/api/teacher/group/${groupId}/member`, fetcher);
 
-  useEffect(() => {
-    async function fetchMembers() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/teacher/group/${groupId}/member`);
-
-        const data = await res.json();
-
-        if (data.success) {
-          setSiswa(data.data);
-        } else {
-          console.error('Gagal:', data.error || data.message);
-        }
-      } catch (error) {
-        console.error('Gagal mengambil data siswa kelompok:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchMembers();
-  }, [groupId]);
-
-  if (loading) return <p>Memuat data anggota kelompok...</p>;
+  if (isLoading || !data) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <GroupMembersTable data={siswa} title="Daftar Anggota Kelompok" />
+      <GroupMembersTable data={data.data} title="Daftar Anggota Kelompok" />
     </div>
   );
 }

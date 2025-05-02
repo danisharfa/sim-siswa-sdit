@@ -1,10 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { AddMemberSchema, AddMemberInput } from '@/lib/validations/group';
 
 interface Props {
   groupId: string;
@@ -12,38 +22,35 @@ interface Props {
 }
 
 export function AddMemberForm({ groupId, onMemberAdded }: Props) {
-  const [nis, setNis] = useState('');
-  const [loading, setLoading] = useState(false);
+  const form = useForm<AddMemberInput>({
+    resolver: zodResolver(AddMemberSchema),
+    defaultValues: {
+      nis: '',
+    },
+  });
 
-  async function handleAddMember() {
-    if (!nis) {
-      toast.warning('NIS wajib diisi');
-      return;
-    }
+  const isLoading = form.formState.isSubmitting;
 
-    setLoading(true);
-
+  async function onSubmit(values: AddMemberInput) {
     try {
       const res = await fetch(`/api/admin/group/${groupId}/member`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nis }),
+        body: JSON.stringify(values),
       });
 
-      const resData = await res.json();
-      if (resData.success) {
-        toast.success(
-          resData.message || 'Siswa berhasil ditambahkan ke kelompok!'
-        );
-        setNis('');
-        onMemberAdded();
-      } else {
-        toast.message(resData.message || 'Gagal menambahkan siswa ke kelompok');
+      const result = await res.json().catch(() => null);
+
+      if (!res.ok || !result?.success) {
+        toast.error(result?.message || 'Gagal menambahkan siswa');
+        return;
       }
+
+      toast.success(result.message || 'Siswa berhasil ditambahkan!');
+      form.reset();
+      onMemberAdded();
     } catch {
       toast.error('Terjadi kesalahan, coba lagi.');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -52,16 +59,27 @@ export function AddMemberForm({ groupId, onMemberAdded }: Props) {
       <CardHeader>
         <h2 className="text-xl font-semibold">Tambah Siswa ke Kelompok</h2>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Input
-          placeholder="Masukkan NIS Siswa"
-          value={nis}
-          onChange={(e) => setNis(e.target.value)}
-          disabled={loading}
-        />
-        <Button onClick={handleAddMember} disabled={loading || !nis}>
-          {loading ? 'Menambahkan...' : 'Tambah Siswa'}
-        </Button>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="nis"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>NIS Siswa</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Masukkan NIS" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Menambahkan...' : 'Tambah Siswa'}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

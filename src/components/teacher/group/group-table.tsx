@@ -23,13 +23,11 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 
 interface Group {
-  id: string;
-  namaKelompok: string;
-  kelas: {
-    namaKelas: string;
-    tahunAjaran: string;
-  };
-  totalAnggota: number;
+  groupId: string;
+  groupName: string;
+  classroomName: string;
+  classroomAcademicYear: string;
+  totalMember: number;
 }
 
 interface GroupTableProps {
@@ -51,22 +49,22 @@ export function GroupTable({ data, title }: GroupTableProps) {
   const columns = useMemo<ColumnDef<Group>[]>(
     () => [
       {
-        accessorKey: 'namaKelompok',
+        accessorKey: 'groupName',
         id: 'Nama Kelompok',
         header: 'Nama Kelompok',
       },
       {
-        accessorFn: (row) => row.kelas?.namaKelas ?? '-',
+        accessorFn: (row) => row.classroomName ?? '-',
         id: 'Kelas',
         header: 'Kelas',
       },
       {
-        accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
+        accessorFn: (row) => row.classroomAcademicYear ?? '-',
         id: 'Tahun Ajaran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
       {
-        accessorKey: 'totalAnggota',
+        accessorKey: 'totalMember',
         id: 'Total Anggota',
         header: 'Jumlah Siswa',
       },
@@ -86,7 +84,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/teacher/group/${kelompok.id}`)}
+                    onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}`)}
                   >
                     Detail
                   </DropdownMenuItem>

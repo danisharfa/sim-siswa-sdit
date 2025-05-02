@@ -25,19 +25,12 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 
 interface Group {
-  id: string;
-  namaKelompok: string;
-  kelas: {
-    namaKelas: string;
-    tahunAjaran: string;
-  };
-  guruKelompok: {
-    guru: {
-      user: {
-        namaLengkap: string;
-      };
-    };
-  }[];
+  groupId: string;
+  groupName: string;
+  classroomName: string;
+  classroomAcademicYear: string;
+  nip: string[];
+  teacherName: string[];
 }
 
 interface GroupTableProps {
@@ -63,16 +56,16 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
   } = useDataTableState<Group, 'edit' | 'delete'>();
 
   const handleOpenEditDialog = useCallback(
-    (kelompok: Group) => {
-      setSelectedGroup(kelompok);
+    (group: Group) => {
+      setSelectedGroup(group);
       setDialogType('edit');
     },
     [setDialogType, setSelectedGroup]
   );
 
   const handleOpenDeleteDialog = useCallback(
-    (kelompok: Group) => {
-      setSelectedGroup(kelompok);
+    (group: Group) => {
+      setSelectedGroup(group);
       setDialogType('delete');
     },
     [setDialogType, setSelectedGroup]
@@ -81,33 +74,32 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
   const columns = useMemo<ColumnDef<Group>[]>(
     () => [
       {
-        accessorKey: 'namaKelompok',
+        accessorKey: 'groupName',
         id: 'Nama Kelompok',
         header: 'Nama Kelompok',
       },
       {
-        accessorKey: 'kelas.namaKelas',
+        accessorKey: 'classroomName',
         id: 'Nama Kelas',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Kelas" />,
       },
       {
-        accessorKey: 'kelas.tahunAjaran',
+        accessorKey: 'classroomAcademicYear',
         id: 'Tahun Ajaran',
-        accessorFn: (row) => row.kelas?.tahunAjaran ?? '-',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
-
       {
-        header: 'Nama Guru',
+        accessorKey: 'teacherName',
         id: 'Nama Guru',
-        accessorFn: (row) => row.guruKelompok?.[0]?.guru?.user?.namaLengkap ?? '-',
+        accessorFn: (row) => row.teacherName.join(', '),
+        header: 'Nama Guru',
       },
       {
         id: 'actions',
         enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
-          const kelompok = row.original;
+          const group = row.original;
           return (
             <>
               <DropdownMenu>
@@ -118,7 +110,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/admin/group/${kelompok.id}`)}
+                    onClick={() => router.push(`/dashboard/admin/group/${group.groupId}`)}
                     className="flex items-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
@@ -126,7 +118,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      handleOpenEditDialog(kelompok);
+                      handleOpenEditDialog(group);
                     }}
                     className="flex items-center gap-2"
                   >
@@ -135,7 +127,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
-                      handleOpenDeleteDialog(kelompok);
+                      handleOpenDeleteDialog(group);
                     }}
                     className="flex items-center gap-2"
                     variant="destructive"
@@ -176,7 +168,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
 
       {dialogType === 'edit' && selectedGroup && (
         <GroupEditDialog
-          kelompok={selectedGroup}
+          group={selectedGroup}
           open={true}
           onOpenChange={(isOpen) => {
             if (!isOpen) {
@@ -194,7 +186,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
 
       {dialogType === 'delete' && selectedGroup && (
         <GroupAlertDialog
-          kelompok={selectedGroup}
+          group={selectedGroup}
           open={true}
           onOpenChange={(isOpen) => {
             if (!isOpen) {

@@ -8,64 +8,64 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { namaKelompok } = await req.json();
+    const { groupName } = await req.json();
 
-    const existingGroup = await prisma.kelompok.findUnique({
+    const existingGroup = await prisma.group.findUnique({
       where: { id },
     });
 
     if (!existingGroup) {
       return NextResponse.json(
-        { error: 'Kelompok tidak ditemukan' },
+        { success: false, message: 'Kelompok tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    const updatedGroup = await prisma.kelompok.update({
+    const updatedGroup = await prisma.group.update({
       where: { id },
-      data: { namaKelompok },
+      data: { name: groupName },
     });
 
-    return NextResponse.json(updatedGroup);
+    return NextResponse.json({
+      success: true,
+      message: 'Kelas berhasil diperbarui',
+      data: updatedGroup,
+    });
   } catch (error) {
     console.error('Error updating kelompok data:', error);
-
     return NextResponse.json(
-      { error: 'Gagal mengedit kelompok' },
+      { success: false, message: 'Gagal mengedit kelompok' },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  segmentData: { params: Params }
-) {
+export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;
     const id = params.id;
 
-    const existingGroup = await prisma.kelompok.findUnique({
+    const existingGroup = await prisma.group.findUnique({
       where: { id },
     });
 
     if (!existingGroup) {
       return NextResponse.json(
-        { error: 'Kelompok tidak ditemukan' },
+        { success: false, message: 'Kelompok tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    await prisma.kelompok.delete({ where: { id } });
+    await prisma.group.delete({ where: { id } });
 
     return NextResponse.json(
-      { message: 'Kelompok berhasil dihapus' },
+      { success: true, message: 'Kelompok berhasil dihapus' },
       { status: 200 }
     );
   } catch (error) {
     console.error('Error deleting kelompok:', error);
     return NextResponse.json(
-      { error: 'Gagal menghapus kelompok' },
+      { success: false, message: 'Gagal menghapus kelompok' },
       { status: 500 }
     );
   }

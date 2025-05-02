@@ -7,11 +7,11 @@ export async function GET() {
     const session = await auth();
     const user = session?.user;
 
-    if (!user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user || user.role !== 'teacher') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const guru = await prisma.guruProfile.findUnique({
+    const guru = await prisma.teacherProfile.findUnique({
       where: { userId: user.id },
     });
 
@@ -19,30 +19,33 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    const groups = await prisma.kelompok.findMany({
+    const groups = await prisma.group.findMany({
       where: {
-        guruKelompok: {
+        teacherGroup: {
           some: {
-            guruId: guru.id,
+            teacherId: guru.id,
           },
         },
       },
       include: {
-        kelas: true,
-        siswaProfiles: {
-          select: { id: true }, // hanya ambil id untuk efisiensi
+        classroom: {
+          select: {
+            name: true,
+            academicYear: true,
+          },
+        },
+        student: {
+          select: { id: true },
         },
       },
     });
 
     const formattedGroups = groups.map((group) => ({
-      id: group.id,
-      namaKelompok: group.namaKelompok,
-      kelas: {
-        namaKelas: group.kelas.namaKelas,
-        tahunAjaran: group.kelas.tahunAjaran,
-      },
-      totalAnggota: group.siswaProfiles.length,
+      groupId: group.id,
+      groupName: group.name,
+      classroomName: group.classroom.name,
+      classroomAcademicYear: group.classroom.academicYear,
+      totalMember: group.student.length,
     }));
 
     return NextResponse.json({

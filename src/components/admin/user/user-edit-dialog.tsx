@@ -1,41 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 interface UserEditDialogProps {
-  user: { id: string; username: string; namaLengkap: string };
+  user: { id: string; username: string; fullName: string };
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSave: () => void;
 }
 
-export function UserEditDialog({
-  user,
-  open,
-  onOpenChange,
-  onSave,
-}: UserEditDialogProps) {
+export function UserEditDialog({ user, open, onOpenChange, onSave }: UserEditDialogProps) {
   const [username, setUsername] = useState(user.username);
-  const [namaLengkap, setNamaLengkap] = useState(user.namaLengkap);
+  const [fullName, setFullName] = useState(user.fullName);
   const [loading, setLoading] = useState(false);
 
   async function handleEdit() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/users/${user.id}`, {
+      const res = await fetch(`/api/admin/user/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, namaLengkap }),
+        body: JSON.stringify({ username, fullName }),
       });
 
       if (res.ok) {
@@ -61,19 +51,11 @@ export function UserEditDialog({
         <div className="space-y-4">
           <div>
             <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
+            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="namaLengkap">Nama</Label>
-            <Input
-              id="namaLengkap"
-              value={namaLengkap}
-              onChange={(e) => setNamaLengkap(e.target.value)}
-            />
+            <Label htmlFor="fullName">Nama</Label>
+            <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
           </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

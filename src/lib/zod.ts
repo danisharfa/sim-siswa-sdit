@@ -1,19 +1,20 @@
-import { object, string, enum as zEnum } from 'zod';
+import { z } from 'zod';
 
-export const LogInSchema = object({
-  username: string().min(1, { message: 'Username is required' }),
-  password: string().min(1, { message: 'Password is required' }),
+export const LogInSchema = z.object({
+  username: z.string().min(1, { message: 'Username wajib diisi' }),
+  password: z.string().min(1, { message: 'Kata sandi wajib diisi' }),
 });
 
-export const AddUserSchema = object({
-  username: string().min(1, { message: 'Username is required' }),
-  namaLengkap: string().min(1, { message: 'Nama Lengkap is required' }),
-  role: zEnum(['teacher', 'student'], {
-    errorMap: () => ({ message: 'Role harus teacher atau student' }),
+export const AddUserSchema = z.object({
+  username: z.string().min(1, { message: 'Username wajib diisi' }),
+  fullName: z.string().min(1, { message: 'Nama lengkap wajib diisi' }),
+  role: z.enum(['coordinator', 'teacher', 'student'], {
+    errorMap: () => ({ message: 'Peran wajib dipilih' }),
   }),
 });
 
-export const ChangePasswordSchema = object({
-  oldPassword: string().min(6, { message: 'Kata sandi lama minimal 6 karakter.' }),
-  newPassword: string().min(6, { message: 'Kata sandi baru minimal 6 karakter.' }),
+export const ChangePasswordSchema = z.object({
+  oldPassword: z.string().min(6, { message: 'Kata sandi lama minimal 6 karakter.' }),
+  newPassword: z.string().min(6, { message: 'Kata sandi baru minimal 6 karakter.' }),
 });
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;

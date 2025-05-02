@@ -1,14 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -19,36 +13,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { toast } from 'sonner';
-import { DatePicker } from '../../ui/date-picker';
 
 type UpdatedUserProfile = {
-  namaLengkap?: string;
+  fullName?: string;
   nis?: string;
   nip?: string;
-  tanggalLahir?: string;
-  tempatLahir?: string;
-  jenisKelamin?: string;
-  golonganDarah?: string;
-  alamat?: string;
-  noTelp?: string;
+  birthDate?: string;
+  birthPlace?: string;
+  gender?: string;
+  bloodType?: string;
+  address?: string;
+  phoneNumber?: string;
   email?: string;
 };
 
 type User = {
-  role: string;
-  fotoProfil?: string;
-  namaLengkap?: string;
+  role: 'student' | 'teacher' | 'coordinator';
+  fullName: string;
   profile?: {
     nis?: string;
     nip?: string;
-    tempatLahir?: string;
-    jenisKelamin?: string;
-    golonganDarah?: string;
-    alamat?: string;
-    noTelp?: string;
+    birthPlace?: string;
+    birthDate?: string;
+    gender?: string;
+    bloodType?: string;
+    address?: string;
+    phoneNumber?: string;
     email?: string;
-    tanggalLahir?: string;
   };
 };
 
@@ -62,28 +55,33 @@ export function UserDetail({ userId }: { userId: string }) {
     async function fetchUser() {
       try {
         const res = await fetch(`/api/users/detail/${userId}`);
-        if (!res.ok) throw new Error('User not found');
-        const data = await res.json();
+        const json = await res.json();
 
-        // Ambil profile berdasarkan role
+        if (!json.success) throw new Error(json.message);
+
+        const userData = json.data;
         const profile =
-          data.role === 'student' ? data.siswaProfile : data.guruProfile;
+          userData.role === 'student'
+            ? userData.student
+            : userData.role === 'teacher'
+            ? userData.teacher
+            : userData.coordinator;
 
-        setUser({ ...data, profile });
+        setUser(userData);
         setUpdatedData({
-          namaLengkap: data.namaLengkap || '',
+          fullName: userData.fullName || '',
           nis: profile?.nis || '',
           nip: profile?.nip || '',
-          tempatLahir: profile?.tempatLahir || '',
-          jenisKelamin: profile?.jenisKelamin || 'PILIH',
-          golonganDarah: profile?.golonganDarah || 'PILIH',
-          alamat: profile?.alamat || '',
-          noTelp: profile?.noTelp || '',
+          birthPlace: profile?.birthPlace || '',
+          gender: profile?.gender || 'PILIH',
+          bloodType: profile?.bloodType || 'PILIH',
+          address: profile?.address || '',
+          phoneNumber: profile?.phoneNumber || '',
           email: profile?.email || '',
         });
 
-        if (profile?.tanggalLahir) {
-          setDate(new Date(profile.tanggalLahir));
+        if (profile?.birthDate) {
+          setDate(new Date(profile.birthDate));
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -110,7 +108,7 @@ export function UserDetail({ userId }: { userId: string }) {
         body: JSON.stringify({
           ...user,
           ...updatedData,
-          tanggalLahir: date?.toISOString() ?? user.profile?.tanggalLahir, // tambahkan jika pakai kalender
+          birthDate: date?.toISOString() ?? user.profile?.birthDate,
         }),
       });
 
@@ -129,163 +127,95 @@ export function UserDetail({ userId }: { userId: string }) {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (!user) return <p>User not found</p>;
+  if (!user) return <p>User tidak ditemukan</p>;
 
   const isStudent = user.role === 'student';
 
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Pribadi</h2>
+        <h2 className="text-xl font-semibold">Detail Pengguna</h2>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col space-x-4">
-          {/* Foto Profil */}
-          {user.fotoProfil && (
-            <div className="flex justify-center">
-              <Image
-                src={user.fotoProfil}
-                alt="Foto Profil"
-                className="w-32 h-32 rounded-full object-cover"
-                width={128}
-                height={128}
-              />
-            </div>
-          )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <Label>Nama Lengkap</Label>
+            <Input
+              value={updatedData.fullName ?? ''}
+              onChange={(e) => handleChange('fullName', e.target.value)}
+            />
 
-          {/* Grid dua kolom */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Kolom kiri */}
-            <div className="space-y-4">
-              {/* Nama Lengkap */}
-              <div>
-                <Label htmlFor="namaLengkap">Nama Lengkap</Label>
-                <Input
-                  id="namaLengkap"
-                  value={updatedData.namaLengkap ?? ''}
-                  onChange={(e) => handleChange('namaLengkap', e.target.value)}
-                />
-              </div>
+            <Label>{isStudent ? 'NIS' : 'NIP'}</Label>
+            <Input
+              value={isStudent ? updatedData.nis ?? '' : updatedData.nip ?? ''}
+              onChange={(e) => handleChange(isStudent ? 'nis' : 'nip', e.target.value)}
+            />
 
-              {/* NIS / NIP */}
-              <div>
-                <Label htmlFor="nisnip">{isStudent ? 'NIS' : 'NIP'}</Label>
-                <Input
-                  id="nisnip"
-                  value={isStudent ? updatedData.nis : updatedData.nip ?? ''}
-                  onChange={(e) =>
-                    handleChange(isStudent ? 'nis' : 'nip', e.target.value)
-                  }
-                />
-              </div>
+            <Label>Tempat Lahir</Label>
+            <Textarea
+              value={updatedData.birthPlace ?? ''}
+              onChange={(e) => handleChange('birthPlace', e.target.value)}
+            />
 
-              {/* Tempat Lahir */}
-              <div>
-                <Label className="py-2" htmlFor="tempatLahir">
-                  Tempat Lahir
-                </Label>
-                <Textarea
-                  id="tempatLahir"
-                  value={updatedData.tempatLahir ?? ''}
-                  onChange={(e) => handleChange('tempatLahir', e.target.value)}
-                />
-              </div>
+            <Label>Tanggal Lahir</Label>
+            <DatePicker value={date} onChange={setDate} />
 
-              {/* Tanggal Lahir */}
-              <div>
-                <Label className="py-2" htmlFor="tanggalLahir">
-                  Tanggal Lahir
-                </Label>
-                <DatePicker value={date} onChange={setDate} />
-              </div>
+            <Label>Jenis Kelamin</Label>
+            <Select
+              value={updatedData.gender || 'PILIH'}
+              onValueChange={(val) => handleChange('gender', val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Jenis Kelamin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PILIH">--Pilih--</SelectItem>
+                <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
+                <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
+              </SelectContent>
+            </Select>
 
-              {/* Jenis Kelamin */}
-              <div>
-                <Label className="py-2" htmlFor="jenisKelamin">
-                  Jenis Kelamin
-                </Label>
-                <Select
-                  value={updatedData.jenisKelamin || 'PILIH'}
-                  onValueChange={(val) => handleChange('jenisKelamin', val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Jenis Kelamin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PILIH">--Pilih--</SelectItem>
-                    <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
-                    <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <Label>Golongan Darah</Label>
+            <Select
+              value={updatedData.bloodType || 'PILIH'}
+              onValueChange={(val) => handleChange('bloodType', val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Golongan Darah" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PILIH">--Pilih--</SelectItem>
+                <SelectItem value="A">A</SelectItem>
+                <SelectItem value="B">B</SelectItem>
+                <SelectItem value="AB">AB</SelectItem>
+                <SelectItem value="O">O</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* Golongan Darah */}
-              <div>
-                <Label className="py-2" htmlFor="golonganDarah">
-                  Golongan Darah
-                </Label>
-                <Select
-                  value={updatedData.golonganDarah || 'PILIH'}
-                  onValueChange={(val) => handleChange('golonganDarah', val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Golongan Darah" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PILIH">--Pilih--</SelectItem>
-                    <SelectItem value="A">A</SelectItem>
-                    <SelectItem value="B">B</SelectItem>
-                    <SelectItem value="AB">AB</SelectItem>
-                    <SelectItem value="O">O</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <div className="space-y-4">
+            <Label>Alamat</Label>
+            <Textarea
+              value={updatedData.address ?? ''}
+              onChange={(e) => handleChange('address', e.target.value)}
+            />
 
-            {/* Kolom kanan */}
-            <div className="space-y-4">
-              {/* Alamat */}
-              <div>
-                <Label className="py-2" htmlFor="alamat">
-                  Alamat
-                </Label>
-                <Textarea
-                  id="alamat"
-                  value={updatedData.alamat ?? ''}
-                  onChange={(e) => handleChange('alamat', e.target.value)}
-                />
-              </div>
+            <Label>Email</Label>
+            <Input
+              value={updatedData.email ?? ''}
+              onChange={(e) => handleChange('email', e.target.value)}
+            />
 
-              {/* Email */}
-              <div>
-                <Label className="py-2" htmlFor="email">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  value={updatedData.email ?? ''}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                />
-              </div>
-
-              {/* No Telp */}
-              <div>
-                <Label className="py-2" htmlFor="noTelp">
-                  No. HP
-                </Label>
-                <Input
-                  id="noTelp"
-                  value={updatedData.noTelp ?? ''}
-                  onChange={(e) => handleChange('noTelp', e.target.value)}
-                />
-              </div>
-            </div>
+            <Label>No. HP</Label>
+            <Input
+              value={updatedData.phoneNumber ?? ''}
+              onChange={(e) => handleChange('phoneNumber', e.target.value)}
+            />
           </div>
         </div>
       </CardContent>
-
       <CardFooter className="flex justify-center">
-        <Button onClick={handleSubmit}>Update Data</Button>
+        <Button onClick={handleSubmit}>Simpan Perubahan</Button>
       </CardFooter>
     </Card>
   );

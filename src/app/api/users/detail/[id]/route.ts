@@ -8,105 +8,112 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    console.log('GET detail user dengan id:', id);
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'ID pengguna tidak valid' },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        siswaProfile: true,
-        guruProfile: true,
+        coordinator: true,
+        teacher: true,
+        student: true,
       },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'User tidak ditemukan' },
+        { success: false, message: 'User tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(user, { status: 200 });
-  } catch {
+    return NextResponse.json({
+      success: true,
+      message: 'Detail user berhasil diambil',
+      data: user,
+    });
+  } catch (error) {
+    console.error('[USER_DETAIL_GET]', error);
     return NextResponse.json(
-      { error: 'Gagal mengambil data pengguna' },
+      { success: false, message: 'Gagal mengambil data user' },
       { status: 500 }
     );
   }
 }
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
-  const params = await segmentData.params;
-  const id = params.id;
-
   try {
+    const params = await segmentData.params;
+    const id = params.id;
+
     const {
-      namaLengkap,
+      fullName,
       role,
       nis,
       nip,
-      tanggalLahir,
-      tempatLahir,
-      jenisKelamin,
-      golonganDarah,
-      alamat,
-      noTelp,
+      birthDate,
+      birthPlace,
+      gender,
+      bloodType,
+      address,
+      phoneNumber,
       email,
     } = await req.json();
 
-    // Update tabel User
     await prisma.user.update({
       where: { id },
-      data: {
-        namaLengkap,
-      },
+      data: { fullName },
     });
 
-    if (role === 'student') {
-      await prisma.siswaProfile.update({
+    const updateData = {
+      birthDate,
+      birthPlace,
+      gender,
+      bloodType,
+      address,
+      phoneNumber,
+      email,
+    };
+
+    if (role === 'coordinator') {
+      await prisma.coordinatorProfile.update({
         where: { userId: id },
-        data: {
-          nis,
-          tanggalLahir,
-          tempatLahir,
-          jenisKelamin,
-          golonganDarah,
-          alamat,
-          noTelp,
-          email,
-        },
+        data: { ...updateData, nip },
       });
     } else if (role === 'teacher') {
-      await prisma.guruProfile.update({
+      await prisma.teacherProfile.update({
         where: { userId: id },
-        data: {
-          nip,
-          tanggalLahir,
-          tempatLahir,
-          jenisKelamin,
-          golonganDarah,
-          alamat,
-          noTelp,
-          email,
-        },
+        data: { ...updateData, nip },
+      });
+    } else if (role === 'student') {
+      await prisma.studentProfile.update({
+        where: { userId: id },
+        data: { ...updateData, nis },
       });
     }
 
     const updatedUser = await prisma.user.findUnique({
       where: { id },
       include: {
-        siswaProfile: true,
-        guruProfile: true,
+        coordinator: true,
+        teacher: true,
+        student: true,
       },
     });
 
     return NextResponse.json({
-      message: 'User updated successfully',
-      updatedUser,
+      success: true,
+      message: 'User berhasil diperbarui',
+      data: updatedUser,
     });
   } catch (error) {
-    console.error(error);
+    console.error('[USER_DETAIL_PUT]', error);
     return NextResponse.json(
-      { message: 'Failed to update user', error },
+      { success: false, message: 'Gagal memperbarui user' },
       { status: 500 }
     );
   }

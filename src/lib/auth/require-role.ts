@@ -1,17 +1,17 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
-export async function requireRole(role: string | string[]) {
+export async function requireRole(allowedRoles: string | string[]) {
   const session = await auth();
 
   if (!session?.user) {
-    return redirect('/login');
+    redirect('/login');
   }
 
-  const allowedRoles = Array.isArray(role) ? role : [role];
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
-  if (!allowedRoles.includes(session.user.role)) {
-    return redirect('/dashboard');
+  if (!roles.includes(session.user.role)) {
+    redirect('/dashboard');
   }
 
   return session.user;

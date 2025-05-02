@@ -3,17 +3,17 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const kelasList = await prisma.kelas.findMany({
+    const classrooms = await prisma.classroom.findMany({
       orderBy: {
-        namaKelas: 'asc',
+        name: 'asc',
       },
     });
 
-    return NextResponse.json(kelasList, { status: 200 });
+    return NextResponse.json({ success: true, data: classrooms });
   } catch (error) {
-    console.error('Error fetching kelas data:', error);
+    console.error('Gagal mendapatkan daftar kelas:', error);
     return NextResponse.json(
-      { error: 'Gagal mengambil data kelas' },
+      { success: false, message: 'Gagal mendapatkan daftar kelas' },
       { status: 500 }
     );
   }
@@ -21,44 +21,44 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Cek apakah request memiliki body JSON yang valid
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json(
-        { error: 'Body request tidak valid' },
+        { success: false, message: 'Body request tidak valid' },
         { status: 400 }
       );
     }
 
-    const { namaKelas, tahunAjaran } = body;
+    const { name, academicYear } = body;
 
-    // Validasi input agar tidak kosong
-    if (!namaKelas || !tahunAjaran) {
+    if (!name || !academicYear) {
       return NextResponse.json(
-        { error: 'Nama kelas dan tahun ajaran wajib diisi' },
+        { success: false, message: 'Nama kelas dan tahun ajaran wajib diisi' },
         { status: 400 }
       );
     }
 
-    // Pastikan nama dan tahunAjaran bersifat unik
-    const existingClass = await prisma.kelas.findFirst({
-      where: { namaKelas, tahunAjaran },
+    const existingClass = await prisma.classroom.findFirst({
+      where: { name, academicYear },
     });
 
     if (existingClass) {
-      return NextResponse.json({ error: 'Kelas sudah ada' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Kelas sudah ada' }, { status: 400 });
     }
 
-    // Generate ID untuk kelas
-    const kelasId = `KELAS-${crypto.randomUUID()}`;
+    const classroomId = `KELAS-${crypto.randomUUID()}`;
 
-    const kelas = await prisma.kelas.create({
-      data: { id: kelasId, namaKelas, tahunAjaran },
+    const classroom = await prisma.classroom.create({
+      data: { id: classroomId, name, academicYear },
     });
 
-    return NextResponse.json(kelas, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      message: 'Berhasil membuat kelas',
+      data: classroom,
+    });
   } catch (error) {
-    console.error('Error creating kelas:', error);
-    return NextResponse.json({ error: 'Gagal membuat kelas' }, { status: 500 });
+    console.error('Gagal membuat kelas:', error);
+    return NextResponse.json({ success: false, message: 'Gagal membuat kelas' }, { status: 500 });
   }
 }

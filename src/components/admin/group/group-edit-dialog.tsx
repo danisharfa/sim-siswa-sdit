@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,46 +14,46 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 interface GroupEditDialogProps {
-  kelompok: { id: string; namaKelompok: string };
+  group: { groupId: string; groupName: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
 }
 
-export function GroupEditDialog({
-  kelompok,
-  open,
-  onOpenChange,
-  onSave,
-}: GroupEditDialogProps) {
-  const [namaKelompok, setNamaKelompok] = React.useState(kelompok.namaKelompok);
-  const [loading, setLoading] = React.useState(false);
+export function GroupEditDialog({ group, open, onOpenChange, onSave }: GroupEditDialogProps) {
+  const [groupName, setGroupName] = useState(group.groupName);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
-    setNamaKelompok(kelompok.namaKelompok);
-  }, [kelompok]);
+  useEffect(() => {
+    setGroupName(group.groupName);
+  }, [group]);
 
   async function handleSave() {
     setLoading(true);
+
     try {
-      const res = await fetch(`/api/admin/group/${kelompok.id}`, {
+      const res = await fetch(`/api/admin/group/${group.groupId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ namaKelompok }),
+        body: JSON.stringify({ groupName }),
       });
 
-      if (res.ok) {
-        toast.success('Nama kelompok berhasil diperbarui!');
-        onSave();
-        onOpenChange(false);
-      } else {
-        toast.error('Terjadi kesalahan saat menyimpan.');
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        toast.error(data?.message || 'Gagal mengedit kelompok');
+        return;
       }
+
+      toast.success(data.message || 'Kelompok berhasil diedit');
+      onSave();
+      onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error('Terjadi kesalahan jaringan.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -64,20 +64,16 @@ export function GroupEditDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="namaKelompok">Nama Kelompok</Label>
+            <Label htmlFor="groupName">Nama Kelompok</Label>
             <Input
-              id="namaKelompok"
-              value={namaKelompok}
-              onChange={(e) => setNamaKelompok(e.target.value)}
+              id="groupName"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Batal
           </Button>
           <Button onClick={handleSave} disabled={loading}>

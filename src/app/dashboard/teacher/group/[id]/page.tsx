@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { getGroupByIdForTeacher } from '@/lib/datas/group';
+import { getGroupByIdForTeacher } from '@/lib/data/group';
 import { notFound } from 'next/navigation';
 import { GroupDetailsManagement } from '@/components/teacher/group-members/group-members-management';
 
@@ -9,19 +9,19 @@ export default async function GroupDetailPage(props: { params: Promise<{ id: str
   const params = await props.params;
   const id = params.id;
 
-  const kelompok = await getGroupByIdForTeacher(id);
+  const group = await getGroupByIdForTeacher(id);
 
-  if (!kelompok) return notFound();
+  if (!group) return notFound();
 
   return (
     <div className="p-4">
-      <Link href="/dashboard/admin/group">
+      <Link href="/dashboard/teacher/group">
         <Button variant="ghost">
           <ArrowLeft />
         </Button>
       </Link>
       <h1 className="text-2xl font-bold mb-4">
-        {kelompok.namaKelompok} - Kelas {kelompok.kelas.namaKelas} - {kelompok.kelas.tahunAjaran}
+        {group.name} - Kelas {group.classroom.name} - {group.classroom.academicYear}
       </h1>
 
       <GroupDetailsManagement groupId={id} />

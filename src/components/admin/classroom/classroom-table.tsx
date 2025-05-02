@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -24,21 +24,19 @@ import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 
-interface Kelas {
+interface Classroom {
   id: string;
-  namaKelas: string;
-  tahunAjaran: string;
+  name: string;
+  academicYear: string;
 }
 
 interface Props {
-  data: Kelas[];
+  data: Classroom[];
   title: string;
   onRefresh: () => void;
 }
 
 export function ClassroomTable({ data, title, onRefresh }: Props) {
-  const router = useRouter();
-
   const {
     sorting,
     setSorting,
@@ -46,37 +44,37 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-    selectedItem: selectedKelas,
-    setSelectedItem: setSelectedKelas,
+    selectedItem: selectedClassroom,
+    setSelectedItem: setSelectedClassroom,
     dialogType,
     setDialogType,
-  } = useDataTableState<Kelas, 'edit' | 'delete'>();
+  } = useDataTableState<Classroom, 'edit' | 'delete'>();
 
   const handleOpenEditDialog = useCallback(
-    (kelas: Kelas) => {
-      setSelectedKelas(kelas);
+    (classroom: Classroom) => {
+      setSelectedClassroom(classroom);
       setDialogType('edit');
     },
-    [setDialogType, setSelectedKelas]
+    [setDialogType, setSelectedClassroom]
   );
 
   const handleOpenDeleteDialog = useCallback(
-    (kelas: Kelas) => {
-      setSelectedKelas(kelas);
+    (classroom: Classroom) => {
+      setSelectedClassroom(classroom);
       setDialogType('delete');
     },
-    [setDialogType, setSelectedKelas]
+    [setDialogType, setSelectedClassroom]
   );
 
-  const columns = useMemo<ColumnDef<Kelas>[]>(
+  const columns = useMemo<ColumnDef<Classroom>[]>(
     () => [
       {
-        accessorKey: 'namaKelas',
+        accessorKey: 'name',
         id: 'Nama Kelas',
         header: 'Nama Kelas',
       },
       {
-        accessorKey: 'tahunAjaran',
+        accessorKey: 'academicYear',
         id: 'Tahun Ajaran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
@@ -85,7 +83,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
         enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
-          const kelas = row.original;
+          const classroom = row.original;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -94,22 +92,24 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32 z-50">
-                <DropdownMenuItem
-                  onClick={() => router.push(`/dashboard/admin/classroom/${kelas.id}`)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  Detail
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/dashboard/admin/classroom/${classroom.id}`}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Detail
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleOpenEditDialog(kelas)}
+                  onClick={() => handleOpenEditDialog(classroom)}
                   className="flex items-center gap-2"
                 >
                   <Pencil className="w-4 h-4" />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleOpenDeleteDialog(kelas)}
+                  onClick={() => handleOpenDeleteDialog(classroom)}
                   className="flex items-center gap-2"
                   variant="destructive"
                 >
@@ -122,7 +122,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
         },
       },
     ],
-    [router, handleOpenEditDialog, handleOpenDeleteDialog]
+    [handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -146,38 +146,38 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
     <>
       <DataTable title={title} table={table} filterColumn="Nama Kelas" />
 
-      {dialogType === 'edit' && selectedKelas && (
+      {dialogType === 'edit' && selectedClassroom && (
         <ClassroomEditDialog
-          kelas={selectedKelas}
+          classroom={selectedClassroom}
           open={true}
           onOpenChange={(isOpen) => {
             if (!isOpen) {
               setDialogType(null);
-              setSelectedKelas(null);
+              setSelectedClassroom(null);
             }
           }}
           onSave={() => {
             onRefresh();
             setDialogType(null);
-            setSelectedKelas(null);
+            setSelectedClassroom(null);
           }}
         />
       )}
 
-      {dialogType === 'delete' && selectedKelas && (
+      {dialogType === 'delete' && selectedClassroom && (
         <ClassroomAlertDialog
-          kelas={selectedKelas}
+          classroom={selectedClassroom}
           open={true}
           onOpenChange={(isOpen) => {
             if (!isOpen) {
               setDialogType(null);
-              setSelectedKelas(null);
+              setSelectedClassroom(null);
             }
           }}
           onConfirm={() => {
             onRefresh();
             setDialogType(null);
-            setSelectedKelas(null);
+            setSelectedClassroom(null);
           }}
         />
       )}

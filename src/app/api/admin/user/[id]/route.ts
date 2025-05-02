@@ -9,24 +9,27 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { username, namaLengkap, resetPassword } = await req.json();
+    const { username, fullName, resetPassword } = await req.json();
 
     const existingUser = await prisma.user.findUnique({ where: { id } });
     if (!existingUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
     const updateData: {
       username?: string;
-      namaLengkap?: string;
+      fullName?: string;
       password?: string;
     } = {};
 
     if (username) updateData.username = username;
-    if (namaLengkap) updateData.namaLengkap = namaLengkap;
+    if (fullName) updateData.fullName = fullName;
     if (resetPassword) {
       if (!existingUser.username) {
-        return NextResponse.json({ error: 'Invalid username for password reset' }, { status: 400 });
+        return NextResponse.json(
+          { success: false, message: 'Invalid username for password reset' },
+          { status: 400 }
+        );
       }
       updateData.password = await hash(existingUser.username, 10);
     }
@@ -36,9 +39,9 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       data: updateData,
     });
 
-    return NextResponse.json({ message: 'User updated successfully' });
+    return NextResponse.json({ success: true, message: 'User updated successfully' });
   } catch {
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Failed to update user' }, { status: 500 });
   }
 }
 
@@ -52,13 +55,13 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
     });
 
     if (!existingUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
     await prisma.user.delete({ where: { id } });
 
-    return NextResponse.json({ message: 'User deleted successfully' });
+    return NextResponse.json({ success: true, message: 'User deleted successfully' });
   } catch {
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Failed to delete user' }, { status: 500 });
   }
 }

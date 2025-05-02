@@ -27,7 +27,7 @@ import { DataTable } from '@/components/ui/data-table';
 interface User {
   id: string;
   username: string;
-  namaLengkap: string;
+  fullName: string;
   role: string;
   createdAt: string;
   updatedAt: string;
@@ -86,7 +86,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Username" />,
       },
       {
-        accessorKey: 'namaLengkap',
+        accessorKey: 'fullName',
         id: 'Nama Lengkap',
         header: 'Nama Lengkap',
       },

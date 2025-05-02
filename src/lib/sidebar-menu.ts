@@ -1,24 +1,26 @@
 import {
   ClipboardPenLine,
   Group,
-  LayoutDashboardIcon,
+  LayoutDashboard,
   MonitorCogIcon,
   School,
   User2Icon,
-  UsersRoundIcon,
+  UserCog,
 } from 'lucide-react';
+
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 
 export const menuData = {
   admin: [
     {
       title: 'Dashboard',
       url: '/dashboard/admin',
-      icon: LayoutDashboardIcon,
+      icon: LayoutDashboard,
     },
     {
       title: 'Manajemen Pengguna',
       url: '/dashboard/admin/users',
-      icon: UsersRoundIcon,
+      icon: UserCog,
     },
     {
       title: 'Manajemen Kelas',
@@ -28,24 +30,14 @@ export const menuData = {
     {
       title: 'Manajemen Kelompok',
       url: '/dashboard/admin/group',
-      icon: Group,
-    },
-    {
-      title: 'Manajemen Tes',
-      url: '/dashboard/admin/exam',
-      icon: ClipboardPenLine,
-    },
-    {
-      title: 'Monitoring Setoran',
-      url: '/dashboard/admin/monitoring',
-      icon: MonitorCogIcon,
+      icon: UserGroupIcon,
     },
   ],
   teacher: [
     {
       title: 'Dashboard',
       url: '/dashboard/teacher',
-      icon: LayoutDashboardIcon,
+      icon: LayoutDashboard,
     },
     {
       title: 'Data Diri',
@@ -73,17 +65,21 @@ export const menuData = {
       ],
     },
     {
-      title: 'Ujian Siswa',
+      title: 'Tes Siswa',
       url: '/dashboard/teacher',
       icon: ClipboardPenLine,
       children: [
         {
-          title: 'Daftar Ujian',
-          url: '/dashboard/teacher/',
+          title: 'Daftar Tes',
+          url: '/dashboard/teacher/exam/register',
         },
         {
-          title: 'Jadwal Ujian',
-          url: '/dashboard/teacher/',
+          title: 'Jadwal Tes',
+          url: '/dashboard/teacher/exam/schedule',
+        },
+        {
+          title: 'Hasil Tes',
+          url: '/dashboard/teacher/exam/result',
         },
       ],
     },
@@ -92,22 +88,22 @@ export const menuData = {
     {
       title: 'Dashboard',
       url: '/dashboard/student',
-      icon: LayoutDashboardIcon,
+      icon: LayoutDashboard,
     },
     {
       title: 'Data Diri',
       url: '/dashboard/student/profile',
       icon: User2Icon,
     },
-    {
-      title: 'Kelas',
-      url: '/dashboard/student/classroom',
-      icon: School,
-    },
-    {
-      title: 'Setoran Hafalan',
-      url: '/dashboard/student/submission',
-      icon: MonitorCogIcon,
-    },
+    // {
+    //   title: 'Kelas',
+    //   url: '/dashboard/student/classroom',
+    //   icon: School,
+    // },
+    // {
+    //   title: 'Setoran Hafalan',
+    //   url: '/dashboard/student/submission',
+    //   icon: MonitorCogIcon,
+    // },
   ],
 };

@@ -28,7 +28,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/types/app/dashboard/[role]/settings/page.tsx",
-    "types/next-auth.d.ts"
+    "types/next-auth.d.ts",
+    "test-env.js"
   ],
   "exclude": ["node_modules"]
 }

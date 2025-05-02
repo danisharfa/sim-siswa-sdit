@@ -1,9 +1,18 @@
-import { requireRole } from '@/lib/auth/require-role';
-import { ChangePasswordForm } from '@/components/settings/change-password-form';
+import { redirect } from 'next/navigation';
+import { getSession } from '@/lib/auth/get-session';
+import { ChangePasswordForm } from '@/app/dashboard/[role]/account/form';
 
-export default async function SettingsPage({ params }: { params: Promise<{ role: string }> }) {
-  const resolvedParams = await params;
-  const user = await requireRole(resolvedParams.role);
+export default async function AccountPage({ params }: { params: Promise<{ role: string }> }) {
+  const { role } = await params;
+  const session = await getSession();
+
+  if (!session?.user) return redirect('/login');
+
+  const actualRole = session.user.role;
+
+  if (role !== actualRole) {
+    return redirect(`/dashboard/${actualRole}/account`);
+  }
 
   return (
     <div className="p-4">
@@ -12,7 +21,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ role:
         <span className="text-muted-foreground">Akun</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ChangePasswordForm userId={user.id} />
+        <ChangePasswordForm userId={session.user.id} />
       </div>
     </div>
   );

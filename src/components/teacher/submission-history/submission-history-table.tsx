@@ -32,35 +32,35 @@ import {
 
 type Submission = {
   id: string;
-  tanggal: string;
-  jenisSetoran: string;
+  date: string;
+  submissionType: string;
   juz: number;
   surahId: number;
   surah: {
-    namaSurah: string;
+    name: string;
   };
   wafaId: number;
   wafa: {
-    namaBuku: string;
+    name: string;
   };
-  ayatMulai: number;
-  ayatSelesai: number;
-  halamanMulai: number;
-  halamanSelesai: number;
-  status: string;
+  startVerse: number;
+  endVerse: number;
+  startPage: number;
+  endPage: number;
+  submissionStatus: string;
   adab: string;
-  catatan: string;
-  siswa: {
+  note: string;
+  student: {
     nis: string;
     user: {
-      namaLengkap: string;
+      fullName: string;
     };
   };
-  kelompok: {
-    namaKelompok: string;
-    kelas: {
-      namaKelas: string;
-      tahunAjaran: string;
+  group: {
+    name: string;
+    classroom: {
+      name: string;
+      academicYear: string;
     };
   };
 };
@@ -80,19 +80,19 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
     setColumnVisibility,
   } = useDataTableState<Submission, string>();
 
-  const [selectedKelompok, setSelectedKelompok] = useState<string | 'all'>('all');
-  const [selectedSiswa, setSelectedSiswa] = useState<string | 'all'>('all');
+  const [selectedGroup, setSelectedGroup] = useState<string | 'all'>('all');
+  const [selectedStudent, setSelectedStudent] = useState<string | 'all'>('all');
 
-  const kelompokList = useMemo(
+  const groupList = useMemo(
     () =>
       Array.from(
         new Map(
           data.map((d) => [
-            d.kelompok.namaKelompok,
+            d.group.name,
             {
-              namaKelompok: d.kelompok.namaKelompok,
-              namaKelas: d.kelompok.kelas.namaKelas,
-              tahunAjaran: d.kelompok.kelas.tahunAjaran,
+              groupName: d.group.name,
+              classroomName: d.group.classroom.name,
+              classroomAcademicYear: d.group.classroom.academicYear,
             },
           ])
         ).values()
@@ -100,17 +100,15 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
     [data]
   );
 
-  const siswaByKelompok = useMemo(() => {
-    if (selectedKelompok === 'all') return [];
-    return data
-      .filter((d) => d.kelompok.namaKelompok === selectedKelompok)
-      .map((d) => d.siswa.user.namaLengkap);
-  }, [selectedKelompok, data]);
+  const studentByGroup = useMemo(() => {
+    if (selectedGroup === 'all') return [];
+    return data.filter((d) => d.group.name === selectedGroup).map((d) => d.student.user.fullName);
+  }, [selectedGroup, data]);
 
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
-        accessorKey: 'tanggal',
+        accessorKey: 'date',
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => (
@@ -124,33 +122,33 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         ),
       },
       {
-        accessorKey: 'siswa.nis',
+        accessorKey: 'student.nis',
         id: 'NIS',
         header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
-        accessorKey: 'siswa.user.namaLengkap',
+        accessorKey: 'student.user.fullName',
         id: 'Nama Siswa',
         header: 'Nama Siswa',
       },
       {
-        accessorKey: 'kelompok.namaKelompok',
+        accessorKey: 'group.name',
         id: 'Nama Kelompok',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Kelompok" />,
         cell: ({ row }) => {
-          const kelompok = row.original.kelompok;
-          const kelas = kelompok.kelas;
-          return `${kelompok.namaKelompok} - ${kelas.namaKelas} (${kelas.tahunAjaran})`;
+          const group = row.original.group;
+          const classroom = group.classroom;
+          return `${group.name} - ${classroom.name} (${classroom.academicYear})`;
         },
       },
       {
-        accessorKey: 'jenisSetoran',
+        accessorKey: 'submissionType',
         id: 'Jenis Setoran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Jenis Setoran" />,
         cell: ({ row }) => (
           <div className="w-32">
             <Badge variant="outline" className="px-1.5 text-muted-foreground">
-              {row.original.jenisSetoran.replaceAll('_', ' ')}
+              {row.original.submissionType.replaceAll('_', ' ')}
             </Badge>
           </div>
         ),
@@ -161,58 +159,58 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         cell: ({ row }) => row.original.juz ?? '-',
       },
       {
-        accessorKey: 'surah.namaSurah',
+        accessorKey: 'surah.name',
         id: 'Surah',
         header: 'Surah',
-        cell: ({ row }) => row.original.surah?.namaSurah ?? '-',
+        cell: ({ row }) => row.original.surah?.name ?? '-',
       },
       {
-        accessorKey: 'ayatMulai',
+        accessorKey: 'startVerse',
         id: 'Ayat Mulai',
         header: 'Ayat Mulai',
-        cell: ({ row }) => row.original.ayatMulai ?? '-',
+        cell: ({ row }) => row.original.startVerse ?? '-',
       },
       {
         accessorKey: 'ayatSelesai',
         id: 'Ayat Selesai',
         header: 'Ayat Selesai',
-        cell: ({ row }) => row.original.ayatSelesai ?? '-',
+        cell: ({ row }) => row.original.endVerse ?? '-',
       },
       {
-        accessorKey: 'wafa.namaBuku',
+        accessorKey: 'wafa.name',
         id: 'Wafa',
         header: 'Wafa',
-        cell: ({ row }) => row.original.wafa?.namaBuku ?? '-',
+        cell: ({ row }) => row.original.wafa?.name ?? '-',
       },
       {
-        accessorKey: 'halamanMulai',
+        accessorKey: 'startPage',
         id: 'Halaman Mulai',
         header: 'Halaman Mulai',
-        cell: ({ row }) => row.original.halamanMulai ?? '-',
+        cell: ({ row }) => row.original.startPage ?? '-',
       },
       {
-        accessorKey: 'halamanSelesai',
+        accessorKey: 'endPage',
         id: 'Halaman Selesai',
         header: 'Halaman Selesai',
-        cell: ({ row }) => row.original.halamanSelesai ?? '-',
+        cell: ({ row }) => row.original.endPage ?? '-',
       },
       {
-        accessorKey: 'status',
+        accessorKey: 'submissionStatus',
         header: 'Status',
         cell: ({ row }) => (
           <Badge
             variant="outline"
             className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
           >
-            {row.original.status === 'LULUS' ? (
+            {row.original.submissionStatus === 'LULUS' ? (
               <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-            ) : row.original.status === 'MENGULANG' ? (
+            ) : row.original.submissionStatus === 'MENGULANG' ? (
               <RefreshCcw className="text-yellow-500 dark:text-yellow-400" />
             ) : (
               <XCircle className="text-red-500 dark:text-red-400" />
             )}
 
-            {row.original.status.replaceAll('_', ' ')}
+            {row.original.submissionStatus.replaceAll('_', ' ')}
           </Badge>
         ),
       },
@@ -237,7 +235,7 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         ),
       },
       {
-        accessorKey: 'catatan',
+        accessorKey: 'note',
         header: 'Catatan',
       },
     ],
@@ -266,10 +264,10 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         {/* Filter Kelompok */}
         <Select
           onValueChange={(value) => {
-            setSelectedKelompok(value);
-            table.getColumn('namaKelompok')?.setFilterValue(value === 'all' ? undefined : value);
-            setSelectedSiswa('all');
-            table.getColumn('siswa')?.setFilterValue(undefined);
+            setSelectedGroup(value);
+            table.getColumn('Nama Kelompok')?.setFilterValue(value === 'all' ? undefined : value);
+            setSelectedStudent('all');
+            table.getColumn('Nama Siswa')?.setFilterValue(undefined);
           }}
         >
           <SelectTrigger className="min-w-[200px] w-full sm:w-[300px]">
@@ -277,12 +275,12 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Kelompok</SelectItem>
-            {kelompokList.map((kelompok) => (
+            {groupList.map((group) => (
               <SelectItem
-                key={`${kelompok.namaKelompok}-${kelompok.namaKelas}-${kelompok.tahunAjaran}`}
-                value={kelompok.namaKelompok}
+                key={`${group.groupName}-${group.classroomName}-${group.classroomAcademicYear}`}
+                value={group.groupName}
               >
-                {`${kelompok.namaKelompok} - ${kelompok.namaKelas} (${kelompok.tahunAjaran})`}
+                {`${group.groupName} - ${group.classroomName} (${group.classroomAcademicYear})`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -290,11 +288,11 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
 
         {/* Filter Siswa (tergantung kelompok) */}
         <Select
-          disabled={selectedKelompok === 'all'}
-          value={selectedSiswa}
+          disabled={selectedGroup === 'all'}
+          value={selectedStudent}
           onValueChange={(value) => {
-            setSelectedSiswa(value);
-            table.getColumn('siswa')?.setFilterValue(value === 'all' ? undefined : value);
+            setSelectedStudent(value);
+            table.getColumn('Nama Siswa')?.setFilterValue(value === 'all' ? undefined : value);
           }}
         >
           <SelectTrigger className="min-w-[200px] w-full sm:w-[250px]">
@@ -302,9 +300,9 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Siswa</SelectItem>
-            {Array.from(new Set(siswaByKelompok)).map((siswa) => (
-              <SelectItem key={siswa} value={siswa}>
-                {siswa}
+            {Array.from(new Set(studentByGroup)).map((student) => (
+              <SelectItem key={student} value={student}>
+                {student}
               </SelectItem>
             ))}
           </SelectContent>
@@ -313,7 +311,7 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         {/* Filter Jenis Setoran */}
         <Select
           onValueChange={(value) =>
-            table.getColumn('jenisSetoran')?.setFilterValue(value === 'all' ? undefined : value)
+            table.getColumn('Jenis Setoran')?.setFilterValue(value === 'all' ? undefined : value)
           }
         >
           <SelectTrigger className="min-w-[200px] w-full sm:w-[200px]">
@@ -321,9 +319,9 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Jenis</SelectItem>
-            {Array.from(new Set(data.map((d) => d.jenisSetoran))).map((jenis) => (
-              <SelectItem key={jenis} value={jenis}>
-                {jenis}
+            {Array.from(new Set(data.map((d) => d.submissionType))).map((st) => (
+              <SelectItem key={st} value={st}>
+                {st}
               </SelectItem>
             ))}
           </SelectContent>

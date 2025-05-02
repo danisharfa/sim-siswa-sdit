@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,48 +14,53 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 interface ClassroomEditDialogProps {
-  kelas: { id: string; namaKelas: string; tahunAjaran: string };
+  classroom: { id: string; name: string; academicYear: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
 }
 
 export function ClassroomEditDialog({
-  kelas,
+  classroom,
   open,
   onOpenChange,
   onSave,
 }: ClassroomEditDialogProps) {
-  const [namaKelas, setNamaKelas] = React.useState(kelas.namaKelas);
-  const [tahunAjaran, setTahunAjaran] = React.useState(kelas.tahunAjaran);
-  const [loading, setLoading] = React.useState(false);
+  const [name, setName] = useState(classroom.name);
+  const [academicYear, setAcademicYear] = useState(classroom.academicYear);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
-    setNamaKelas(kelas.namaKelas);
-    setTahunAjaran(kelas.tahunAjaran);
-  }, [kelas]);
+  useEffect(() => {
+    setName(classroom.name);
+    setAcademicYear(classroom.academicYear);
+  }, [classroom]);
 
   async function handleSave() {
     setLoading(true);
+
     try {
-      const res = await fetch(`/api/admin/classroom/${kelas.id}`, {
+      const res = await fetch(`/api/admin/classroom/${classroom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ namaKelas, tahunAjaran }),
+        body: JSON.stringify({ name, academicYear }),
       });
 
-      if (res.ok) {
-        toast.success('Kelas berhasil diperbarui!');
-        onSave();
-        onOpenChange(false);
-      } else {
-        toast.error('Terjadi kesalahan saat menyimpan.');
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        toast.error(data?.message || 'Gagal mengedit kelas');
+        return;
       }
+
+      toast.success(data.message || 'Kelas berhasil diedit');
+      onSave();
+      onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error('Terjadi kesalahan jaringan.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -66,28 +71,20 @@ export function ClassroomEditDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="namaKelas">Nama Kelas</Label>
-            <Input
-              id="namaKelas"
-              value={namaKelas}
-              onChange={(e) => setNamaKelas(e.target.value)}
-            />
+            <Label htmlFor="name">Nama Kelas</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="tahunAjaran">Tahun Ajaran</Label>
+            <Label htmlFor="academicYear">Tahun Ajaran</Label>
             <Input
-              id="tahunAjaran"
-              value={tahunAjaran}
-              onChange={(e) => setTahunAjaran(e.target.value)}
+              id="academicYear"
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Batal
           </Button>
           <Button onClick={handleSave} disabled={loading}>

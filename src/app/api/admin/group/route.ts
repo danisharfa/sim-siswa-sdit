@@ -3,14 +3,26 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const groups = await prisma.kelompok.findMany({
-      include: {
-        kelas: true,
-        guruKelompok: {
-          include: {
-            guru: {
-              include: {
-                user: true,
+    const groups = await prisma.group.findMany({
+      select: {
+        id: true,
+        name: true,
+        classroom: {
+          select: {
+            name: true,
+            academicYear: true,
+          },
+        },
+        teacherGroup: {
+          select: {
+            teacher: {
+              select: {
+                nip: true,
+                user: {
+                  select: {
+                    fullName: true,
+                  },
+                },
               },
             },
           },
@@ -18,10 +30,19 @@ export async function GET() {
       },
     });
 
+    const formattedGroups = groups.map((g) => ({
+      groupId: g.id,
+      groupName: g.name,
+      classroomName: g.classroom.name,
+      classroomAcademicYear: g.classroom.academicYear,
+      nip: g.teacherGroup.map((tg) => tg.teacher.nip),
+      teacherName: g.teacherGroup.map((tg) => tg.teacher.user.fullName),
+    }));
+
     return NextResponse.json({
       success: true,
       message: 'Data kelompok berhasil diambil',
-      data: groups,
+      data: formattedGroups,
     });
   } catch (error) {
     console.error('Gagal mengambil data kelompok:', error);
@@ -43,36 +64,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { namaKelompok, namaKelas, tahunAjaran, nip } = body;
+    const { groupName, classroomName, classroomAcademicYear, nip } = body;
 
-    if (!namaKelompok || !namaKelas || !tahunAjaran || !nip) {
+    if (!groupName || !classroomName || !classroomAcademicYear || !nip) {
       return NextResponse.json(
         { success: false, message: 'Semua field wajib diisi' },
         { status: 400 }
       );
     }
 
-    const kelas = await prisma.kelas.findUnique({
+    const classroom = await prisma.classroom.findUnique({
       where: {
-        namaKelas_tahunAjaran: {
-          namaKelas,
-          tahunAjaran,
+        name_academicYear: {
+          name: classroomName,
+          academicYear: classroomAcademicYear,
         },
       },
     });
 
-    if (!kelas) {
+    if (!classroom) {
       return NextResponse.json(
         { success: false, message: 'Kelas tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    const existingGroup = await prisma.kelompok.findFirst({
+    const existingGroup = await prisma.group.findFirst({
       where: {
-        namaKelompok,
-        kelasId: kelas.id,
-        tahunAjaran,
+        name: groupName,
+        classroomId: classroom.id,
       },
     });
 
@@ -83,20 +103,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const kelompokId = `KELOMPOK-${crypto.randomUUID()}`;
-
-    const newGroup = await prisma.kelompok.create({
-      data: {
-        id: kelompokId,
-        namaKelompok,
-        kelasId: kelas.id,
-        tahunAjaran,
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { nip },
+      include: {
+        user: {
+          select: {
+            fullName: true,
+          },
+        },
       },
     });
 
-    const guru = await prisma.guruProfile.findUnique({ where: { nip } });
-
-    if (!guru) {
+    if (!teacher) {
       return NextResponse.json(
         {
           success: false,
@@ -106,17 +124,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.guruKelompok.create({
+    const kelompokId = `KELOMPOK-${crypto.randomUUID()}`;
+
+    const newGroup = await prisma.group.create({
       data: {
-        guruId: guru.id,
-        kelompokId: newGroup.id,
+        id: kelompokId,
+        name: groupName,
+        classroomId: classroom.id,
       },
     });
+
+    await prisma.teacherGroup.create({
+      data: {
+        teacherId: teacher.id,
+        groupId: newGroup.id,
+      },
+    });
+
+    const formattedGroup = {
+      groupId: newGroup.id,
+      groupName: newGroup.name,
+      classroomName: classroom.name,
+      classroomAcademicYear: classroom.academicYear,
+      nip: teacher.nip,
+      teacherName: teacher.user.fullName,
+    };
 
     return NextResponse.json({
       success: true,
       message: 'Kelompok berhasil dibuat',
-      data: newGroup,
+      data: formattedGroup,
     });
   } catch (error) {
     console.error('Gagal membuat kelompok:', error);

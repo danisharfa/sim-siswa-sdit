@@ -9,7 +9,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVerticalIcon, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,19 +16,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MemberAlertDialog } from '@/components/admin/group-members/member-alert-dialog';
+import { MoreVerticalIcon, Trash2 } from 'lucide-react';
+import { MemberAlertDialog } from '@/components/admin/group-members/member-alert-dialog'; // Ganti path sesuai struktur proyekmu
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 
-interface Siswa {
+interface Student {
   id: string;
   nis: string;
-  namaLengkap: string;
+  fullName: string;
 }
 
 interface Props {
-  data: Siswa[];
+  data: Student[];
   title: string;
   groupId: string;
   onRefresh: () => void;
@@ -47,51 +47,52 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
     setSelectedItem: setSelectedMember,
     dialogType,
     setDialogType,
-  } = useDataTableState<Siswa, 'delete'>();
+  } = useDataTableState<Student, 'delete'>();
 
   const handleOpenDeleteDialog = useCallback(
-    (siswa: Siswa) => {
-      setSelectedMember(siswa);
+    (student: Student) => {
+      setSelectedMember(student);
       setDialogType('delete');
     },
     [setDialogType, setSelectedMember]
   );
 
-  const columns = useMemo<ColumnDef<Siswa>[]>(
+  const columns = useMemo<ColumnDef<Student>[]>(
     () => [
       {
         accessorKey: 'nis',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
+        id: 'NIS',
+        header: 'NIS',
       },
       {
-        accessorKey: 'namaLengkap',
-        id: 'Nama Lengkap',
-        header: 'Nama Lengkap',
+        accessorKey: 'fullName',
+        id: 'Nama Siswa',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Siswa" />,
       },
       {
         id: 'actions',
         enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
-          const siswa = row.original;
+          const student = row.original;
           return (
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex size-8">
                     <MoreVerticalIcon />
-                    <span className="sr-only">Options</span>
+                    <span className="sr-only">User Option</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
                     onClick={() => {
-                      handleOpenDeleteDialog(siswa);
+                      handleOpenDeleteDialog(student);
                     }}
                     className="flex items-center gap-2"
                     variant="destructive"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                     Hapus
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -123,7 +124,7 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="Nama Lengkap" />
+      <DataTable title={title} table={table} filterColumn="NIS" />
 
       {dialogType === 'delete' && selectedMember && (
         <MemberAlertDialog

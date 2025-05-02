@@ -4,36 +4,45 @@ import { prisma } from '@/lib/prisma';
 type Params = Promise<{ id: string }>;
 
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
-  const params = await segmentData.params;
-  const id = params.id;
-
-  if (!id) {
-    return NextResponse.json(
-      { success: false, message: 'Group Id is required' },
-      { status: 400 }
-    );
-  }
-
   try {
-    const members = await prisma.siswaProfile.findMany({
+    const params = await segmentData.params;
+    const id = params.id;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Group Id is required' },
+        { status: 400 }
+      );
+    }
+
+    const members = await prisma.studentProfile.findMany({
       where: {
-        kelompokId: id,
+        groupId: id,
+      },
+      orderBy: {
+        nis: 'asc',
       },
       select: {
         id: true,
         nis: true,
         user: {
           select: {
-            namaLengkap: true,
+            fullName: true,
           },
         },
       },
     });
 
+    const formattedMembers = members.map((m) => ({
+      id: m.id,
+      nis: m.nis,
+      fullName: m.user?.fullName || 'Tidak diketahui',
+    }));
+
     return NextResponse.json({
       success: true,
       message: 'Data anggota kelompok berhasil diambil',
-      data: members,
+      data: formattedMembers,
     });
   } catch (error) {
     console.error('Error get members:', error);
@@ -57,16 +66,16 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const siswa = await prisma.siswaProfile.findUnique({ where: { nis } });
+    const student = await prisma.studentProfile.findUnique({ where: { nis } });
 
-    if (!siswa) {
+    if (!student) {
       return NextResponse.json(
         { success: false, message: 'Siswa tidak ditemukan' },
         { status: 404 }
       );
     }
-    const kelompok = await prisma.kelompok.findUnique({ where: { id } });
-    if (!kelompok) {
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
       return NextResponse.json(
         { success: false, message: 'Kelompok tidak ditemukan' },
         { status: 404 }
@@ -74,19 +83,18 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     }
 
     // Validasi: siswa harus berada di kelas yang sama dengan kelompok
-    if (siswa.kelasId !== kelompok.kelasId) {
+    if (student.classroomId !== group.classroomId) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            'Siswa harus berada di kelas yang sama dengan kelas kelompok ini',
+          message: 'Siswa harus berada di kelas yang sama dengan kelas kelompok ini',
         },
         { status: 400 }
       );
     }
 
     // Cek apakah siswa sudah tergabung dalam kelompok yang sama
-    if (siswa.kelompokId === id) {
+    if (student.groupId === id) {
       return NextResponse.json(
         { success: false, message: 'Siswa sudah tergabung dalam kelompok ini' },
         { status: 409 }
@@ -94,9 +102,9 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     }
 
     // Update siswa untuk bergabung ke kelompok
-    await prisma.siswaProfile.update({
-      where: { id: siswa.id },
-      data: { kelompokId: id },
+    await prisma.studentProfile.update({
+      where: { id: student.id },
+      data: { groupId: id },
     });
 
     return NextResponse.json({
@@ -105,17 +113,11 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     });
   } catch (error) {
     console.error('Error adding member:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  segmentData: { params: Params }
-) {
+export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;
     const id = params.id;
@@ -128,18 +130,18 @@ export async function DELETE(
       );
     }
 
-    const siswa = await prisma.siswaProfile.findUnique({ where: { nis } });
+    const student = await prisma.studentProfile.findUnique({ where: { nis } });
 
-    if (!siswa || siswa.kelompokId !== id) {
+    if (!student || student.groupId !== id) {
       return NextResponse.json(
         { success: false, message: 'Siswa tidak ditemukan di kelompok ini' },
         { status: 404 }
       );
     }
 
-    await prisma.siswaProfile.update({
-      where: { id: siswa.id },
-      data: { kelompokId: null },
+    await prisma.studentProfile.update({
+      where: { id: student.id },
+      data: { groupId: null },
     });
 
     return NextResponse.json({
@@ -148,9 +150,6 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Error removing member:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

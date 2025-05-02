@@ -1,43 +1,47 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AddUserForm } from '@/components/admin/user/add-user-form';
 import { UserTable } from '@/components/admin/user/user-table';
 
 interface User {
   id: string;
   username: string;
-  namaLengkap: string;
+  fullName: string;
   role: string;
   createdAt: string;
   updatedAt: string;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
+  const { data, isLoading, mutate } = useSWR('/api/admin/user', fetcher);
 
-  async function fetchUsers() {
-    const res = await fetch('/api/users', {
-      method: 'GET',
-    });
-    const data = await res.json();
-    setUsers(data);
+  const users = data?.data ?? [];
+
+  const coordinator: User[] = users.filter((user: User) => user.role === 'coordinator');
+  const teachers: User[] = users.filter((user: User) => user.role === 'teacher');
+  const students: User[] = users.filter((user: User) => user.role === 'student');
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
+      </div>
+    );
   }
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const teachers = users.filter((user) => user.role === 'teacher');
-  const students = users.filter((user) => user.role === 'student');
 
   return (
     <div className="space-y-6">
-      <AddUserForm onUserAdded={fetchUsers} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UserTable data={teachers} title="Daftar Guru" onRefresh={fetchUsers} />
-        <UserTable data={students} title="Daftar Siswa" onRefresh={fetchUsers} />
-      </div>
+      <AddUserForm onUserAdded={mutate} />
+      <UserTable data={coordinator} title="Daftar Koordinator" onRefresh={mutate} />
+      <UserTable data={teachers} title="Daftar Guru" onRefresh={mutate} />
+      <UserTable data={students} title="Daftar Siswa" onRefresh={mutate} />
     </div>
   );
 }

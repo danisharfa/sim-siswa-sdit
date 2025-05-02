@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -13,40 +13,44 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-interface KelasAlertDialogProps {
-  kelas: { id: string };
+interface ClassroomAlertDialogProps {
+  classroom: { id: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
 
 export function ClassroomAlertDialog({
-  kelas,
+  classroom,
   open,
   onOpenChange,
   onConfirm,
-}: KelasAlertDialogProps) {
-  const [loading, setLoading] = React.useState(false);
+}: ClassroomAlertDialogProps) {
+  const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/classroom/${kelas.id}`, {
+      const res = await fetch(`/api/admin/classroom/${classroom.id}`, {
         method: 'DELETE',
       });
 
-      if (res.ok) {
-        toast.success('Kelas berhasil dihapus!');
-        onConfirm();
-        onOpenChange(false);
-      } else {
-        toast.error('Terjadi kesalahan saat menghapus.');
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        toast.error(data?.message || 'Gagal menghapus kelas');
+        return;
       }
+
+      toast.success(data.message || 'Kelas berhasil dihapus');
+      onConfirm();
+      onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error('Terjadi kesalahan jaringan.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -55,14 +59,11 @@ export function ClassroomAlertDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
           <AlertDialogDescription>
-            Apakah Anda yakin ingin menghapus kelas ini? Tindakan ini tidak
-            dapat dibatalkan.
+            Apakah Anda yakin ingin menghapus kelas ini? Tindakan ini tidak dapat dibatalkan.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>
-            Batal
-          </AlertDialogCancel>
+          <AlertDialogCancel onClick={() => onOpenChange(false)}>Batal</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} disabled={loading}>
             {loading ? 'Menghapus...' : 'Hapus'}
           </AlertDialogAction>

@@ -1,48 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
 import { GroupTable } from '@/components/admin/group/group-table';
 import { AddGroupForm } from '@/components/admin/group/add-group-form';
 
-interface Group {
-  id: string;
-  namaKelompok: string;
-  kelas: {
-    namaKelas: string;
-    tahunAjaran: string;
-  };
-  guruKelompok: {
-    guru: {
-      user: {
-        namaLengkap: string;
-      };
-    };
-  }[];
-}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function GroupManagement() {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const { data, isLoading, mutate } = useSWR('/api/admin/group', fetcher);
 
-  async function fetchGroups() {
-    try {
-      const res = await fetch('/api/admin/group');
-      const data = await res.json();
-      if (data.success) {
-        setGroups(data.data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
+      </div>
+    );
   }
-
-  useEffect(() => {
-    fetchGroups();
-  }, []);
 
   return (
     <div className="space-y-6">
-      <AddGroupForm onGroupAdded={fetchGroups} />
-      <GroupTable data={groups} title="Daftar Siswa" onRefresh={fetchGroups} />
+      <AddGroupForm onGroupAdded={mutate} />
+      <GroupTable data={data.data} title="Daftar Siswa" onRefresh={mutate} />
     </div>
   );
 }

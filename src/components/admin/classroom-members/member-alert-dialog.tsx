@@ -16,7 +16,7 @@ import { getErrorMessage } from '@/lib/utils';
 
 interface MemberAlertDialogProps {
   member: { nis: string };
-  kelasId: string;
+  classroomId: string;
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onConfirm: () => void;
@@ -24,7 +24,7 @@ interface MemberAlertDialogProps {
 
 export function MemberAlertDialog({
   member,
-  kelasId,
+  classroomId,
   open,
   onOpenChange,
   onConfirm,
@@ -35,7 +35,7 @@ export function MemberAlertDialog({
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/admin/classroom/${kelasId}/members`, {
+      const res = await fetch(`/api/admin/classroom/${classroomId}/member`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -46,9 +46,7 @@ export function MemberAlertDialog({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(
-          data?.error || 'Terjadi kesalahan saat menghapus anggota.'
-        );
+        throw new Error(data?.error || 'Terjadi kesalahan saat menghapus anggota.');
       }
 
       toast.success('Anggota berhasil dihapus dari kelas!');
@@ -69,15 +67,12 @@ export function MemberAlertDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Hapus Anggota Kelas</AlertDialogTitle>
           <AlertDialogDescription>
-            Apakah Anda yakin ingin menghapus anggota ini dari kelas? Tindakan
-            ini tidak dapat dibatalkan.
+            Apakah Anda yakin ingin menghapus anggota ini dari kelas? Tindakan ini tidak dapat
+            dibatalkan.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel
-            disabled={loading}
-            onClick={() => onOpenChange(false)}
-          >
+          <AlertDialogCancel disabled={loading} onClick={() => onOpenChange(false)}>
             Batal
           </AlertDialogCancel>
           <AlertDialogAction onClick={handleAction} disabled={loading}>

@@ -14,24 +14,19 @@ import {
 import { toast } from 'sonner';
 
 interface GroupAlertDialogProps {
-  kelompok: { id: string };
+  group: { groupId: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
 
-export function GroupAlertDialog({
-  kelompok,
-  open,
-  onOpenChange,
-  onConfirm,
-}: GroupAlertDialogProps) {
+export function GroupAlertDialog({ group, open, onOpenChange, onConfirm }: GroupAlertDialogProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/group/${kelompok.id}`, {
+      const res = await fetch(`/api/admin/group/${group.groupId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
