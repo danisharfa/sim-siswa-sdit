@@ -12,6 +12,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 interface UserAlertDialogProps {
   user: { id: string };
@@ -45,19 +46,23 @@ export function UserAlertDialog({
           : { method: 'DELETE' };
 
       const res = await fetch(url, options);
-      if (!res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
         throw new Error(data.message || 'Terjadi kesalahan');
       }
 
       toast.success(
-        type === 'reset' ? 'Password user berhasil direset!' : 'User berhasil dihapus!'
+        data.message ||
+          (type === 'reset' ? 'Password user berhasil direset!' : 'User berhasil dihapus!')
       );
 
       onConfirm();
       onOpenChange(false);
-    } catch {
-      toast.error('Terjadi kesalahan jaringan.');
+    } catch (error) {
+      const message = getErrorMessage(error);
+      console.error('Error:', message);
+      toast.error(message || 'Terjadi kesalahan saat menghubungi server.');
     } finally {
       setLoading(false);
     }

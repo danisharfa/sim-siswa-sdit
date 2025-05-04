@@ -14,7 +14,7 @@ export const AddUserSchema = z.object({
 });
 
 export const ChangePasswordSchema = z.object({
-  oldPassword: z.string().min(6, { message: 'Kata sandi lama minimal 6 karakter.' }),
-  newPassword: z.string().min(6, { message: 'Kata sandi baru minimal 6 karakter.' }),
+  oldPassword: z.string().min(1, { message: 'Kata sandi lama wajib diisi.' }),
+  newPassword: z.string().min(8, { message: 'Kata sandi baru minimal 8 karakter' }),
 });
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;

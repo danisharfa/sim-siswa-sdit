@@ -1,4 +1,4 @@
-import { SubmissionHistoryManagement } from '@/components/teacher/submission-history/submission-history-management';
+import { SubmissionHistoryManagement } from '@/components/teacher/submission/history/submission-history-management';
 
 export default function SubmissionHistoryPage() {
   return (

@@ -34,9 +34,13 @@ type Submission = {
   id: string;
   date: string;
   submissionType: string;
-  juz: number;
+  juzId: number;
   surahId: number;
   surah: {
+    name: string;
+  };
+  juz: {
+    id: number;
     name: string;
   };
   wafaId: number;
@@ -105,6 +109,12 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
     return data.filter((d) => d.group.name === selectedGroup).map((d) => d.student.user.fullName);
   }, [selectedGroup, data]);
 
+  // const formatSubmissionType = (type: string) =>
+  //   type
+  //     .replace(/_/g, ' ')
+  //     .toUpperCase()
+  //     .replace(/\b\w/g, (c) => c.toUpperCase());
+
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
@@ -127,8 +137,8 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
-        accessorKey: 'student.user.fullName',
         id: 'Nama Siswa',
+        accessorFn: (row) => row.student.user.fullName,
         header: 'Nama Siswa',
       },
       {
@@ -154,9 +164,10 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         ),
       },
       {
-        accessorKey: 'juz',
+        accessorKey: 'juz.name',
+        id: 'Juz',
         header: 'Juz',
-        cell: ({ row }) => row.original.juz ?? '-',
+        cell: ({ row }) => row.original.juz?.name ?? '-',
       },
       {
         accessorKey: 'surah.name',
@@ -171,11 +182,12 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
         cell: ({ row }) => row.original.startVerse ?? '-',
       },
       {
-        accessorKey: 'ayatSelesai',
+        accessorKey: 'endVerse',
         id: 'Ayat Selesai',
         header: 'Ayat Selesai',
         cell: ({ row }) => row.original.endVerse ?? '-',
       },
+
       {
         accessorKey: 'wafa.name',
         id: 'Wafa',
@@ -196,6 +208,7 @@ export function SubmissionHistoryTable({ data, title }: SubmissionHistoryTablePr
       },
       {
         accessorKey: 'submissionStatus',
+        id: 'Status',
         header: 'Status',
         cell: ({ row }) => (
           <Badge

@@ -9,7 +9,7 @@ export async function GET() {
         name: true,
         verseCount: true,
       },
-      orderBy: { id: 'asc' },
+      orderBy: { id: 'desc' },
     });
 
     return NextResponse.json({

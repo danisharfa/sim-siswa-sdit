@@ -19,7 +19,12 @@ export function UserEditDialog({ user, open, onOpenChange, onSave }: UserEditDia
   const [fullName, setFullName] = useState(user.fullName);
   const [loading, setLoading] = useState(false);
 
+  const isUnchanged = username === user.username && fullName === user.fullName;
+  const isEmpty = !username.trim() || !fullName.trim();
+
   async function handleEdit() {
+    if (isEmpty || isUnchanged) return;
+
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/user/${user.id}`, {
@@ -28,18 +33,20 @@ export function UserEditDialog({ user, open, onOpenChange, onSave }: UserEditDia
         body: JSON.stringify({ username, fullName }),
       });
 
-      if (res.ok) {
-        toast.success('User berhasil diperbarui!');
+      const json = await res.json();
+      if (json.success) {
+        toast.success(json.message || 'User berhasil diperbarui!');
         onSave();
         onOpenChange(false);
       } else {
-        toast.error('Terjadi kesalahan saat menyimpan.');
+        toast.error(json.message || 'Terjadi kesalahan saat menyimpan.');
       }
     } catch (error) {
       console.error(error);
       toast.error('Terjadi kesalahan jaringan.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

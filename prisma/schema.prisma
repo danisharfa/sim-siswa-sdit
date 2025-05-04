@@ -44,6 +44,7 @@ model CoordinatorProfile {
   deletedAt       DateTime?
 
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  examSchedules   ExamSchedule[]
 
   @@index([nip])
   @@map("coordinator_profiles")
@@ -70,6 +71,7 @@ model TeacherProfile {
   teacherGroup    TeacherGroup[]
   groupHistory    GroupHistory[]
   submission      Submission[]
+  examRequests    ExamRequest[]
 
   @@index([nip])
   @@map("teacher_profiles")
@@ -100,6 +102,7 @@ model StudentProfile {
   group               Group?                @relation(fields: [groupId], references: [id])
   groupHistory        GroupHistory[]
   submission          Submission[]
+  examRequests        ExamRequest[]
 
   @@index([nis])
   @@map("student_profiles")
@@ -202,7 +205,7 @@ model Submission {
   date                DateTime
   submissionType      SubmissionType
   
-  juz                 Int?
+  juzId               Int?
   surahId             Int?
   startVerse          Int?
   endVerse            Int?
@@ -220,6 +223,7 @@ model Submission {
   deletedAt           DateTime?
   
   surah     Surah?            @relation(fields: [surahId], references: [id])
+  juz       Juz?              @relation(fields: [juzId], references: [id])
   wafa      Wafa?             @relation(fields: [wafaId], references: [id])
   group     Group             @relation(fields: [groupId], references: [id])
   teacher   TeacherProfile    @relation(fields: [teacherId], references: [id])
@@ -236,21 +240,34 @@ model Surah {
   
   surahJuz      SurahJuz[]
   submission    Submission[]
+  examRequest   ExamRequest[]
 
   @@map("surah")
 }
 
-model SurahJuz{
+model SurahJuz {
   id            Int     @id @default(autoincrement())
-  juz           Int       
   surahId       Int
+  juzId         Int
   startVerse    Int
   endVerse      Int
 
   surah         Surah   @relation(fields: [surahId], references: [id], onDelete: Cascade)
+  juz           Juz     @relation(fields: [juzId], references: [id], onDelete: Cascade)
 
-  @@index([juz])
   @@map("surah_juz")
+}
+
+
+model Juz {
+  id          Int          @id
+  name        String       
+
+  surahJuz    SurahJuz[]
+  submissions Submission[]
+  examRequest   ExamRequest[]
+
+  @@map("juz")
 }
 
 model Wafa {
@@ -260,6 +277,74 @@ model Wafa {
   submission        Submission[]
 
   @@map("wafa")
+}
+
+model ExamRequest {
+  id            String           @id @default(uuid())
+  studentId     String
+  teacherId     String
+  examType      ExamType        
+  surahId       Int?           
+  juzId         Int?            
+  notes         String?
+  status        ExamRequestStatus @default(MENUNGGU)
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  student       StudentProfile  @relation(fields: [studentId], references: [id])
+  teacher       TeacherProfile  @relation(fields: [teacherId], references: [id])
+  surah         Surah?          @relation(fields: [surahId], references: [id])
+  juz   Juz? @relation(fields: [juzId], references: [id])
+  schedules     ScheduleRequest[]
+
+  @@map("exam_requests")
+}
+
+
+model ScheduleRequest {
+  scheduleId   String
+  requestId    String
+
+  examSchedule ExamSchedule @relation(fields: [scheduleId], references: [id])
+  examRequest  ExamRequest  @relation(fields: [requestId], references: [id])
+
+  @@id([scheduleId, requestId])
+  @@map("schedule_requests")
+}
+
+model ExamSchedule {
+  id              String               @id @default(uuid())
+  coordinatorId   String
+  date            DateTime
+  sessionName     String
+  startTime       String
+  endTime         String
+  location        String
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  coordinator     CoordinatorProfile   @relation(fields: [coordinatorId], references: [id])
+  schedules       ScheduleRequest[]
+  result          ExamResult[]
+
+  @@map("exam_schedules")
+}
+
+model ExamResult {
+  id              String         @id @default(uuid())
+  examScheduleId  String         @unique
+  score           Int
+  passed          Boolean
+  notes           String?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  examSchedule    ExamSchedule   @relation(fields: [examScheduleId], references: [id])
+
+  @@map("exam_results")
 }
 
 enum Role {
@@ -299,4 +384,16 @@ enum Adab{
   BAIK
   KURANG_BAIK
   TIDAK_BAIK
+}
+
+enum ExamType {
+  SURAH
+  JUZ
+}
+
+enum ExamRequestStatus {
+  MENUNGGU
+  DITERIMA
+  DITOLAK
+  SELESAI
 }

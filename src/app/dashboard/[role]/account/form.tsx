@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -10,12 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Loader2, Save } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ChangePasswordSchema } from '@/lib/zod';
-import { z } from 'zod';
 import {
   Form,
   FormField,
@@ -24,12 +17,21 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2, Save } from 'lucide-react';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ChangePasswordInput, ChangePasswordSchema } from '@/lib/validations/auth';
+import { getErrorMessage } from '@/lib/utils';
+import { signOut } from 'next-auth/react';
 
-export function ChangePasswordForm({ userId }: { userId: string }) {
+export function ChangePasswordForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const form = useForm<z.infer<typeof ChangePasswordSchema>>({
+  const form = useForm<ChangePasswordInput>({
     resolver: zodResolver(ChangePasswordSchema),
     defaultValues: {
       oldPassword: '',
@@ -37,22 +39,34 @@ export function ChangePasswordForm({ userId }: { userId: string }) {
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof ChangePasswordSchema>) => {
+  const handleSubmit = async (values: ChangePasswordInput) => {
     setLoading(true);
     setMessage('');
 
-    const res = await fetch('/api/auth/change-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, ...values }),
-    });
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
 
-    if (res.ok) {
-      setMessage('✅ Kata sandi berhasil diubah!');
-    } else {
-      setMessage('❌ Gagal mengubah kata sandi. Silakan coba lagi.');
+      const json = await res.json();
+      if (json.success) {
+        toast.success(json.message || 'Password berhasil diubah');
+        form.reset();
+        setTimeout(() => {
+          signOut({ callbackUrl: '/login' });
+        }, 1000);
+      } else {
+        toast.error(json.message || 'Gagal mengubah password');
+      }
+    } catch (error) {
+      const message = getErrorMessage(error);
+      console.error('Error:', message);
+      toast.error(message || 'Terjadi kesalahan saat menghubungi server.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

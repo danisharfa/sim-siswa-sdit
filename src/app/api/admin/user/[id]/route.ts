@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hash } from 'bcryptjs';
+import { auth } from '@/auth';
 
 type Params = Promise<{ id: string }>;
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
+    const session = await auth();
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+    }
+
     const params = await segmentData.params;
     const id = params.id;
 
@@ -24,6 +30,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     if (username) updateData.username = username;
     if (fullName) updateData.fullName = fullName;
+
     if (resetPassword) {
       if (!existingUser.username) {
         return NextResponse.json(
@@ -31,7 +38,9 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
           { status: 400 }
         );
       }
-      updateData.password = await hash(existingUser.username, 10);
+
+      const newPassword = await hash(existingUser.username, 10);
+      updateData.password = newPassword;
     }
 
     await prisma.user.update({
@@ -39,14 +48,23 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       data: updateData,
     });
 
-    return NextResponse.json({ success: true, message: 'User updated successfully' });
-  } catch {
+    return NextResponse.json({
+      success: true,
+      message: resetPassword ? 'Password berhasil direset' : 'User berhasil diupdate',
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
     return NextResponse.json({ success: false, message: 'Failed to update user' }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
+    const session = await auth();
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+    }
+
     const params = await segmentData.params;
     const id = params.id;
 
@@ -61,7 +79,8 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
     await prisma.user.delete({ where: { id } });
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });
-  } catch {
+  } catch (error) {
+    console.error('Delete user error:', error);
     return NextResponse.json({ success: false, message: 'Failed to delete user' }, { status: 500 });
   }
 }

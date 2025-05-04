@@ -1,35 +1,54 @@
+// app/api/auth/change-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { compare, hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, oldPassword, newPassword } = await req.json();
+    const session = await auth();
+    const userId = session?.user?.id;
 
-    if (!userId || !oldPassword || !newPassword) {
-      return NextResponse.json({ error: 'Semua input tidak boleh kosong' }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const { oldPassword, newPassword } = await req.json();
 
-    if (!user) {
-      return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
-    }
-
-    const isPasswordValid = await compare(oldPassword, user.password);
-    if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Passworld lama salah' }, { status: 401 });
+    if (!oldPassword || !newPassword) {
+      return NextResponse.json(
+        { success: false, message: 'Semua input wajib diisi' },
+        { status: 400 }
+      );
     }
 
     if (oldPassword === newPassword) {
       return NextResponse.json(
-        { error: 'Password baru tidak boleh sama dengan password lama' },
+        { success: false, message: 'Password baru tidak boleh sama' },
         { status: 400 }
       );
     }
 
     if (newPassword.length < 8) {
-      return NextResponse.json({ error: 'Password harus minimal 8 karakter' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Password minimal 8 karakter' },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'User tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    const isPasswordValid = await compare(oldPassword, user.password);
+
+    if (!isPasswordValid) {
+      return NextResponse.json({ success: false, message: 'Password lama salah' }, { status: 401 });
     }
 
     const hashedPassword = await hash(newPassword, 10);
@@ -42,9 +61,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ message: 'Password berhasil diupdate' }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Password berhasil diubah' });
   } catch (error) {
-    console.error('Update password error:', error);
-    return NextResponse.json({ message: 'Terjadi kesalahan pada server' }, { status: 500 });
+    console.error('Change password error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Terjadi kesalahan pada server' },
+      { status: 500 }
+    );
   }
 }

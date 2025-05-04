@@ -2,12 +2,12 @@
 
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SubmissionHistoryTable } from '@/components/teacher/submission-history/submission-history-table';
+import { SubmissionHistoryTable } from '@/components/teacher/submission/history/submission-history-table';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function SubmissionHistoryManagement() {
-  const { data, error, isLoading } = useSWR('/api/submission', fetcher);
+  const { data, error, isLoading } = useSWR('/api/teacher/submission', fetcher);
 
   if (isLoading) {
     return (

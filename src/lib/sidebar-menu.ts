@@ -1,4 +1,5 @@
 import {
+  ClipboardList,
   ClipboardPenLine,
   Group,
   LayoutDashboard,
@@ -33,6 +34,37 @@ export const menuData = {
       icon: UserGroupIcon,
     },
   ],
+  coordinator: [
+    {
+      title: 'Dashboard',
+      url: '/dashboard/coordinator',
+      icon: LayoutDashboard,
+    },
+    {
+      title: 'Data Diri',
+      url: '/dashboard/coordinator/profile',
+      icon: User2Icon,
+    },
+    {
+      title: 'Manajemen Ujian',
+      url: '/dashboard/coordinator/exam',
+      icon: ClipboardList,
+      children: [
+        {
+          title: 'Permintaan Ujian',
+          url: '/dashboard/coordinator/exam/requests',
+        },
+        {
+          title: 'Penjadwalan',
+          url: '/dashboard/coordinator/exam/schedules',
+        },
+        {
+          title: 'Penilaian',
+          url: '/dashboard/coordinator/exam/results',
+        },
+      ],
+    },
+  ],
   teacher: [
     {
       title: 'Dashboard',
@@ -65,20 +97,20 @@ export const menuData = {
       ],
     },
     {
-      title: 'Tes Siswa',
+      title: 'Ujian Siswa',
       url: '/dashboard/teacher',
       icon: ClipboardPenLine,
       children: [
         {
-          title: 'Daftar Tes',
-          url: '/dashboard/teacher/exam/register',
+          title: 'Daftar Ujian',
+          url: '/dashboard/teacher/exam/request',
         },
         {
-          title: 'Jadwal Tes',
+          title: 'Jadwal Ujian',
           url: '/dashboard/teacher/exam/schedule',
         },
         {
-          title: 'Hasil Tes',
+          title: 'Hasil Ujian',
           url: '/dashboard/teacher/exam/result',
         },
       ],

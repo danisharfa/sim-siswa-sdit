@@ -1,4 +1,4 @@
-import { SubmissionInputManagement } from '@/components/teacher/submission-input/submission-input-management';
+import { SubmissionInputManagement } from '@/components/teacher/submission/input/submission-input-management';
 
 export default function SubmissionInputPage() {
   return (

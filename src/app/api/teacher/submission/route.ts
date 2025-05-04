@@ -5,14 +5,12 @@ import { auth } from '@/auth';
 export async function GET() {
   try {
     const session = await auth();
-    const user = session?.user;
-
-    if (!user || user.role !== 'teacher') {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    if (!session || session.user.role !== 'teacher') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
-      where: { userId: user.id },
+      where: { userId: session.user.id },
     });
 
     if (!teacher) {
@@ -29,7 +27,7 @@ export async function GET() {
 
     const groupIds = kelompokBinaan.map((item) => item.groupId);
 
-    const setoranList = await prisma.submission.findMany({
+    const submissionList = await prisma.submission.findMany({
       where: {
         teacherId: teacher.id,
         groupId: {
@@ -41,6 +39,12 @@ export async function GET() {
       },
       include: {
         surah: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        juz: {
           select: {
             id: true,
             name: true,
@@ -79,7 +83,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: 'Data setoran berhasil diambil',
-      data: setoranList,
+      data: submissionList,
     });
   } catch (error) {
     console.error('[SUBMISSION_GET]', error);
@@ -96,10 +100,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    const user = session?.user;
-
-    if (!user || user.role !== 'teacher') {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    if (!session || session.user.role !== 'teacher') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
     const {
@@ -109,7 +111,7 @@ export async function POST(req: NextRequest) {
       submissionStatus,
       adab,
       note,
-      juz,
+      juzId,
       surahId,
       startVerse,
       endVerse,
@@ -123,7 +125,7 @@ export async function POST(req: NextRequest) {
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
-      where: { userId: user.id },
+      where: { userId: session.user.id },
     });
 
     if (!teacher) {
@@ -147,25 +149,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const siswa = await prisma.studentProfile.findFirst({
+    const student = await prisma.studentProfile.findFirst({
       where: {
         id: studentId,
         groupId,
       },
     });
 
-    if (!siswa) {
+    if (!student) {
       return NextResponse.json(
         { success: false, message: 'Siswa tidak berada di kelompok ini' },
         { status: 400 }
       );
     }
 
-    const setoranId = `SETORAN-${crypto.randomUUID()}`;
+    const submissionId = `SETORAN-${crypto.randomUUID()}`;
 
-    const setoran = await prisma.submission.create({
+    const submission = await prisma.submission.create({
       data: {
-        id: setoranId,
+        id: submissionId,
         studentId,
         teacherId: teacher.id,
         groupId,
@@ -174,7 +176,7 @@ export async function POST(req: NextRequest) {
         submissionStatus,
         adab,
         note,
-        juz,
+        juzId,
         surahId,
         startVerse,
         endVerse,
@@ -184,7 +186,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: setoran });
+    return NextResponse.json({ success: true, data: submission });
   } catch (error) {
     console.error('[SUBMISSION_POST]', error);
     return NextResponse.json(

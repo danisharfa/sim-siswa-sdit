@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
 
 type Params = Promise<{ id: string }>;
 
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
+    const session = await auth();
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+    }
+
     const params = await segmentData.params;
     const id = params.id;
 
@@ -55,8 +61,14 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
 export async function POST(req: NextRequest, segmentData: { params: Params }) {
   try {
+    const session = await auth();
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+    }
+
     const params = await segmentData.params;
     const id = params.id;
+
     const { nis } = await req.json();
 
     if (!nis || !id) {
@@ -82,7 +94,6 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    // Validasi: siswa harus berada di kelas yang sama dengan kelompok
     if (student.classroomId !== group.classroomId) {
       return NextResponse.json(
         {
@@ -93,7 +104,6 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    // Cek apakah siswa sudah tergabung dalam kelompok yang sama
     if (student.groupId === id) {
       return NextResponse.json(
         { success: false, message: 'Siswa sudah tergabung dalam kelompok ini' },
@@ -101,7 +111,6 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    // Update siswa untuk bergabung ke kelompok
     await prisma.studentProfile.update({
       where: { id: student.id },
       data: { groupId: id },
@@ -119,8 +128,14 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
 
 export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
+    const session = await auth();
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+    }
+
     const params = await segmentData.params;
     const id = params.id;
+
     const { nis } = await req.json();
 
     if (!id || !nis) {

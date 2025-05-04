@@ -30,18 +30,20 @@ interface Student {
   fullName: string;
 }
 
-interface Surah {
-  id: number;
-  name: string;
-  verseCount: number;
-}
-
 interface SurahJuz {
   id: number;
-  juz: number;
-  surahId: number;
+  juzId: number;
   startVerse: number;
   endVerse: number;
+  surah: {
+    id: number;
+    name: string;
+    verseCount: number;
+  };
+  juz: {
+    id: number;
+    name: string;
+  };
 }
 
 interface Wafa {
@@ -68,8 +70,8 @@ interface FormData {
 export function SubmissionInputManagement() {
   const [groupList, setGroupList] = useState<Group[]>([]);
   const [studentList, setStudentList] = useState<Student[]>([]);
-  const [surahList, setSurahList] = useState<Surah[]>([]);
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
+  const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
 
   const [groupId, setGroupId] = useState('');
@@ -94,27 +96,30 @@ export function SubmissionInputManagement() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [groupRes, surahRes, surahJuzRes, wafaRes] = await Promise.all([
+        const [groupRes, surahJuzRes, juzRes, wafaRes] = await Promise.all([
           fetch('/api/teacher/group'),
-          fetch('/api/surah'),
           fetch('/api/surahJuz'),
+          fetch('/api/juz'),
           fetch('/api/wafa'),
         ]);
 
-        const groupData = await groupRes.json();
-        const surahData = await surahRes.json();
-        const surahJuzData = await surahJuzRes.json();
-        const wafaData = await wafaRes.json();
+        const [groupData, surahJuzData, juzData, wafaData] = await Promise.all([
+          groupRes.json(),
+          surahJuzRes.json(),
+          juzRes.json(),
+          wafaRes.json(),
+        ]);
 
         if (groupData.success) setGroupList(groupData.data);
-        if (surahData.success) setSurahList(surahData.data);
         if (surahJuzData.success) setSurahJuzList(surahJuzData.data);
+        if (juzData.success) setJuzList(juzData.data);
         if (wafaData.success) setWafaList(wafaData.data);
       } catch (error) {
         console.error('Gagal mengambil data:', error);
         toast.error('Gagal mengambil data');
       }
     };
+
     fetchData();
   }, []);
 
@@ -148,7 +153,7 @@ export function SubmissionInputManagement() {
       note,
       ...(submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN'
         ? {
-            juz: selectedJuz ? parseInt(selectedJuz) : undefined,
+            juzId: selectedJuz ? parseInt(selectedJuz) : undefined,
             surahId: selectedSurahId ? parseInt(selectedSurahId) : undefined,
             startVerse: startVerse ? parseInt(startVerse) : undefined,
             endVerse: endVerse ? parseInt(endVerse) : undefined,
@@ -162,7 +167,7 @@ export function SubmissionInputManagement() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/submission', {
+      const res = await fetch('/api/teacher/submission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -195,12 +200,7 @@ export function SubmissionInputManagement() {
     setNote('');
   };
 
-  const filteredSurahJuz = surahJuzList.filter((s) => s.juz.toString() === selectedJuz);
-
-  const getSurahName = (surahId: number) => {
-    const surah = surahList.find((s) => s.id === surahId);
-    return surah ? surah.name : 'Surah tidak ditemukan';
-  };
+  const filteredSurahJuz = surahJuzList.filter((s) => s.juz.id.toString() === selectedJuz);
 
   return (
     <Card>
@@ -272,9 +272,9 @@ export function SubmissionInputManagement() {
                   <SelectValue placeholder="Pilih Juz" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from(new Set(surahJuzList.map((s) => s.juz.toString()))).map((j) => (
-                    <SelectItem key={j} value={j}>
-                      Juz {j}
+                  {juzList.map((j) => (
+                    <SelectItem key={j.id} value={j.id.toString()}>
+                      {j.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -292,8 +292,8 @@ export function SubmissionInputManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   {filteredSurahJuz.map((s) => (
-                    <SelectItem key={s.surahId} value={s.surahId.toString()}>
-                      {getSurahName(s.surahId)}
+                    <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
+                      {s.surah.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

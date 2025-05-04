@@ -21,7 +21,7 @@ export default async function AccountPage({ params }: { params: Promise<{ role: 
         <span className="text-muted-foreground">Akun</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ChangePasswordForm userId={session.user.id} />
+        <ChangePasswordForm />
       </div>
     </div>
   );

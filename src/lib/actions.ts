@@ -1,6 +1,6 @@
 'use server';
 
-import { AddUserSchema, LogInSchema } from '@/lib/zod';
+import { AddUserSchema, LogInSchema } from '@/lib/validations/auth';
 import { signIn } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { AuthError } from 'next-auth';
@@ -31,8 +31,6 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
         role,
       },
     });
-
-    console.log('User berhasil dibuat:', newUser);
 
     if (role === 'coordinator') {
       const coordinatorId = generateCustomId('COORDINATOR');
@@ -109,8 +107,6 @@ export const logInCredentials = async (prevState: unknown, formData: FormData) =
     password,
     redirect: false,
   });
-
-  console.log('SIGNIN RESULT:', result);
 
   if (result?.error) {
     return { success: false, message: 'Gagal login' };

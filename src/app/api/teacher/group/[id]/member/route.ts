@@ -5,22 +5,20 @@ import { auth } from '@/auth';
 type Params = Promise<{ id: string }>;
 
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
-  const params = await segmentData.params;
-  const id = params.id;
-
-  const session = await auth();
-  const user = session?.user;
-
-  if (!user || user.role !== 'teacher') {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-    const guru = await prisma.teacherProfile.findUnique({
-      where: { userId: user.id },
+    const session = await auth();
+    if (!session || session.user.role !== 'teacher') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+    }
+
+    const params = await segmentData.params;
+    const id = params.id;
+
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: session.user.id },
     });
 
-    if (!guru) {
+    if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Guru tidak ditemukan' },
         { status: 404 }
@@ -30,7 +28,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const isGroupBimbingan = await prisma.teacherGroup.findFirst({
       where: {
         groupId: id,
-        teacherId: guru.id,
+        teacherId: teacher.id,
       },
     });
 
