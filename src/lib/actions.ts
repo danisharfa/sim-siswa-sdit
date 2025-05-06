@@ -102,18 +102,25 @@ export const logInCredentials = async (prevState: unknown, formData: FormData) =
 
   const { username, password } = validatedFields.data;
 
-  const result = await signIn('credentials', {
+  return await signIn('credentials', {
     username,
     password,
-    redirect: false,
+    redirect: true,
+    callbackUrl: '/dashboard',
   });
 
-  if (result?.error) {
-    return { success: false, message: 'Gagal login' };
-  }
+  // const result = await signIn('credentials', {
+  //   username,
+  //   password,
+  //   redirect: false,
+  // });
 
-  return {
-    success: true,
-    message: 'Berhasil login',
-  };
+  // if (result?.error) {
+  //   return { success: false, message: 'Gagal login' };
+  // }
+
+  // return {
+  //   success: true,
+  //   message: 'Berhasil login',
+  // };
 };
