@@ -6,28 +6,31 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
   const { pathname } = req.nextUrl;
 
-  // Kalau belum login dan mau ke dashboard
+  // Jika belum login dan mengakses halaman dashboard, arahkan ke login
   if (pathname.startsWith('/dashboard') && !token) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  // Kalau sudah login tapi mencoba akses halaman dashboard role yang salah
   if (token) {
-    const userRole = token.role; // ambil role dari token jwt
+    const userRole = token.role as string;
+    const expectedRoleInPath = pathname.split('/')[2]; // misal: admin, coordinator, teacher, student
 
+    // Kalau user akses /dashboard/account → redirect ke /dashboard/{role}/account
     if (pathname === '/dashboard/account') {
       return NextResponse.redirect(new URL(`/dashboard/${userRole}/account`, req.url));
     }
 
-    const expectedRoleInPath = pathname.split('/')[2]; // 'admin', 'coordinator', 'teacher', 'student'
+    const isValidRole = ['admin', 'coordinator', 'teacher', 'student'].includes(expectedRoleInPath);
 
-    // Cek apakah user mencoba akses role yang salah
-    if (['admin', 'coordinator', 'teacher', 'student'].includes(expectedRoleInPath)) {
+    if (isValidRole) {
       if (userRole !== expectedRoleInPath) {
-        // Kalau role user tidak sama dengan role di path, tetap di halaman itu atau redirect ke dashboard sesuai role
+        // Salah role → redirect ke /dashboard/{role}
         const redirectUrl = new URL(`/dashboard/${userRole}`, req.url);
         return NextResponse.redirect(redirectUrl);
       }
+
+      // Benar role → biarkan lewat
+      return NextResponse.next();
     }
   }
 
