@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signOut } from 'next-auth/react';
 import {
   Card,
   CardContent,
@@ -19,17 +22,23 @@ import {
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ChangePasswordInput, ChangePasswordSchema } from '@/lib/validations/auth';
 import { getErrorMessage } from '@/lib/utils';
-import { signOut } from 'next-auth/react';
+import { ChangePasswordInput, ChangePasswordSchema } from '@/lib/validations/auth';
 
 export function ChangePasswordForm() {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const form = useForm<ChangePasswordInput>({
     resolver: zodResolver(ChangePasswordSchema),
@@ -41,19 +50,23 @@ export function ChangePasswordForm() {
 
   const handleSubmit = async (values: ChangePasswordInput) => {
     setLoading(true);
-    setMessage('');
+
+    abortRef.current = new AbortController();
 
     try {
       const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
+        signal: abortRef.current.signal,
       });
 
       const json = await res.json();
+
       if (json.success) {
         toast.success(json.message || 'Password berhasil diubah');
         form.reset();
+        form.clearErrors();
         setTimeout(() => {
           signOut({ callbackUrl: '/login' });
         }, 1000);
@@ -87,7 +100,23 @@ export function ChangePasswordForm() {
                 <FormItem>
                   <FormLabel>Kata Sandi Lama</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Masukkan kata sandi lama" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showOld ? 'text' : 'password'}
+                        placeholder="Masukkan kata sandi lama"
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                        onClick={() => setShowOld((prev) => !prev)}
+                        tabIndex={-1}
+                      >
+                        {showOld ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -100,7 +129,23 @@ export function ChangePasswordForm() {
                 <FormItem>
                   <FormLabel>Kata Sandi Baru</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Masukkan kata sandi baru" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showNew ? 'text' : 'password'}
+                        placeholder="Masukkan kata sandi baru"
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                        onClick={() => setShowNew((prev) => !prev)}
+                        tabIndex={-1}
+                      >
+                        {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -108,20 +153,20 @@ export function ChangePasswordForm() {
             />
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full flex items-center justify-center"
+              disabled={loading}
+            >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Menyimpan...
                 </>
               ) : (
-                <>
-                  <Save />
-                  Simpan
-                </>
+                <span>Simpan</span>
               )}
             </Button>
-            {message && <p className="text-center text-sm">{message}</p>}
           </CardFooter>
         </form>
       </Form>

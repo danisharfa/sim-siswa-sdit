@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState, useActionState } from 'react';
-import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectTrigger,
@@ -12,7 +10,9 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
-import { Loader2, Save } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Loader2, UserPlus2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { addUserCredentials } from '@/lib/actions';
 
@@ -23,6 +23,7 @@ interface Props {
 const initialRole = 'student';
 
 export function AddUserForm({ onUserAdded }: Props) {
+  const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<'coordinator' | 'teacher' | 'student'>(initialRole);
   const [state, formAction] = useActionState(addUserCredentials, null);
 
@@ -35,21 +36,24 @@ export function AddUserForm({ onUserAdded }: Props) {
       setRole(initialRole);
     } else if (state.error) {
       const first = Object.values(state.error)[0]?.[0];
+
       toast.error(first || 'Validasi gagal');
     } else if (state.message && !state.success) {
       toast.error(state.message);
     }
   }, [state, onUserAdded]);
 
-  const [submitting, setSubmitting] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    setSubmitting(true);
+    setLoading(true);
+
     const form = e.currentTarget;
     const formData = new FormData(form);
+
     formData.set('role', role);
+
     await formAction(formData);
-    setSubmitting(false);
+
+    setLoading(false);
   };
 
   return (
@@ -78,21 +82,23 @@ export function AddUserForm({ onUserAdded }: Props) {
             </SelectContent>
           </Select>
 
-          <CardFooter className="flex flex-col gap-2">
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Simpan
-                </>
-              )}
-            </Button>
-          </CardFooter>
+          <Button
+            type="submit"
+            className="w-full flex items-center justify-center"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Menambahkan...
+              </>
+            ) : (
+              <>
+                <UserPlus2 />
+                Tambah User
+              </>
+            )}
+          </Button>
         </form>
       </CardContent>
     </Card>

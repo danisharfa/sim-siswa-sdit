@@ -1,11 +1,9 @@
 'use server';
 
-import { AddUserSchema, LogInSchema } from '@/lib/validations/auth';
-import { signIn } from '@/auth';
+import { AddUserSchema } from '@/lib/validations/auth';
 import { prisma } from '@/lib/prisma';
 import { AuthError } from 'next-auth';
 import { hash } from 'bcryptjs';
-import { cookies } from 'next/headers';
 
 function generateCustomId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -90,38 +88,4 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
       return { success: false, message: error.message };
     }
   }
-};
-
-export const logInCredentials = async (_prevState: unknown, formData: FormData) => {
-  const validatedFields = LogInSchema.safeParse(Object.fromEntries(formData.entries()));
-
-  if (!validatedFields.success) {
-    return {
-      error: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  const { username, password } = validatedFields.data;
-
-  const result = await signIn('credentials', {
-    username,
-    password,
-    redirect: false,
-  });
-
-  if (!result || result.error || !result.status || !result.cookies) {
-    return { success: false, message: 'Gagal login' };
-  }
-
-  const cookieStore = await cookies();
-  result.cookies.forEach(
-    (cookie: { name: string; value: string; options: Record<string, unknown> }) => {
-      cookieStore.set(cookie.name, cookie.value, cookie.options);
-    }
-  );
-
-  return {
-    success: true,
-    message: 'Berhasil login',
-  };
 };

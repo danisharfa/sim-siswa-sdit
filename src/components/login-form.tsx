@@ -1,37 +1,51 @@
 'use client';
 
-import { useEffect, useActionState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { logInCredentials } from '@/lib/actions';
 
 export function LoginForm() {
   const router = useRouter();
-  const [state, formAction] = useActionState(logInCredentials, null);
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    if (!state) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-    if (state.success) {
-      toast.success('Berhasil login 🎉');
-      router.replace('/dashboard');
+    // console.log('🔑 Attempting login with:', { username, password });
+
+    const result = await signIn('credentials', {
+      username,
+      password,
+      redirect: false,
+      callbackUrl: '/dashboard',
+    });
+
+    console.log('🎯 Login result:', result);
+
+    setLoading(false);
+
+    if (result?.error || !result?.url) {
+      toast.error('Gagal login: username atau password salah');
+      console.error('❌ Login gagal:', result?.error);
+      return;
     }
 
-    if (state.error) {
-      const firstError = Object.values(state.error)[0]?.[0];
-      toast.error(firstError || 'Login gagal');
-    }
-
-    if (state.message && !state.success) {
-      toast.error(state.message);
-    }
-  }, [state, router]);
+    toast.success('Berhasil login 🎉');
+    console.log('✅ Login berhasil. Redirecting to:', result.url);
+    router.replace(result.url);
+  };
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Masuk</h1>
         <p className="text-muted-foreground text-sm">Logo sekolah bisa disini</p>
@@ -39,19 +53,51 @@ export function LoginForm() {
       <div className="grid gap-6">
         <div className="grid gap-3">
           <Label htmlFor="username">Nama akun</Label>
-          <Input id="username" name="username" type="text" required />
+          <Input
+            id="username"
+            name="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
         </div>
         <div className="grid gap-3">
-          <div className="flex items-center">
-            <Label htmlFor="password">Kata sandi</Label>
-            <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
-              Lupa kata sandi Anda?
-            </a>
+          <Label htmlFor="password">Kata sandi</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2"
+              onClick={() => setShowPassword((prev) => !prev)}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </Button>
           </div>
-          <Input id="password" name="password" type="password" required />
         </div>
-        <Button type="submit" className="w-full">
-          Masuk
+        <Button
+          type="submit"
+          className="w-full flex items-center justify-center"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Memproses...
+            </>
+          ) : (
+            <span>Masuk</span>
+          )}
         </Button>
       </div>
     </form>
