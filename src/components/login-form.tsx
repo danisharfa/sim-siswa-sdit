@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,13 +42,16 @@ export function LoginForm() {
     toast.success('Berhasil login 🎉');
     console.log('✅ Login berhasil. Redirecting to:', result.url);
     // router.replace(result.url);
-    setTimeout(() => {
-      if (result.url) {
-        router.replace(result.url);
-      } else {
-        console.error('Redirect URL is null');
-      }
-    }, 100);
+
+    const session = await getSession();
+    const role = session?.user?.role;
+
+    if (!role) {
+      toast.error('Gagal mendapatkan role pengguna.');
+      return;
+    }
+
+    router.replace(`/dashboard/${role}`);
   };
 
   return (
