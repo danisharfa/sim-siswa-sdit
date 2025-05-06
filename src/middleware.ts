@@ -7,7 +7,16 @@ export async function middleware(req: NextRequest) {
 
   console.log('🔍 Request cookies:', req.cookies.getAll());
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET || '',
+    secureCookie: process.env.NODE_ENV === 'production',
+    cookieName:
+      process.env.NODE_ENV === 'production'
+        ? '__Secure-authjs.session-token'
+        : 'authjs.session-token',
+  });
+
   console.log('🔍 Token in middleware:', token);
 
   // Jika belum login dan mengakses halaman dashboard, arahkan ke login
