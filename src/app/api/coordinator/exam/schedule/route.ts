@@ -43,6 +43,17 @@ export async function GET() {
                     user: {
                       select: { fullName: true },
                     },
+                    group: {
+                      select: {
+                        name: true,
+                        classroom: {
+                          select: {
+                            name: true,
+                            academicYear: true,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
                 teacher: {
@@ -73,7 +84,6 @@ export async function GET() {
   }
 }
 
-
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -103,26 +113,55 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const createdSchedule = await prisma.examSchedule.create({
-      data: {
-        coordinatorId: coordinator.id,
-        date: new Date(date),
+    const inputDate = new Date(date);
+    const startOfDay = new Date(inputDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(inputDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    let schedule = await prisma.examSchedule.findFirst({
+      where: {
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
         sessionName,
         startTime,
         endTime,
         location,
-        schedules: {
-          create: requestIds.map((requestId: string) => ({
-            requestId,
-          })),
-        },
       },
+    });
+
+    const isNewSchedule = !schedule;
+
+    if (isNewSchedule) {
+      schedule = await prisma.examSchedule.create({
+        data: {
+          coordinatorId: coordinator.id,
+          date: inputDate,
+          sessionName,
+          startTime,
+          endTime,
+          location,
+        },
+      });
+    }
+
+    await prisma.scheduleRequest.createMany({
+      data: requestIds.map((requestId: string) => ({
+        scheduleId: schedule!.id,
+        requestId,
+      })),
+      skipDuplicates: true,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Jadwal berhasil dibuat',
-      data: createdSchedule,
+      message: isNewSchedule
+        ? 'Jadwal baru berhasil dibuat'
+        : 'Jadwal ditemukan, siswa berhasil ditambahkan',
+      data: schedule,
     });
   } catch (error) {
     console.error('[EXAM_SCHEDULE_POST]', error);

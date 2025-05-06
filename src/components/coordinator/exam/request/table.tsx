@@ -1,4 +1,3 @@
-// components/coordinator/exam/request/table.tsx
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
@@ -42,6 +41,13 @@ interface ExamRequest {
     nis: string;
     user: {
       fullName: string;
+    };
+    group?: {
+      name: string;
+      classroom: {
+        name: string;
+        academicYear: string;
+      };
     };
   };
   teacher: {
@@ -99,23 +105,55 @@ export function ExamRequestTable({ data, title, onRefresh }: ExamRequestTablePro
   const columns = useMemo<ColumnDef<ExamRequest>[]>(() => {
     const cols: ColumnDef<ExamRequest>[] = [
       {
+        accessorKey: 'createdAt',
+        id: 'Tanggal',
+        header: 'Tanggal',
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
+      },
+      {
+        accessorKey: 'student.nis',
+        id: 'NIS',
+        header: 'NIS',
+      },
+      {
         accessorKey: 'student.user.fullName',
         id: 'Nama Siswa',
         header: 'Nama Siswa',
         cell: ({ row }) => row.original.student.user.fullName,
       },
       {
-        accessorKey: 'student.nis',
-        header: 'NIS',
+        accessorKey: 'student.group.name',
+        id: 'Kelompok & Kelas',
+        header: 'Kelompok & Kelas',
+        cell: ({ row }) => {
+          const group = row.original.student.group;
+          return (
+            <Badge variant="secondary" className="w-fit">
+              {group
+                ? `${group.name} - ${group.classroom.name} (${group.classroom.academicYear})`
+                : 'Tidak terdaftar'}
+            </Badge>
+          );
+        },
       },
       {
         accessorKey: 'teacher.user.fullName',
-        id: 'Guru Pengusul',
-        header: 'Guru Pengusul',
-        cell: ({ row }) => row.original.teacher.user.fullName,
+        id: 'Guru Pembimbing',
+        header: 'Guru Pembimbing',
+        cell: ({ row }) => (
+          <Badge variant="secondary" className="w-fit">
+            {row.original.teacher.user.fullName}
+          </Badge>
+        ),
       },
       {
         accessorKey: 'examType',
+        id: 'Jenis',
         header: 'Jenis',
         cell: ({ row }) => (
           <Badge variant="outline" className="text-muted-foreground">
@@ -145,18 +183,9 @@ export function ExamRequestTable({ data, title, onRefresh }: ExamRequestTablePro
       },
       {
         accessorKey: 'notes',
+        id: 'Catatan',
         header: 'Catatan',
         cell: ({ row }) => row.original.notes || '-',
-      },
-      {
-        accessorKey: 'createdAt',
-        header: 'Tanggal',
-        cell: ({ row }) =>
-          new Date(row.original.createdAt).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          }),
       },
     ];
 

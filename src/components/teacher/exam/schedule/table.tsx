@@ -9,12 +9,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { DataTableColumnHeader } from '@/components/ui/table-column-header';
-import { DataTable } from '@/components/ui/data-table';
 
-interface ExamSchedule {
+import { Badge } from '@/components/ui/badge';
+import { DataTable } from '@/components/ui/data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+
+interface TeacherExamSchedule {
   id: string;
   date: string;
   sessionName: string;
@@ -23,6 +23,11 @@ interface ExamSchedule {
   location: string;
   schedules: {
     examRequest: {
+      id: string;
+      examType: 'SURAH' | 'JUZ';
+      status: string;
+      surah?: { name: string };
+      juz?: { name: string };
       student: {
         nis: string;
         user: { fullName: string };
@@ -34,33 +39,16 @@ interface ExamSchedule {
           };
         };
       };
-      teacher: {
-        user: {
-          fullName: string;
-        };
-      };
-      examType: 'SURAH' | 'JUZ';
-      surah?: { name: string };
-      juz?: { name: string };
     };
   }[];
 }
 
-interface ExamScheduleTableProps {
-  data: ExamSchedule[];
-  title: string;
+interface TeacherExamScheduleTableProps {
+  data: TeacherExamSchedule[];
 }
 
-export function ExamScheduleTable({ data, title }: ExamScheduleTableProps) {
-  const {
-    sorting,
-    setSorting,
-    columnFilters,
-    setColumnFilters,
-    columnVisibility,
-    setColumnVisibility,
-  } = useDataTableState<ExamSchedule, string>();
-  const columns = useMemo<ColumnDef<ExamSchedule>[]>(
+export function TeacherExamScheduleTable({ data }: TeacherExamScheduleTableProps) {
+  const columns = useMemo<ColumnDef<TeacherExamSchedule>[]>(
     () => [
       {
         accessorKey: 'date',
@@ -88,31 +76,13 @@ export function ExamScheduleTable({ data, title }: ExamScheduleTableProps) {
         header: 'Lokasi',
       },
       {
-        id: 'Jumlah Siswa',
+        id: 'Jumlah',
         header: 'Jumlah Siswa',
         cell: ({ row }) => row.original.schedules.length,
       },
       {
-        accessorKey: 'schedules.examRequest.student',
-        id: 'Daftar Siswa',
-        header: 'Siswa',
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s, i) => (
-              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                {s.examRequest.student.user.fullName} (
-                {s.examRequest.examType === 'SURAH'
-                  ? `Surah: ${s.examRequest.surah?.name}`
-                  : `Juz: ${s.examRequest.juz?.name}`}
-                )
-              </Badge>
-            ))}
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'schedules.examRequest.student.group.name',
-        id: 'KelompokKelas',
+        accessorKey: 'schedules',
+        id: 'Kelompok & Kelas',
         header: 'Kelompok & Kelas',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
@@ -130,14 +100,17 @@ export function ExamScheduleTable({ data, title }: ExamScheduleTableProps) {
         ),
       },
       {
-        accessorKey: 'schedules.examRequest.teacher.user.fullName',
-        id: 'Guru Pembimbing',
-        header: 'Guru Pembimbing',
+        accessorKey: 'schedules.examRequest.student.user.fullName',
+        id: 'Siswa',
+        header: 'Daftar Siswa',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => (
-              <Badge key={i} variant="secondary" className="w-fit">
-                {s.examRequest.teacher.user.fullName}
+              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                {s.examRequest.student.user.fullName} -{' '}
+                {s.examRequest.examType === 'SURAH'
+                  ? `Surah: ${s.examRequest.surah?.name}`
+                  : `Juz: ${s.examRequest.juz?.name}`}
               </Badge>
             ))}
           </div>
@@ -150,19 +123,11 @@ export function ExamScheduleTable({ data, title }: ExamScheduleTableProps) {
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-    },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
   });
 
-  return <DataTable title={title} table={table} filterColumn="Tanggal" />;
+  return <DataTable title="Jadwal Ujian Bimbingan" table={table} filterColumn="Tanggal" />;
 }

@@ -1,4 +1,3 @@
-// components/coordinator/exam/request/management.tsx
 'use client';
 
 import useSWR from 'swr';

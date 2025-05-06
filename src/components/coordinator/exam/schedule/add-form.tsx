@@ -14,11 +14,22 @@ interface ExamRequest {
   examType: 'SURAH' | 'JUZ';
   surah?: { id: number; name: string };
   juz?: { id: number; name: string };
+  schedules: [];
   student: {
     nis: string;
     user: { fullName: string };
+    group?: {
+      name: string;
+      classroom: {
+        name: string;
+        academicYear: string;
+      };
+    };
   };
-  status: string; // Added the missing 'status' property
+  teacher: {
+    user: { fullName: string };
+  };
+  status: string;
 }
 
 interface Props {
@@ -26,7 +37,7 @@ interface Props {
 }
 
 export function AddScheduleForm({ onScheduleAdded }: Props) {
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date>(new Date());
   const [sessionName, setSessionName] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -35,16 +46,21 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  async function fetchRequests() {
+    const res = await fetch('/api/coordinator/exam/request');
+    const json = await res.json();
+    if (json.success) {
+      const filtered = json.data.filter(
+        (r: ExamRequest) =>
+          r.status === 'DITERIMA' && Array.isArray(r.schedules) && r.schedules.length === 0
+      );
+      setRequests(filtered);
+    } else {
+      toast.error('Gagal memuat daftar permintaan ujian');
+    }
+  }
+
   useEffect(() => {
-    const fetchRequests = async () => {
-      const res = await fetch('/api/coordinator/exam/request');
-      const json = await res.json();
-      if (json.success) {
-        setRequests(json.data.filter((r: ExamRequest) => r.status === 'DITERIMA'));
-      } else {
-        toast.error('Gagal memuat daftar permintaan ujian');
-      }
-    };
     fetchRequests();
   }, []);
 
@@ -56,12 +72,13 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (
       !date ||
-      !sessionName ||
-      !startTime ||
-      !endTime ||
-      !location ||
+      sessionName.trim() === '' ||
+      startTime.trim() === '' ||
+      endTime.trim() === '' ||
+      location.trim() === '' ||
       selectedRequests.length === 0
     ) {
       toast.error('Harap lengkapi semua data');
@@ -85,14 +102,15 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
 
       const json = await res.json();
       if (json.success) {
-        toast.success('Jadwal berhasil dibuat');
-        setDate(undefined);
+        toast.success(json.message || 'Berhasil memperbarui jadwal');
+        setDate(new Date());
         setSessionName('');
         setStartTime('');
         setEndTime('');
         setLocation('');
         setSelectedRequests([]);
         onScheduleAdded();
+        fetchRequests();
       } else {
         toast.error(json.message || 'Gagal membuat jadwal');
       }
@@ -115,6 +133,7 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
             <Label>Tanggal Ujian</Label>
             <DatePicker value={date} onChange={setDate} />
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Nama Sesi</Label>
@@ -141,6 +160,7 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
               />
             </div>
           </div>
+
           <div>
             <Label>Daftar Siswa & Info Ujian</Label>
             <div className="grid gap-2 max-h-[200px] overflow-auto border p-2 rounded-md">
@@ -156,12 +176,18 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
                     {req.student.user.fullName} ({req.student.nis}) -{' '}
                     {req.examType === 'SURAH'
                       ? `Surah: ${req.surah?.name}`
-                      : `Juz: ${req.juz?.name}`}
+                      : `Juz: ${req.juz?.name}`}{' '}
+                    |{' '}
+                    {req.student.group
+                      ? `${req.student.group.name} - ${req.student.group.classroom.name} (${req.student.group.classroom.academicYear})`
+                      : 'Tidak terdaftar'}{' '}
+                    | {req.teacher.user.fullName}
                   </label>
                 ))
               )}
             </div>
           </div>
+
           <Button type="submit" disabled={loading}>
             {loading ? 'Menyimpan...' : 'Buat Jadwal'}
           </Button>

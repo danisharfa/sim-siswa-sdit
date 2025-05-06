@@ -297,6 +297,7 @@ model ExamRequest {
   surah         Surah?          @relation(fields: [surahId], references: [id])
   juz   Juz? @relation(fields: [juzId], references: [id])
   schedules     ScheduleRequest[]
+  result        ExamResult[]
 
   @@map("exam_requests")
 }
@@ -329,12 +330,14 @@ model ExamSchedule {
   schedules       ScheduleRequest[]
   result          ExamResult[]
 
+  @@unique([date, sessionName, startTime, endTime, location])
   @@map("exam_schedules")
 }
 
 model ExamResult {
   id              String         @id @default(uuid())
-  examScheduleId  String         @unique
+  examScheduleId  String         
+  examRequestId   String
   score           Int
   passed          Boolean
   notes           String?
@@ -343,7 +346,9 @@ model ExamResult {
   updatedAt       DateTime       @updatedAt
 
   examSchedule    ExamSchedule   @relation(fields: [examScheduleId], references: [id])
+  examRequest     ExamRequest    @relation(fields: [examRequestId], references: [id])
 
+  @@unique([examScheduleId, examRequestId])
   @@map("exam_results")
 }
 

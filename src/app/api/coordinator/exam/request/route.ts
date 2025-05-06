@@ -24,10 +24,22 @@ export async function GET() {
     const examRequests = await prisma.examRequest.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
+        schedules: true,
         student: {
           select: {
             nis: true,
             user: { select: { fullName: true } },
+            group: {
+              select: {
+                name: true,
+                classroom: {
+                  select: {
+                    name: true,
+                    academicYear: true,
+                  },
+                },
+              },
+            },
           },
         },
         teacher: {

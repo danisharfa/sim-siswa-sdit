@@ -25,7 +25,7 @@ export function ExamScheduleManagement() {
   return (
     <div className="space-y-6">
       <AddScheduleForm onScheduleAdded={mutate} />
-      <ExamScheduleTable data={data.data} title="Jadwal Ujian Siswa" onRefresh={mutate} />
+      <ExamScheduleTable data={data.data} title="Jadwal Ujian Siswa" />
     </div>
   );
 }
