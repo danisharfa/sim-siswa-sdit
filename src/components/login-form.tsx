@@ -41,7 +41,14 @@ export function LoginForm() {
 
     toast.success('Berhasil login 🎉');
     console.log('✅ Login berhasil. Redirecting to:', result.url);
-    router.replace(result.url);
+    // router.replace(result.url);
+    setTimeout(() => {
+      if (result.url) {
+        router.replace(result.url);
+      } else {
+        console.error('Redirect URL is null');
+      }
+    }, 100);
   };
 
   return (
