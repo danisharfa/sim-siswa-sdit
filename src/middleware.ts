@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  console.log('🔍 Request cookies:', req.cookies.getAll());
+  // console.log('🔍 Request cookies:', req.cookies.getAll());
 
   const token = await getToken({
     req,
@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
         : 'authjs.session-token',
   });
 
-  console.log('🔍 Token in middleware:', token);
+  // console.log('🔍 Token in middleware:', token);
 
   // Jika belum login dan mengakses halaman dashboard, arahkan ke login
   if (pathname.startsWith('/dashboard') && !token) {

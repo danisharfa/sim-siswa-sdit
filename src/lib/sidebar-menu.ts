@@ -28,11 +28,6 @@ export const menuData = {
       url: '/dashboard/admin/classroom',
       icon: School,
     },
-    {
-      title: 'Manajemen Kelompok',
-      url: '/dashboard/admin/group',
-      icon: UserGroupIcon,
-    },
   ],
   coordinator: [
     {
@@ -46,21 +41,26 @@ export const menuData = {
       icon: User2Icon,
     },
     {
-      title: 'Manajemen Ujian',
-      url: '/dashboard/coordinator/exam',
+      title: 'Manajemen Kelompok',
+      url: '/dashboard/coordinator/group',
+      icon: UserGroupIcon,
+    },
+    {
+      title: 'Tashih',
+      url: '/dashboard/coordinator/tashih',
       icon: ClipboardList,
       children: [
         {
-          title: 'Permintaan Ujian',
-          url: '/dashboard/coordinator/exam/requests',
+          title: 'Permintaan',
+          url: '/dashboard/coordinator/tashih/requests',
         },
         {
           title: 'Penjadwalan',
-          url: '/dashboard/coordinator/exam/schedules',
+          url: '/dashboard/coordinator/tashih/schedules',
         },
         {
           title: 'Penilaian',
-          url: '/dashboard/coordinator/exam/results',
+          url: '/dashboard/coordinator/tashih/results',
         },
       ],
     },
@@ -97,23 +97,28 @@ export const menuData = {
       ],
     },
     {
-      title: 'Ujian Siswa',
+      title: 'Tashih',
       url: '/dashboard/teacher',
       icon: ClipboardPenLine,
       children: [
         {
-          title: 'Daftar Ujian',
-          url: '/dashboard/teacher/exam/request',
+          title: 'Daftar',
+          url: '/dashboard/teacher/tashih/request',
         },
         {
-          title: 'Jadwal Ujian',
-          url: '/dashboard/teacher/exam/schedule',
+          title: 'Jadwal',
+          url: '/dashboard/teacher/tashih/schedule',
         },
         {
-          title: 'Hasil Ujian',
-          url: '/dashboard/teacher/exam/result',
+          title: 'Hasil',
+          url: '/dashboard/teacher/tashih/result',
         },
       ],
+    },
+    {
+      title: 'Penilaian',
+      // url: '/dashboard/teacher/group',
+      // icon: MonitorCogIcon,
     },
   ],
   student: [
@@ -127,11 +132,11 @@ export const menuData = {
       url: '/dashboard/student/profile',
       icon: User2Icon,
     },
-    // {
-    //   title: 'Kelas',
-    //   url: '/dashboard/student/classroom',
-    //   icon: School,
-    // },
+    {
+      title: 'Aktifitas Rumah',
+      // url: '/dashboard/student/homeActivity',
+      icon: School,
+    },
     // {
     //   title: 'Setoran Hafalan',
     //   url: '/dashboard/student/submission',

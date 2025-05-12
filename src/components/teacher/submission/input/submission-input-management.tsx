@@ -200,7 +200,9 @@ export function SubmissionInputManagement() {
     setNote('');
   };
 
-  const filteredSurahJuz = surahJuzList.filter((s) => s.juz.id.toString() === selectedJuz);
+  const filteredSurahJuz = surahJuzList
+    .filter((s) => s.juz.id.toString() === selectedJuz)
+    .sort((a, b) => b.surah.id - a.surah.id);
 
   return (
     <Card>
