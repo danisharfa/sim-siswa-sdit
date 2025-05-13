@@ -3,13 +3,6 @@ import type { Metadata } from 'next';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { SessionProvider } from '@/lib/providers/session-provider';
 import { Toaster } from '@/components/ui/sonner';
-import { Nunito } from 'next/font/google';
-
-const nunito = Nunito({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'Sistem Informasi Monitoring >> SD IT Ulul Albab Mataram',
@@ -22,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${nunito.className} antialiased`} suppressHydrationWarning={true}>
+    <html lang="en" suppressHydrationWarning={true}>
       <body>
         <SessionProvider>
           <ThemeProvider

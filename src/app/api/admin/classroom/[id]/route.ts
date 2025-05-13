@@ -14,11 +14,11 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { name, academicYear } = await req.json();
+    const { name, academicYear, semester } = await req.json();
 
-    if (!name || !academicYear) {
+    if (!name || !academicYear || !semester) {
       return NextResponse.json(
-        { success: false, message: 'Nama kelas dan tahun ajaran wajib diisi' },
+        { success: false, message: 'Nama kelas, tahun ajaran, dan semester wajib diisi' },
         { status: 400 }
       );
     }
@@ -36,9 +36,8 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const updatedClass = await prisma.classroom.update({
       where: { id },
-      data: { name, academicYear },
+      data: { name, academicYear, semester },
     });
-
     return NextResponse.json({
       success: true,
       message: 'Kelas berhasil diperbarui',

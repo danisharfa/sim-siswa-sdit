@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getClassroomById } from '@/lib/data/classroom';
 import { ClassroomDetailsManagement } from '@/components/admin/classroom-members/classroom-members-management';
+import { PromoteDialogWrapper } from '@/components/admin/classroom-members/promote-dialog-wrapper';
 
 export default async function ClassroomPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -21,8 +22,15 @@ export default async function ClassroomPage(props: { params: Promise<{ id: strin
         </Button>
       </Link>
       <h1 className="text-2xl font-bold mb-4">
-        Kelas {classroom.name} - {classroom.academicYear}
+        Kelas {classroom.name} - {classroom.academicYear} {classroom.semester}
       </h1>
+
+      {/* Tombol & Dialog Naik Kelas */}
+      <PromoteDialogWrapper
+        classroomId={id}
+        currentAcademicYear={classroom.academicYear}
+        currentSemester={classroom.semester}
+      />
 
       <ClassroomDetailsManagement classroomId={id} />
     </div>

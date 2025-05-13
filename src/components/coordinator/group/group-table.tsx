@@ -23,12 +23,14 @@ import { GroupEditDialog } from './group-edit-dialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Semester } from '@prisma/client';
 
 interface Group {
   groupId: string;
   groupName: string;
   classroomName: string;
   classroomAcademicYear: string;
+  classroomSemester: Semester;
   nip: string[];
   teacherName: string[];
 }
@@ -87,6 +89,11 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
         accessorKey: 'classroomAcademicYear',
         id: 'Tahun Ajaran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
+      },
+      {
+        accessorKey: 'classroomSemester',
+        id: 'Semester',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
       },
       {
         accessorKey: 'teacherName',

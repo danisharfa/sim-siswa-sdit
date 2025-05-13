@@ -30,6 +30,7 @@ export async function GET() {
           select: {
             name: true,
             academicYear: true,
+            semester: true,
           },
         },
         student: {
@@ -43,6 +44,7 @@ export async function GET() {
       groupName: group.name,
       classroomName: group.classroom.name,
       classroomAcademicYear: group.classroom.academicYear,
+      classroomSemester: group.classroom.semester,
       totalMember: group.student.length,
     }));
 

@@ -21,7 +21,8 @@ export default async function GroupDetailPage(props: { params: Promise<{ id: str
         </Button>
       </Link>
       <h1 className="text-2xl font-bold mb-4">
-        {group.name} - Kelas {group.classroom.name} - {group.classroom.academicYear}
+        {group.name} - Kelas {group.classroom.name} {group.classroom.academicYear}{' '}
+        {group.classroom.semester}
       </h1>
 
       <GroupDetailsManagement groupId={id} />

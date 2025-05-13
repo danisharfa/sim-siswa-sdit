@@ -21,12 +21,14 @@ import { Button } from '@/components/ui/button';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Semester } from '@prisma/client';
 
 interface Group {
   groupId: string;
   groupName: string;
   classroomName: string;
   classroomAcademicYear: string;
+  classroomSemester: Semester;
   totalMember: number;
 }
 
@@ -54,14 +56,19 @@ export function GroupTable({ data, title }: GroupTableProps) {
         header: 'Nama Kelompok',
       },
       {
-        accessorFn: (row) => row.classroomName ?? '-',
+        accessorKey: 'classroomName',
         id: 'Kelas',
         header: 'Kelas',
       },
       {
-        accessorFn: (row) => row.classroomAcademicYear ?? '-',
+        accessorKey: 'classroomAcademicYear',
         id: 'Tahun Ajaran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
+      },
+      {
+        accessorKey: 'classroomSemester',
+        id: 'Semester',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
       },
       {
         accessorKey: 'totalMember',

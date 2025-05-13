@@ -13,16 +13,22 @@ export async function GET() {
       orderBy: { username: 'asc' },
     });
 
+    const mapData = users.map((user) => ({
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    }));
+
     return NextResponse.json({
       success: true,
-      message: 'Berhasil mengambil data user',
-      data: users.map((user) => ({
-        ...user,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-      })),
+      message: 'Berhasil mengambil daftar pengguna',
+      data: mapData,
     });
-  } catch {
-    return NextResponse.json({ message: 'Gagal mengambil data pengguna' }, { status: 500 });
+  } catch (error) {
+    console.error('Gagal mengambil daftar pengguna:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil daftar pengguna' },
+      { status: 500 }
+    );
   }
 }

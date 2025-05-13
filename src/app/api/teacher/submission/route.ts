@@ -68,11 +68,13 @@ export async function GET() {
         },
         group: {
           select: {
+            id: true,
             name: true,
             classroom: {
               select: {
                 name: true,
                 academicYear: true,
+                semester: true,
               },
             },
           },
@@ -154,11 +156,24 @@ export async function POST(req: NextRequest) {
         id: studentId,
         groupId,
       },
+      include: {
+        classroom: true,
+      },
     });
 
     if (!student) {
       return NextResponse.json(
         { success: false, message: 'Siswa tidak berada di kelompok ini' },
+        { status: 400 }
+      );
+    }
+
+    if (!student?.classroom) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Siswa belum terdaftar di kelas aktif',
+        },
         { status: 400 }
       );
     }
@@ -172,6 +187,8 @@ export async function POST(req: NextRequest) {
         teacherId: teacher.id,
         groupId,
         date: new Date(),
+        academicYear: student.classroom?.academicYear ?? '',
+        semester: student.classroom?.semester ?? 'GANJIL',
         submissionType,
         submissionStatus,
         adab,

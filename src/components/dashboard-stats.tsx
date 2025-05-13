@@ -1,7 +1,13 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, GraduationCap, School, Group } from 'lucide-react';
+import {
+  FaUserTie,
+  FaChalkboardTeacher,
+  FaUserGraduate,
+  FaChalkboard,
+  FaUsers,
+} from 'react-icons/fa';
 
 interface Props {
   totalCoordinator: number;
@@ -23,7 +29,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-sm font-medium">Total Koordinator</CardTitle>
-          <Users className="w-10 h-10 text-muted-foreground" />
+          <FaUserTie className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalCoordinator}</p>
@@ -33,7 +39,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-sm font-medium">Total Guru</CardTitle>
-          <Users className="w-10 h-10 text-muted-foreground" />
+          <FaChalkboardTeacher className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalTeachers}</p>
@@ -43,7 +49,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-sm font-medium">Total Siswa</CardTitle>
-          <GraduationCap className="w-10 h-10 text-muted-foreground" />
+          <FaUserGraduate className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalStudents}</p>
@@ -53,7 +59,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-sm font-medium">Total Kelas</CardTitle>
-          <School className="w-10 h-10 text-muted-foreground" />
+          <FaChalkboard className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalClassrooms}</p>
@@ -63,7 +69,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-sm font-medium">Total Kelompok</CardTitle>
-          <Group className="w-10 h-10 text-muted-foreground" />
+          <FaUsers className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalGroups}</p>

@@ -11,9 +11,18 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Semester } from '@prisma/client';
 import { AddClassroomSchema, AddClassroomInput } from '@/lib/validations/classroom';
 
 interface Props {
@@ -26,10 +35,11 @@ export function AddClassroomForm({ onClassroomAdded }: Props) {
     defaultValues: {
       name: '',
       academicYear: '',
+      semester: Semester.GANJIL,
     },
   });
 
-  const isLoading = form.formState.isSubmitting;
+  const loading = form.formState.isSubmitting;
 
   async function onSubmit(values: AddClassroomInput) {
     try {
@@ -75,6 +85,7 @@ export function AddClassroomForm({ onClassroomAdded }: Props) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="academicYear"
@@ -88,8 +99,44 @@ export function AddClassroomForm({ onClassroomAdded }: Props) {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Menambahkan...' : 'Tambah Kelas'}
+
+            <FormField
+              control={form.control}
+              name="semester"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Semester</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih Semester" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={Semester.GANJIL}>Ganjil</SelectItem>
+                      <SelectItem value={Semester.GENAP}>Genap</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              className="w-full flex items-center justify-center"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  <span>Menambahkan...</span>
+                </>
+              ) : (
+                <>
+                  <span>Tambah Kelas</span>
+                </>
+              )}
             </Button>
           </form>
         </Form>

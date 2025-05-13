@@ -15,6 +15,14 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AddGroupSchema, AddGroupInput } from '@/lib/validations/group';
+import { Semester } from '@prisma/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Props {
   onGroupAdded: () => void;
@@ -27,6 +35,7 @@ export function AddGroupForm({ onGroupAdded }: Props) {
       groupName: '',
       classroomName: '',
       classroomAcademicYear: '',
+      classroomSemester: Semester.GANJIL,
       nip: '',
     },
   });
@@ -98,6 +107,27 @@ export function AddGroupForm({ onGroupAdded }: Props) {
                   <FormLabel>Tahun Ajaran</FormLabel>
                   <FormControl>
                     <Input placeholder="Contoh: 2024/2025" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="classroomSemester"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Semester</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih Semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GANJIL">Ganjil</SelectItem>
+                        <SelectItem value="GENAP">Genap</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

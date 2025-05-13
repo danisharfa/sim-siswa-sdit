@@ -117,6 +117,7 @@ model Classroom {
   id              String        @id @unique
   name            String
   academicYear    String
+  semester        Semester
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -126,7 +127,7 @@ model Classroom {
   group               Group[]
   student             StudentProfile[]
 
-  @@unique([name, academicYear])
+  @@unique([name, academicYear, semester])
   @@map("classrooms")
 }
 
@@ -135,6 +136,7 @@ model ClassroomHistory {
   studentId       String
   classroomId     String
   academicYear    String
+  semester        Semester
   
   movedAt         DateTime      @default(now())
 
@@ -145,6 +147,7 @@ model ClassroomHistory {
   classroom       Classroom         @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   student         StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@unique([studentId, academicYear, semester])
   @@map("classroom_histories")
 }
 
@@ -188,6 +191,7 @@ model GroupHistory {
   teacherId       String?
   studentId       String
   academicYear    String
+  semester        Semester
   joinedAt        DateTime      @default(now())
 
   createdAt       DateTime      @default(now())
@@ -198,6 +202,7 @@ model GroupHistory {
   teacher    TeacherProfile?   @relation(fields: [teacherId], references: [id])
   student    StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@unique([studentId, academicYear, semester])
   @@map("group_histories")
 }
 
@@ -206,6 +211,9 @@ model Submission {
   studentId           String
   teacherId           String
   groupId             String
+
+  academicYear        String
+  semester            Semester
 
   date                DateTime
   submissionType      SubmissionType
@@ -390,6 +398,11 @@ enum StudentStatus {
   LULUS
   PINDAH
   KELUAR
+}
+
+enum Semester {
+  GANJIL
+  GENAP
 }
 
 enum SubmissionStatus {

@@ -17,6 +17,7 @@ export async function GET() {
           select: {
             name: true,
             academicYear: true,
+            semester: true,
           },
         },
         teacherGroup: {
@@ -41,13 +42,14 @@ export async function GET() {
       groupName: g.name,
       classroomName: g.classroom.name,
       classroomAcademicYear: g.classroom.academicYear,
+      classroomSemester: g.classroom.semester,
       nip: g.teacherGroup.map((tg) => tg.teacher.nip),
       teacherName: g.teacherGroup.map((tg) => tg.teacher.user.fullName),
     }));
 
     return NextResponse.json({
       success: true,
-      message: 'Data kelompok berhasil diambil',
+      message: 'Berhasil mengambil data kelompok',
       data: formattedGroups,
     });
   } catch (error) {
@@ -75,9 +77,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { groupName, classroomName, classroomAcademicYear, nip } = body;
+    const { groupName, classroomName, classroomAcademicYear, classroomSemester, nip } = body;
 
-    if (!groupName || !classroomName || !classroomAcademicYear || !nip) {
+    if (!groupName || !classroomName || !classroomAcademicYear || !classroomSemester || !nip) {
       return NextResponse.json(
         { success: false, message: 'Semua field wajib diisi' },
         { status: 400 }
@@ -86,9 +88,10 @@ export async function POST(req: NextRequest) {
 
     const classroom = await prisma.classroom.findUnique({
       where: {
-        name_academicYear: {
+        name_academicYear_semester: {
           name: classroomName,
           academicYear: classroomAcademicYear,
+          semester: classroomSemester,
         },
       },
     });
@@ -157,19 +160,20 @@ export async function POST(req: NextRequest) {
       groupName: newGroup.name,
       classroomName: classroom.name,
       classroomAcademicYear: classroom.academicYear,
+      classroomSemester: classroom.semester,
       nip: teacher.nip,
       teacherName: teacher.user.fullName,
     };
 
     return NextResponse.json({
       success: true,
-      message: 'Kelompok berhasil dibuat',
+      message: 'Berhasil membaut kelompok',
       data: formattedGroup,
     });
   } catch (error) {
     console.error('Gagal membuat kelompok:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal membuat kelompok, silakan coba lagi.' },
+      { success: false, message: 'Gagal membuat kelompok' },
       { status: 500 }
     );
   }

@@ -23,11 +23,14 @@ import { ClassroomAlertDialog } from '@/components/admin/classroom/classroom-ale
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Semester } from '@prisma/client';
 
 interface Classroom {
   id: string;
   name: string;
   academicYear: string;
+  semester: Semester;
+  studentCount: number;
 }
 
 interface Props {
@@ -77,6 +80,17 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
         accessorKey: 'academicYear',
         id: 'Tahun Ajaran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
+      },
+      {
+        accessorKey: 'semester',
+        id: 'Semester',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
+      },
+      {
+        accessorKey: 'studentCount',
+        id: 'Jumlah Siswa',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Jumlah Siswa" />,
+        cell: ({ row }) => row.original.studentCount ?? 0,
       },
       {
         id: 'actions',

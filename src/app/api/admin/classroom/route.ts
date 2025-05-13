@@ -10,16 +10,28 @@ export async function GET() {
     }
 
     const classrooms = await prisma.classroom.findMany({
-      orderBy: {
-        name: 'asc',
+      orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: { student: true },
+        },
       },
     });
 
-    return NextResponse.json({ success: true, data: classrooms });
+    const formattedData = classrooms.map((c) => ({
+      ...c,
+      studentCount: c._count.student,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      message: 'Berhasil mengambil daftar kelas',
+      data: formattedData,
+    });
   } catch (error) {
-    console.error('Gagal mendapatkan daftar kelas:', error);
+    console.error('Gagal mengambil daftar kelas:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mendapatkan daftar kelas' },
+      { success: false, message: 'Gagal mengambil daftar kelas' },
       { status: 500 }
     );
   }
@@ -41,17 +53,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, academicYear } = body;
+    const { name, academicYear, semester } = body;
 
-    if (!name || !academicYear) {
+    if (!name || !academicYear || !semester) {
       return NextResponse.json(
-        { success: false, message: 'Nama kelas dan tahun ajaran wajib diisi' },
+        { success: false, message: 'Harap lengkapi semua data kelas' },
         { status: 400 }
       );
     }
 
     const existingClass = await prisma.classroom.findFirst({
-      where: { name, academicYear },
+      where: { name, academicYear, semester },
     });
 
     if (existingClass) {
@@ -61,7 +73,7 @@ export async function POST(req: NextRequest) {
     const classroomId = `KELAS-${crypto.randomUUID()}`;
 
     const classroom = await prisma.classroom.create({
-      data: { id: classroomId, name, academicYear },
+      data: { id: classroomId, name, academicYear, semester },
     });
 
     return NextResponse.json({

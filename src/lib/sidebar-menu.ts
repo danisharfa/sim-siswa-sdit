@@ -1,15 +1,10 @@
-import {
-  ClipboardList,
-  ClipboardPenLine,
-  Group,
-  LayoutDashboard,
-  MonitorCogIcon,
-  School,
-  User2Icon,
-  UserCog,
-} from 'lucide-react';
-
-import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { ClipboardPenLine, LayoutDashboard, User2Icon, UserCog } from 'lucide-react';
+import { FaChalkboard } from 'react-icons/fa';
+import { FaUsersGear } from 'react-icons/fa6';
+import { ImProfile } from 'react-icons/im';
+import { MdHomeWork } from 'react-icons/md';
+import { TbBookUpload } from 'react-icons/tb';
+import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
 
 export const menuData = {
   admin: [
@@ -26,7 +21,7 @@ export const menuData = {
     {
       title: 'Manajemen Kelas',
       url: '/dashboard/admin/classroom',
-      icon: School,
+      icon: FaChalkboard,
     },
   ],
   coordinator: [
@@ -38,17 +33,16 @@ export const menuData = {
     {
       title: 'Data Diri',
       url: '/dashboard/coordinator/profile',
-      icon: User2Icon,
+      icon: ImProfile,
     },
     {
       title: 'Manajemen Kelompok',
       url: '/dashboard/coordinator/group',
-      icon: UserGroupIcon,
+      icon: FaUsersGear,
     },
     {
       title: 'Tashih',
-      url: '/dashboard/coordinator/tashih',
-      icon: ClipboardList,
+      icon: ClipboardPenLine,
       children: [
         {
           title: 'Permintaan',
@@ -74,17 +68,16 @@ export const menuData = {
     {
       title: 'Data Diri',
       url: '/dashboard/teacher/profile',
-      icon: User2Icon,
+      icon: ImProfile,
     },
     {
       title: 'Kelompok Bimbingan',
       url: '/dashboard/teacher/group',
-      icon: Group,
+      icon: FaUsersGear,
     },
     {
       title: 'Setoran Siswa',
-      url: '/dashboard/teacher/submission',
-      icon: MonitorCogIcon,
+      icon: TbBookUpload,
       children: [
         {
           title: 'Input Setoran',
@@ -117,8 +110,8 @@ export const menuData = {
     },
     {
       title: 'Penilaian',
-      // url: '/dashboard/teacher/group',
-      // icon: MonitorCogIcon,
+      url: '/dashboard/teacher/avaluation',
+      icon: HiOutlineClipboardDocumentList,
     },
   ],
   student: [
@@ -134,13 +127,13 @@ export const menuData = {
     },
     {
       title: 'Aktifitas Rumah',
-      // url: '/dashboard/student/homeActivity',
-      icon: School,
+      url: '/dashboard/student/homeActivity',
+      icon: MdHomeWork,
     },
-    // {
-    //   title: 'Setoran Hafalan',
-    //   url: '/dashboard/student/submission',
-    //   icon: MonitorCogIcon,
-    // },
+    {
+      title: 'Setoran',
+      url: '/dashboard/student/submission',
+      icon: TbBookUpload,
+    },
   ],
 };

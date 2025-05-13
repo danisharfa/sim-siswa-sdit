@@ -15,12 +15,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
+import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 
 interface Group {
   groupId: string;
   groupName: string;
   classroomName: string;
   classroomAcademicYear: string;
+  classroomSemester: Semester;
   totalMember: number;
 }
 
@@ -54,9 +56,9 @@ interface Wafa {
 interface FormData {
   groupId: string;
   studentId: string;
-  submissionType: 'TAHFIDZ' | 'TAHSIN_WAFA' | 'TAHSIN_ALQURAN';
-  submissionStatus: 'LULUS' | 'TIDAK_LULUS' | 'MENGULANG';
-  adab: 'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK';
+  submissionType: SubmissionType;
+  submissionStatus: SubmissionStatus;
+  adab: Adab;
   note: string;
   juz?: number;
   surahId?: number;
@@ -76,9 +78,7 @@ export function SubmissionInputManagement() {
 
   const [groupId, setGroupId] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [submissionType, setSubmissionType] = useState<
-    'TAHFIDZ' | 'TAHSIN_WAFA' | 'TAHSIN_ALQURAN'
-  >('TAHFIDZ');
+  const [submissionType, setSubmissionType] = useState<SubmissionType>(SubmissionType.TAHFIDZ);
   const [selectedJuz, setSelectedJuz] = useState('');
   const [selectedSurahId, setSelectedSurahId] = useState('');
   const [startVerse, setStartVerse] = useState('');
@@ -86,10 +86,10 @@ export function SubmissionInputManagement() {
   const [selectedWafaId, setSelectedWafaId] = useState('');
   const [startPage, setStartPage] = useState('');
   const [endPage, setEndPage] = useState('');
-  const [submissionStatus, setSubmissionStatus] = useState<'LULUS' | 'TIDAK_LULUS' | 'MENGULANG'>(
-    'LULUS'
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>(
+    SubmissionStatus.LULUS
   );
-  const [adab, setAdab] = useState<'BAIK' | 'KURANG_BAIK' | 'TIDAK_BAIK'>('BAIK');
+  const [adab, setAdab] = useState<Adab>(Adab.BAIK);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -151,7 +151,8 @@ export function SubmissionInputManagement() {
       submissionStatus,
       adab,
       note,
-      ...(submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN'
+      ...(submissionType === SubmissionType.TAHFIDZ ||
+      submissionType === SubmissionType.TAHSIN_ALQURAN
         ? {
             juzId: selectedJuz ? parseInt(selectedJuz) : undefined,
             surahId: selectedSurahId ? parseInt(selectedSurahId) : undefined,
@@ -221,7 +222,8 @@ export function SubmissionInputManagement() {
               <SelectContent>
                 {groupList.map((k) => (
                   <SelectItem key={k.groupId} value={k.groupId}>
-                    {k.groupName} - {k.classroomName} ({k.classroomAcademicYear})
+                    {k.groupName} - {k.classroomName} ({k.classroomAcademicYear}{' '}
+                    {k.classroomSemester})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -257,15 +259,16 @@ export function SubmissionInputManagement() {
               <SelectValue placeholder="Pilih Jenis Setoran" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={'TAHFIDZ'}>TAHFIDZ</SelectItem>
-              <SelectItem value={'TAHSIN_WAFA'}>TAHSIN WAFA</SelectItem>
-              <SelectItem value={'TAHSIN_ALQURAN'}>TAHSIN AL-QURAN</SelectItem>
+              <SelectItem value={SubmissionType.TAHFIDZ}>TAHFIDZ</SelectItem>
+              <SelectItem value={SubmissionType.TAHSIN_WAFA}>TAHSIN WAFA</SelectItem>
+              <SelectItem value={SubmissionType.TAHSIN_ALQURAN}>TAHSIN AL-QURAN</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Tampilkan opsi berdasarkan Jenis Setoran */}
-        {submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN' ? (
+        {submissionType === SubmissionType.TAHFIDZ ||
+        submissionType === SubmissionType.TAHSIN_ALQURAN ? (
           <div className="flex flex-col lg:flex-row gap-6">
             <div>
               <Label>Juz</Label>
@@ -323,7 +326,7 @@ export function SubmissionInputManagement() {
             </div>
           </div>
         ) : (
-          submissionType === 'TAHSIN_WAFA' && (
+          submissionType === SubmissionType.TAHSIN_WAFA && (
             <div className="flex flex-col lg:flex-row gap-6">
               <div>
                 <Label>Wafa</Label>
@@ -376,9 +379,9 @@ export function SubmissionInputManagement() {
                 <SelectValue placeholder="Pilih Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="LULUS">LULUS</SelectItem>
-                <SelectItem value="TIDAK_LULUS">TIDAK LULUS</SelectItem>
-                <SelectItem value="MENGULANG">MENGULANG</SelectItem>
+                <SelectItem value={SubmissionStatus.LULUS}>LULUS</SelectItem>
+                <SelectItem value={SubmissionStatus.TIDAK_LULUS}>TIDAK LULUS</SelectItem>
+                <SelectItem value={SubmissionStatus.MENGULANG}>MENGULANG</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -391,9 +394,9 @@ export function SubmissionInputManagement() {
                 <SelectValue placeholder="Pilih Adab" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="BAIK">BAIK</SelectItem>
-                <SelectItem value="KURANG_BAIK">KURANG BAIK</SelectItem>
-                <SelectItem value="TIDAK_BAIK">TIDAK BAIK</SelectItem>
+                <SelectItem value={Adab.BAIK}>BAIK</SelectItem>
+                <SelectItem value={Adab.KURANG_BAIK}>KURANG BAIK</SelectItem>
+                <SelectItem value={Adab.TIDAK_BAIK}>TIDAK BAIK</SelectItem>
               </SelectContent>
             </Select>
           </div>

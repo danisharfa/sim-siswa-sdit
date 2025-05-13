@@ -31,7 +31,7 @@ export function NavMain({ items = [] }: { items?: NavItem[] }) {
                 {item.children && item.children.length > 0 ? (
                   <>
                     <SidebarMenuButton className="flex items-center gap-2">
-                      {item.icon && <item.icon className="size-5" />}
+                      {item.icon && <item.icon />}
                       <span className="truncate ">{item.title}</span>
                     </SidebarMenuButton>
                     <SidebarMenuSub>
@@ -49,7 +49,7 @@ export function NavMain({ items = [] }: { items?: NavItem[] }) {
                 ) : (
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <Link href={item.url ?? '#'} className="flex items-center gap-2">
-                      {item.icon && <item.icon className="size-5" />}
+                      {item.icon && <item.icon />}
                       <span className="truncate">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

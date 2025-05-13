@@ -12,9 +12,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select';
+import { Semester } from '@prisma/client';
 
 interface ClassroomEditDialogProps {
-  classroom: { id: string; name: string; academicYear: string };
+  classroom: {
+    id: string;
+    name: string;
+    academicYear: string;
+    semester: Semester;
+  };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
@@ -28,11 +41,13 @@ export function ClassroomEditDialog({
 }: ClassroomEditDialogProps) {
   const [name, setName] = useState(classroom.name);
   const [academicYear, setAcademicYear] = useState(classroom.academicYear);
+  const [semester, setSemester] = useState<Semester>(classroom.semester);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setName(classroom.name);
     setAcademicYear(classroom.academicYear);
+    setSemester(classroom.semester);
   }, [classroom]);
 
   async function handleSave() {
@@ -42,7 +57,7 @@ export function ClassroomEditDialog({
       const res = await fetch(`/api/admin/classroom/${classroom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, academicYear }),
+        body: JSON.stringify({ name, academicYear, semester }),
       });
 
       const data = await res.json().catch(() => null);
@@ -81,6 +96,18 @@ export function ClassroomEditDialog({
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}
             />
+          </div>
+          <div>
+            <Label htmlFor="semester">Semester</Label>
+            <Select value={semester} onValueChange={(val) => setSemester(val as Semester)}>
+              <SelectTrigger id="semester" className="w-full">
+                <SelectValue placeholder="Pilih Semester" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={Semester.GANJIL}>Ganjil</SelectItem>
+                <SelectItem value={Semester.GENAP}>Genap</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
