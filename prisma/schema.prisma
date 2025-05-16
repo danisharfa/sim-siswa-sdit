@@ -67,11 +67,11 @@ model TeacherProfile {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
   
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teacherGroup     TeacherGroup[]
-  groupHistory     GroupHistory[]
-  submission       Submission[]
-  tashihRequests   TashihRequest[]
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teacherGroups     TeacherGroup[]
+  groupHistories    GroupHistory[]
+  submissions       Submission[]
+  tashihRequests    TashihRequest[]
 
 
   @@index([nip])
@@ -101,13 +101,17 @@ model StudentProfile {
   graduatedAt     DateTime?
 
 
-  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  classroom           Classroom?            @relation(fields: [classroomId], references: [id])
-  classroomHistory    ClassroomHistory[]
-  group               Group?                @relation(fields: [groupId], references: [id])
-  groupHistory        GroupHistory[]
-  submission          Submission[]
-  tashihRequests      TashihRequest[]
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroom             Classroom?            @relation(fields: [classroomId], references: [id])
+  classroomHistories    ClassroomHistory[]
+  group                 Group?                @relation(fields: [groupId], references: [id])
+  groupHistories        GroupHistory[]
+  submissions           Submission[]
+  tashihRequests        TashihRequest[]
+  tahfidzScores         TahfidzScore[]
+  tahfidzSummaries      TahfidzSummary[]
+  tahsinScores          TahsinScore[]
+  tahsinSummaries       TahsinSummary[]
 
   @@index([nis])
   @@map("student_profiles")
@@ -123,9 +127,9 @@ model Classroom {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
 
-  classroomHistory    ClassroomHistory[]
-  group               Group[]
-  student             StudentProfile[]
+  classroomHistories    ClassroomHistory[]
+  groups                Group[]
+  students              StudentProfile[]
 
   @@unique([name, academicYear, semester])
   @@map("classrooms")
@@ -175,11 +179,11 @@ model Group {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
   
-  groupHistory      GroupHistory[]
-  classroom         Classroom           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  teacherGroup      TeacherGroup[]
-  student           StudentProfile[]
-  submission        Submission[]
+  groupHistories      GroupHistory[]
+  classroom           Classroom           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  teacherGroups       TeacherGroup[]
+  students            StudentProfile[]
+  submissions         Submission[]
 
   @@unique([name, classroomId])
   @@map("groups")
@@ -251,9 +255,10 @@ model Surah {
   name          String    @unique
   verseCount    Int
   
-  surahJuz        SurahJuz[]
-  submission      Submission[]
-  tashihRequest   TashihRequest[]
+  surahJuz         SurahJuz[]
+  submissions      Submission[]
+  tashihRequests   TashihRequest[]
+  tahfidzScores    TahfidzScore[]
 
   @@map("surah")
 }
@@ -276,19 +281,20 @@ model Juz {
   id          Int          @id
   name        String       
 
-  surahJuz        SurahJuz[]
-  submissions     Submission[]
-  tashihRequest   TashihRequest[]
+  surahJuz         SurahJuz[]
+  submissions      Submission[]
+  tashihRequests   TashihRequest[]
 
   @@map("juz")
 }
 
 model Wafa {
-  id      Int       @id
-  name    String    @unique
+  id          Int       @id
+  name        String    @unique
+  pageCount   Int?
 
-  submission        Submission[]
-  tashihRequest   TashihRequest[]
+  submissions       Submission[]
+  tashihRequests    TashihRequest[]
 
   @@map("wafa")
 }
@@ -328,8 +334,8 @@ model TashihScheduleRequest {
   scheduleId   String
   requestId    String
 
-  tashihSchedules    TashihSchedule   @relation(fields: [scheduleId], references: [id])
-  tashihRequests     TashihRequest    @relation(fields: [requestId], references: [id])
+  tashihSchedule    TashihSchedule   @relation(fields: [scheduleId], references: [id])
+  tashihRequest     TashihRequest    @relation(fields: [requestId], references: [id])
 
   @@id([scheduleId, requestId])
   @@map("tashih_schedule_requests")
@@ -365,11 +371,87 @@ model TashihResult {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
-  tashihSchedules    TashihSchedule   @relation(fields: [tashihScheduleId], references: [id])
-  tashihRequests     TashihRequest    @relation(fields: [tashihRequestId], references: [id])
+  tashihSchedule    TashihSchedule   @relation(fields: [tashihScheduleId], references: [id])
+  tashihRequest     TashihRequest    @relation(fields: [tashihRequestId], references: [id])
 
   @@unique([tashihScheduleId, tashihRequestId])
   @@map("tashih_results")
+}
+
+model TahfidzScore {
+  id            String        @id @default(uuid())
+  studentId     String
+  academicYear  String
+  semester      Semester
+  surahId       Int
+  scoreNumeric  Int
+  scoreLetter   GradeLetter
+  description   String?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  student       StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  surah         Surah           @relation(fields: [surahId], references: [id])
+
+  @@unique([studentId, academicYear, semester, surahId])
+  @@map("tahfidz_scores")
+}
+
+model TahfidzSummary {
+  id              String        @id @default(uuid())
+  studentId       String
+  academicYear    String
+  semester        Semester
+  averageScore    Float?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, academicYear, semester])
+  @@map("tahfidz_summaries")
+}
+
+model TahsinScore {
+  id              String          @id @default(uuid())
+  studentId       String
+  academicYear    String
+  semester        Semester
+  tahsinType      TahsinType
+
+  topic           String          // Bebas: contoh "Isymam" atau "Al-Fatihah"
+  scoreNumeric    Int
+  scoreLetter     GradeLetter
+  description     String?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, academicYear, semester, tahsinType, topic])
+  @@map("tahsin_scores")
+}
+
+
+
+model TahsinSummary {
+  id              String        @id @default(uuid())
+  studentId       String
+  academicYear    String
+  semester        Semester
+  lastMaterial    String?
+  averageScore    Float?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, academicYear, semester])
+  @@map("tahsin_summaries")
 }
 
 enum Role {
@@ -434,3 +516,16 @@ enum TashihRequestStatus {
   DITOLAK
   SELESAI
 }
+
+enum GradeLetter {
+  A // 92–100 (Sangat Baik)
+  B // 83–91 (Baik)
+  C // 75–82 (Cukup)
+  D // <75 (Kurang)
+}
+
+enum TahsinType {
+  WAFA
+  ALQURAN
+}
+

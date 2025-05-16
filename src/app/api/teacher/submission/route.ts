@@ -38,32 +38,13 @@ export async function GET() {
         date: 'desc',
       },
       include: {
-        surah: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        juz: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        wafa: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        surah: { select: { id: true, name: true } },
+        juz: { select: { id: true, name: true } },
+        wafa: { select: { id: true, name: true } },
         student: {
           select: {
             nis: true,
-            user: {
-              select: {
-                fullName: true,
-              },
-            },
+            user: { select: { fullName: true } },
           },
         },
         group: {
@@ -71,11 +52,7 @@ export async function GET() {
             id: true,
             name: true,
             classroom: {
-              select: {
-                name: true,
-                academicYear: true,
-                semester: true,
-              },
+              select: { name: true, academicYear: true, semester: true },
             },
           },
         },

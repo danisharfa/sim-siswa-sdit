@@ -297,7 +297,7 @@ export function SubmissionHistoryTable({ data, title }: Props) {
           }}
         >
           <SelectTrigger className="min-w-[220px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran + Semester" />
+            <SelectValue placeholder="Pilih Tahun Ajaran" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Periode</SelectItem>
@@ -328,9 +328,10 @@ export function SubmissionHistoryTable({ data, title }: Props) {
           }}
         >
           <SelectTrigger className="min-w-[250px]">
-            <SelectValue placeholder="Pilih Kelompok + Kelas" />
+            <SelectValue placeholder="Pilih Kelompok" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Semua Kelompok</SelectItem>
             {filteredGroups.map((g) => (
               <SelectItem key={g.id} value={g.id}>
                 {`${g.name} - ${g.classroom.name}`}

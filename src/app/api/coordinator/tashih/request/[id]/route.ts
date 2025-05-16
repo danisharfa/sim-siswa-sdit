@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { TashihRequestStatus } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
@@ -28,7 +29,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const { status } = await req.json();
 
-    if (!['DITERIMA', 'DITOLAK'].includes(status)) {
+    if (![TashihRequestStatus.DITERIMA, TashihRequestStatus.DITOLAK].includes(status)) {
       return NextResponse.json({ success: false, message: 'Status tidak valid' }, { status: 400 });
     }
 
@@ -41,7 +42,9 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({
       success: true,
-      message: `Permintaan ujian berhasil di${status === 'DITERIMA' ? 'terima' : 'tolak'}`,
+      message: `Permintaan ujian berhasil di${
+        status === TashihRequestStatus.DITERIMA ? 'terima' : 'tolak'
+      }`,
       data: updated,
     });
   } catch (error) {

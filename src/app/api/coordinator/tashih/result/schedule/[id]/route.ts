@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       include: {
         schedules: {
           include: {
-            tashihRequests: {
+            tashihRequest: {
               select: {
                 id: true,
                 tashihType: true,
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     }
 
     const results = schedule.schedules.map((sr) => {
-      const r = sr.tashihRequests;
+      const r = sr.tashihRequest;
       return {
         tashihScheduleId: schedule.id,
         tashihRequestId: r.id,

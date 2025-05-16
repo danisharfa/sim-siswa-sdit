@@ -20,7 +20,7 @@ export async function GET() {
             semester: true,
           },
         },
-        teacherGroup: {
+        teacherGroups: {
           select: {
             teacher: {
               select: {
@@ -43,8 +43,8 @@ export async function GET() {
       classroomName: g.classroom.name,
       classroomAcademicYear: g.classroom.academicYear,
       classroomSemester: g.classroom.semester,
-      nip: g.teacherGroup.map((tg) => tg.teacher.nip),
-      teacherName: g.teacherGroup.map((tg) => tg.teacher.user.fullName),
+      nip: g.teacherGroups.map((tg) => tg.teacher.nip),
+      teacherName: g.teacherGroups.map((tg) => tg.teacher.user.fullName),
     }));
 
     return NextResponse.json({

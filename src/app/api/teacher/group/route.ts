@@ -19,7 +19,7 @@ export async function GET() {
 
     const groups = await prisma.group.findMany({
       where: {
-        teacherGroup: {
+        teacherGroups: {
           some: {
             teacherId: teacher.id,
           },
@@ -33,7 +33,7 @@ export async function GET() {
             semester: true,
           },
         },
-        student: {
+        students: {
           select: { id: true },
         },
       },
@@ -45,7 +45,7 @@ export async function GET() {
       classroomName: group.classroom.name,
       classroomAcademicYear: group.classroom.academicYear,
       classroomSemester: group.classroom.semester,
-      totalMember: group.student.length,
+      totalMember: group.students.length,
     }));
 
     return NextResponse.json({

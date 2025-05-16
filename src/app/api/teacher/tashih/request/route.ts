@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { TashihRequestStatus, TashihType } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,14 +31,14 @@ export async function POST(req: NextRequest) {
     }
 
     // validasi berdasarkan jenis
-    if (tashihType === 'ALQURAN') {
+    if (tashihType === TashihType.ALQURAN) {
       if (!juzId || !surahId) {
         return NextResponse.json(
           { success: false, message: 'Juz dan Surah wajib diisi' },
           { status: 400 }
         );
       }
-    } else if (tashihType === 'WAFA') {
+    } else if (tashihType === TashihType.WAFA) {
       if (!wafaId || startPage == null) {
         return NextResponse.json(
           { success: false, message: 'Wafa dan halaman mulai wajib diisi' },
@@ -56,9 +57,9 @@ export async function POST(req: NextRequest) {
       where: {
         studentId,
         tashihType,
-        status: 'MENUNGGU',
-        ...(tashihType === 'ALQURAN' && { juzId, surahId }),
-        ...(tashihType === 'WAFA' && { wafaId, startPage, endPage: endPage ?? startPage }),
+        status: TashihRequestStatus.MENUNGGU,
+        ...(tashihType === TashihType.ALQURAN && { juzId, surahId }),
+        ...(tashihType === TashihType.WAFA && { wafaId, startPage, endPage: endPage ?? startPage }),
       },
     });
 
@@ -77,13 +78,13 @@ export async function POST(req: NextRequest) {
         teacherId: teacher.id,
         studentId,
         tashihType,
-        juzId: tashihType === 'ALQURAN' ? juzId : null,
-        surahId: tashihType === 'ALQURAN' ? surahId : null,
-        wafaId: tashihType === 'WAFA' ? wafaId : null,
-        startPage: tashihType === 'WAFA' ? startPage : null,
-        endPage: tashihType === 'WAFA' ? endPage ?? startPage : null,
+        juzId: tashihType === TashihType.ALQURAN ? juzId : null,
+        surahId: tashihType === TashihType.ALQURAN ? surahId : null,
+        wafaId: tashihType === TashihType.WAFA ? wafaId : null,
+        startPage: tashihType === TashihType.WAFA ? startPage : null,
+        endPage: tashihType === TashihType.WAFA ? endPage ?? startPage : null,
         notes: notes ?? null,
-        status: 'MENUNGGU',
+        status: TashihRequestStatus.MENUNGGU,
       },
     });
 

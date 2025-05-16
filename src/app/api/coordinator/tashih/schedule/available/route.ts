@@ -14,7 +14,7 @@ export async function GET() {
       include: {
         schedules: {
           include: {
-            tashihRequests: {
+            tashihRequest: {
               include: {
                 results: true,
               },

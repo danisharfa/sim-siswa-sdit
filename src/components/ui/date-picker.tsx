@@ -7,18 +7,8 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
 
 interface DatePickerProps {
   value?: Date;
@@ -33,9 +23,7 @@ export function DatePicker({
   startYear = getYear(new Date()) - 100,
   endYear = getYear(new Date()) + 100,
 }: DatePickerProps) {
-  const [internalDate, setInternalDate] = React.useState<Date>(
-    value || new Date()
-  );
+  const [internalDate, setInternalDate] = React.useState<Date>(value || new Date());
 
   // Sinkronisasi jika prop value berubah dari luar
   React.useEffect(() => {
@@ -56,10 +44,7 @@ export function DatePicker({
     'November',
     'December',
   ];
-  const years = Array.from(
-    { length: endYear - startYear + 1 },
-    (_, i) => startYear + i
-  );
+  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
 
   const handleMonthChange = (month: string) => {
     const newDate = setMonth(internalDate, months.indexOf(month));
@@ -91,19 +76,12 @@ export function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {internalDate ? (
-            format(internalDate, 'PPP')
-          ) : (
-            <span>Pick a date</span>
-          )}
+          {internalDate ? format(internalDate, 'PPP') : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <div className="flex justify-between p-2 gap-2">
-          <Select
-            onValueChange={handleMonthChange}
-            value={months[getMonth(internalDate)]}
-          >
+          <Select onValueChange={handleMonthChange} value={months[getMonth(internalDate)]}>
             <SelectTrigger className="w-1/2">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
@@ -115,10 +93,7 @@ export function DatePicker({
               ))}
             </SelectContent>
           </Select>
-          <Select
-            onValueChange={handleYearChange}
-            value={getYear(internalDate).toString()}
-          >
+          <Select onValueChange={handleYearChange} value={getYear(internalDate).toString()}>
             <SelectTrigger className="w-1/2">
               <SelectValue placeholder="Year" />
             </SelectTrigger>

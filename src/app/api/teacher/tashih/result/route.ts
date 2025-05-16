@@ -24,7 +24,7 @@ export async function GET() {
     const results = await prisma.tashihResult.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        tashihSchedules: {
+        tashihSchedule: {
           select: {
             id: true,
             date: true,
@@ -34,7 +34,7 @@ export async function GET() {
             location: true,
           },
         },
-        tashihRequests: {
+        tashihRequest: {
           select: {
             id: true,
             teacherId: true,
@@ -50,12 +50,10 @@ export async function GET() {
                 user: { select: { fullName: true } },
                 group: {
                   select: {
+                    id: true,
                     name: true,
                     classroom: {
-                      select: {
-                        name: true,
-                        academicYear: true,
-                      },
+                      select: { name: true, academicYear: true, semester: true },
                     },
                   },
                 },
@@ -67,7 +65,7 @@ export async function GET() {
     });
 
     const filtered = results.filter(
-      (r) => r.tashihRequests !== null && r.tashihRequests.teacherId === teacher.id
+      (r) => r.tashihRequest !== null && r.tashihRequest.teacherId === teacher.id
     );
 
     return NextResponse.json({ success: true, data: filtered });

@@ -1,16 +1,27 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ColumnDef,
   getCoreRowModel,
-  useReactTable,
-  getSortedRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { DataTable } from '@/components/ui/data-table';
+import { Label } from '@/components/ui/label';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
+import { TashihType } from '@prisma/client';
 
 interface TashihSchedule {
   id: string;
@@ -26,10 +37,10 @@ interface TashihSchedule {
         user: { fullName: string };
         group?: {
           name: string;
-          classroom: { name: string; academicYear: string };
+          classroom: { name: string; academicYear: string; semester: string };
         };
       };
-      tashihType?: 'ALQURAN' | 'WAFA';
+      tashihType?: TashihType;
       surah?: { name: string };
       juz?: { name: string };
       wafa?: { name: string };
@@ -48,17 +59,36 @@ interface Props {
 }
 
 export function TashihScheduleTable({ data, title }: Props) {
-  const { sorting, setSorting, columnVisibility, setColumnVisibility } = useDataTableState<
-    TashihSchedule,
-    string
-  >();
+  const {
+    sorting,
+    setSorting,
+    columnVisibility,
+    setColumnVisibility,
+    columnFilters,
+    setColumnFilters,
+  } = useDataTableState<TashihSchedule, string>();
+
+  const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
+
+  const yearSemesterOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const schedule of data) {
+      for (const s of schedule.schedules) {
+        const g = s.tashihRequests.student.group;
+        if (g) {
+          set.add(`${g.classroom.academicYear}__${g.classroom.semester}`);
+        }
+      }
+    }
+    return Array.from(set);
+  }, [data]);
 
   const columns = useMemo<ColumnDef<TashihSchedule>[]>(
     () => [
       {
         accessorKey: 'date',
         id: 'Tanggal',
-        header: 'Tanggal',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
         cell: ({ row }) =>
           new Date(row.original.date).toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -104,7 +134,7 @@ export function TashihScheduleTable({ data, title }: Props) {
               const r = s.tashihRequests;
               return (
                 <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {r.tashihType === 'ALQURAN'
+                  {r.tashihType === TashihType.ALQURAN
                     ? `${r.surah?.name ?? '-'} (${r.juz?.name ?? '-'})`
                     : `${r.wafa?.name ?? '-'} (Hal ${r.startPage ?? '-'}${
                         r.startPage !== r.endPage ? `–${r.endPage}` : ''
@@ -116,24 +146,57 @@ export function TashihScheduleTable({ data, title }: Props) {
         ),
       },
       {
-        id: 'Kelompok & Guru',
+        id: 'Kelompok',
         header: 'Kelompok',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => {
-              const r = s.tashihRequests;
-              const group = r.student.group;
-              const groupInfo = group
-                ? `${group.name} - ${group.classroom.name} (${group.classroom.academicYear})`
-                : 'Tidak terdaftar';
-              const teacherName = r.teacher.user.fullName;
-
+              const group = s.tashihRequests.student.group;
               return (
-                <Badge key={i} variant="secondary" className="w-fit">
-                  {groupInfo} | {teacherName}
+                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                  {group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar'}
                 </Badge>
               );
             })}
+          </div>
+        ),
+      },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) => {
+          const set = new Set<string>();
+          row.schedules.forEach((s) => {
+            const group = s.tashihRequests.student.group;
+            if (group) {
+              set.add(`${group.classroom.academicYear} ${group.classroom.semester}`);
+            }
+          });
+          return Array.from(set).join(', ');
+        },
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => {
+              const group = s.tashihRequests.student.group;
+              return (
+                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                  {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
+                </Badge>
+              );
+            })}
+          </div>
+        ),
+      },
+      {
+        id: 'Guru Pembimbing',
+        header: 'Guru Pembimbing',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => (
+              <Badge key={i} variant="secondary" className="w-fit">
+                {s.tashihRequests.teacher.user.fullName}
+              </Badge>
+            ))}
           </div>
         ),
       },
@@ -146,14 +209,49 @@ export function TashihScheduleTable({ data, title }: Props) {
     columns,
     state: {
       sorting,
+      columnFilters,
       columnVisibility,
     },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
   });
 
-  return <DataTable title={title} table={table} filterColumn="Tanggal" />;
+  return (
+    <>
+      <div className="mb-4">
+        <Label>Tahun Ajaran</Label>
+        <Select
+          value={selectedYearSemester}
+          onValueChange={(value) => {
+            setSelectedYearSemester(value);
+            table
+              .getColumn('Tahun Ajaran')
+              ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
+          }}
+        >
+          <SelectTrigger className="w-min-[200px] w-[300px]">
+            <SelectValue placeholder="Pilih Tahun Ajaran" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Semua</SelectItem>
+            {yearSemesterOptions.map((val) => {
+              const [year, sem] = val.split('__');
+              return (
+                <SelectItem key={val} value={val}>
+                  {year} {sem}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <DataTable title={title} table={table} filterColumn="Tanggal" />
+    </>
+  );
 }

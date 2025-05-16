@@ -26,7 +26,7 @@ export async function GET() {
       where: {
         schedules: {
           some: {
-            tashihRequests: {
+            tashihRequest: {
               teacherId: teacher.id,
             },
           },
@@ -35,12 +35,12 @@ export async function GET() {
       include: {
         schedules: {
           where: {
-            tashihRequests: {
+            tashihRequest: {
               teacherId: teacher.id,
             },
           },
           include: {
-            tashihRequests: {
+            tashihRequest: {
               select: {
                 id: true,
                 status: true,
@@ -56,12 +56,10 @@ export async function GET() {
                     user: { select: { fullName: true } },
                     group: {
                       select: {
+                        id: true,
                         name: true,
                         classroom: {
-                          select: {
-                            name: true,
-                            academicYear: true,
-                          },
+                          select: { name: true, academicYear: true, semester: true },
                         },
                       },
                     },

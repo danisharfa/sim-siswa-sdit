@@ -58,7 +58,6 @@ export function LoginForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Masuk</h1>
-        <p className="text-muted-foreground text-sm">Logo sekolah bisa disini</p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-3">

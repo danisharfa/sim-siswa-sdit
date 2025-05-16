@@ -26,7 +26,7 @@ export async function GET() {
       include: {
         schedules: {
           include: {
-            tashihRequests: {
+            tashihRequest: {
               include: {
                 student: {
                   select: {
@@ -36,7 +36,7 @@ export async function GET() {
                       select: {
                         name: true,
                         classroom: {
-                          select: { name: true, academicYear: true },
+                          select: { name: true, academicYear: true, semester: true },
                         },
                       },
                     },

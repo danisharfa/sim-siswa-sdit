@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Sidebar,
   SidebarContent,
@@ -27,12 +28,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/" aria-label="Home">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  LOGO
+                <div className="flex size-12 items-center justify-center">
+                  <Image src="/logo-sekolah.png" alt="Logo" width={48} height={48} />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate font-semibold">Sistem Informasi Monitoring</span>
-                  <span className="truncate text-xs text-muted-foreground">SD IT Ulul Albab</span>
+                  <span className="truncate text-xs">SD IT Ulul Albab</span>
                 </div>
               </Link>
             </SidebarMenuButton>

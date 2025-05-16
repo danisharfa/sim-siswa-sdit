@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -14,12 +14,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Semester, TashihType } from '@prisma/client';
 
 interface Group {
   groupId: string;
   groupName: string;
   classroomName: string;
   classroomAcademicYear: string;
+  classroomSemester: Semester;
 }
 
 interface Student {
@@ -46,7 +48,7 @@ interface Wafa {
 
 interface ExamRequestPayload {
   studentId: string;
-  tashihType: 'ALQURAN' | 'WAFA';
+  tashihType: TashihType;
   notes: string;
   juzId?: number;
   surahId?: number;
@@ -63,9 +65,12 @@ export function ExamRequestForm() {
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
 
-  const [tashihType, setTashihType] = useState<'ALQURAN' | 'WAFA'>('ALQURAN');
+  const [academicSemester, setAcademicSemester] = useState<string | 'all'>('all');
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
+
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [tashihType, setTashihType] = useState<TashihType>(TashihType.ALQURAN);
   const [selectedJuzId, setSelectedJuzId] = useState<number | null>(null);
   const [selectedSurahId, setSelectedSurahId] = useState<number | null>(null);
   const [selectedWafaId, setSelectedWafaId] = useState<number | null>(null);
@@ -99,6 +104,19 @@ export function ExamRequestForm() {
   }, []);
 
   useEffect(() => {
+    if (academicSemester === 'all') {
+      setFilteredGroups(groups);
+    } else {
+      const [year, semester] = academicSemester.split('|');
+      setFilteredGroups(
+        groups.filter((g) => g.classroomAcademicYear === year && g.classroomSemester === semester)
+      );
+    }
+    setSelectedGroupId('');
+    setStudents([]);
+  }, [academicSemester, groups]);
+
+  useEffect(() => {
     if (!selectedGroupId) return;
 
     const fetchStudents = async () => {
@@ -109,6 +127,26 @@ export function ExamRequestForm() {
 
     fetchStudents();
   }, [selectedGroupId]);
+
+  const academicOptions = useMemo(() => {
+    const unique = new Set<string>();
+    for (const g of groups) {
+      unique.add(`${g.classroomAcademicYear}|${g.classroomSemester}`);
+    }
+    return Array.from(unique).map((s) => {
+      const [year, semester] = s.split('|');
+      return {
+        value: s,
+        label: `${year} ${semester}`,
+      };
+    });
+  }, [groups]);
+
+  const filteredSurah = useMemo(() => {
+    return surahJuzList
+      .filter((sj) => sj.juzId === selectedJuzId)
+      .sort((a, b) => b.surah.id - a.surah.id);
+  }, [surahJuzList, selectedJuzId]);
 
   const handleSubmit = async () => {
     if (!selectedStudentId) {
@@ -122,7 +160,7 @@ export function ExamRequestForm() {
       notes,
     };
 
-    if (tashihType === 'ALQURAN') {
+    if (tashihType === TashihType.ALQURAN) {
       if (!selectedJuzId || !selectedSurahId) {
         toast.error('Pilih Juz dan Surah');
         return;
@@ -169,13 +207,25 @@ export function ExamRequestForm() {
     }
   };
 
-  const filteredSurah = surahJuzList
-    .filter((sj) => sj.juzId === selectedJuzId)
-    .sort((a, b) => b.surah.id - a.surah.id);
-
   return (
     <div className="space-y-4">
-      {/* Pilih Kelompok dan Siswa */}
+      <div>
+        <Label>Tahun Ajaran & Semester</Label>
+        <Select value={academicSemester} onValueChange={setAcademicSemester}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pilih Tahun & Semester" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua</SelectItem>
+            {academicOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div>
         <Label>Kelompok</Label>
         <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
@@ -183,9 +233,9 @@ export function ExamRequestForm() {
             <SelectValue placeholder="Pilih Kelompok" />
           </SelectTrigger>
           <SelectContent>
-            {groups.map((g) => (
+            {filteredGroups.map((g) => (
               <SelectItem key={g.groupId} value={g.groupId}>
-                {g.groupName} - {g.classroomName} ({g.classroomAcademicYear})
+                {g.groupName} - {g.classroomName} ({g.classroomAcademicYear} {g.classroomSemester})
               </SelectItem>
             ))}
           </SelectContent>
@@ -211,19 +261,19 @@ export function ExamRequestForm() {
       {/* Jenis Tashih */}
       <div>
         <Label>Jenis Tashih</Label>
-        <Select value={tashihType} onValueChange={(v) => setTashihType(v as 'ALQURAN' | 'WAFA')}>
+        <Select value={tashihType} onValueChange={(v) => setTashihType(v as TashihType)}>
           <SelectTrigger>
             <SelectValue placeholder="Pilih Jenis Tashih" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALQURAN">AL-QUR&apos;AN</SelectItem>
-            <SelectItem value="WAFA">WAFA</SelectItem>
+            <SelectItem value={TashihType.ALQURAN}>AL-QUR&apos;AN</SelectItem>
+            <SelectItem value={TashihType.WAFA}>WAFA</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Input berdasarkan jenis tashih */}
-      {tashihType === 'ALQURAN' && (
+      {/* Input Berdasarkan Jenis Tashih */}
+      {tashihType === TashihType.ALQURAN && (
         <>
           <div>
             <Label>Juz</Label>
@@ -268,7 +318,7 @@ export function ExamRequestForm() {
         </>
       )}
 
-      {tashihType === 'WAFA' && (
+      {tashihType === TashihType.WAFA && (
         <>
           <div>
             <Label>Wafa</Label>

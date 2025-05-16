@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
+import { TashihRequestStatus } from '@prisma/client';
 
 interface RequestStatusAlertDialogProps {
   request: { id: string };
@@ -38,7 +39,9 @@ export function RequestStatusAlertDialog({
       const res = await fetch(`/api/coordinator/tashih/request/${request.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: type === 'accept' ? 'DITERIMA' : 'DITOLAK' }),
+        body: JSON.stringify({
+          status: type === 'accept' ? TashihRequestStatus.DITERIMA : TashihRequestStatus.DITOLAK,
+        }),
       });
 
       const data = await res.json();

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         classroom: true,
-        group: { include: { teacherGroup: true } },
+        group: { include: { teacherGroups: true } },
       },
     });
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
           data: {
             studentId: student.id,
             groupId: student.groupId,
-            teacherId: student.group?.teacherGroup?.[0]?.teacherId || null,
+            teacherId: student.group?.teacherGroups?.[0]?.teacherId || null,
             academicYear: currentClass.academicYear,
             semester: currentClass.semester,
           },

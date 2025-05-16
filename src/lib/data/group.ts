@@ -30,7 +30,7 @@ export async function getGroupByIdForTeacher(id: string) {
     const group = await prisma.group.findFirst({
       where: {
         id,
-        teacherGroup: {
+        teacherGroups: {
           some: {
             teacherId: guru.id,
           },

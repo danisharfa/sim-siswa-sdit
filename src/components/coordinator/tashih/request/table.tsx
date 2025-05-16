@@ -20,7 +20,6 @@ import {
 import { MoreVertical } from 'lucide-react';
 import { RequestStatusAlertDialog } from './alert-dialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
-// import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import {
   Select,
@@ -30,10 +29,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Semester, TashihRequestStatus, TashihType } from '@prisma/client';
 
 interface TashihRequest {
   id: string;
-  status: 'MENUNGGU' | 'DITERIMA' | 'DITOLAK' | 'SELESAI';
+  status: TashihRequestStatus;
   notes?: string;
   createdAt: string;
   student: {
@@ -41,11 +41,11 @@ interface TashihRequest {
     user: { fullName: string };
     group?: {
       name: string;
-      classroom: { name: string; academicYear: string };
+      classroom: { name: string; academicYear: string; semester: Semester };
     };
   };
   teacher: { user: { fullName: string } };
-  tashihType?: 'ALQURAN' | 'WAFA';
+  tashihType?: TashihType;
   surah?: { name: string };
   juz?: { name: string };
   wafa?: { name: string };
@@ -72,9 +72,33 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
     dialogType,
     setDialogType,
   } = useDataTableState<TashihRequest, 'accept' | 'reject'>();
-  const [selectedStatus, setSelectedStatus] = useState<
-    'ALL' | 'MENUNGGU' | 'DITERIMA' | 'DITOLAK' | 'SELESAI'
-  >('ALL');
+
+  const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
+  const [selectedGroup, setSelectedGroup] = useState<string | 'ALL'>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<TashihRequestStatus | 'ALL'>('ALL');
+
+  const yearSemesterOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of data) {
+      const group = d.student.group;
+      if (group) {
+        set.add(`${group.classroom.academicYear}__${group.classroom.semester}`);
+      }
+    }
+    return Array.from(set);
+  }, [data]);
+
+  const groupOptions = useMemo(() => {
+    if (selectedYearSemester === 'ALL') return [];
+    return data
+      .filter(
+        (d) =>
+          d.student.group &&
+          `${d.student.group.classroom.academicYear}__${d.student.group.classroom.semester}` ===
+            selectedYearSemester
+      )
+      .map((d) => `${d.student.group!.name} - ${d.student.group!.classroom.name}`);
+  }, [data, selectedYearSemester]);
 
   const handleOpenAcceptDialog = useCallback(
     (request: TashihRequest) => {
@@ -117,20 +141,22 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         cell: ({ row }) => row.original.student.user.fullName,
       },
       {
-        accessorKey: 'student.group.name',
-        id: 'Kelompok & Kelas',
-        header: 'Kelompok & Kelas',
-        cell: ({ row }) => {
-          const group = row.original.student.group;
-          return (
-            <Badge variant="secondary" className="w-fit">
-              {group
-                ? `${group.name} - ${group.classroom.name} (${group.classroom.academicYear})`
-                : 'Tidak terdaftar'}
-            </Badge>
-          );
-        },
+        id: 'Kelompok',
+        header: 'Kelompok',
+        accessorFn: (row) =>
+          row.student.group
+            ? `${row.student.group.name} - ${row.student.group.classroom.name}`
+            : 'Tidak terdaftar',
       },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) =>
+          row.student.group
+            ? `${row.student.group.classroom.academicYear} ${row.student.group.classroom.semester}`
+            : '-',
+      },
+
       {
         accessorKey: 'teacher.user.fullName',
         id: 'Guru Pembimbing',
@@ -146,34 +172,28 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         header: 'Jenis Tashih',
         cell: ({ row }) => (
           <Badge variant="outline" className="w-fit">
-            {row.original.tashihType === 'ALQURAN' ? "Al-Qur'an" : 'Wafa'}
+            {row.original.tashihType === TashihType.ALQURAN ? "Al-Qur'an" : 'Wafa'}
           </Badge>
         ),
         enableColumnFilter: true,
       },
-
       {
         id: 'Materi',
         header: 'Materi Ujian',
         cell: ({ row }) => {
           const { tashihType, surah, juz, wafa, startPage, endPage } = row.original;
-
-          if (tashihType === 'ALQURAN') {
-            const surahName = surah?.name ?? '-';
-            const juzName = juz?.name ? ` (${juz.name})` : '';
-            return <Badge variant="outline">{`${surahName}${juzName}`}</Badge>;
+          if (tashihType === TashihType.ALQURAN) {
+            return <Badge variant="outline">{`${surah?.name ?? '-'} (${juz?.name ?? '-'})`}</Badge>;
           }
-
-          if (tashihType === 'WAFA') {
-            const pageLabel =
+          if (tashihType === TashihType.WAFA) {
+            const label =
               startPage && endPage
                 ? startPage === endPage
                   ? `Hal ${startPage}`
                   : `Hal ${startPage}-${endPage}`
                 : '-';
-            return <Badge variant="outline">{`${wafa?.name ?? '-'} (${pageLabel})`}</Badge>;
+            return <Badge variant="outline">{`${wafa?.name ?? '-'} (${label})`}</Badge>;
           }
-
           return <Badge variant="outline">-</Badge>;
         },
       },
@@ -184,11 +204,11 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
           <Badge
             variant="outline"
             className={
-              row.original.status === 'DITERIMA'
+              row.original.status === TashihRequestStatus.DITERIMA
                 ? 'text-green-500 border-green-500'
-                : row.original.status === 'DITOLAK'
+                : row.original.status === TashihRequestStatus.DITOLAK
                 ? 'text-red-500 border-red-500'
-                : row.original.status === 'SELESAI'
+                : row.original.status === TashihRequestStatus.SELESAI
                 ? 'text-blue-500 border-blue-500'
                 : 'text-yellow-500 border-yellow-500'
             }
@@ -199,21 +219,17 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
       },
       {
         accessorKey: 'notes',
-        id: 'Catatan',
         header: 'Catatan',
         cell: ({ row }) => row.original.notes || '-',
       },
     ];
 
-    // Tambah kolom aksi jika status MENUNGGU
     cols.push({
       id: 'actions',
-      enableHiding: false,
       header: 'Aksi',
       cell: ({ row }) => {
         const request = row.original;
         if (request.status !== 'MENUNGGU') return null;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -222,17 +238,10 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-32 z-50">
-              <DropdownMenuItem
-                onClick={() => handleOpenAcceptDialog(request)}
-                className="flex items-center gap-2"
-              >
+              <DropdownMenuItem onClick={() => handleOpenAcceptDialog(request)}>
                 Terima
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleOpenRejectDialog(request)}
-                className="flex items-center gap-2"
-                variant="destructive"
-              >
+              <DropdownMenuItem onClick={() => handleOpenRejectDialog(request)}>
                 Tolak
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -263,25 +272,57 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label>Filter Status</Label>
+          <Label>Filter Tahun Ajaran + Semester</Label>
           <Select
-            value={selectedStatus}
+            value={selectedYearSemester}
             onValueChange={(value) => {
-              setSelectedStatus(value as typeof selectedStatus);
-              table.getColumn('status')?.setFilterValue(value === 'ALL' ? undefined : value);
+              setSelectedYearSemester(value);
+              table
+                .getColumn('Tahun Ajaran')
+                ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
+              setSelectedGroup('ALL');
+              table.getColumn('Kelompok')?.setFilterValue(undefined);
             }}
           >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Pilih Status Permintaan" />
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Pilih Tahun Ajaran & Semester" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="MENUNGGU">Menunggu</SelectItem>
-              <SelectItem value="DITERIMA">Diterima</SelectItem>
-              <SelectItem value="DITOLAK">Ditolak</SelectItem>
-              <SelectItem value="SELESAI">Selesai</SelectItem>
+              {yearSemesterOptions.map((val) => {
+                const [year, sem] = val.split('__');
+                return (
+                  <SelectItem key={val} value={val}>
+                    {year} {sem}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Filter Kelompok</Label>
+          <Select
+            value={selectedGroup}
+            disabled={selectedYearSemester === 'ALL'}
+            onValueChange={(value) => {
+              setSelectedGroup(value);
+              table.getColumn('Kelompok')?.setFilterValue(value === 'ALL' ? undefined : value);
+            }}
+          >
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Pilih Kelompok" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua</SelectItem>
+              {Array.from(new Set(groupOptions)).map((val) => (
+                <SelectItem key={val} value={val}>
+                  {val}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -299,8 +340,30 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="ALQURAN">Al-Qur&apos;an</SelectItem>
-              <SelectItem value="WAFA">Wafa</SelectItem>
+              <SelectItem value={TashihType.ALQURAN}>Al-Qur&apos;an</SelectItem>
+              <SelectItem value={TashihType.WAFA}>Wafa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Filter Status</Label>
+          <Select
+            value={selectedStatus}
+            onValueChange={(value) => {
+              setSelectedStatus(value as typeof selectedStatus);
+              table.getColumn('status')?.setFilterValue(value === 'ALL' ? undefined : value);
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Status Permintaan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua</SelectItem>
+              <SelectItem value="MENUNGGU">Menunggu</SelectItem>
+              <SelectItem value={TashihRequestStatus.DITERIMA}>Diterima</SelectItem>
+              <SelectItem value={TashihRequestStatus.DITOLAK}>Ditolak</SelectItem>
+              <SelectItem value={TashihRequestStatus.SELESAI}>Selesai</SelectItem>
             </SelectContent>
           </Select>
         </div>

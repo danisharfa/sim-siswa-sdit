@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   NavigationMenu,
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
 import { Button } from '@/components/ui/button';
-import { GalleryVerticalEnd, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
 export function LandingHeader() {
   return (
@@ -15,8 +16,8 @@ export function LandingHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between">
         <div>
           <Link href="/" className="flex items-center gap-2 font-medium">
-            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="size-4" />
+            <div className="flex size-12 items-center justify-center">
+              <Image src="/logo-sekolah.png" alt="Logo" width={48} height={48} />
             </div>
             Sistem Informasi Monitoring
           </Link>

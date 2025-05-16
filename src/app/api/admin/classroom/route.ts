@@ -13,14 +13,14 @@ export async function GET() {
       orderBy: { name: 'asc' },
       include: {
         _count: {
-          select: { student: true },
+          select: { students: true },
         },
       },
     });
 
     const formattedData = classrooms.map((c) => ({
       ...c,
-      studentCount: c._count.student,
+      studentCount: c._count.students,
     }));
 
     return NextResponse.json({

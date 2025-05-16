@@ -12,7 +12,7 @@ export async function GET() {
     const results = await prisma.tashihResult.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        tashihRequests: {
+        tashihRequest: {
           select: {
             tashihType: true,
             surah: { select: { name: true } },
@@ -28,10 +28,7 @@ export async function GET() {
                   select: {
                     name: true,
                     classroom: {
-                      select: {
-                        name: true,
-                        academicYear: true,
-                      },
+                      select: { name: true, academicYear: true, semester: true },
                     },
                   },
                 },
@@ -45,7 +42,7 @@ export async function GET() {
             },
           },
         },
-        tashihSchedules: {
+        tashihSchedule: {
           select: {
             date: true,
             sessionName: true,

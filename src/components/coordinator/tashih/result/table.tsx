@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -13,13 +13,22 @@ import { Badge } from '@/components/ui/badge';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Semester, TashihType } from '@prisma/client';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface TashihResult {
   id: string;
   passed: boolean;
   notes?: string;
   tashihRequests: {
-    tashihType: 'ALQURAN' | 'WAFA';
+    tashihType: TashihType;
     surah?: { name: string };
     juz?: { name: string };
     wafa?: { name: string };
@@ -33,6 +42,7 @@ interface TashihResult {
         classroom: {
           name: string;
           academicYear: string;
+          semester: Semester;
         };
       };
     };
@@ -64,6 +74,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     columnVisibility,
     setColumnVisibility,
   } = useDataTableState<TashihResult, string>();
+  const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
 
   const columns = useMemo<ColumnDef<TashihResult>[]>(
     () => [
@@ -97,7 +108,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         header: 'Materi Ujian',
         cell: ({ row }) => {
           const r = row.original.tashihRequests;
-          if (r.tashihType === 'ALQURAN') {
+          if (r.tashihType === TashihType.ALQURAN) {
             return (
               <Badge variant="outline">{`${r.surah?.name ?? '-'} (${r.juz?.name ?? '-'})`}</Badge>
             );
@@ -113,20 +124,29 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         },
       },
       {
-        id: 'Kelompok & Kelas',
-        header: 'Kelompok & Kelas',
+        id: 'Kelompok',
+        header: 'Kelompok',
+        cell: ({ row }) => {
+          const group = row.original.tashihRequests.student.group;
+          return group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar';
+        },
+      },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) => {
+          const group = row.tashihRequests.student.group;
+          return group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-';
+        },
         cell: ({ row }) => {
           const group = row.original.tashihRequests.student.group;
           return (
-            <Badge variant="secondary" className="w-fit">
-              {group
-                ? `${group.name} - ${group.classroom.name} (${group.classroom.academicYear})`
-                : 'Tidak terdaftar'}
+            <Badge variant="outline" className="w-fit text-muted-foreground">
+              {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
             </Badge>
           );
         },
       },
-
       {
         accessorKey: 'tashihRequests.teacher.user.fullName',
         id: 'Guru',
@@ -164,6 +184,17 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     []
   );
 
+  const yearSemesterOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of data) {
+      const group = d.tashihRequests.student.group;
+      if (group) {
+        set.add(`${group.classroom.academicYear}__${group.classroom.semester}`);
+      }
+    }
+    return Array.from(set);
+  }, [data]);
+
   const table = useReactTable({
     data,
     columns,
@@ -181,5 +212,36 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     onColumnVisibilityChange: setColumnVisibility,
   });
 
-  return <DataTable title={title} table={table} filterColumn="Nama Siswa" />;
+  return (
+    <>
+      <div className="mb-4">
+        <Label>Filter Tahun Ajaran + Semester</Label>
+        <Select
+          value={selectedYearSemester}
+          onValueChange={(value) => {
+            setSelectedYearSemester(value);
+            table
+              .getColumn('Tahun Ajaran')
+              ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
+          }}
+        >
+          <SelectTrigger className="w-[250px]">
+            <SelectValue placeholder="Pilih Tahun Ajaran & Semester" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Semua</SelectItem>
+            {yearSemesterOptions.map((val) => {
+              const [year, sem] = val.split('__');
+              return (
+                <SelectItem key={val} value={val}>
+                  {year} {sem}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+      <DataTable title={title} table={table} filterColumn="Nama Siswa" />
+    </>
+  );
 }
