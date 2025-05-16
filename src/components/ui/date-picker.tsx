@@ -21,11 +21,11 @@ export function DatePicker({
   value,
   onChange,
   startYear = getYear(new Date()) - 100,
-  endYear = getYear(new Date()) + 100,
+  endYear = getYear(new Date()) + 5,
 }: DatePickerProps) {
   const [internalDate, setInternalDate] = React.useState<Date>(value || new Date());
+  const [open, setOpen] = React.useState(false);
 
-  // Sinkronisasi jika prop value berubah dari luar
   React.useEffect(() => {
     if (value) setInternalDate(value);
   }, [value]);
@@ -44,7 +44,19 @@ export function DatePicker({
     'November',
     'December',
   ];
-  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+
+  const baseYear = getYear(internalDate);
+  const adjustedStartYear = Math.min(startYear, baseYear);
+  const adjustedEndYear = Math.max(endYear, baseYear);
+
+  const years = React.useMemo(
+    () =>
+      Array.from(
+        { length: adjustedEndYear - adjustedStartYear + 1 },
+        (_, i) => adjustedStartYear + i
+      ),
+    [adjustedStartYear, adjustedEndYear]
+  );
 
   const handleMonthChange = (month: string) => {
     const newDate = setMonth(internalDate, months.indexOf(month));
@@ -62,11 +74,12 @@ export function DatePicker({
     if (selectedDate) {
       setInternalDate(selectedDate);
       onChange?.(selectedDate);
+      setOpen(false); // langsung tutup popover saat tanggal dipilih
     }
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={'outline'}
@@ -79,7 +92,7 @@ export function DatePicker({
           {internalDate ? format(internalDate, 'PPP') : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="w-auto p-0" forceMount sideOffset={4}>
         <div className="flex justify-between p-2 gap-2">
           <Select onValueChange={handleMonthChange} value={months[getMonth(internalDate)]}>
             <SelectTrigger className="w-1/2">
@@ -111,7 +124,7 @@ export function DatePicker({
           mode="single"
           selected={internalDate}
           onSelect={handleSelect}
-          initialFocus
+          autoFocus
           month={internalDate}
           onMonthChange={setInternalDate}
         />

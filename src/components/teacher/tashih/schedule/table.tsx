@@ -29,7 +29,7 @@ interface TeacherTashihSchedule {
   endTime: string;
   location: string;
   schedules: {
-    tashihRequests: {
+    tashihRequest: {
       id: string;
       status: 'MENUNGGU' | 'DITERIMA' | 'DITOLAK' | 'SELESAI';
       tashihType: 'ALQURAN' | 'WAFA';
@@ -76,7 +76,7 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
     const set = new Set<string>();
     for (const schedule of data) {
       for (const s of schedule.schedules) {
-        const g = s.tashihRequests.student.group;
+        const g = s.tashihRequest.student.group;
         if (g && g.classroom.semester) {
           set.add(`${g.classroom.academicYear}__${g.classroom.semester}`);
         }
@@ -89,7 +89,7 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
     const set = new Map<string, string>();
     for (const schedule of data) {
       for (const s of schedule.schedules) {
-        const g = s.tashihRequests.student.group;
+        const g = s.tashihRequest.student.group;
         if (g) {
           set.set(g.id, `${g.name} - ${g.classroom.name}`);
         }
@@ -129,11 +129,11 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s) => (
               <Badge
-                key={s.tashihRequests.id}
+                key={s.tashihRequest.id}
                 variant="outline"
                 className="w-fit text-muted-foreground"
               >
-                {s.tashihRequests.student.user.fullName}
+                {s.tashihRequest.student.user.fullName}
               </Badge>
             ))}
           </div>
@@ -144,7 +144,7 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
         header: 'Kelompok',
         accessorFn: (row) => {
           return row.schedules
-            .map((s) => s.tashihRequests.student.group)
+            .map((s) => s.tashihRequest.student.group)
             .filter((g): g is NonNullable<typeof g> => !!g)
             .map((g) => `${g.name} - ${g.classroom.name}`)
             .join(', ');
@@ -152,10 +152,10 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s) => {
-              const g = s.tashihRequests.student.group;
+              const g = s.tashihRequest.student.group;
               return (
                 <Badge
-                  key={s.tashihRequests.id + '-g'}
+                  key={s.tashihRequest.id + '-g'}
                   variant="outline"
                   className="w-fit text-muted-foreground"
                 >
@@ -176,7 +176,7 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
         accessorFn: (row) => {
           const set = new Set<string>();
           row.schedules.forEach((s) => {
-            const g = s.tashihRequests.student.group;
+            const g = s.tashihRequest.student.group;
             if (g?.classroom.semester) {
               set.add(`${g.classroom.academicYear} ${g.classroom.semester}`);
             }

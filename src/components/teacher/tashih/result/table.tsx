@@ -25,7 +25,7 @@ interface ExamResult {
   id: string;
   passed: boolean;
   notes?: string;
-  tashihRequests: {
+  tashihRequest: {
     tashihType: TashihType;
     surah?: { name: string };
     juz?: { name: string };
@@ -46,7 +46,7 @@ interface ExamResult {
       };
     };
   };
-  tashihSchedules: {
+  tashihSchedule: {
     date: string;
     sessionName: string;
     startTime: string;
@@ -74,9 +74,9 @@ export function TeacherTashihResultTable({ data }: Props) {
   const [selectedStudent, setSelectedStudent] = useState('all');
 
   const groupList = useMemo(() => {
-    const map = new Map<string, NonNullable<ExamResult['tashihRequests']['student']['group']>>();
+    const map = new Map<string, NonNullable<ExamResult['tashihRequest']['student']['group']>>();
     for (const d of data) {
-      const group = d.tashihRequests.student.group;
+      const group = d.tashihRequest.student.group;
       if (group && !map.has(group.id)) {
         map.set(group.id, group);
       }
@@ -88,7 +88,7 @@ export function TeacherTashihResultTable({ data }: Props) {
     return Array.from(
       new Set(
         data
-          .map((d) => d.tashihRequests.student.group)
+          .map((d) => d.tashihRequest.student.group)
           .filter((g): g is NonNullable<typeof g> => !!g)
           .map((g) => `${g.classroom.academicYear}-${g.classroom.semester}`)
       )
@@ -108,8 +108,8 @@ export function TeacherTashihResultTable({ data }: Props) {
     return Array.from(
       new Set(
         data
-          .filter((d) => d.tashihRequests.student.group?.id === selectedGroupId)
-          .map((d) => d.tashihRequests.student.user.fullName)
+          .filter((d) => d.tashihRequest.student.group?.id === selectedGroupId)
+          .map((d) => d.tashihRequest.student.user.fullName)
       )
     );
   }, [selectedGroupId, data]);
@@ -118,10 +118,10 @@ export function TeacherTashihResultTable({ data }: Props) {
     () => [
       {
         id: 'Tanggal',
-        accessorKey: 'tashihSchedules.date',
+        accessorKey: 'tashihSchedule.date',
         header: 'Tanggal',
         cell: ({ row }) => {
-          const s = row.original.tashihSchedules;
+          const s = row.original.tashihSchedule;
           return `${new Date(s.date).toLocaleDateString('id-ID')} (${s.sessionName}, ${
             s.startTime
           } - ${s.endTime})`;
@@ -130,17 +130,17 @@ export function TeacherTashihResultTable({ data }: Props) {
       {
         id: 'Nama Siswa',
         header: 'Nama Siswa',
-        accessorFn: (row) => row.tashihRequests.student.user.fullName,
+        accessorFn: (row) => row.tashihRequest.student.user.fullName,
       },
       {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) =>
-          `${row.tashihRequests.student.group?.name} - ${row.tashihRequests.student.group?.classroom.name}`,
+          `${row.tashihRequest.student.group?.name} - ${row.tashihRequest.student.group?.classroom.name}`,
         cell: ({ row }) => (
           <Badge variant="outline">
-            {`${row.original.tashihRequests.student.group?.name ?? '-'} - ${
-              row.original.tashihRequests.student.group?.classroom.name ?? '-'
+            {`${row.original.tashihRequest.student.group?.name ?? '-'} - ${
+              row.original.tashihRequest.student.group?.classroom.name ?? '-'
             }`}
           </Badge>
         ),
@@ -149,11 +149,11 @@ export function TeacherTashihResultTable({ data }: Props) {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
         accessorFn: (row) =>
-          `${row.tashihRequests.student.group?.classroom.academicYear} ${row.tashihRequests.student.group?.classroom.semester}`,
+          `${row.tashihRequest.student.group?.classroom.academicYear} ${row.tashihRequest.student.group?.classroom.semester}`,
         cell: ({ row }) => (
           <Badge variant="outline">
-            {`${row.original.tashihRequests.student.group?.classroom.academicYear ?? '-'} ${
-              row.original.tashihRequests.student.group?.classroom.semester ?? '-'
+            {`${row.original.tashihRequest.student.group?.classroom.academicYear ?? '-'} ${
+              row.original.tashihRequest.student.group?.classroom.semester ?? '-'
             }`}
           </Badge>
         ),
@@ -162,7 +162,7 @@ export function TeacherTashihResultTable({ data }: Props) {
         id: 'Materi',
         header: 'Materi Ujian',
         cell: ({ row }) => {
-          const r = row.original.tashihRequests;
+          const r = row.original.tashihRequest;
           return (
             <Badge variant="outline">
               {r.tashihType === TashihType.ALQURAN

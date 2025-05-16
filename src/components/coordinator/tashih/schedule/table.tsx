@@ -31,7 +31,7 @@ interface TashihSchedule {
   endTime: string;
   location: string;
   schedules: {
-    tashihRequests: {
+    tashihRequest: {
       student: {
         nis: string;
         user: { fullName: string };
@@ -74,7 +74,7 @@ export function TashihScheduleTable({ data, title }: Props) {
     const set = new Set<string>();
     for (const schedule of data) {
       for (const s of schedule.schedules) {
-        const g = s.tashihRequests.student.group;
+        const g = s.tashihRequest.student.group;
         if (g) {
           set.add(`${g.classroom.academicYear}__${g.classroom.semester}`);
         }
@@ -119,7 +119,7 @@ export function TashihScheduleTable({ data, title }: Props) {
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => (
               <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                {s.tashihRequests.student.user.fullName}
+                {s.tashihRequest.student.user.fullName}
               </Badge>
             ))}
           </div>
@@ -131,7 +131,7 @@ export function TashihScheduleTable({ data, title }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => {
-              const r = s.tashihRequests;
+              const r = s.tashihRequest;
               return (
                 <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
                   {r.tashihType === TashihType.ALQURAN
@@ -151,7 +151,7 @@ export function TashihScheduleTable({ data, title }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => {
-              const group = s.tashihRequests.student.group;
+              const group = s.tashihRequest.student.group;
               return (
                 <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
                   {group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar'}
@@ -167,7 +167,7 @@ export function TashihScheduleTable({ data, title }: Props) {
         accessorFn: (row) => {
           const set = new Set<string>();
           row.schedules.forEach((s) => {
-            const group = s.tashihRequests.student.group;
+            const group = s.tashihRequest.student.group;
             if (group) {
               set.add(`${group.classroom.academicYear} ${group.classroom.semester}`);
             }
@@ -177,7 +177,7 @@ export function TashihScheduleTable({ data, title }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => {
-              const group = s.tashihRequests.student.group;
+              const group = s.tashihRequest.student.group;
               return (
                 <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
                   {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
@@ -194,7 +194,7 @@ export function TashihScheduleTable({ data, title }: Props) {
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => (
               <Badge key={i} variant="secondary" className="w-fit">
-                {s.tashihRequests.teacher.user.fullName}
+                {s.tashihRequest.teacher.user.fullName}
               </Badge>
             ))}
           </div>

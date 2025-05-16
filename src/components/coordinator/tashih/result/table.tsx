@@ -27,7 +27,7 @@ interface TashihResult {
   id: string;
   passed: boolean;
   notes?: string;
-  tashihRequests: {
+  tashihRequest: {
     tashihType: TashihType;
     surah?: { name: string };
     juz?: { name: string };
@@ -51,7 +51,7 @@ interface TashihResult {
       user: { fullName: string };
     };
   };
-  tashihSchedules: {
+  tashihSchedule: {
     date: string;
     sessionName: string;
     startTime: string;
@@ -80,10 +80,10 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     () => [
       {
         id: 'Tanggal',
-        accessorKey: 'tashihSchedules.date',
+        accessorKey: 'tashihSchedule.date',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
         cell: ({ row }) => {
-          const s = row.original.tashihSchedules;
+          const s = row.original.tashihSchedule;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
             day: 'numeric',
             month: 'long',
@@ -94,20 +94,20 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
       },
       {
         id: 'Lokasi',
-        accessorKey: 'tashihSchedules.location',
+        accessorKey: 'tashihSchedule.location',
         header: 'Lokasi',
       },
       {
         id: 'Nama Siswa',
-        accessorKey: 'tashihRequests.student.user.fullName',
+        accessorKey: 'tashihRequest.student.user.fullName',
         header: 'Nama Siswa',
-        cell: ({ row }) => row.original.tashihRequests.student.user.fullName,
+        cell: ({ row }) => row.original.tashihRequest.student.user.fullName,
       },
       {
         id: 'Materi',
         header: 'Materi Ujian',
         cell: ({ row }) => {
-          const r = row.original.tashihRequests;
+          const r = row.original.tashihRequest;
           if (r.tashihType === TashihType.ALQURAN) {
             return (
               <Badge variant="outline">{`${r.surah?.name ?? '-'} (${r.juz?.name ?? '-'})`}</Badge>
@@ -127,7 +127,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         id: 'Kelompok',
         header: 'Kelompok',
         cell: ({ row }) => {
-          const group = row.original.tashihRequests.student.group;
+          const group = row.original.tashihRequest.student.group;
           return group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar';
         },
       },
@@ -135,11 +135,11 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
         accessorFn: (row) => {
-          const group = row.tashihRequests.student.group;
+          const group = row.tashihRequest.student.group;
           return group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-';
         },
         cell: ({ row }) => {
-          const group = row.original.tashihRequests.student.group;
+          const group = row.original.tashihRequest.student.group;
           return (
             <Badge variant="outline" className="w-fit text-muted-foreground">
               {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
@@ -148,12 +148,12 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         },
       },
       {
-        accessorKey: 'tashihRequests.teacher.user.fullName',
+        accessorKey: 'tashihRequest.teacher.user.fullName',
         id: 'Guru',
         header: 'Guru Pembimbing',
         cell: ({ row }) => (
           <Badge variant="secondary" className="w-fit">
-            {row.original.tashihRequests.teacher.user.fullName}
+            {row.original.tashihRequest.teacher.user.fullName}
           </Badge>
         ),
       },
@@ -187,7 +187,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
     for (const d of data) {
-      const group = d.tashihRequests.student.group;
+      const group = d.tashihRequest.student.group;
       if (group) {
         set.add(`${group.classroom.academicYear}__${group.classroom.semester}`);
       }
