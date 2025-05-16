@@ -57,7 +57,7 @@ interface ExamRequestPayload {
   endPage?: number;
 }
 
-export function ExamRequestForm() {
+export function TashihForm() {
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [students, setStudents] = useState<Student[]>([]);

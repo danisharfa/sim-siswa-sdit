@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
+import { TashihRequestStatus, TashihType } from '@prisma/client';
 
 interface TeacherTashihSchedule {
   id: string;
@@ -31,25 +32,25 @@ interface TeacherTashihSchedule {
   schedules: {
     tashihRequest: {
       id: string;
-      status: 'MENUNGGU' | 'DITERIMA' | 'DITOLAK' | 'SELESAI';
-      tashihType: 'ALQURAN' | 'WAFA';
-      surah?: { name: string };
-      juz?: { name: string };
-      wafa?: { name: string };
-      startPage?: number;
-      endPage?: number;
+      status: TashihRequestStatus;
+      tashihType: TashihType;
+      surah: { name: string } | null;
+      juz: { name: string } | null;
+      wafa: { name: string } | null;
+      startPage: number | null;
+      endPage: number | null;
       student: {
         nis: string;
         user: { fullName: string };
-        group?: {
+        group: {
           id: string;
           name: string;
           classroom: {
             name: string;
             academicYear: string;
-            semester?: string;
+            semester: string;
           };
-        };
+        } | null;
       };
     };
   }[];
@@ -136,6 +137,34 @@ export function TeacherTashihScheduleTable({ data }: TeacherTashihScheduleTableP
                 {s.tashihRequest.student.user.fullName}
               </Badge>
             ))}
+          </div>
+        ),
+      },
+      {
+        id: 'Materi',
+        header: 'Materi Ujian',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s) => {
+              const r = s.tashihRequest;
+
+              const materi =
+                r.tashihType === TashihType.ALQURAN
+                  ? `${r.surah?.name ?? '-'} (${r.juz?.name ?? '-'})`
+                  : `${r.wafa?.name ?? '-'} (Hal ${r.startPage ?? '-'}${
+                      r.endPage ? `–${r.endPage}` : ''
+                    })`;
+
+              return (
+                <Badge
+                  key={r.id + '-materi'}
+                  variant="outline"
+                  className="w-fit text-muted-foreground"
+                >
+                  {materi}
+                </Badge>
+              );
+            })}
           </div>
         ),
       },

@@ -28,8 +28,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/" aria-label="Home">
-                <div className="flex size-12 items-center justify-center">
-                  <Image src="/logo-sekolah.png" alt="Logo" width={48} height={48} />
+                <div className="flex aspect-square size-8 items-center justify-center">
+                  <Image src="/logo-sekolah.png" alt="Logo" width={32} height={32} />
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate font-semibold">Sistem Informasi Monitoring</span>

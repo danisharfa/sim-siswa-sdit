@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
@@ -69,12 +69,14 @@ interface FormData {
   endPage?: number;
 }
 
-export function SubmissionInputManagement() {
+export function SubmissionForm() {
   const [groupList, setGroupList] = useState<Group[]>([]);
   const [studentList, setStudentList] = useState<Student[]>([]);
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
+  const [academicSemester, setAcademicSemester] = useState<string | 'all'>('all');
+  const [filteredGroupList, setFilteredGroupList] = useState<Group[]>([]);
 
   const [groupId, setGroupId] = useState('');
   const [studentId, setStudentId] = useState('');
@@ -92,6 +94,20 @@ export function SubmissionInputManagement() {
   const [adab, setAdab] = useState<Adab>(Adab.BAIK);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const academicOptions = useMemo(() => {
+    const unique = new Set<string>();
+    for (const g of groupList) {
+      unique.add(`${g.classroomAcademicYear}|${g.classroomSemester}`);
+    }
+    return Array.from(unique).map((s) => {
+      const [year, semester] = s.split('|');
+      return {
+        value: s,
+        label: `${year} ${semester}`,
+      };
+    });
+  }, [groupList]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,6 +138,21 @@ export function SubmissionInputManagement() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (academicSemester === 'all') {
+      setFilteredGroupList(groupList);
+    } else {
+      const [year, semester] = academicSemester.split('|');
+      setFilteredGroupList(
+        groupList.filter(
+          (g) => g.classroomAcademicYear === year && g.classroomSemester === semester
+        )
+      );
+    }
+    setGroupId('');
+    setStudentList([]);
+  }, [academicSemester, groupList]);
 
   useEffect(() => {
     if (!groupId) return;
@@ -212,6 +243,23 @@ export function SubmissionInputManagement() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col lg:flex-row gap-6">
+          {/* Tahun Ajaran & Semester */}
+          <div>
+            <Label>Tahun Ajaran</Label>
+            <Select value={academicSemester} onValueChange={setAcademicSemester}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Tahun & Semester" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                {academicOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {/* Pilih Kelompok */}
           <div>
             <Label>Kelompok</Label>
@@ -220,7 +268,7 @@ export function SubmissionInputManagement() {
                 <SelectValue placeholder="Pilih Kelompok" />
               </SelectTrigger>
               <SelectContent>
-                {groupList.map((k) => (
+                {filteredGroupList.map((k) => (
                   <SelectItem key={k.groupId} value={k.groupId}>
                     {k.groupName} - {k.classroomName} ({k.classroomAcademicYear}{' '}
                     {k.classroomSemester})

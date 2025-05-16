@@ -5,7 +5,7 @@ import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Table } from '@tanstack/react-table';
-import { Submission } from './submission-history-table';
+import { Submission } from '@/components/teacher/submission/history/table';
 
 interface Props {
   table: Table<Submission>;

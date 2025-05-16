@@ -1,13 +1,12 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function fetchTashihResult() {
   try {
     const session = await auth();
 
     if (!session || session.user.role !== 'teacher') {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      throw new Error('Unauthorized');
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -15,13 +14,15 @@ export async function GET() {
     });
 
     if (!teacher) {
-      return NextResponse.json(
-        { success: false, message: 'Guru tidak ditemukan' },
-        { status: 404 }
-      );
+      throw new Error('Profil guru tidak ditemukan');
     }
 
     const results = await prisma.tashihResult.findMany({
+      where: {
+        tashihRequest: {
+          teacherId: teacher.id,
+        },
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         tashihSchedule: {
@@ -36,8 +37,6 @@ export async function GET() {
         },
         tashihRequest: {
           select: {
-            id: true,
-            teacherId: true,
             tashihType: true,
             surah: { select: { id: true, name: true } },
             juz: { select: { id: true, name: true } },
@@ -53,7 +52,11 @@ export async function GET() {
                     id: true,
                     name: true,
                     classroom: {
-                      select: { name: true, academicYear: true, semester: true },
+                      select: {
+                        name: true,
+                        academicYear: true,
+                        semester: true,
+                      },
                     },
                   },
                 },
@@ -64,16 +67,21 @@ export async function GET() {
       },
     });
 
-    const filtered = results.filter(
-      (r) => r.tashihRequest !== null && r.tashihRequest.teacherId === teacher.id
-    );
+    const mappedResults = results.map((result) => ({
+      ...result,
+      tashihSchedule: {
+        ...result.tashihSchedule,
+        date:
+          typeof result.tashihSchedule?.date === 'object' &&
+          result.tashihSchedule?.date instanceof Date
+            ? result.tashihSchedule.date.toISOString()
+            : result.tashihSchedule?.date,
+      },
+    }));
 
-    return NextResponse.json({ success: true, data: filtered });
+    return mappedResults;
   } catch (error) {
-    console.error('[TEACHER_TASHIH_RESULT_GET]', error);
-    return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data hasil tashih' },
-      { status: 500 }
-    );
+    console.error('[FETCH_TASHIH_RESULT]', error);
+    throw new Error('Gagal mengambil data hasil tashih');
   }
 }

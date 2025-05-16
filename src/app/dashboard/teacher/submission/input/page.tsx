@@ -1,11 +1,11 @@
-import { SubmissionInputManagement } from '@/components/teacher/submission/input/submission-input-management';
+import { SubmissionForm } from '@/components/teacher/submission/input/submission-form';
 
 export default function SubmissionInputPage() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Input Setoran</h1>
 
-      <SubmissionInputManagement />
+      <SubmissionForm />
     </div>
   );
 }

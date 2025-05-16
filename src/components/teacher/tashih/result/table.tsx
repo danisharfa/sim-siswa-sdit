@@ -24,18 +24,18 @@ import { Semester, TashihType } from '@prisma/client';
 interface ExamResult {
   id: string;
   passed: boolean;
-  notes?: string;
+  notes: string | null;
   tashihRequest: {
     tashihType: TashihType;
-    surah?: { name: string };
-    juz?: { name: string };
-    wafa?: { name: string };
-    startPage?: number;
-    endPage?: number;
+    surah: { name: string } | null;
+    juz: { name: string } | null;
+    wafa: { name: string } | null;
+    startPage: number | null;
+    endPage: number | null;
     student: {
       nis: string;
       user: { fullName: string };
-      group?: {
+      group: {
         id: string;
         name: string;
         classroom: {
@@ -43,7 +43,7 @@ interface ExamResult {
           academicYear: string;
           semester: Semester;
         };
-      };
+      } | null;
     };
   };
   tashihSchedule: {

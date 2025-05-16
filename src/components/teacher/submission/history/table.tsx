@@ -258,7 +258,12 @@ export function SubmissionHistoryTable({ data, title }: Props) {
       },
       {
         accessorKey: 'note',
+        id: 'Catatan',
         header: 'Catatan',
+        cell: ({ row }) => {
+          const note = row.original.note;
+          return <span className="text-muted-foreground">{note ? note : '-'}</span>;
+        },
       },
     ],
     [selectedMonth, selectedWeek]
@@ -283,143 +288,158 @@ export function SubmissionHistoryTable({ data, title }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:flex gap-4 mb-4">
-        <Select
-          onValueChange={(val) => {
-            setSelectedPeriod(val);
-            setSelectedGroupId('all');
-            setSelectedStudent('all');
-            table
-              .getColumn('Tahun Ajaran')
-              ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
-            table.getColumn('Kelompok')?.setFilterValue(undefined);
-            table.getColumn('Nama Siswa')?.setFilterValue(undefined);
-          }}
-        >
-          <SelectTrigger className="min-w-[220px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Periode</SelectItem>
-            {academicPeriods.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p.replace('-', ' ')}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          disabled={selectedPeriod === 'all'}
-          onValueChange={(val) => {
-            setSelectedGroupId(val);
-            setSelectedStudent('all');
-            const group = groupList.find((g) => g.id === val);
-            if (group) {
-              table
-                .getColumn('Kelompok')
-                ?.setFilterValue(`${group.name} - ${group.classroom.name}`);
+      <div className="flex flex-wrap gap-x-4 gap-y-3 mb-4">
+        {/* Filter Tahun Ajaran */}
+        <div className="w-full sm:w-auto">
+          <Select
+            onValueChange={(val) => {
+              setSelectedPeriod(val);
+              setSelectedGroupId('all');
+              setSelectedStudent('all');
               table
                 .getColumn('Tahun Ajaran')
-                ?.setFilterValue(`${group.classroom.academicYear} ${group.classroom.semester}`);
+                ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
+              table.getColumn('Kelompok')?.setFilterValue(undefined);
+              table.getColumn('Nama Siswa')?.setFilterValue(undefined);
+            }}
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Periode</SelectItem>
+              {academicPeriods.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p.replace('-', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Filter Kelompok */}
+        <div className="w-full sm:w-auto">
+          <Select
+            disabled={selectedPeriod === 'all'}
+            onValueChange={(val) => {
+              setSelectedGroupId(val);
+              setSelectedStudent('all');
+              const group = groupList.find((g) => g.id === val);
+              if (group) {
+                table
+                  .getColumn('Kelompok')
+                  ?.setFilterValue(`${group.name} - ${group.classroom.name}`);
+                table
+                  .getColumn('Tahun Ajaran')
+                  ?.setFilterValue(`${group.classroom.academicYear} ${group.classroom.semester}`);
+              }
+              table.getColumn('Nama Siswa')?.setFilterValue(undefined);
+            }}
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[250px]">
+              <SelectValue placeholder="Pilih Kelompok" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Kelompok</SelectItem>
+              {filteredGroups.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {`${g.name} - ${g.classroom.name}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Filter Siswa */}
+        <div className="w-full sm:w-auto">
+          <Select
+            disabled={selectedGroupId === 'all'}
+            value={selectedStudent}
+            onValueChange={(val) => {
+              setSelectedStudent(val);
+              table.getColumn('Nama Siswa')?.setFilterValue(val === 'all' ? undefined : val);
+            }}
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
+              <SelectValue placeholder="Pilih Siswa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Siswa</SelectItem>
+              {studentByGroup.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Filter Jenis Setoran */}
+        <div className="w-full sm:w-auto">
+          <Select
+            onValueChange={(val) =>
+              table.getColumn('Jenis Setoran')?.setFilterValue(val === 'all' ? undefined : val)
             }
-
-            table.getColumn('Nama Siswa')?.setFilterValue(undefined);
-          }}
-        >
-          <SelectTrigger className="min-w-[250px]">
-            <SelectValue placeholder="Pilih Kelompok" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Kelompok</SelectItem>
-            {filteredGroups.map((g) => (
-              <SelectItem key={g.id} value={g.id}>
-                {`${g.name} - ${g.classroom.name}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          disabled={selectedGroupId === 'all'}
-          value={selectedStudent}
-          onValueChange={(val) => {
-            setSelectedStudent(val);
-            table.getColumn('Nama Siswa')?.setFilterValue(val === 'all' ? undefined : val);
-          }}
-        >
-          <SelectTrigger className="min-w-[220px]">
-            <SelectValue placeholder="Pilih Siswa" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Siswa</SelectItem>
-            {studentByGroup.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          onValueChange={(val) =>
-            table.getColumn('Jenis Setoran')?.setFilterValue(val === 'all' ? undefined : val)
-          }
-        >
-          <SelectTrigger className="min-w-[180px]">
-            <SelectValue placeholder="Jenis Setoran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Jenis</SelectItem>
-            {Array.from(new Set(data.map((d) => d.submissionType))).map((st) => (
-              <SelectItem key={st} value={st}>
-                {st.replaceAll('_', ' ')}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[180px]">
+              <SelectValue placeholder="Jenis Setoran" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Jenis</SelectItem>
+              {Array.from(new Set(data.map((d) => d.submissionType))).map((st) => (
+                <SelectItem key={st} value={st}>
+                  {st.replaceAll('_', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Filter Bulan */}
-        <Select
-          onValueChange={(value) => {
-            const val = value === 'all' ? 'all' : parseInt(value);
-            setSelectedMonth(val);
-            table.getColumn('Tanggal')?.setFilterValue('custom'); // trigger filter
-          }}
-        >
-          <SelectTrigger className="min-w-[200px]">
-            <SelectValue placeholder="Pilih Bulan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Bulan</SelectItem>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <SelectItem key={i} value={i.toString()}>
-                {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-auto">
+          <Select
+            onValueChange={(value) => {
+              const val = value === 'all' ? 'all' : parseInt(value);
+              setSelectedMonth(val);
+              table.getColumn('Tanggal')?.setFilterValue('custom');
+            }}
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[200px]">
+              <SelectValue placeholder="Pilih Bulan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Bulan</SelectItem>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SelectItem key={i} value={i.toString()}>
+                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Filter Minggu */}
-        <Select
-          onValueChange={(value) => {
-            const val = value === 'all' ? 'all' : parseInt(value);
-            setSelectedWeek(val);
-            table.getColumn('Tanggal')?.setFilterValue('custom'); // trigger filter
-          }}
-        >
-          <SelectTrigger className="min-w-[200px]">
-            <SelectValue placeholder="Pilih Minggu" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Minggu</SelectItem>
-            {[1, 2, 3, 4, 5].map((w) => (
-              <SelectItem key={w} value={w.toString()}>
-                Minggu ke-{w}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-auto">
+          <Select
+            onValueChange={(value) => {
+              const val = value === 'all' ? 'all' : parseInt(value);
+              setSelectedWeek(val);
+              table.getColumn('Tanggal')?.setFilterValue('custom');
+            }}
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[200px]">
+              <SelectValue placeholder="Pilih Minggu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Minggu</SelectItem>
+              {[1, 2, 3, 4, 5].map((w) => (
+                <SelectItem key={w} value={w.toString()}>
+                  Minggu ke-{w}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex justify-end mb-4">
