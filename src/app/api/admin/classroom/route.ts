@@ -10,6 +10,7 @@ export async function GET() {
     }
 
     const classrooms = await prisma.classroom.findMany({
+      where: { isActive: true },
       orderBy: { name: 'asc' },
       include: {
         _count: {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     }
 
     const existingClass = await prisma.classroom.findFirst({
-      where: { name, academicYear, semester },
+      where: { name, academicYear, semester, isActive: true },
     });
 
     if (existingClass) {
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
     const classroomId = `KELAS-${crypto.randomUUID()}`;
 
     const classroom = await prisma.classroom.create({
-      data: { id: classroomId, name, academicYear, semester },
+      data: { id: classroomId, name, academicYear, semester, isActive: true },
     });
 
     return NextResponse.json({

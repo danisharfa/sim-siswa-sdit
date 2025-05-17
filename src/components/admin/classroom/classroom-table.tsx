@@ -1,5 +1,3 @@
-'use client';
-
 import { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
@@ -18,8 +16,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { ClassroomEditDialog } from '@/components/admin/classroom/classroom-edit-dialog';
-import { ClassroomAlertDialog } from '@/components/admin/classroom/classroom-alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { ClassroomEditDialog } from '@/components/admin/classroom/edit-dialog';
+import { ClassroomAlertDialog } from '@/components/admin/classroom/alert-dialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -31,6 +30,7 @@ interface Classroom {
   academicYear: string;
   semester: Semester;
   studentCount: number;
+  isActive: boolean;
 }
 
 interface Props {
@@ -84,13 +84,24 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
       {
         accessorKey: 'semester',
         id: 'Semester',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
+        header: 'Semester',
       },
       {
         accessorKey: 'studentCount',
         id: 'Jumlah Siswa',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Jumlah Siswa" />,
         cell: ({ row }) => row.original.studentCount ?? 0,
+      },
+      {
+        accessorKey: 'isActive',
+        id: 'Status Kelas',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status Kelas" />,
+        cell: ({ row }) =>
+          row.original.isActive ? (
+            <Badge variant="default">Aktif</Badge>
+          ) : (
+            <Badge variant="destructive">Tidak Aktif</Badge>
+          ),
       },
       {
         id: 'actions',
@@ -101,11 +112,11 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex size-8">
-                  <MoreVertical />
+                <Button variant="ghost" className="size-8 p-0">
+                  <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32 z-50">
+              <DropdownMenuContent align="end" className="w-36 z-50">
                 <DropdownMenuItem asChild>
                   <Link
                     href={`/dashboard/admin/classroom/${classroom.id}`}
@@ -149,11 +160,11 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
@@ -163,7 +174,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
       {dialogType === 'edit' && selectedClassroom && (
         <ClassroomEditDialog
           classroom={selectedClassroom}
-          open={true}
+          open
           onOpenChange={(isOpen) => {
             if (!isOpen) {
               setDialogType(null);
@@ -181,7 +192,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
       {dialogType === 'delete' && selectedClassroom && (
         <ClassroomAlertDialog
           classroom={selectedClassroom}
-          open={true}
+          open
           onOpenChange={(isOpen) => {
             if (!isOpen) {
               setDialogType(null);

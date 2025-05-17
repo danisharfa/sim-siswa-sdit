@@ -23,10 +23,11 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function PromoteDialogWrapper({ classroomId, currentAcademicYear, currentSemester }: Props) {
   const [open, setOpen] = useState(false);
 
-  const { data: studentData, isLoading: loadingStudents } = useSWR(
-    open ? `/api/admin/classroom/${classroomId}/member` : null,
-    fetcher
-  );
+  const {
+    data: studentData,
+    isLoading: loadingStudents,
+    mutate,
+  } = useSWR(open ? `/api/admin/classroom/${classroomId}/member` : null, fetcher);
 
   const students: Student[] = studentData?.data || [];
 
@@ -46,6 +47,7 @@ export function PromoteDialogWrapper({ classroomId, currentAcademicYear, current
         currentSemester={currentSemester}
         onConfirm={() => {
           setOpen(false);
+          mutate();
         }}
       />
     </>

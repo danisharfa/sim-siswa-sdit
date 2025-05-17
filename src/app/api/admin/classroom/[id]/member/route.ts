@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { StudentStatus } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
@@ -28,9 +29,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         id: true,
         nis: true,
         user: {
-          select: {
-            fullName: true,
-          },
+          select: { fullName: true },
         },
       },
     });
@@ -64,33 +63,55 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const classroomId = params.id;
 
-    const { nis } = await req.json();
+    const body = await req.json();
+    const { nis, nisList } = body;
 
-    if (!nis || !classroomId) {
+    if (!classroomId) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Data tidak lengkap. Pastikan NIS dan classroomId diisi.',
-          data: null,
-        },
+        { success: false, message: 'classroomId wajib diisi' },
         { status: 400 }
       );
     }
 
+    if (Array.isArray(nisList)) {
+      // 🔁 Tambah banyak siswa sekaligus
+      const updated = await prisma.studentProfile.updateMany({
+        where: {
+          nis: { in: nisList },
+          classroomId: null,
+          status: StudentStatus.AKTIF,
+        },
+        data: { classroomId },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${updated.count} siswa berhasil ditambahkan ke kelas`,
+      });
+    }
+
+    if (!nis) {
+      return NextResponse.json(
+        { success: false, message: 'NIS wajib diisi jika bukan bulk' },
+        { status: 400 }
+      );
+    }
+
+    // ➕ Tambah satu siswa
     const siswa = await prisma.studentProfile.findUnique({
       where: { nis },
     });
 
     if (!siswa) {
       return NextResponse.json(
-        { success: false, message: 'Siswa dengan NIS tersebut tidak ditemukan' },
+        { success: false, message: 'Siswa tidak ditemukan' },
         { status: 404 }
       );
     }
 
     if (siswa.classroomId) {
       return NextResponse.json(
-        { success: false, message: 'Siswa sudah tergabung dalam kelas lain' },
+        { success: false, message: 'Siswa sudah dalam kelas lain' },
         { status: 409 }
       );
     }
@@ -103,10 +124,9 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     return NextResponse.json({
       success: true,
       message: 'Siswa berhasil ditambahkan ke kelas',
-      data: null,
     });
   } catch (error) {
-    console.error('POST /add-member error:', error);
+    console.error('POST /member error:', error);
     return NextResponse.json(
       { success: false, message: 'Terjadi kesalahan server' },
       { status: 500 }

@@ -2,12 +2,18 @@
 
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddMemberForm } from '@/components/coordinator/group-members/add-member-form';
-import { GroupMembersTable } from '@/components/coordinator/group-members/group-members-table';
+import { AddMemberForm } from '@/components/coordinator/group-members/add-form';
+import { GroupMembersTable } from '@/components/coordinator/group-members/members-table';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function GroupDetailsManagement({ groupId }: { groupId: string }) {
+export function GroupDetailsManagement({
+  groupId,
+  classroomId,
+}: {
+  groupId: string;
+  classroomId: string;
+}) {
   const { data, isLoading, mutate } = useSWR(`/api/coordinator/group/${groupId}/member`, fetcher);
 
   if (isLoading || !data) {
@@ -21,7 +27,7 @@ export function GroupDetailsManagement({ groupId }: { groupId: string }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-      <AddMemberForm groupId={groupId} onMemberAdded={mutate} />
+      <AddMemberForm groupId={groupId} classroomId={classroomId} onMemberAdded={mutate} />
       <GroupMembersTable
         data={data.data}
         title="Daftar Anggota Kelompok"

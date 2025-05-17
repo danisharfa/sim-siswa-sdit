@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { GroupManagement } from '@/components/teacher/group/group-management';
+import { GroupManagement } from '@/components/teacher/group/management';
 
 export default function TeacherGroupPage() {
   return (

@@ -10,6 +10,11 @@ export async function GET() {
     }
 
     const groups = await prisma.group.findMany({
+      where: {
+        classroom: {
+          isActive: true,
+        },
+      },
       select: {
         id: true,
         name: true,
@@ -18,6 +23,11 @@ export async function GET() {
             name: true,
             academicYear: true,
             semester: true,
+          },
+        },
+        _count: {
+          select: {
+            students: true,
           },
         },
         teacherGroups: {
@@ -43,6 +53,7 @@ export async function GET() {
       classroomName: g.classroom.name,
       classroomAcademicYear: g.classroom.academicYear,
       classroomSemester: g.classroom.semester,
+      studentCount: g._count.students,
       nip: g.teacherGroups.map((tg) => tg.teacher.nip),
       teacherName: g.teacherGroups.map((tg) => tg.teacher.user.fullName),
     }));

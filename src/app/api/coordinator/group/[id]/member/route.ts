@@ -69,24 +69,20 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { nis } = await req.json();
+    const { nisList } = await req.json();
 
-    if (!nis || !id) {
+    if (!Array.isArray(nisList) || nisList.length === 0 || !id) {
       return NextResponse.json(
-        { success: false, message: 'NIS dan id wajib diisi' },
+        { success: false, message: 'Daftar NIS dan ID kelompok wajib disediakan' },
         { status: 400 }
       );
     }
 
-    const student = await prisma.studentProfile.findUnique({ where: { nis } });
+    const group = await prisma.group.findUnique({
+      where: { id },
+      select: { classroomId: true },
+    });
 
-    if (!student) {
-      return NextResponse.json(
-        { success: false, message: 'Siswa tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-    const group = await prisma.group.findUnique({ where: { id } });
     if (!group) {
       return NextResponse.json(
         { success: false, message: 'Kelompok tidak ditemukan' },
@@ -94,34 +90,36 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    if (student.classroomId !== group.classroomId) {
+    const students = await prisma.studentProfile.findMany({
+      where: {
+        nis: { in: nisList },
+        classroomId: group.classroomId,
+        groupId: null,
+      },
+    });
+
+    if (students.length === 0) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Siswa harus berada di kelas yang sama dengan kelas kelompok ini',
-        },
+        { success: false, message: 'Tidak ada siswa valid untuk ditambahkan' },
         { status: 400 }
       );
     }
 
-    if (student.groupId === id) {
-      return NextResponse.json(
-        { success: false, message: 'Siswa sudah tergabung dalam kelompok ini' },
-        { status: 409 }
-      );
-    }
+    const updatePromises = students.map((student) =>
+      prisma.studentProfile.update({
+        where: { id: student.id },
+        data: { groupId: id },
+      })
+    );
 
-    await prisma.studentProfile.update({
-      where: { id: student.id },
-      data: { groupId: id },
-    });
+    await Promise.all(updatePromises);
 
     return NextResponse.json({
       success: true,
-      message: 'Siswa berhasil ditambahkan ke kelompok',
+      message: `${students.length} siswa berhasil ditambahkan ke kelompok`,
     });
   } catch (error) {
-    console.error('Error adding member:', error);
+    console.error('Error adding members:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { ImProfile } from 'react-icons/im';
 import { MdHomeWork } from 'react-icons/md';
 import { TbBookUpload } from 'react-icons/tb';
 import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
+import { GrDocumentConfig } from 'react-icons/gr';
 
 export const menuData = {
   admin: [
@@ -22,6 +23,11 @@ export const menuData = {
       title: 'Manajemen Kelas',
       url: '/dashboard/admin/classroom',
       icon: FaChalkboard,
+    },
+    {
+      title: 'Konfigurasi & Referensi Data',
+      url: '/dashboard/admin/configuration',
+      icon: GrDocumentConfig,
     },
   ],
   coordinator: [

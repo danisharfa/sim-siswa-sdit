@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreVerticalIcon, Trash2 } from 'lucide-react';
-import { MemberAlertDialog } from '@/components/coordinator/group-members/member-alert-dialog'; // Ganti path sesuai struktur proyekmu
+import { MemberAlertDialog } from '@/components/coordinator/group-members/alert-dialog'; // Ganti path sesuai struktur proyekmu
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';

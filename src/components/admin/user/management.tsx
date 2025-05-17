@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddUserForm } from '@/components/admin/user/add-user-form';
+import { AddUserForm } from '@/components/admin/user/add-form';
 import { UserTable } from '@/components/admin/user/user-table';
 
 interface User {

@@ -54,6 +54,8 @@ export function PromoteSemesterDialog({
     );
   };
 
+  const promotableStudents = students;
+
   async function handlePromote() {
     if (selectedStudentIds.length === 0) {
       toast.error('Pilih minimal satu siswa.');
@@ -100,12 +102,12 @@ export function PromoteSemesterDialog({
         </AlertDialogHeader>
 
         <div className="space-y-4 max-h-[300px] overflow-y-auto border p-2 rounded-md">
-          {students.length === 0 ? (
+          {promotableStudents.length === 0 ? (
             <p className="text-sm text-muted-foreground px-2">
-              Tidak ada siswa atau sedang memuat...
+              Tidak ada siswa yang dapat dipromosikan.
             </p>
           ) : (
-            students.map((siswa) => (
+            promotableStudents.map((siswa) => (
               <label key={siswa.id} className="flex items-center space-x-2">
                 <Checkbox
                   checked={selectedStudentIds.includes(siswa.id)}

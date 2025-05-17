@@ -43,8 +43,10 @@ model CoordinatorProfile {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
 
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tashihSchedules   TashihSchedule[]
+  user                        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  handledTashihRequests       TashihRequest[]
+  scheduledTashihSchedules    TashihSchedule[]
+  evaluatedTashihResults      TashihResult[]
 
   @@index([nip])
   @@map("coordinator_profiles")
@@ -117,11 +119,22 @@ model StudentProfile {
   @@map("student_profiles")
 }
 
+model AcademicSetting {
+  id                  String    @id
+  currentYear         String
+  currentSemester     Semester
+  updatedAt           DateTime  @updatedAt
+  createdAt           DateTime  @default(now())
+
+  @@map("academic_settings")
+}
+
 model Classroom {
   id              String        @id @unique
   name            String
   academicYear    String
   semester        Semester
+  isActive        Boolean       @default(true)
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -304,19 +317,28 @@ model TashihRequest {
   teacherId     String     
   studentId     String
 
+  academicYear  String
+  semester      Semester
+
+  classroomId   String
+  classroomName String
+  groupId       String
+  groupName     String
+
   tashihType    TashihType
   juzId         Int?            
   surahId       Int?   
-
   wafaId        Int?   
   startPage     Int?
   endPage       Int?
-
   status        TashihRequestStatus     @default(MENUNGGU)
   notes         String?
 
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
+
+  handledByCoordinatorId String?
+  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [id])
 
   teacher       TeacherProfile          @relation(fields: [teacherId], references: [id])
   student       StudentProfile          @relation(fields: [studentId], references: [id])
@@ -353,7 +375,9 @@ model TashihSchedule {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 
-  coordinator     CoordinatorProfile          @relation(fields: [coordinatorId], references: [id])
+  scheduledByCoordinatorId String
+  scheduledByCoordinator   CoordinatorProfile @relation(fields: [scheduledByCoordinatorId], references: [id])
+
   schedules       TashihScheduleRequest[]
   results         TashihResult[]
 
@@ -370,6 +394,9 @@ model TashihResult {
 
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
+
+  evaluatedByCoordinatorId String
+  evaluatedByCoordinator   CoordinatorProfile? @relation(fields: [evaluatedByCoordinatorId], references: [id])
 
   tashihSchedule    TashihSchedule   @relation(fields: [tashihScheduleId], references: [id])
   tashihRequest     TashihRequest    @relation(fields: [tashihRequestId], references: [id])

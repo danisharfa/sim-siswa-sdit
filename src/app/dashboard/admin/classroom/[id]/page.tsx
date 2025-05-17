@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getClassroomById } from '@/lib/data/classroom';
-import { ClassroomDetailsManagement } from '@/components/admin/classroom-members/classroom-members-management';
+import { ClassroomDetailsManagement } from '@/components/admin/classroom-members/management';
 import { PromoteDialogWrapper } from '@/components/admin/classroom-members/promote-dialog-wrapper';
 
 export default async function ClassroomPage(props: { params: Promise<{ id: string }> }) {

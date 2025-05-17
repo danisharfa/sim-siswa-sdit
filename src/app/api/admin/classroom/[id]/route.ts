@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { name, academicYear, semester } = await req.json();
+    const { name, academicYear, semester, isActive } = await req.json();
 
     if (!name || !academicYear || !semester) {
       return NextResponse.json(
@@ -36,8 +36,14 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const updatedClass = await prisma.classroom.update({
       where: { id },
-      data: { name, academicYear, semester },
+      data: {
+        name,
+        academicYear,
+        semester,
+        isActive: !!isActive,
+      },
     });
+
     return NextResponse.json({
       success: true,
       message: 'Kelas berhasil diperbarui',

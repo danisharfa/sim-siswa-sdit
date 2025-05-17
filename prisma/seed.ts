@@ -27,6 +27,16 @@ async function main() {
   } else {
     console.log('ℹ️ Admin user already exists');
   }
+
+  await prisma.academicSetting.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: {
+      id: 'default',
+      currentYear: '2024/2025',
+      currentSemester: 'GENAP',
+    },
+  });
 }
 
 main()

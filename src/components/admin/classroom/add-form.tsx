@@ -27,15 +27,21 @@ import { AddClassroomSchema, AddClassroomInput } from '@/lib/validations/classro
 
 interface Props {
   onClassroomAdded: () => void;
+  defaultAcademicYear: string;
+  defaultSemester: Semester;
 }
 
-export function AddClassroomForm({ onClassroomAdded }: Props) {
+export function AddClassroomForm({
+  onClassroomAdded,
+  defaultAcademicYear,
+  defaultSemester,
+}: Props) {
   const form = useForm<AddClassroomInput>({
     resolver: zodResolver(AddClassroomSchema),
     defaultValues: {
       name: '',
-      academicYear: '',
-      semester: Semester.GANJIL,
+      academicYear: defaultAcademicYear,
+      semester: defaultSemester,
     },
   });
 
@@ -57,7 +63,11 @@ export function AddClassroomForm({ onClassroomAdded }: Props) {
       }
 
       toast.success(data.message || 'Kelas berhasil ditambahkan');
-      form.reset();
+      form.reset({
+        name: '',
+        academicYear: defaultAcademicYear,
+        semester: defaultSemester,
+      });
       onClassroomAdded();
     } catch {
       toast.error('Terjadi kesalahan saat mengirim data.');
@@ -106,7 +116,7 @@ export function AddClassroomForm({ onClassroomAdded }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Semester</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Pilih Semester" />
@@ -133,9 +143,7 @@ export function AddClassroomForm({ onClassroomAdded }: Props) {
                   <span>Menambahkan...</span>
                 </>
               ) : (
-                <>
-                  <span>Tambah Kelas</span>
-                </>
+                <span>Tambah Kelas</span>
               )}
             </Button>
           </form>

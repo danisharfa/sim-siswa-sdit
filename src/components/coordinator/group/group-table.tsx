@@ -18,8 +18,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { GroupAlertDialog } from './group-alert-dialog';
-import { GroupEditDialog } from './group-edit-dialog';
+import { GroupAlertDialog } from './alert-dialog';
+import { GroupEditDialog } from './edit-dialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -33,6 +33,7 @@ interface Group {
   classroomSemester: Semester;
   nip: string[];
   teacherName: string[];
+  studentCount: number;
 }
 
 interface GroupTableProps {
@@ -100,6 +101,12 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
         id: 'Nama Guru',
         accessorFn: (row) => row.teacherName.join(', '),
         header: 'Nama Guru',
+      },
+      {
+        accessorKey: 'studentCount',
+        id: 'Jumlah Siswa',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Jumlah Siswa" />,
+        cell: ({ row }) => row.original.studentCount ?? 0,
       },
       {
         id: 'actions',

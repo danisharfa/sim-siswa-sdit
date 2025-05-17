@@ -19,6 +19,7 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Semester } from '@prisma/client';
 
 interface ClassroomEditDialogProps {
@@ -27,6 +28,7 @@ interface ClassroomEditDialogProps {
     name: string;
     academicYear: string;
     semester: Semester;
+    isActive: boolean;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,12 +44,14 @@ export function ClassroomEditDialog({
   const [name, setName] = useState(classroom.name);
   const [academicYear, setAcademicYear] = useState(classroom.academicYear);
   const [semester, setSemester] = useState<Semester>(classroom.semester);
+  const [isActive, setIsActive] = useState(classroom.isActive);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setName(classroom.name);
     setAcademicYear(classroom.academicYear);
     setSemester(classroom.semester);
+    setIsActive(classroom.isActive);
   }, [classroom]);
 
   async function handleSave() {
@@ -57,7 +61,7 @@ export function ClassroomEditDialog({
       const res = await fetch(`/api/admin/classroom/${classroom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, academicYear, semester }),
+        body: JSON.stringify({ name, academicYear, semester, isActive }),
       });
 
       const data = await res.json().catch(() => null);
@@ -67,7 +71,7 @@ export function ClassroomEditDialog({
         return;
       }
 
-      toast.success(data.message || 'Kelas berhasil diedit');
+      toast.success(data.message || 'Kelas berhasil diperbarui');
       onSave();
       onOpenChange(false);
     } catch (error) {
@@ -108,6 +112,10 @@ export function ClassroomEditDialog({
                 <SelectItem value={Semester.GENAP}>Genap</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <Label htmlFor="isActive">Kelas Aktif</Label>
+            <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
           </div>
         </div>
         <DialogFooter>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Semester } from '@prisma/client';
 import { auth } from '@/auth';
-import { addOneYearToAcademicYear } from '@/lib/data/classroom'; // ⬅️ helper fungsi kecil (dibuat di bawah)
+import { addOneYearToAcademicYear } from '@/lib/data/classroom';
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,7 +25,11 @@ export async function POST(req: NextRequest) {
       },
       include: {
         classroom: true,
-        group: { include: { teacherGroups: true } },
+        group: {
+          include: {
+            teacherGroups: true,
+          },
+        },
       },
     });
 
@@ -35,7 +39,7 @@ export async function POST(req: NextRequest) {
       const currentClass = student.classroom;
       if (!currentClass) continue;
 
-      // Simpan histori kelas dan kelompok
+      // Simpan histori kelas
       await prisma.classroomHistory.create({
         data: {
           studentId: student.id,
@@ -45,24 +49,29 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      if (student.groupId) {
+      // Simpan histori kelompok (gunakan variabel lokal agar tidak hilang)
+      const prevGroupId = student.groupId;
+      const prevTeacherId = student.group?.teacherGroups?.[0]?.teacherId || null;
+
+      if (prevGroupId) {
         await prisma.groupHistory.create({
           data: {
             studentId: student.id,
-            groupId: student.groupId,
-            teacherId: student.group?.teacherGroups?.[0]?.teacherId || null,
+            groupId: prevGroupId,
+            teacherId: prevTeacherId,
             academicYear: currentClass.academicYear,
             semester: currentClass.semester,
           },
         });
       }
 
+      // Cek apakah siswa lulus
       const isGraduating = currentClass.name.startsWith('6') && currentClass.semester === 'GENAP';
-      let nextClassroomId = null;
+      let nextClassroomId: string | null = null;
 
       if (!isGraduating) {
         if (currentClass.semester === 'GANJIL') {
-          // Naik ke semester GENAP di kelas yang sama
+          // Naik ke semester GENAP
           const kelasGenap = await prisma.classroom.upsert({
             where: {
               name_academicYear_semester: {
@@ -81,7 +90,7 @@ export async function POST(req: NextRequest) {
           });
           nextClassroomId = kelasGenap.id;
         } else {
-          // GENAP ➝ GANJIL tahun ajaran berikut dan nama kelas naik tingkat
+          // Naik ke tahun berikut & nama kelas naik tingkat
           const [grade, ...rest] = currentClass.name.split(' ');
           const nextGrade = parseInt(grade) + 1;
           const nextClassName = `${nextGrade} ${rest.join(' ')}`.trim();
@@ -108,6 +117,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Update siswa
       await prisma.studentProfile.update({
         where: { id: student.id },
         data: {
@@ -117,6 +127,20 @@ export async function POST(req: NextRequest) {
           graduatedAt: isGraduating ? new Date() : null,
         },
       });
+
+      // Nonaktifkan kelas lama
+      await prisma.classroom.update({
+        where: { id: currentClass.id },
+        data: { isActive: false },
+      });
+
+      // Aktifkan kelas baru jika ada
+      if (nextClassroomId) {
+        await prisma.classroom.update({
+          where: { id: nextClassroomId },
+          data: { isActive: true },
+        });
+      }
 
       results.push(`${student.nis} → ${isGraduating ? 'LULUS' : nextClassroomId}`);
     }

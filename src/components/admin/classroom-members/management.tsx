@@ -2,8 +2,8 @@
 
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddMemberForm } from '@/components/admin/classroom-members/add-member-form';
-import { ClassroomMembersTable } from '@/components/admin/classroom-members/classroom-members-table';
+import { AddMemberForm } from '@/components/admin/classroom-members/add-form';
+import { ClassroomMembersTable } from '@/components/admin/classroom-members/members-table';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
