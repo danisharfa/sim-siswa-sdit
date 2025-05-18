@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -12,6 +13,14 @@ import {
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Siswa {
   id: string;
@@ -22,9 +31,10 @@ interface Siswa {
 interface Props {
   data: Siswa[];
   title: string;
+  groupId: string;
 }
 
-export function GroupMembersTable({ data, title }: Props) {
+export function GroupMembersTable({ data, title, groupId }: Props) {
   const {
     sorting,
     setSorting,
@@ -33,6 +43,7 @@ export function GroupMembersTable({ data, title }: Props) {
     columnVisibility,
     setColumnVisibility,
   } = useDataTableState<Siswa, string>();
+  const router = useRouter();
 
   const columns = useMemo<ColumnDef<Siswa>[]>(
     () => [
@@ -45,8 +56,35 @@ export function GroupMembersTable({ data, title }: Props) {
         id: 'siswa',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Lengkap" />,
       },
+      {
+        id: 'actions',
+        header: 'Aksi',
+        cell: ({ row }) => {
+          const siswa = row.original;
+          return (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex size-8">
+                    <MoreVertical />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32 z-50">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/teacher/group/${groupId}/score/${siswa.id}`)
+                    }
+                  >
+                    Nilai
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          );
+        },
+      },
     ],
-    []
+    [groupId, router]
   );
 
   const table = useReactTable({

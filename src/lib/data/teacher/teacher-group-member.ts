@@ -1,24 +1,22 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function getGroupId(id: string) {
+export async function getGroupId(groupId: string) {
   try {
     const session = await auth();
+    if (!session?.user) throw new Error('Unauthorized');
 
-    if (!session?.user) return null;
-
-    const guru = await prisma.teacherProfile.findUnique({
+    const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
-    if (!guru) return null;
+    if (!teacher) throw new Error('Guru tidak ditemukan');
 
     const group = await prisma.group.findFirst({
       where: {
-        id,
+        id: groupId,
         teacherGroups: {
           some: {
-            teacherId: guru.id,
+            teacherId: teacher.id,
           },
         },
       },
@@ -72,5 +70,44 @@ export async function fetchGroupMembersForTeacher(groupId: string) {
   } catch (error) {
     console.error('[FETCH_GROUP_MEMBERS_ERROR]', error);
     throw new Error('Gagal mengambil data member kelompok binaan');
+  }
+}
+
+export async function getStudentForTeacherGroup(groupId: string, studentId: string) {
+  try {
+    const session = await auth();
+    if (!session?.user) throw new Error('Unauthorized');
+
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!teacher) throw new Error('Guru tidak ditemukan');
+
+    const student = await prisma.studentProfile.findFirst({
+      where: {
+        id: studentId,
+        groupId: groupId,
+      },
+      select: {
+        id: true,
+        nis: true,
+        user: {
+          select: {
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    if (!student) return null;
+
+    return {
+      id: student.id,
+      nis: student.nis,
+      fullName: student.user.fullName,
+    };
+  } catch (error) {
+    console.error('Error fetching student for teacher group:', error);
+    return null;
   }
 }

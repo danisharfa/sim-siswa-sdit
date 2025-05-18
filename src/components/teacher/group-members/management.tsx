@@ -7,7 +7,7 @@ export function GroupDetailsManagement({ groupId }: { groupId: string }) {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <GroupMembersTable data={members} title="Daftar Anggota Kelompok" />
+      <GroupMembersTable data={members} title="Daftar Anggota Kelompok" groupId={groupId} />
     </div>
   );
 }

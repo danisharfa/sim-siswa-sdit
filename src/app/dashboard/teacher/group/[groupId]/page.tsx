@@ -7,11 +7,11 @@ import { ArrowLeft } from 'lucide-react';
 import { getGroupId } from '@/lib/data/teacher/teacher-group-member';
 import { GroupDetailsManagement } from '@/components/teacher/group-members/management';
 
-export default async function GroupDetailPage(props: { params: Promise<{ id: string }> }) {
+export default async function GroupDetailPage(props: { params: Promise<{ groupId: string }> }) {
   const params = await props.params;
-  const id = params.id;
+  const groupId = params.groupId;
 
-  const group = await getGroupId(id);
+  const group = await getGroupId(groupId);
 
   if (!group) return notFound();
 
@@ -36,7 +36,7 @@ export default async function GroupDetailPage(props: { params: Promise<{ id: str
           </div>
         }
       >
-        <GroupDetailsManagement groupId={id} />
+        <GroupDetailsManagement groupId={groupId} />
       </Suspense>
     </div>
   );

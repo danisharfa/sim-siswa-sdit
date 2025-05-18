@@ -61,7 +61,7 @@ interface FormData {
   submissionStatus: SubmissionStatus;
   adab: Adab;
   note: string;
-  juz?: number;
+  juzId?: number;
   surahId?: number;
   startVerse?: number;
   endVerse?: number;
@@ -96,7 +96,7 @@ export function SubmissionForm() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { data: academicSetting } = useSWR('/api/admin/configuration', fetcher);
+  const { data: academicSetting } = useSWR('/api/academicSetting', fetcher);
 
   const filteredGroupList = useMemo(() => {
     if (!academicSetting?.data) return [];
@@ -166,7 +166,7 @@ export function SubmissionForm() {
       ...(submissionType === SubmissionType.TAHFIDZ ||
       submissionType === SubmissionType.TAHSIN_ALQURAN
         ? {
-            juz: selectedJuz ? parseInt(selectedJuz) : undefined,
+            juzId: selectedJuz ? parseInt(selectedJuz) : undefined,
             surahId: selectedSurahId ? parseInt(selectedSurahId) : undefined,
             startVerse: startVerse ? parseInt(startVerse) : undefined,
             endVerse: endVerse ? parseInt(endVerse) : undefined,

@@ -79,7 +79,7 @@ export function TashihForm() {
   const [endPage, setEndPage] = useState('');
   const [notes, setNotes] = useState('');
 
-  const { data: settingData } = useSWR('/api/admin/configuration', fetcher);
+  const { data: settingData } = useSWR('/api/academicSetting', fetcher);
 
   const filteredGroups = useMemo(() => {
     if (!settingData?.data) return [];

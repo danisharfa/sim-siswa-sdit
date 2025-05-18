@@ -1,4 +1,11 @@
-import { ClipboardPenLine, LayoutDashboard, User2Icon, UserCog } from 'lucide-react';
+import {
+  BookOpenIcon,
+  ClipboardPenLine,
+  LayoutDashboard,
+  NotebookIcon,
+  User2Icon,
+  UserCog,
+} from 'lucide-react';
 import { FaChalkboard } from 'react-icons/fa';
 import { FaUsersGear } from 'react-icons/fa6';
 import { ImProfile } from 'react-icons/im';
@@ -114,11 +121,11 @@ export const menuData = {
         },
       ],
     },
-    {
-      title: 'Penilaian',
-      url: '/dashboard/teacher/avaluation',
-      icon: HiOutlineClipboardDocumentList,
-    },
+    // {
+    //   title: 'Penilaian',
+    //   url: '/dashboard/teacher/avaluation',
+    //   icon: HiOutlineClipboardDocumentList,
+    // },
   ],
   student: [
     {
@@ -131,15 +138,20 @@ export const menuData = {
       url: '/dashboard/student/profile',
       icon: User2Icon,
     },
+    // {
+    //   title: 'Aktifitas Rumah',
+    //   url: '/dashboard/student/homeActivity',
+    //   icon: MdHomeWork,
+    // },
     {
-      title: 'Aktifitas Rumah',
-      url: '/dashboard/student/homeActivity',
-      icon: MdHomeWork,
+      title: 'Riwayat Setoran',
+      url: '/dashboard/student/submission',
+      icon: BookOpenIcon,
     },
     {
-      title: 'Setoran',
-      url: '/dashboard/student/submission',
-      icon: TbBookUpload,
+      title: 'Nilai',
+      url: '/dashboard/student/score',
+      icon: NotebookIcon,
     },
   ],
 };

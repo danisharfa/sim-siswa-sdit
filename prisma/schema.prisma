@@ -102,7 +102,6 @@ model StudentProfile {
   status          StudentStatus   @default(AKTIF)
   graduatedAt     DateTime?
 
-
   user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   classroom             Classroom?            @relation(fields: [classroomId], references: [id])
   classroomHistories    ClassroomHistory[]
@@ -289,7 +288,6 @@ model SurahJuz {
   @@map("surah_juz")
 }
 
-
 model Juz {
   id          Int          @id
   name        String       
@@ -350,7 +348,6 @@ model TashihRequest {
 
   @@map("tashih_requests")
 }
-
 
 model TashihScheduleRequest {
   scheduleId   String
@@ -447,7 +444,7 @@ model TahsinScore {
   semester        Semester
   tahsinType      TahsinType
 
-  topic           String          // Bebas: contoh "Isymam" atau "Al-Fatihah"
+  topic           String
   scoreNumeric    Int
   scoreLetter     GradeLetter
   description     String?
@@ -460,8 +457,6 @@ model TahsinScore {
   @@unique([studentId, academicYear, semester, tahsinType, topic])
   @@map("tahsin_scores")
 }
-
-
 
 model TahsinSummary {
   id              String        @id @default(uuid())
@@ -554,4 +549,3 @@ enum TahsinType {
   WAFA
   ALQURAN
 }
-

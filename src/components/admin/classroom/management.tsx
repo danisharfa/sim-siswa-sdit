@@ -9,10 +9,7 @@ import { ClassroomHistoryTable } from '@/components/admin/classroom/history-tabl
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function ClassroomManagement() {
-  const { data: settingData, isLoading: loadingSetting } = useSWR(
-    '/api/admin/configuration',
-    fetcher
-  );
+  const { data: settingData, isLoading: loadingSetting } = useSWR('/api/academicSetting', fetcher);
 
   const {
     data: classData,

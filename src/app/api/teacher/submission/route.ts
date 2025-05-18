@@ -233,6 +233,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log('Setoran berhasil disimpan:', submission);
+
     return NextResponse.json({ success: true, data: submission });
   } catch (error) {
     console.error('[SUBMISSION_POST]', error);
