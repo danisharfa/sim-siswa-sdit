@@ -365,7 +365,6 @@ model TashihScheduleRequest {
 
 model TashihSchedule {
   id                  String               @id @default(uuid())
-  coordinatorId       String
   date                DateTime
   sessionName         String
   startTime           String

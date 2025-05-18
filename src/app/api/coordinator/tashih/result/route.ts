@@ -1,3 +1,4 @@
+// src/app/api/coordinator/tashih/result/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
@@ -34,7 +35,6 @@ export async function GET() {
                 },
               },
             },
-
             teacher: {
               select: {
                 user: { select: { fullName: true } },
@@ -49,6 +49,11 @@ export async function GET() {
             startTime: true,
             endTime: true,
             location: true,
+          },
+        },
+        evaluatedByCoordinator: {
+          select: {
+            user: { select: { fullName: true } },
           },
         },
       },
@@ -72,11 +77,21 @@ export async function POST(req: NextRequest) {
     }
 
     const { tashihScheduleId, tashihRequestId, passed, notes } = await req.json();
-
     if (!tashihScheduleId || !tashihRequestId || typeof passed !== 'boolean') {
       return NextResponse.json(
         { success: false, message: 'Data hasil ujian tidak lengkap' },
         { status: 400 }
+      );
+    }
+
+    const coordinator = await prisma.coordinatorProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!coordinator) {
+      return NextResponse.json(
+        { success: false, message: 'Koordinator tidak ditemukan' },
+        { status: 404 }
       );
     }
 
@@ -100,6 +115,7 @@ export async function POST(req: NextRequest) {
           data: {
             passed,
             notes: notes ?? null,
+            evaluatedByCoordinatorId: coordinator.id,
           },
         })
       : await prisma.tashihResult.create({
@@ -108,6 +124,7 @@ export async function POST(req: NextRequest) {
             tashihRequestId,
             passed,
             notes: notes ?? null,
+            evaluatedByCoordinatorId: coordinator.id,
           },
         });
 
@@ -122,7 +139,7 @@ export async function POST(req: NextRequest) {
       data: result,
     });
   } catch (error) {
-    console.error('[POST_EXAM_RESULT]', error);
+    console.error('[POST_TASHIH_RESULT]', error);
     return NextResponse.json(
       { success: false, message: 'Gagal menyimpan hasil ujian' },
       { status: 500 }

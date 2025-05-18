@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import useSWR from 'swr';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -69,14 +70,14 @@ interface FormData {
   endPage?: number;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export function SubmissionForm() {
   const [groupList, setGroupList] = useState<Group[]>([]);
   const [studentList, setStudentList] = useState<Student[]>([]);
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
-  const [academicSemester, setAcademicSemester] = useState<string | 'all'>('all');
-  const [filteredGroupList, setFilteredGroupList] = useState<Group[]>([]);
 
   const [groupId, setGroupId] = useState('');
   const [studentId, setStudentId] = useState('');
@@ -95,19 +96,15 @@ export function SubmissionForm() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const academicOptions = useMemo(() => {
-    const unique = new Set<string>();
-    for (const g of groupList) {
-      unique.add(`${g.classroomAcademicYear}|${g.classroomSemester}`);
-    }
-    return Array.from(unique).map((s) => {
-      const [year, semester] = s.split('|');
-      return {
-        value: s,
-        label: `${year} ${semester}`,
-      };
-    });
-  }, [groupList]);
+  const { data: academicSetting } = useSWR('/api/admin/configuration', fetcher);
+
+  const filteredGroupList = useMemo(() => {
+    if (!academicSetting?.data) return [];
+    const { currentYear, currentSemester } = academicSetting.data;
+    return groupList.filter(
+      (g) => g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
+    );
+  }, [groupList, academicSetting]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -131,7 +128,7 @@ export function SubmissionForm() {
         if (juzData.success) setJuzList(juzData.data);
         if (wafaData.success) setWafaList(wafaData.data);
       } catch (error) {
-        console.error('Gagal mengambil data:', error);
+        console.error('Error fetching data:', error);
         toast.error('Gagal mengambil data');
       }
     };
@@ -140,29 +137,13 @@ export function SubmissionForm() {
   }, []);
 
   useEffect(() => {
-    if (academicSemester === 'all') {
-      setFilteredGroupList(groupList);
-    } else {
-      const [year, semester] = academicSemester.split('|');
-      setFilteredGroupList(
-        groupList.filter(
-          (g) => g.classroomAcademicYear === year && g.classroomSemester === semester
-        )
-      );
-    }
-    setGroupId('');
-    setStudentList([]);
-  }, [academicSemester, groupList]);
-
-  useEffect(() => {
     if (!groupId) return;
     const fetchMembers = async () => {
       try {
         const res = await fetch(`/api/teacher/group/${groupId}/member`);
         const resData = await res.json();
         if (resData.success) setStudentList(resData.data);
-      } catch (error) {
-        console.error('Gagal mengambil siswa:', error);
+      } catch {
         toast.error('Gagal mengambil siswa');
       }
     };
@@ -185,7 +166,7 @@ export function SubmissionForm() {
       ...(submissionType === SubmissionType.TAHFIDZ ||
       submissionType === SubmissionType.TAHSIN_ALQURAN
         ? {
-            juzId: selectedJuz ? parseInt(selectedJuz) : undefined,
+            juz: selectedJuz ? parseInt(selectedJuz) : undefined,
             surahId: selectedSurahId ? parseInt(selectedSurahId) : undefined,
             startVerse: startVerse ? parseInt(startVerse) : undefined,
             endVerse: endVerse ? parseInt(endVerse) : undefined,
@@ -206,14 +187,10 @@ export function SubmissionForm() {
       });
       const resData = await res.json();
 
-      if (!resData.success) {
-        throw new Error(resData.message);
-      }
-
+      if (!resData.success) throw new Error(resData.message);
       toast.success('Setoran berhasil ditambahkan!');
       resetForm();
-    } catch (error) {
-      console.error('Gagal submit:', error);
+    } catch {
       toast.error('Gagal submit setoran');
     } finally {
       setLoading(false);
@@ -240,29 +217,21 @@ export function SubmissionForm() {
     <Card>
       <CardHeader>
         <CardTitle>Form Input Setoran</CardTitle>
+        <CardDescription>
+          {academicSetting?.success && (
+            <div className="mb-4 text-sm text-muted-foreground">
+              Tahun Ajaran: <span className="font-medium">{academicSetting.data.currentYear}</span>{' '}
+              — Semester:{' '}
+              <span className="font-medium">{academicSetting.data.currentSemester}</span>
+            </div>
+          )}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Tahun Ajaran & Semester */}
-          <div>
-            <Label>Tahun Ajaran</Label>
-            <Select value={academicSemester} onValueChange={setAcademicSemester}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Tahun & Semester" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                {academicOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {/* Pilih Kelompok */}
-          <div>
-            <Label>Kelompok</Label>
+        {/* Kelompok dan Siswa */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 min-w-0">
+            <Label className="mb-2 block">Kelompok</Label>
             <Select value={groupId} onValueChange={setGroupId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Kelompok" />
@@ -270,17 +239,15 @@ export function SubmissionForm() {
               <SelectContent>
                 {filteredGroupList.map((k) => (
                   <SelectItem key={k.groupId} value={k.groupId}>
-                    {k.groupName} - {k.classroomName} ({k.classroomAcademicYear}{' '}
-                    {k.classroomSemester})
+                    {k.groupName} - {k.classroomName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Pilih Siswa */}
-          <div>
-            <Label>Siswa</Label>
+          <div className="flex-1 min-w-0">
+            <Label className="mb-2 block">Siswa</Label>
             <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Siswa" />
@@ -298,10 +265,10 @@ export function SubmissionForm() {
 
         {/* Jenis Setoran */}
         <div>
-          <Label>Jenis Setoran</Label>
+          <Label className="mb-2 block">Jenis Setoran</Label>
           <Select
             value={submissionType}
-            onValueChange={(val) => setSubmissionType(val as typeof submissionType)}
+            onValueChange={(val) => setSubmissionType(val as SubmissionType)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Pilih Jenis Setoran" />
@@ -314,114 +281,114 @@ export function SubmissionForm() {
           </Select>
         </div>
 
-        {/* Tampilkan opsi berdasarkan Jenis Setoran */}
+        {/* Detail Setoran */}
         {submissionType === SubmissionType.TAHFIDZ ||
         submissionType === SubmissionType.TAHSIN_ALQURAN ? (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div>
-              <Label>Juz</Label>
-              <Select value={selectedJuz} onValueChange={setSelectedJuz}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Juz" />
-                </SelectTrigger>
-                <SelectContent>
-                  {juzList.map((j) => (
-                    <SelectItem key={j.id} value={j.id.toString()}>
-                      {j.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Surah</Label>
-              <Select
-                value={selectedSurahId}
-                onValueChange={setSelectedSurahId}
-                disabled={!selectedJuz}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Surah" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredSurahJuz.map((s) => (
-                    <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
-                      {s.surah.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Ayat Mulai</Label>
-              <Input
-                type="number"
-                value={startVerse}
-                onChange={(e) => setStartVerse(e.target.value)}
-                min={1}
-              />
-            </div>
-
-            <div>
-              <Label>Ayat Selesai</Label>
-              <Input
-                type="number"
-                value={endVerse}
-                onChange={(e) => setEndVerse(e.target.value)}
-                min={1}
-              />
-            </div>
-          </div>
-        ) : (
-          submissionType === SubmissionType.TAHSIN_WAFA && (
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div>
-                <Label>Wafa</Label>
-                <Select value={selectedWafaId} onValueChange={setSelectedWafaId}>
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Juz</Label>
+                <Select value={selectedJuz} onValueChange={setSelectedJuz}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih Wafa" />
+                    <SelectValue placeholder="Pilih Juz" />
                   </SelectTrigger>
                   <SelectContent>
-                    {wafaList.map((w) => (
-                      <SelectItem key={w.id} value={w.id.toString()}>
-                        {w.name}
+                    {juzList.map((j) => (
+                      <SelectItem key={j.id} value={j.id.toString()}>
+                        {j.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <Label>Halaman Mulai</Label>
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Surah</Label>
+                <Select
+                  value={selectedSurahId}
+                  onValueChange={setSelectedSurahId}
+                  disabled={!selectedJuz}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Surah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredSurahJuz.map((s) => (
+                      <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
+                        {s.surah.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Ayat Mulai</Label>
+                <Input
+                  type="number"
+                  value={startVerse}
+                  onChange={(e) => setStartVerse(e.target.value)}
+                  placeholder="1"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Ayat Selesai</Label>
+                <Input
+                  type="number"
+                  value={endVerse}
+                  onChange={(e) => setEndVerse(e.target.value)}
+                  placeholder="7"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex-1 min-w-0">
+              <Label className="mb-2 block">Wafa</Label>
+              <Select value={selectedWafaId} onValueChange={setSelectedWafaId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Wafa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wafaList.map((w) => (
+                    <SelectItem key={w.id} value={w.id.toString()}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Halaman Mulai</Label>
                 <Input
                   type="number"
                   value={startPage}
                   onChange={(e) => setStartPage(e.target.value)}
-                  min={1}
+                  placeholder="1"
                 />
               </div>
-
-              <div>
-                <Label>Halaman Selesai</Label>
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Halaman Selesai</Label>
                 <Input
                   type="number"
                   value={endPage}
                   onChange={(e) => setEndPage(e.target.value)}
-                  min={1}
+                  placeholder="10"
                 />
               </div>
             </div>
-          )
+          </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Status Setoran */}
-          <div>
-            <Label>Status Setoran</Label>
+        {/* Status & Adab */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 min-w-0">
+            <Label className="mb-2 block">Status Setoran</Label>
             <Select
               value={submissionStatus}
-              onValueChange={(val) => setSubmissionStatus(val as typeof submissionStatus)}
+              onValueChange={(val) => setSubmissionStatus(val as SubmissionStatus)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Status" />
@@ -433,11 +400,9 @@ export function SubmissionForm() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Adab */}
-          <div>
-            <Label>Adab</Label>
-            <Select value={adab} onValueChange={(val) => setAdab(val as typeof adab)}>
+          <div className="flex-1 min-w-0">
+            <Label className="mb-2 block">Adab</Label>
+            <Select value={adab} onValueChange={(val) => setAdab(val as Adab)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Adab" />
               </SelectTrigger>
@@ -452,16 +417,17 @@ export function SubmissionForm() {
 
         {/* Catatan */}
         <div>
-          <Label>Catatan</Label>
+          <Label className="mb-2 block">Catatan</Label>
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Masukkan catatan"
+            className="min-h-24"
           />
         </div>
 
         {/* Submit Button */}
-        <Button onClick={handleSubmit} disabled={loading} className="w-full">
+        <Button onClick={handleSubmit} disabled={loading} className="w-full mt-6">
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -469,7 +435,7 @@ export function SubmissionForm() {
             </>
           ) : (
             <>
-              <Save />
+              <Save className="w-4 h-4 mr-2" />
               Simpan Setoran
             </>
           )}

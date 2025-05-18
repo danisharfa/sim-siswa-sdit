@@ -1,4 +1,3 @@
-// /api/teacher/tashih/request/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
@@ -30,7 +29,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    // validasi berdasarkan jenis
     if (tashihType === TashihType.ALQURAN) {
       if (!juzId || !surahId) {
         return NextResponse.json(
@@ -52,14 +50,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // cek duplikat
+    const student = await prisma.studentProfile.findUnique({
+      where: { id: studentId },
+      select: {
+        group: {
+          select: {
+            id: true,
+            name: true,
+            classroom: {
+              select: {
+                id: true,
+                name: true,
+                academicYear: true,
+                semester: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!student || !student.group || !student.group.classroom) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Siswa belum terdaftar dalam kelompok atau kelas',
+        },
+        { status: 400 }
+      );
+    }
+
+    const classroom = student.group.classroom;
+    const group = student.group;
+
     const existing = await prisma.tashihRequest.findFirst({
       where: {
         studentId,
         tashihType,
         status: TashihRequestStatus.MENUNGGU,
         ...(tashihType === TashihType.ALQURAN && { juzId, surahId }),
-        ...(tashihType === TashihType.WAFA && { wafaId, startPage, endPage: endPage ?? startPage }),
+        ...(tashihType === TashihType.WAFA && {
+          wafaId,
+          startPage,
+          endPage: endPage ?? startPage,
+        }),
       },
     });
 
@@ -77,14 +111,20 @@ export async function POST(req: NextRequest) {
       data: {
         teacherId: teacher.id,
         studentId,
+        academicYear: classroom.academicYear,
+        semester: classroom.semester,
+        classroomId: classroom.id,
+        classroomName: classroom.name,
+        groupId: group.id,
+        groupName: group.name,
         tashihType,
         juzId: tashihType === TashihType.ALQURAN ? juzId : null,
         surahId: tashihType === TashihType.ALQURAN ? surahId : null,
         wafaId: tashihType === TashihType.WAFA ? wafaId : null,
         startPage: tashihType === TashihType.WAFA ? startPage : null,
         endPage: tashihType === TashihType.WAFA ? endPage ?? startPage : null,
-        notes: notes ?? null,
         status: TashihRequestStatus.MENUNGGU,
+        notes: notes ?? null,
       },
     });
 

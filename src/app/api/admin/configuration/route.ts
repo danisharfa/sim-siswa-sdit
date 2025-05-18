@@ -5,11 +5,6 @@ import { Semester } from '@prisma/client';
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
-    }
-
     const setting = await prisma.academicSetting.findUnique({
       where: { id: 'default' },
     });

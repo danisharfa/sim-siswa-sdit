@@ -25,6 +25,15 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       include: {
         schedules: true,
+        handledByCoordinator: {
+          select: {
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
         student: {
           select: {
             nis: true,

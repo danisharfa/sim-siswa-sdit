@@ -1,4 +1,5 @@
-import { NextResponse, NextRequest } from 'next/server';
+// src/app/api/coordinator/tashih/schedule/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
@@ -8,17 +9,6 @@ export async function GET() {
 
     if (!session || session.user.role !== 'coordinator') {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
-    }
-
-    const coordinator = await prisma.coordinatorProfile.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    if (!coordinator) {
-      return NextResponse.json(
-        { success: false, message: 'Koordinator tidak ditemukan' },
-        { status: 404 }
-      );
     }
 
     const schedules = await prisma.tashihSchedule.findMany({
@@ -47,31 +37,28 @@ export async function GET() {
                     user: { select: { fullName: true } },
                   },
                 },
-                surah: {
-                  select: { name: true },
-                },
-                juz: {
-                  select: { name: true },
-                },
-                wafa: {
-                  select: { name: true },
-                },
+                surah: { select: { name: true } },
+                juz: { select: { name: true } },
+                wafa: { select: { name: true } },
               },
             },
           },
+        },
+        scheduledByCoordinator: {
+          select: { user: { select: { fullName: true } } },
         },
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil mengambil jadwal ujian',
+      message: 'Berhasil mengambil jadwal tashih',
       data: schedules,
     });
   } catch (error) {
-    console.error('[COORDINATOR_EXAM_SCHEDULE_GET]', error);
+    console.error('[GET_TASHIH_SCHEDULES]', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data jadwal ujian' },
+      { success: false, message: 'Gagal mengambil data jadwal tashih' },
       { status: 500 }
     );
   }
@@ -80,7 +67,6 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-
     if (!session || session.user.role !== 'coordinator') {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
@@ -109,16 +95,12 @@ export async function POST(req: NextRequest) {
     const inputDate = new Date(date);
     const startOfDay = new Date(inputDate);
     startOfDay.setHours(0, 0, 0, 0);
-
     const endOfDay = new Date(inputDate);
     endOfDay.setHours(23, 59, 59, 999);
 
     let schedule = await prisma.tashihSchedule.findFirst({
       where: {
-        date: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        date: { gte: startOfDay, lte: endOfDay },
         sessionName,
         startTime,
         endTime,
@@ -131,7 +113,7 @@ export async function POST(req: NextRequest) {
     if (isNewSchedule) {
       schedule = await prisma.tashihSchedule.create({
         data: {
-          coordinatorId: coordinator.id,
+          scheduledByCoordinatorId: coordinator.id,
           date: inputDate,
           sessionName,
           startTime,
@@ -152,12 +134,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: isNewSchedule
-        ? 'Jadwal baru berhasil dibuat'
+        ? 'Jadwal tashih baru berhasil dibuat'
         : 'Jadwal ditemukan, siswa berhasil ditambahkan',
       data: schedule,
     });
   } catch (error) {
-    console.error('[EXAM_SCHEDULE_POST]', error);
+    console.error('[POST_TASHIH_SCHEDULE]', error);
     return NextResponse.json(
       { success: false, message: 'Gagal menyimpan jadwal' },
       { status: 500 }

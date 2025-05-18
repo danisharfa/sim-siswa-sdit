@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 
 type Params = Promise<{ id: string }>;
 
-// Mengambil daftar siswa dalam suatu jadwal ujian dan hasil jika sudah ada.
+// Mengambil daftar siswa dalam suatu jadwal tashih dan hasilnya jika sudah dinilai.
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
@@ -31,11 +31,11 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
               select: {
                 id: true,
                 tashihType: true,
+                startPage: true,
+                endPage: true,
                 surah: { select: { name: true } },
                 juz: { select: { name: true } },
                 wafa: { select: { name: true } },
-                startPage: true,
-                endPage: true,
                 student: {
                   select: {
                     nis: true,
@@ -48,6 +48,11 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                     id: true,
                     passed: true,
                     notes: true,
+                    evaluatedByCoordinator: {
+                      select: {
+                        user: { select: { fullName: true } },
+                      },
+                    },
                   },
                 },
               },
@@ -76,15 +81,22 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         wafa: r.wafa,
         startPage: r.startPage,
         endPage: r.endPage,
-        result: r.results[0] || null,
+        result: r.results[0]
+          ? {
+              id: r.results[0].id,
+              passed: r.results[0].passed,
+              notes: r.results[0].notes,
+              evaluatedBy: r.results[0].evaluatedByCoordinator?.user.fullName ?? null,
+            }
+          : null,
       };
     });
 
     return NextResponse.json({ success: true, data: results });
   } catch (error) {
-    console.error('[GET_EXAM_RESULT_BY_SCHEDULE]', error);
+    console.error('[GET_TASHIH_RESULT_BY_SCHEDULE]', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data hasil ujian' },
+      { success: false, message: 'Gagal mengambil data hasil tashih' },
       { status: 500 }
     );
   }

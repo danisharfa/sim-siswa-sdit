@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       where: { id },
       data: {
         status,
+        handledByCoordinatorId: coordinator.id,
       },
     });
 

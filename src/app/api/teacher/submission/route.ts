@@ -145,14 +145,67 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!student?.classroom) {
+    if (!student.classroom) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Siswa belum terdaftar di kelas aktif',
-        },
+        { success: false, message: 'Siswa belum terdaftar di kelas aktif' },
         { status: 400 }
       );
+    }
+
+    // Validasi referensi
+    if (juzId) {
+      const juz = await prisma.juz.findUnique({ where: { id: juzId } });
+      if (!juz) {
+        return NextResponse.json(
+          { success: false, message: 'Juz tidak ditemukan' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (surahId) {
+      const surah = await prisma.surah.findUnique({ where: { id: surahId } });
+      if (!surah) {
+        return NextResponse.json(
+          { success: false, message: 'Surah tidak ditemukan' },
+          { status: 400 }
+        );
+      }
+
+      // Validasi ayat
+      if (startVerse && startVerse < 1) {
+        return NextResponse.json(
+          { success: false, message: 'Ayat mulai tidak valid' },
+          { status: 400 }
+        );
+      }
+      if (endVerse && endVerse > surah.verseCount) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Ayat selesai melebihi jumlah ayat surah (${surah.verseCount})`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (wafaId) {
+      const wafa = await prisma.wafa.findUnique({ where: { id: wafaId } });
+      if (!wafa) {
+        return NextResponse.json(
+          { success: false, message: 'Materi Wafa tidak ditemukan' },
+          { status: 400 }
+        );
+      }
+
+      // Validasi halaman
+      if (startPage !== undefined && endPage !== undefined && startPage > endPage) {
+        return NextResponse.json(
+          { success: false, message: 'Halaman mulai tidak boleh lebih besar dari halaman selesai' },
+          { status: 400 }
+        );
+      }
     }
 
     const submissionId = `SETORAN-${crypto.randomUUID()}`;
@@ -164,8 +217,8 @@ export async function POST(req: NextRequest) {
         teacherId: teacher.id,
         groupId,
         date: new Date(),
-        academicYear: student.classroom?.academicYear ?? '',
-        semester: student.classroom?.semester ?? 'GANJIL',
+        academicYear: student.classroom.academicYear,
+        semester: student.classroom.semester,
         submissionType,
         submissionStatus,
         adab,

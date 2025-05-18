@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import useSWR from 'swr';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -9,11 +11,11 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Save, Loader2 } from 'lucide-react';
 import { Semester, TashihType } from '@prisma/client';
 
 interface Group {
@@ -57,6 +59,8 @@ interface ExamRequestPayload {
   endPage?: number;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export function TashihForm() {
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -64,9 +68,6 @@ export function TashihForm() {
   const [juzList, setJuzList] = useState<Juz[]>([]);
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
-
-  const [academicSemester, setAcademicSemester] = useState<string | 'all'>('all');
-  const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
 
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -78,6 +79,22 @@ export function TashihForm() {
   const [endPage, setEndPage] = useState('');
   const [notes, setNotes] = useState('');
 
+  const { data: settingData } = useSWR('/api/admin/configuration', fetcher);
+
+  const filteredGroups = useMemo(() => {
+    if (!settingData?.data) return [];
+    const { currentYear, currentSemester } = settingData.data;
+    return groups.filter(
+      (g) => g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
+    );
+  }, [groups, settingData]);
+
+  const filteredSurah = useMemo(() => {
+    return surahJuzList
+      .filter((sj) => sj.juzId === selectedJuzId)
+      .sort((a, b) => b.surah.id - a.surah.id);
+  }, [surahJuzList, selectedJuzId]);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       const [groupRes, juzRes, surahJuzRes, wafaRes] = await Promise.all([
@@ -86,67 +103,29 @@ export function TashihForm() {
         fetch('/api/surahJuz'),
         fetch('/api/wafa'),
       ]);
-
       const [groupJson, juzJson, surahJuzJson, wafaJson] = await Promise.all([
         groupRes.json(),
         juzRes.json(),
         surahJuzRes.json(),
         wafaRes.json(),
       ]);
-
       if (groupJson.success) setGroups(groupJson.data);
       if (juzJson.success) setJuzList(juzJson.data);
       if (surahJuzJson.success) setSurahJuzList(surahJuzJson.data);
       if (wafaJson.success) setWafaList(wafaJson.data);
     };
-
     fetchInitialData();
   }, []);
 
   useEffect(() => {
-    if (academicSemester === 'all') {
-      setFilteredGroups(groups);
-    } else {
-      const [year, semester] = academicSemester.split('|');
-      setFilteredGroups(
-        groups.filter((g) => g.classroomAcademicYear === year && g.classroomSemester === semester)
-      );
-    }
-    setSelectedGroupId('');
-    setStudents([]);
-  }, [academicSemester, groups]);
-
-  useEffect(() => {
     if (!selectedGroupId) return;
-
     const fetchStudents = async () => {
       const res = await fetch(`/api/teacher/group/${selectedGroupId}/member`);
       const json = await res.json();
       if (json.success) setStudents(json.data);
     };
-
     fetchStudents();
   }, [selectedGroupId]);
-
-  const academicOptions = useMemo(() => {
-    const unique = new Set<string>();
-    for (const g of groups) {
-      unique.add(`${g.classroomAcademicYear}|${g.classroomSemester}`);
-    }
-    return Array.from(unique).map((s) => {
-      const [year, semester] = s.split('|');
-      return {
-        value: s,
-        label: `${year} ${semester}`,
-      };
-    });
-  }, [groups]);
-
-  const filteredSurah = useMemo(() => {
-    return surahJuzList
-      .filter((sj) => sj.juzId === selectedJuzId)
-      .sort((a, b) => b.surah.id - a.surah.id);
-  }, [surahJuzList, selectedJuzId]);
 
   const handleSubmit = async () => {
     if (!selectedStudentId) {
@@ -184,7 +163,6 @@ export function TashihForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       const json = await res.json();
       if (json.success) {
         toast.success('Berhasil mendaftarkan ujian');
@@ -200,7 +178,7 @@ export function TashihForm() {
         toast.error(json.message ?? 'Gagal mendaftar ujian');
       }
     } catch (error) {
-      console.error('[EXAM_REQUEST_SUBMIT]', error);
+      console.error('[TASHIH_REQUEST_SUBMIT]', error);
       toast.error('Terjadi kesalahan');
     } finally {
       setLoading(false);
@@ -208,172 +186,186 @@ export function TashihForm() {
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Label>Tahun Ajaran & Semester</Label>
-        <Select value={academicSemester} onValueChange={setAcademicSemester}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih Tahun & Semester" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua</SelectItem>
-            {academicOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>Kelompok</Label>
-        <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih Kelompok" />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredGroups.map((g) => (
-              <SelectItem key={g.groupId} value={g.groupId}>
-                {g.groupName} - {g.classroomName} ({g.classroomAcademicYear} {g.classroomSemester})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>Siswa</Label>
-        <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih Siswa" />
-          </SelectTrigger>
-          <SelectContent>
-            {students.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.fullName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Jenis Tashih */}
-      <div>
-        <Label>Jenis Tashih</Label>
-        <Select value={tashihType} onValueChange={(v) => setTashihType(v as TashihType)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih Jenis Tashih" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={TashihType.ALQURAN}>AL-QUR&apos;AN</SelectItem>
-            <SelectItem value={TashihType.WAFA}>WAFA</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Input Berdasarkan Jenis Tashih */}
-      {tashihType === TashihType.ALQURAN && (
-        <>
-          <div>
-            <Label>Juz</Label>
-            <Select
-              value={selectedJuzId?.toString() || ''}
-              onValueChange={(val) => {
-                setSelectedJuzId(Number(val));
-                setSelectedSurahId(null);
-              }}
-            >
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Form Permintaan Tashih</CardTitle>
+        <CardDescription>
+          {settingData?.success && (
+            <span className="text-sm text-muted-foreground">
+              Tahun Ajaran: <span className="font-medium">{settingData.data.currentYear}</span> —
+              Semester: <span className="font-medium">{settingData.data.currentSemester}</span>
+            </span>
+          )}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Kelompok dan Siswa */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 min-w-0">
+            <Label className="mb-2 block">Kelompok</Label>
+            <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih Juz" />
+                <SelectValue placeholder="Pilih Kelompok" />
               </SelectTrigger>
               <SelectContent>
-                {juzList.map((j) => (
-                  <SelectItem key={j.id} value={String(j.id)}>
-                    {j.name}
+                {filteredGroups.map((g) => (
+                  <SelectItem key={g.groupId} value={g.groupId}>
+                    {g.groupName} - {g.classroomName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div>
-            <Label>Surah</Label>
-            <Select
-              value={selectedSurahId?.toString() || ''}
-              onValueChange={(val) => setSelectedSurahId(Number(val))}
-            >
+          <div className="flex-1 min-w-0">
+            <Label className="mb-2 block">Siswa</Label>
+            <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih Surah dalam Juz" />
+                <SelectValue placeholder="Pilih Siswa" />
               </SelectTrigger>
               <SelectContent>
-                {filteredSurah.map((sj) => (
-                  <SelectItem key={sj.surah.id} value={String(sj.surah.id)}>
-                    {sj.surah.name}
+                {students.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.fullName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-        </>
-      )}
+        </div>
 
-      {tashihType === TashihType.WAFA && (
-        <>
-          <div>
-            <Label>Wafa</Label>
-            <Select
-              value={selectedWafaId?.toString() || ''}
-              onValueChange={(val) => setSelectedWafaId(Number(val))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Wafa" />
-              </SelectTrigger>
-              <SelectContent>
-                {wafaList.map((w) => (
-                  <SelectItem key={w.id} value={String(w.id)}>
-                    {w.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Jenis Tashih */}
+        <div>
+          <Label className="mb-2 block">Jenis Tashih</Label>
+          <Select value={tashihType} onValueChange={(val) => setTashihType(val as TashihType)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih Jenis Tashih" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TashihType.ALQURAN}>AL-QUR&apos;AN</SelectItem>
+              <SelectItem value={TashihType.WAFA}>WAFA</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Halaman Mulai</Label>
-              <Input
-                type="number"
-                value={startPage}
-                onChange={(e) => setStartPage(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Halaman Selesai</Label>
-              <Input type="number" value={endPage} onChange={(e) => setEndPage(e.target.value)} />
+        {/* AL-QUR'AN Form Fields */}
+        {tashihType === TashihType.ALQURAN && (
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Juz</Label>
+                <Select
+                  value={selectedJuzId?.toString() || ''}
+                  onValueChange={(val) => {
+                    setSelectedJuzId(Number(val));
+                    setSelectedSurahId(null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Juz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {juzList.map((j) => (
+                      <SelectItem key={j.id} value={String(j.id)}>
+                        {j.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Surah</Label>
+                <Select
+                  value={selectedSurahId?.toString() || ''}
+                  onValueChange={(val) => setSelectedSurahId(Number(val))}
+                  disabled={!selectedJuzId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Surah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredSurah.map((sj) => (
+                      <SelectItem key={sj.surah.id} value={String(sj.surah.id)}>
+                        {sj.surah.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </>
-      )}
-
-      <div>
-        <Label>Catatan</Label>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-      </div>
-
-      <Button onClick={handleSubmit} disabled={loading} className="w-full">
-        {loading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            Mendaftar ujian...
-          </>
-        ) : (
-          <>
-            <Save className="mr-2" />
-            Daftarkan Ujian
-          </>
         )}
-      </Button>
-    </div>
+
+        {/* WAFA Form Fields */}
+        {tashihType === TashihType.WAFA && (
+          <div className="space-y-4">
+            <div className="flex-1 min-w-0">
+              <Label className="mb-2 block">Wafa</Label>
+              <Select
+                value={selectedWafaId?.toString() || ''}
+                onValueChange={(val) => setSelectedWafaId(Number(val))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Wafa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wafaList.map((w) => (
+                    <SelectItem key={w.id} value={String(w.id)}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Halaman Mulai</Label>
+                <Input
+                  type="number"
+                  value={startPage}
+                  onChange={(e) => setStartPage(e.target.value)}
+                  placeholder="1"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Halaman Selesai</Label>
+                <Input
+                  type="number"
+                  value={endPage}
+                  onChange={(e) => setEndPage(e.target.value)}
+                  placeholder="10"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Catatan */}
+        <div>
+          <Label className="mb-2 block">Catatan</Label>
+          <Textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Masukkan catatan"
+            className="min-h-24"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <Button onClick={handleSubmit} disabled={loading} className="w-full mt-6">
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Mendaftar ujian...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Daftarkan Ujian
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
