@@ -9,9 +9,9 @@ import {
 import { FaChalkboard } from 'react-icons/fa';
 import { FaUsersGear } from 'react-icons/fa6';
 import { ImProfile } from 'react-icons/im';
-import { MdHomeWork } from 'react-icons/md';
+// import { MdHomeWork } from 'react-icons/md';
 import { TbBookUpload } from 'react-icons/tb';
-import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
+// import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
 import { GrDocumentConfig } from 'react-icons/gr';
 
 export const menuData = {

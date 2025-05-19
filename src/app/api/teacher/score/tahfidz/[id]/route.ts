@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session || session.user.role !== 'teacher') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+type Params = Promise<{ id: string }>;
 
+export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
-    await prisma.tahfidzScore.delete({ where: { id: params.id } });
+    const params = await segmentData.params;
+    const id = params.id;
+
+    const session = await auth();
+    if (!session || session.user.role !== 'teacher') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await prisma.tahfidzScore.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[DELETE_TAHFIDZ_SCORE]', error);

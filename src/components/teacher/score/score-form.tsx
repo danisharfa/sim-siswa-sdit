@@ -113,13 +113,17 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
 
   function handleTahsinChange(index: number, field: keyof TahsinEntry, value: string | number) {
     const updated = [...tahsinEntries];
+
     if (field === 'scoreNumeric') {
       const numeric = parseInt(value as string) || 0;
       updated[index].scoreNumeric = numeric;
       updated[index].scoreLetter = convertToLetter(numeric);
-    } else {
-      updated[index][field] = value as any;
+    } else if (field === 'topic' || field === 'description') {
+      updated[index][field] = value as string;
+    } else if (field === 'type') {
+      updated[index].type = value as TahsinType;
     }
+
     setTahsinEntries(updated);
   }
 
@@ -162,13 +166,15 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
 
   function handleTahfidzChange(index: number, field: keyof TahfidzEntry, value: string | number) {
     const updated = [...tahfidzEntries];
+
     if (field === 'scoreNumeric') {
       const numeric = parseInt(value as string) || 0;
       updated[index].scoreNumeric = numeric;
       updated[index].scoreLetter = convertToLetter(numeric);
-    } else {
-      updated[index][field] = value as any;
+    } else if (field === 'description') {
+      updated[index].description = value as string;
     }
+
     setTahfidzEntries(updated);
   }
 
@@ -204,7 +210,7 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
       studentId: student.id,
       groupId,
       tahsin: tahsinEntries,
-      tahfidz: tahfidzEntries.map(({ topic, ...rest }) => rest),
+      tahfidz: tahfidzEntries,
     };
 
     try {
