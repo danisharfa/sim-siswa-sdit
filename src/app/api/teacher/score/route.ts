@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { TahsinType, GradeLetter } from '@prisma/client';
+import { Role, TahsinType, GradeLetter } from '@prisma/client';
 
 interface TahsinInput {
   type: TahsinType;
@@ -23,40 +23,34 @@ interface ScoreRequestBody {
   groupId: string;
   tahsin: TahsinInput[];
   tahfidz: TahfidzInput[];
+  lastMaterial?: string;
 }
 
+// Untuk menyimpan nilai Tahsin dan Tahfidz
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = (await req.json()) as ScoreRequestBody;
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       return NextResponse.json({ error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    const { studentId, groupId, tahsin, tahfidz } = body;
+    const body = (await req.json()) as ScoreRequestBody;
+    const { studentId, groupId, tahsin, tahfidz, lastMaterial } = body;
 
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        teacherGroups: {
-          some: { teacherId: teacher.id },
-        },
-        students: {
-          some: { id: studentId },
-        },
+        teacherGroups: { some: { teacherId: teacher.id } },
+        students: { some: { id: studentId } },
       },
-      include: {
-        classroom: true,
-      },
+      include: { classroom: true },
     });
 
     if (!group) {
@@ -68,7 +62,14 @@ export async function POST(req: NextRequest) {
 
     const { academicYear, semester } = group.classroom;
 
-    // Simpan nilai Tahsin
+    const tahsinAvg = tahsin.length
+      ? tahsin.reduce((sum, t) => sum + t.scoreNumeric, 0) / tahsin.length
+      : null;
+
+    const tahfidzAvg = tahfidz.length
+      ? tahfidz.reduce((sum, t) => sum + t.scoreNumeric, 0) / tahfidz.length
+      : null;
+
     await prisma.$transaction(async (tx) => {
       await tx.tahsinScore.deleteMany({
         where: {
@@ -77,7 +78,6 @@ export async function POST(req: NextRequest) {
           semester,
         },
       });
-
       await tx.tahsinScore.createMany({
         data: tahsin.map((item) => ({
           studentId,
@@ -90,8 +90,30 @@ export async function POST(req: NextRequest) {
           description: item.description,
         })),
       });
+      // Update TahsinSummary
+      if (tahsinAvg !== null) {
+        await tx.tahsinSummary.upsert({
+          where: {
+            studentId_academicYear_semester: {
+              studentId,
+              academicYear,
+              semester,
+            },
+          },
+          update: {
+            averageScore: tahsinAvg,
+            lastMaterial: lastMaterial?.trim() || null,
+          },
+          create: {
+            studentId,
+            academicYear,
+            semester,
+            averageScore: tahsinAvg,
+            lastMaterial: lastMaterial?.trim() || null,
+          },
+        });
+      }
 
-      // Simpan nilai Tahfidz
       await tx.tahfidzScore.deleteMany({
         where: {
           studentId,
@@ -99,7 +121,6 @@ export async function POST(req: NextRequest) {
           semester,
         },
       });
-
       await tx.tahfidzScore.createMany({
         data: tahfidz.map((item) => ({
           studentId,
@@ -111,6 +132,27 @@ export async function POST(req: NextRequest) {
           description: item.description,
         })),
       });
+      // Update TahfidzSummary
+      if (tahfidzAvg !== null) {
+        await tx.tahfidzSummary.upsert({
+          where: {
+            studentId_academicYear_semester: {
+              studentId,
+              academicYear,
+              semester,
+            },
+          },
+          update: {
+            averageScore: tahfidzAvg,
+          },
+          create: {
+            studentId,
+            academicYear,
+            semester,
+            averageScore: tahfidzAvg,
+          },
+        });
+      }
     });
 
     return NextResponse.json({ success: true });

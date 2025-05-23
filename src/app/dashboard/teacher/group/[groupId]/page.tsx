@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
 import { getGroupId } from '@/lib/data/teacher/teacher-group-member';
 import { GroupDetailsManagement } from '@/components/teacher/group-members/management';
 
@@ -17,16 +15,13 @@ export default async function GroupDetailPage(props: { params: Promise<{ groupId
 
   return (
     <div className="p-4">
-      <Link href="/dashboard/teacher/group">
-        <Button variant="ghost">
-          <ArrowLeft />
-        </Button>
-      </Link>
-
-      <h1 className="text-2xl font-bold mb-4">
-        {group.name} - Kelas {group.classroom.name} {group.classroom.academicYear}{' '}
-        {group.classroom.semester}
-      </h1>
+      <div className="flex items-center mb-4">
+        <BackButton href={`/dashboard/teacher/group`} />
+        <h1 className="text-2xl font-bold ml-4">
+          {group.name} - Kelas {group.classroom.name} {group.classroom.academicYear}{' '}
+          {group.classroom.semester}
+        </h1>
+      </div>
 
       <Suspense
         fallback={

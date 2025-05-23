@@ -1,11 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -13,60 +8,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker-plus';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { DatePicker } from '@/components/ui/date-picker';
+import { Role, Gender, BloodType } from '@prisma/client';
 
 type StudentProfile = {
-  fullName?: string;
-  nis?: string;
   birthDate?: string;
   birthPlace?: string;
-  gender?: string;
-  bloodType?: string;
+  gender?: Gender;
+  bloodType?: BloodType;
   address?: string;
   phoneNumber?: string;
   email?: string;
 };
 
-type User = {
-  role: string;
-  fullName?: string;
-  profile?: {
-    nis?: string;
-    birthPlace?: string;
-    birthDate?: string;
-    gender?: string;
-    bloodType?: string;
-    address?: string;
-    phoneNumber?: string;
-    email?: string;
-  };
+// Untuk tampilan data tetap
+type StudentIdentity = {
+  fullName: string;
+  nis: string;
+  nisn: string;
 };
 
 export default function StudentProfileDetail({ userId }: { userId: string }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [updatedData, setUpdatedData] = useState<StudentProfile>({});
   const [date, setDate] = useState<Date>();
+  const [identity, setIdentity] = useState<StudentIdentity | null>(null);
+  const [updatedData, setUpdatedData] = useState<StudentProfile>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUser() {
       try {
         const res = await fetch(`/api/users/detail/${userId}`);
         const json = await res.json();
-
         if (!json.success) throw new Error(json.message);
 
         const userData = json.data;
-        const profile = userData.role === 'student' ? userData.student : null;
+        const profile = userData.student;
 
-        setUser(userData);
-        setUpdatedData({
-          fullName: userData.fullName || '',
+        setIdentity({
+          fullName: userData.fullName,
           nis: profile?.nis || '',
+          nisn: profile?.nisn || '',
+        });
+
+        setUpdatedData({
           birthPlace: profile?.birthPlace || '',
-          gender: profile?.gender || 'PILIH',
-          bloodType: profile?.bloodType || 'PILIH',
+          gender: profile?.gender || Gender.PILIH,
+          bloodType: profile?.bloodType || BloodType.PILIH,
           address: profile?.address || '',
           phoneNumber: profile?.phoneNumber || '',
           email: profile?.email || '',
@@ -84,42 +77,44 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
     fetchUser();
   }, [userId]);
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: keyof StudentProfile, value: string) => {
     setUpdatedData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
-
     try {
+      const payload = {
+        ...updatedData,
+        birthDate: date?.toISOString(),
+        role: Role.student,
+      };
+
       const res = await fetch(`/api/users/detail/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...user,
-          ...updatedData,
-          birthDate: date?.toISOString() ?? user.profile?.birthDate,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        toast.success('Detail user berhasil diperbarui!');
-        const detailRes = await fetch(`/api/users/detail/${userId}`);
-        const detailData = await detailRes.json();
-        setUser(detailData);
-      } else {
-        toast.success('Gagal memperbarui detail user!');
-      }
+      if (!res.ok) throw new Error();
+
+      toast.success('Detail user berhasil diperbarui!');
     } catch (error) {
-      toast.success('Gagal memperbarui detail user!');
       console.error('Error updating user:', error);
+      toast.error('Gagal memperbarui detail user!');
     }
   };
 
+  const labelMap = (val: string) =>
+    val === 'PILIH'
+      ? '-- Pilih --'
+      : val
+          .replace('_', ' ')
+          .toLowerCase()
+          .replace(/^\w/, (c) => c.toUpperCase());
+
   if (loading) return <p>Loading...</p>;
-  if (!user) return <p>User tidak ditemukan</p>;
 
   return (
     <Card>
@@ -130,18 +125,13 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Label>Nama Lengkap</Label>
-            <Input
-              value={updatedData.fullName ?? ''}
-              onChange={(e) => handleChange('fullName', e.target.value)}
-              readOnly
-            />
+            <Input value={identity?.fullName ?? ''} readOnly />
 
             <Label>NIS</Label>
-            <Input
-              value={updatedData.nis ?? ''}
-              onChange={(e) => handleChange('nis', e.target.value)}
-              readOnly
-            />
+            <Input value={identity?.nis ?? ''} readOnly />
+
+            <Label>NISN</Label>
+            <Input value={identity?.nisn ?? ''} readOnly />
 
             <Label>Tempat Lahir</Label>
             <Textarea
@@ -154,33 +144,35 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
 
             <Label>Jenis Kelamin</Label>
             <Select
-              value={updatedData.gender || 'PILIH'}
-              onValueChange={(val) => handleChange('gender', val)}
+              value={updatedData.gender ?? Gender.PILIH}
+              onValueChange={(val) => handleChange('gender', val as Gender)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Jenis Kelamin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PILIH">--Pilih--</SelectItem>
-                <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
-                <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
+                {Object.values(Gender).map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {labelMap(g)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
             <Label>Golongan Darah</Label>
             <Select
-              value={updatedData.bloodType || 'PILIH'}
+              value={updatedData.bloodType || BloodType.PILIH}
               onValueChange={(val) => handleChange('bloodType', val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Golongan Darah" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PILIH">--Pilih--</SelectItem>
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="AB">AB</SelectItem>
-                <SelectItem value="O">O</SelectItem>
+                {Object.values(BloodType).map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {labelMap(b)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

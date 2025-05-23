@@ -4,11 +4,11 @@ import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
+  useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 import { Eye, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import {

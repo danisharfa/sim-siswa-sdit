@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { evaluateTargetAchievement } from '@/lib/data/teacher/evaluate-target';
 
 export async function GET() {
   try {
@@ -12,7 +13,6 @@ export async function GET() {
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Profil guru tidak ditemukan' },
@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
     }
 
     const {
+      date,
       groupId,
       studentId,
       submissionType,
@@ -106,7 +107,6 @@ export async function POST(req: NextRequest) {
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Profil guru tidak ditemukan' },
@@ -120,7 +120,6 @@ export async function POST(req: NextRequest) {
         groupId,
       },
     });
-
     if (!isGuruMembimbing) {
       return NextResponse.json(
         { success: false, message: 'Guru tidak membimbing kelompok ini' },
@@ -216,7 +215,7 @@ export async function POST(req: NextRequest) {
         studentId,
         teacherId: teacher.id,
         groupId,
-        date: new Date(),
+        date: date ? new Date(date) : new Date(),
         academicYear: student.classroom.academicYear,
         semester: student.classroom.semester,
         submissionType,
@@ -232,6 +231,8 @@ export async function POST(req: NextRequest) {
         endPage,
       },
     });
+
+    await evaluateTargetAchievement(studentId, submission.date, submission.date);
 
     console.log('Setoran berhasil disimpan:', submission);
 

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 type Params = Promise<{ studentId: string }>;
 
+// untuk mendapatkan daftar surah yang sudah lulus tashih
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   const params = await segmentData.params;
   const studentId = params.studentId;

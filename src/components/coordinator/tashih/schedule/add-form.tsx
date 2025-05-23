@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePickerSimple } from '@/components/ui/date-picker-simple';
 
 interface TashihRequest {
   id: string;
@@ -123,7 +123,7 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Tanggal Ujian</Label>
-            <DatePicker value={date} onChange={setDate} />
+            <DatePickerSimple value={date} onChange={setDate} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

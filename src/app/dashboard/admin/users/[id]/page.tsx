@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { UserDetail } from '@/components/admin/user/user-detail';
 import { prisma } from '@/lib/prisma';
+import { BackButton } from '@/components/ui/back-button';
 
 type Params = Promise<{ id: string }>;
 
@@ -31,21 +29,18 @@ export default async function UserPage({ params }: { params: Params }) {
 
   if (!role) return notFound();
 
-  const displayName = user.fullName;
-  const roleLabel = role === 'student' ? 'Siswa' : role === 'teacher' ? 'Guru' : 'Koordinator';
-
   return (
     <div className="p-4">
-      <Link href="/dashboard/admin/users">
-        <Button variant="ghost">
-          <ArrowLeft />
-        </Button>
-      </Link>
+      <BackButton href={`/dashboard/admin/users`} />
       <h1 className="text-2xl font-bold mb-4">
-        {roleLabel} - {displayName}
+        {role === 'student'
+          ? `Siswa - ${user.fullName}`
+          : role === 'teacher'
+          ? `Guru - ${user.fullName}`
+          : `Koordinator - ${user.fullName}`}
       </h1>
 
-      <UserDetail userId={id} />
+      <UserDetail userId={id} role={role} />
     </div>
   );
 }

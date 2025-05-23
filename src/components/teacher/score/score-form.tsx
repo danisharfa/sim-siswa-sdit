@@ -13,9 +13,9 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { GradeLetter, TahsinType } from '@prisma/client';
-import { convertToLetter } from '@/lib/data/score-converter';
 import { toast } from 'sonner';
+import { convertToLetter } from '@/lib/data/score-converter';
+import { GradeLetter, TahsinType } from '@prisma/client';
 
 interface ScoreInputFormProps {
   groupId: string;
@@ -60,6 +60,7 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
   const [tahfidzEntries, setTahfidzEntries] = useState<TahfidzEntry[]>([]);
   const [selectedJuz, setSelectedJuz] = useState<Record<number, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastMaterial, setLastMaterial] = useState('');
 
   const { data: surahData } = useSWR<{ data: { id: number; name: string }[] }>(
     `/api/teacher/score/tahfidz/eligible/${student.id}`,
@@ -123,7 +124,6 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
     } else if (field === 'type') {
       updated[index].type = value as TahsinType;
     }
-
     setTahsinEntries(updated);
   }
 
@@ -211,6 +211,7 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
       groupId,
       tahsin: tahsinEntries,
       tahfidz: tahfidzEntries,
+      lastMaterial,
     };
 
     try {
@@ -314,6 +315,14 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
               </Button>
             </div>
           ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-center pt-2 border-t mt-4">
+            <label className="font-medium text-sm">Bacaan Terakhir</label>
+            <Input
+              value={lastMaterial}
+              onChange={(e) => setLastMaterial(e.target.value)}
+              placeholder="Contoh: Review Gharib"
+            />
+          </div>
         </CardContent>
       </Card>
 

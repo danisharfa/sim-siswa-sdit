@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { Semester } from '@prisma/client';
 
 export async function GET() {
   try {
@@ -40,7 +41,7 @@ export async function GET() {
       groupName: string;
       classroomName: string;
       academicYear: string;
-      semester: string;
+      semester: Semester;
       students: StudentItem[];
     };
 
@@ -52,7 +53,7 @@ export async function GET() {
           groupName: curr.group.name,
           classroomName: curr.group.classroom.name,
           academicYear: curr.academicYear,
-          semester: curr.semester,
+          semester: curr.semester as Semester,
           students: [],
         };
       }

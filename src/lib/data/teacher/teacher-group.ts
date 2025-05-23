@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { Semester } from '@prisma/client';
 
 export async function fetchTeacherGroups() {
   try {
@@ -11,7 +12,6 @@ export async function fetchTeacherGroups() {
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       throw new Error('Guru tidak ditemukan');
     }
@@ -43,5 +43,86 @@ export async function fetchTeacherGroups() {
   } catch (error) {
     console.error('[FETCH_TEACHER_GROUPS]', error);
     throw new Error('Gagal mengambil data kelompok binaan');
+  }
+}
+
+export async function fetchTeacherGroupHistory() {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== 'teacher') {
+      throw new Error('Unauthorized');
+    }
+
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!teacher) {
+      throw new Error('Guru tidak ditemukan');
+    }
+
+    const histories = await prisma.groupHistory.findMany({
+      where: {
+        teacherId: teacher.id,
+      },
+      orderBy: [{ academicYear: 'desc' }, { semester: 'desc' }, { group: { name: 'asc' } }],
+      include: {
+        group: {
+          include: {
+            classroom: true,
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            nis: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    type StudentItem = {
+      id: string;
+      nis: string;
+      fullName: string;
+    };
+
+    type GroupedHistory = {
+      groupId: string;
+      groupName: string;
+      classroomName: string;
+      academicYear: string;
+      semester: Semester;
+      students: StudentItem[];
+    };
+
+    const grouped = histories.reduce((acc, curr) => {
+      const key = `${curr.groupId}-${curr.academicYear}-${curr.semester}`;
+      if (!acc[key]) {
+        acc[key] = {
+          groupId: curr.groupId,
+          groupName: curr.group.name,
+          classroomName: curr.group.classroom.name,
+          academicYear: curr.academicYear,
+          semester: curr.semester as Semester,
+          students: [],
+        };
+      }
+      acc[key].students.push({
+        id: curr.student.id,
+        nis: curr.student.nis,
+        fullName: curr.student.user.fullName,
+      });
+      return acc;
+    }, {} as Record<string, GroupedHistory>);
+
+    return Object.values(grouped);
+  } catch (error) {
+    console.error('[FETCH_TEACHER_GROUP_HISTORY]', error);
+    throw new Error('Gagal mengambil data riwayat kelompok');
   }
 }

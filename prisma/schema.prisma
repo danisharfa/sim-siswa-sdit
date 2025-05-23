@@ -74,7 +74,7 @@ model TeacherProfile {
   groupHistories    GroupHistory[]
   submissions       Submission[]
   tashihRequests    TashihRequest[]
-
+  weeklyTargets     WeeklyTarget[]
 
   @@index([nip])
   @@map("teacher_profiles")
@@ -84,6 +84,7 @@ model StudentProfile {
   id              String          @id @unique
   userId          String          @unique
   nis             String          @unique
+  nisn            String?         @unique
   classroomId     String?
   groupId         String?
 
@@ -113,6 +114,7 @@ model StudentProfile {
   tahfidzSummaries      TahfidzSummary[]
   tahsinScores          TahsinScore[]
   tahsinSummaries       TahsinSummary[]
+  weeklyTargets         WeeklyTarget[]
 
   @@index([nis])
   @@map("student_profiles")
@@ -196,6 +198,7 @@ model Group {
   teacherGroups       TeacherGroup[]
   students            StudentProfile[]
   submissions         Submission[]
+  weeklyTargets       WeeklyTarget[]
 
   @@unique([name, classroomId])
   @@map("groups")
@@ -267,10 +270,12 @@ model Surah {
   name          String    @unique
   verseCount    Int
   
-  surahJuz         SurahJuz[]
-  submissions      Submission[]
-  tashihRequests   TashihRequest[]
-  tahfidzScores    TahfidzScore[]
+  surahJuz            SurahJuz[]
+  submissions         Submission[]
+  tashihRequests      TashihRequest[]
+  tahfidzScores       TahfidzScore[]
+  weeklyTargetsStart  WeeklyTarget[] @relation("StartSurah")
+  weeklyTargetsEnd    WeeklyTarget[] @relation("EndSurah")
 
   @@map("surah")
 }
@@ -306,6 +311,7 @@ model Wafa {
 
   submissions       Submission[]
   tashihRequests    TashihRequest[]
+  weeklyTargets     WeeklyTarget[]
 
   @@map("wafa")
 }
@@ -475,6 +481,44 @@ model TahsinSummary {
   @@map("tahsin_summaries")
 }
 
+model WeeklyTarget {
+  id                String        @id @default(uuid())
+  teacherId         String
+  studentId         String
+  groupId           String
+
+  academicYear      String
+  semester          Semester
+
+  type              SubmissionType
+  startDate         DateTime
+  endDate           DateTime
+  description       String
+  status            TargetStatus  @default(TIDAK_TERCAPAI)
+  progressPercent   Int?          @default(0)
+
+  surahStartId      Int?
+  surahEndId        Int?
+  startAyat         Int?
+  endAyat           Int?
+
+  wafaId            Int?
+  startPage         Int?
+  endPage           Int?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  student           StudentProfile  @relation(fields: [studentId], references: [id])
+  teacher           TeacherProfile  @relation(fields: [teacherId], references: [id])
+  group             Group           @relation(fields: [groupId], references: [id])
+  surahStart        Surah?          @relation("StartSurah", fields: [surahStartId], references: [id])
+  surahEnd          Surah?          @relation("EndSurah", fields: [surahEndId], references: [id])
+  wafa              Wafa?           @relation(fields: [wafaId], references: [id])
+
+  @@map("weekly_targets")
+}
+
 enum Role {
   admin
   coordinator
@@ -548,4 +592,9 @@ enum GradeLetter {
 enum TahsinType {
   WAFA
   ALQURAN
+}
+
+enum TargetStatus {
+  TIDAK_TERCAPAI
+  TERCAPAI
 }

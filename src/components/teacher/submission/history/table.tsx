@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -20,9 +20,12 @@ import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2Icon,
   MinusCircle,
+  MoreVertical,
+  Pencil,
   RefreshCcw,
   ThumbsDown,
   ThumbsUp,
+  Trash2,
   XCircle,
 } from 'lucide-react';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
@@ -30,14 +33,31 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 import { ExportToPDFButton } from './export-to-pdf-button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { SubmissionEditDialog } from './edit-dialog';
+import { SubmissionAlertDialog } from './alert-dialog';
 
 export type Submission = {
   id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  teacherId: string;
+  groupId: string;
+  studentId: string;
+  academicYear: string;
+  semester: Semester;
   date: string;
   submissionType: SubmissionType;
-  juz: { name: string } | null;
-  surah: { name: string } | null;
-  wafa: { name: string } | null;
+  juz: { id: number; name: string } | null;
+  surah: { id: number; name: string } | null;
+  wafa: { id: number; name: string } | null;
   startVerse: number | null;
   endVerse: number | null;
   startPage: number | null;
@@ -63,9 +83,10 @@ export type Submission = {
 interface Props {
   data: Submission[];
   title: string;
+  onRefresh: () => void;
 }
 
-export function SubmissionHistoryTable({ data, title }: Props) {
+export function SubmissionHistoryTable({ data, title, onRefresh }: Props) {
   const {
     sorting,
     setSorting,
@@ -73,13 +94,33 @@ export function SubmissionHistoryTable({ data, title }: Props) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-  } = useDataTableState<Submission, string>();
+    selectedItem: selectedSubmission,
+    setSelectedItem: setSelectedSubmission,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<Submission, 'edit' | 'delete'>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState('all');
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
+
+  const handleOpenEditDialog = useCallback(
+    (submission: Submission) => {
+      setSelectedSubmission(submission);
+      setDialogType('edit');
+    },
+    [setSelectedSubmission, setDialogType]
+  );
+
+  const handleOpenDeleteDialog = useCallback(
+    (submission: Submission) => {
+      setSelectedSubmission(submission);
+      setDialogType('delete');
+    },
+    [setSelectedSubmission, setDialogType]
+  );
 
   const groupList = useMemo(() => {
     const map = new Map<string, Submission['group']>();
@@ -265,8 +306,45 @@ export function SubmissionHistoryTable({ data, title }: Props) {
           return <span className="text-muted-foreground">{note ? note : '-'}</span>;
         },
       },
+      {
+        id: 'actions',
+        enableHiding: false,
+        header: 'Aksi',
+        cell: ({ row }) => {
+          const user = row.original;
+          return (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex size-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">Target Option</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-50 z-50">
+                  <DropdownMenuItem
+                    onClick={() => handleOpenEditDialog(user)}
+                    className="flex items-center gap-2"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleOpenDeleteDialog(user)}
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          );
+        },
+      },
     ],
-    [selectedMonth, selectedWeek]
+    [selectedMonth, selectedWeek, handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -447,6 +525,55 @@ export function SubmissionHistoryTable({ data, title }: Props) {
       </div>
 
       <DataTable title={title} table={table} filterColumn="Tanggal" />
+
+      {dialogType === 'edit' && selectedSubmission && (
+        <SubmissionEditDialog
+          submission={{
+            ...selectedSubmission,
+            juz: selectedSubmission.juz === null ? undefined : { id: selectedSubmission.juz.id },
+            surah:
+              selectedSubmission.surah === null ? undefined : { id: selectedSubmission.surah.id },
+            wafa: selectedSubmission.wafa === null ? undefined : { id: selectedSubmission.wafa.id },
+            startVerse:
+              selectedSubmission.startVerse === null ? undefined : selectedSubmission.startVerse,
+            endVerse:
+              selectedSubmission.endVerse === null ? undefined : selectedSubmission.endVerse,
+            startPage:
+              selectedSubmission.startPage === null ? undefined : selectedSubmission.startPage,
+            endPage: selectedSubmission.endPage === null ? undefined : selectedSubmission.endPage,
+            note: selectedSubmission.note === null ? undefined : selectedSubmission.note,
+          }}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedSubmission(null);
+              setDialogType(null);
+            }
+          }}
+          onSave={() => {
+            onRefresh();
+            setSelectedSubmission(null);
+            setDialogType(null);
+          }}
+        />
+      )}
+      {dialogType === 'delete' && selectedSubmission && (
+        <SubmissionAlertDialog
+          submission={selectedSubmission}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedSubmission(null);
+              setDialogType(null);
+            }
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setSelectedSubmission(null);
+            setDialogType(null);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 
 type Params = Promise<{ id: string }>;
 
+// untuk hapus nilai tahsin
 export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
     const params = await segmentData.params;
@@ -15,6 +16,7 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
     }
 
     await prisma.tahsinScore.delete({ where: { id } });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[DELETE_TAHSIN_SCORE]', error);

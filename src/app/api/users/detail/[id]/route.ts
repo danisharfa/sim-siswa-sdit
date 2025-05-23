@@ -31,10 +31,18 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
+    let role: 'student' | 'teacher' | 'coordinator' | null = null;
+    if (user.student) role = 'student';
+    else if (user.teacher) role = 'teacher';
+    else if (user.coordinator) role = 'coordinator';
+
     return NextResponse.json({
       success: true,
       message: 'Detail user berhasil diambil',
-      data: user,
+      data: {
+        ...user,
+        role,
+      },
     });
   } catch (error) {
     console.error('[USER_DETAIL_GET]', error);
@@ -54,6 +62,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       fullName,
       role,
       nis,
+      nisn,
       nip,
       birthDate,
       birthPlace,
@@ -92,7 +101,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     } else if (role === 'student') {
       await prisma.studentProfile.update({
         where: { userId: id },
-        data: { ...updateData, nis },
+        data: { ...updateData, nis, nisn },
       });
     }
 

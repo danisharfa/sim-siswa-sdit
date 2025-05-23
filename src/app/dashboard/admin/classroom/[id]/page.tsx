@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { getClassroomById } from '@/lib/data/classroom';
 import { ClassroomDetailsManagement } from '@/components/admin/classroom-members/management';
 import { PromoteDialogWrapper } from '@/components/admin/classroom-members/promote-dialog-wrapper';
+import { BackButton } from '@/components/ui/back-button';
 
 export default async function ClassroomPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -16,11 +14,7 @@ export default async function ClassroomPage(props: { params: Promise<{ id: strin
 
   return (
     <div className="p-4">
-      <Link href="/dashboard/admin/classroom">
-        <Button variant="ghost">
-          <ArrowLeft />
-        </Button>
-      </Link>
+      <BackButton href={`/dashboard/admin/classroom`} />
       <h1 className="text-2xl font-bold mb-4">
         Kelas {classroom.name} - {classroom.academicYear} {classroom.semester}
       </h1>

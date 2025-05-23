@@ -14,8 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
+import { toast } from 'sonner';
+import { DatePickerSimple } from '@/components/ui/date-picker-simple';
 import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 
 interface Group {
@@ -55,6 +56,7 @@ interface Wafa {
 }
 
 interface FormData {
+  date: Date;
   groupId: string;
   studentId: string;
   submissionType: SubmissionType;
@@ -75,12 +77,13 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function SubmissionForm() {
   const [groupList, setGroupList] = useState<Group[]>([]);
   const [studentList, setStudentList] = useState<Student[]>([]);
-  const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
+  const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
 
   const [groupId, setGroupId] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [submissionDate, setSubmissionDate] = useState<Date>(new Date());
   const [submissionType, setSubmissionType] = useState<SubmissionType>(SubmissionType.TAHFIDZ);
   const [selectedJuz, setSelectedJuz] = useState('');
   const [selectedSurahId, setSelectedSurahId] = useState('');
@@ -96,15 +99,15 @@ export function SubmissionForm() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { data: academicSetting } = useSWR('/api/academicSetting', fetcher);
+  const { data: academic } = useSWR('/api/academicSetting', fetcher);
 
   const filteredGroupList = useMemo(() => {
-    if (!academicSetting?.data) return [];
-    const { currentYear, currentSemester } = academicSetting.data;
+    if (!academic?.data) return [];
+    const { currentYear, currentSemester } = academic.data;
     return groupList.filter(
       (g) => g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
     );
-  }, [groupList, academicSetting]);
+  }, [groupList, academic]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -150,6 +153,19 @@ export function SubmissionForm() {
     fetchMembers();
   }, [groupId]);
 
+  const resetForm = () => {
+    setSubmissionDate(new Date());
+    setStudentId('');
+    setSelectedJuz('');
+    setSelectedSurahId('');
+    setStartVerse('');
+    setEndVerse('');
+    setSelectedWafaId('');
+    setStartPage('');
+    setEndPage('');
+    setNote('');
+  };
+
   const handleSubmit = async () => {
     if (!groupId || !studentId || !submissionType) {
       toast.error('Lengkapi semua field terlebih dahulu');
@@ -157,6 +173,7 @@ export function SubmissionForm() {
     }
 
     const formData: FormData = {
+      date: submissionDate,
       groupId,
       studentId,
       submissionType,
@@ -197,18 +214,6 @@ export function SubmissionForm() {
     }
   };
 
-  const resetForm = () => {
-    setStudentId('');
-    setSelectedJuz('');
-    setSelectedSurahId('');
-    setStartVerse('');
-    setEndVerse('');
-    setSelectedWafaId('');
-    setStartPage('');
-    setEndPage('');
-    setNote('');
-  };
-
   const filteredSurahJuz = surahJuzList
     .filter((s) => s.juz.id.toString() === selectedJuz)
     .sort((a, b) => b.surah.id - a.surah.id);
@@ -218,16 +223,20 @@ export function SubmissionForm() {
       <CardHeader>
         <CardTitle>Form Input Setoran</CardTitle>
         <CardDescription>
-          {academicSetting?.success && (
-            <div className="mb-4 text-sm text-muted-foreground">
-              Tahun Ajaran: <span className="font-medium">{academicSetting.data.currentYear}</span>{' '}
-              — Semester:{' '}
-              <span className="font-medium">{academicSetting.data.currentSemester}</span>
-            </div>
+          {academic?.data && (
+            <span className="text-sm text-muted-foreground">
+              Tahun Ajaran: <b>{academic.data.currentYear}</b> — Semester:{' '}
+              <b>{academic.data.currentSemester}</b>
+            </span>
           )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Tanggal Setoran */}
+        <div>
+          <Label className="mb-2 block">Tanggal Setoran</Label>
+          <DatePickerSimple value={submissionDate} onChange={setSubmissionDate} />
+        </div>
         {/* Kelompok dan Siswa */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 min-w-0">

@@ -1,13 +1,11 @@
 import { notFound } from 'next/navigation';
 import { getStudentForTeacherGroup } from '@/lib/data/teacher/teacher-group-member';
 import { ScoreInputForm } from '@/components/teacher/score/score-form';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
 
-export default async function ScorePage(props: {
-  params: Promise<{ groupId: string; studentId: string }>;
-}) {
+type Params = Promise<{ groupId: string; studentId: string }>;
+
+export default async function ScorePage(props: { params: Params }) {
   const params = await props.params;
   const { groupId, studentId } = params;
 
@@ -16,15 +14,13 @@ export default async function ScorePage(props: {
 
   return (
     <div className="p-4">
-      <Button asChild variant="ghost" size="icon">
-        <Link href={`/dashboard/teacher/group/${groupId}`}>
-          <ArrowLeft />
-        </Link>
-      </Button>
+      <div className="flex items-center mb-4">
+        <BackButton href={`/dashboard/teacher/group/${groupId}`} />
+        <h1 className="text-2xl font-bold ml-4">
+          Penilaian: {student.fullName} ({student.nis})
+        </h1>
+      </div>
 
-      <h1 className="text-2xl font-bold">
-        Penilaian - {student.fullName} ({student.nis})
-      </h1>
       <ScoreInputForm groupId={groupId} student={student} />
     </div>
   );

@@ -77,6 +77,20 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
                   >
                     Nilai
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/teacher/group/${groupId}/report/${siswa.id}`)
+                    }
+                  >
+                    Rapot
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/teacher/group/${groupId}/target/${siswa.id}`)
+                    }
+                  >
+                    Target Setoran
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>

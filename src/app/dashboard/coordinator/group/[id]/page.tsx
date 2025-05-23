@@ -1,9 +1,7 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { getGroupById } from '@/lib/data/group';
 import { notFound } from 'next/navigation';
 import { GroupDetailsManagement } from '@/components/coordinator/group-members/management';
+import { BackButton } from '@/components/ui/back-button';
 
 export default async function GroupDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -15,11 +13,7 @@ export default async function GroupDetailPage(props: { params: Promise<{ id: str
 
   return (
     <div className="p-4">
-      <Link href="/dashboard/coordinator/group">
-        <Button variant="ghost">
-          <ArrowLeft />
-        </Button>
-      </Link>
+      <BackButton href={`/dashboard/coordinator/group`} />
       <h1 className="text-2xl font-bold mb-4">
         {group.name} - Kelas {group.classroom.name} {group.classroom.academicYear}{' '}
         {group.classroom.semester}

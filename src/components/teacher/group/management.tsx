@@ -1,13 +1,16 @@
-import { GroupTable } from './group-table';
-import { fetchTeacherGroups } from '@/lib/data/teacher/teacher-group';
 import { use } from 'react';
+import { fetchTeacherGroups, fetchTeacherGroupHistory } from '@/lib/data/teacher/teacher-group';
+import { GroupTable } from '@/components/teacher/group/group-table';
+import { GroupHistoryTable } from '@/components/teacher/group/history-table';
 
 export function GroupManagement() {
   const groups = use(fetchTeacherGroups());
+  const groupHistory = use(fetchTeacherGroupHistory());
 
   return (
     <div className="space-y-6">
       <GroupTable data={groups} title="Daftar Kelompok" />
+      <GroupHistoryTable data={groupHistory} title="Riwayat Kelompok" />
     </div>
   );
 }

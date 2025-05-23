@@ -13,71 +13,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePickerPlus } from '@/components/ui/date-picker-plus';
 import { toast } from 'sonner';
+import { Role, Gender, BloodType } from '@prisma/client';
 
 type UpdatedUserProfile = {
   fullName?: string;
   nis?: string;
+  nisn?: string;
   nip?: string;
   birthDate?: string;
   birthPlace?: string;
-  gender?: string;
-  bloodType?: string;
+  gender?: Gender;
+  bloodType?: BloodType;
   address?: string;
   phoneNumber?: string;
   email?: string;
 };
 
-type User = {
-  role: 'student' | 'teacher' | 'coordinator';
-  fullName: string;
-  profile?: {
-    nis?: string;
-    nip?: string;
-    birthPlace?: string;
-    birthDate?: string;
-    gender?: string;
-    bloodType?: string;
-    address?: string;
-    phoneNumber?: string;
-    email?: string;
-  };
-};
-
-export function UserDetail({ userId }: { userId: string }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function UserDetail({ userId, role }: { userId: string; role: Role }) {
   const [updatedData, setUpdatedData] = useState<UpdatedUserProfile>({});
   const [date, setDate] = useState<Date>();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUser() {
       try {
         const res = await fetch(`/api/users/detail/${userId}`);
-        const json = await res.json();
+        const { data } = await res.json();
 
-        if (!json.success) throw new Error(json.message);
+        const profile = data[role];
 
-        const userData = json.data;
-        const profile =
-          userData.role === 'student'
-            ? userData.student
-            : userData.role === 'teacher'
-            ? userData.teacher
-            : userData.coordinator;
-
-        setUser(userData);
         setUpdatedData({
-          fullName: userData.fullName || '',
-          nis: profile?.nis || '',
-          nip: profile?.nip || '',
-          birthPlace: profile?.birthPlace || '',
-          gender: profile?.gender || 'PILIH',
-          bloodType: profile?.bloodType || 'PILIH',
-          address: profile?.address || '',
-          phoneNumber: profile?.phoneNumber || '',
-          email: profile?.email || '',
+          fullName: data.fullName,
+          nis: role === Role.student ? profile?.nis ?? '' : undefined,
+          nisn: role === Role.student ? profile?.nisn ?? '' : undefined,
+          nip: role !== Role.student ? profile?.nip ?? '' : undefined,
+          birthPlace: profile?.birthPlace ?? '',
+          gender: profile?.gender ?? Gender.PILIH,
+          bloodType: profile?.bloodType ?? BloodType.PILIH,
+          address: profile?.address ?? '',
+          phoneNumber: profile?.phoneNumber ?? '',
+          email: profile?.email ?? '',
         });
 
         if (profile?.birthDate) {
@@ -89,47 +66,37 @@ export function UserDetail({ userId }: { userId: string }) {
         setLoading(false);
       }
     }
-    fetchUser();
-  }, [userId]);
 
-  const handleChange = (field: string, value: string) => {
+    fetchUser();
+  }, [userId, role]);
+
+  const handleChange = (field: keyof UpdatedUserProfile, value: string) => {
     setUpdatedData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
-
     try {
+      const payload = {
+        ...updatedData,
+        role,
+        birthDate: date?.toISOString(),
+      };
+
       const res = await fetch(`/api/users/detail/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...user,
-          ...updatedData,
-          birthDate: date?.toISOString() ?? user.profile?.birthDate,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        toast.success('Detail user berhasil diperbarui!');
-        const detailRes = await fetch(`/api/users/detail/${userId}`);
-        const detailData = await detailRes.json();
-        setUser(detailData);
-      } else {
-        toast.success('Gagal memperbarui detail user!');
-      }
-    } catch (error) {
-      toast.success('Gagal memperbarui detail user!');
-      console.error('Error updating user:', error);
+      if (!res.ok) throw new Error();
+
+      toast.success('Detail user berhasil diperbarui!');
+    } catch {
+      toast.error('Gagal memperbarui detail user!');
     }
   };
 
   if (loading) return <p>Loading...</p>;
-  if (!user) return <p>User tidak ditemukan</p>;
-
-  const isStudent = user.role === 'student';
 
   return (
     <Card>
@@ -145,11 +112,21 @@ export function UserDetail({ userId }: { userId: string }) {
               onChange={(e) => handleChange('fullName', e.target.value)}
             />
 
-            <Label>{isStudent ? 'NIS' : 'NIP'}</Label>
+            <Label>{role === Role.student ? 'NIS' : 'NIP'}</Label>
             <Input
-              value={isStudent ? updatedData.nis ?? '' : updatedData.nip ?? ''}
-              onChange={(e) => handleChange(isStudent ? 'nis' : 'nip', e.target.value)}
+              value={role === Role.student ? updatedData.nis ?? '' : updatedData.nip ?? ''}
+              onChange={(e) => handleChange(role === Role.student ? 'nis' : 'nip', e.target.value)}
             />
+
+            {role === Role.student && (
+              <>
+                <Label>NISN</Label>
+                <Input
+                  value={updatedData.nisn ?? ''}
+                  onChange={(e) => handleChange('nisn', e.target.value)}
+                />
+              </>
+            )}
 
             <Label>Tempat Lahir</Label>
             <Textarea
@@ -158,37 +135,39 @@ export function UserDetail({ userId }: { userId: string }) {
             />
 
             <Label>Tanggal Lahir</Label>
-            <DatePicker value={date} onChange={setDate} />
+            <DatePickerPlus value={date} onChange={setDate} />
 
             <Label>Jenis Kelamin</Label>
             <Select
-              value={updatedData.gender || 'PILIH'}
-              onValueChange={(val) => handleChange('gender', val)}
+              value={updatedData.gender ?? Gender.PILIH}
+              onValueChange={(val) => handleChange('gender', val as Gender)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Jenis Kelamin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PILIH">--Pilih--</SelectItem>
-                <SelectItem value="LAKI_LAKI">Laki-laki</SelectItem>
-                <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
+                {Object.values(Gender).map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g.replace('_', ' ')}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
             <Label>Golongan Darah</Label>
             <Select
-              value={updatedData.bloodType || 'PILIH'}
-              onValueChange={(val) => handleChange('bloodType', val)}
+              value={updatedData.bloodType ?? BloodType.PILIH}
+              onValueChange={(val) => handleChange('bloodType', val as BloodType)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Golongan Darah" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PILIH">--Pilih--</SelectItem>
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="AB">AB</SelectItem>
-                <SelectItem value="O">O</SelectItem>
+                {Object.values(BloodType).map((bt) => (
+                  <SelectItem key={bt} value={bt}>
+                    {bt}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
