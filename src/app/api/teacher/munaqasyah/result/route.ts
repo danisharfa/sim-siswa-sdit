@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Role, MunaqosyahGrade, MunaqosyahRequestStatus, MunaqosyahStage } from '@prisma/client';
+import { Role, MunaqasyahGrade, MunaqasyahRequestStatus, MunaqasyahStage } from '@prisma/client';
 
 export async function GET() {
   try {
@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
-    const results = await prisma.munaqosyahResult.findMany({
+    const results = await prisma.munaqasyahResult.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         juz: true,
@@ -46,7 +46,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: results });
   } catch (error) {
-    console.error('[GET_MUNAQOSYAH_RESULT]', error);
+    console.error('[GET_MUNAQASYAH_RESULT]', error);
     return NextResponse.json(
       {
         success: false,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const request = await prisma.munaqosyahRequest.findUnique({
+    const request = await prisma.munaqasyahRequest.findUnique({
       where: { id: requestId },
       include: {
         student: true,
@@ -91,15 +91,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Hitung grade
-    let grade: MunaqosyahGrade = MunaqosyahGrade.TIDAK_LULUS;
-    if (score >= 91) grade = MunaqosyahGrade.MUMTAZ;
-    else if (score >= 85) grade = MunaqosyahGrade.JAYYID_JIDDAN;
-    else if (score >= 80) grade = MunaqosyahGrade.JAYYID;
+    let grade: MunaqasyahGrade = MunaqasyahGrade.TIDAK_LULUS;
+    if (score >= 91) grade = MunaqasyahGrade.MUMTAZ;
+    else if (score >= 85) grade = MunaqasyahGrade.JAYYID_JIDDAN;
+    else if (score >= 80) grade = MunaqasyahGrade.JAYYID;
 
     const passed = score >= 80;
 
     // Simpan hasil munaqasyah
-    await prisma.munaqosyahResult.create({
+    await prisma.munaqasyahResult.create({
       data: {
         studentId: request.studentId,
         scheduleId,
@@ -115,17 +115,17 @@ export async function POST(req: NextRequest) {
     });
 
     // Jika lulus, buat permintaan ke tahap berikutnya (termasuk MUNAQASYAH)
-    if (passed && request.stage !== MunaqosyahStage.MUNAQASYAH) {
-      const nextStageMap: Record<MunaqosyahStage, MunaqosyahStage> = {
-        TAHAP_1: MunaqosyahStage.TAHAP_2,
-        TAHAP_2: MunaqosyahStage.TAHAP_3,
-        TAHAP_3: MunaqosyahStage.MUNAQASYAH,
-        MUNAQASYAH: MunaqosyahStage.MUNAQASYAH,
+    if (passed && request.stage !== MunaqasyahStage.MUNAQASYAH) {
+      const nextStageMap: Record<MunaqasyahStage, MunaqasyahStage> = {
+        TAHAP_1: MunaqasyahStage.TAHAP_2,
+        TAHAP_2: MunaqasyahStage.TAHAP_3,
+        TAHAP_3: MunaqasyahStage.MUNAQASYAH,
+        MUNAQASYAH: MunaqasyahStage.MUNAQASYAH,
       };
 
       const nextStage = nextStageMap[request.stage];
 
-      const existing = await prisma.munaqosyahRequest.findFirst({
+      const existing = await prisma.munaqasyahRequest.findFirst({
         where: {
           studentId: request.studentId,
           stage: nextStage,
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!existing) {
-        await prisma.munaqosyahRequest.create({
+        await prisma.munaqasyahRequest.create({
           data: {
             studentId: request.studentId,
             teacherId: request.teacherId,
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
             semester: request.semester,
             juzId: request.juzId,
             stage: nextStage,
-            status: MunaqosyahRequestStatus.MENUNGGU,
+            status: MunaqasyahRequestStatus.MENUNGGU,
           },
         });
       }
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       message: 'Hasil munaqasyah berhasil disimpan',
     });
   } catch (error) {
-    console.error('[POST_TEACHER_MUNAQOSYAH_RESULT]', error);
+    console.error('[POST_TEACHER_MUNAQASYAH_RESULT]', error);
     return NextResponse.json(
       {
         success: false,

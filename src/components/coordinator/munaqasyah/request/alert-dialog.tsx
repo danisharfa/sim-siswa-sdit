@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
-import { MunaqosyahRequestStatus } from '@prisma/client';
+import { MunaqasyahRequestStatus } from '@prisma/client';
 
 interface RequestStatusAlertDialogProps {
   request: { id: string };
@@ -41,7 +41,7 @@ export function RequestStatusAlertDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status:
-            type === 'accept' ? MunaqosyahRequestStatus.DITERIMA : MunaqosyahRequestStatus.DITOLAK,
+            type === 'accept' ? MunaqasyahRequestStatus.DITERIMA : MunaqasyahRequestStatus.DITOLAK,
         }),
       });
 

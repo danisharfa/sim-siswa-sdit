@@ -21,7 +21,7 @@ export async function GET() {
       );
     }
 
-    const schedules = await prisma.munaqosyahSchedule.findMany({
+    const schedules = await prisma.munaqasyahSchedule.findMany({
       where: { examinerId: teacher.id },
       orderBy: { date: 'desc' },
       include: {
@@ -56,7 +56,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: formatted });
   } catch (error) {
-    console.error('[TEACHER_GET_AVAILABLE_MUNAQOSYAH_SCHEDULES]', error);
+    console.error('[TEACHER_GET_AVAILABLE_MUNAQASYAH_SCHEDULES]', error);
     return NextResponse.json({ success: false, message: 'Gagal memuat data' }, { status: 500 });
   }
 }

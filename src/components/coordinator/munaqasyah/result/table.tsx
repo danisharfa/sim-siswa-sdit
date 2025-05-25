@@ -22,7 +22,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Semester } from '@prisma/client';
 
-interface MunaqosyahResult {
+interface MunaqasyahResult {
   id: string;
   stage: string;
   score: number;
@@ -53,12 +53,12 @@ interface MunaqosyahResult {
   };
 }
 
-interface MunaqosyahResultTableProps {
-  data: MunaqosyahResult[];
+interface MunaqasyahResultTableProps {
+  data: MunaqasyahResult[];
   title: string;
 }
 
-export function MunaqosyahResultTable({ data, title }: MunaqosyahResultTableProps) {
+export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProps) {
   const {
     sorting,
     setSorting,
@@ -66,11 +66,11 @@ export function MunaqosyahResultTable({ data, title }: MunaqosyahResultTableProp
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-  } = useDataTableState<MunaqosyahResult, string>();
+  } = useDataTableState<MunaqasyahResult, string>();
 
   const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
 
-  const columns = useMemo<ColumnDef<MunaqosyahResult>[]>(
+  const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
     () => [
       {
         id: 'Tanggal',

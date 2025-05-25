@@ -2,12 +2,12 @@
 
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MunaqosyahScheduleTable } from './table';
+import { MunaqasyahScheduleTable } from './table';
 import { AddScheduleForm } from './add-form';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function MunaqosyahScheduleManagement() {
+export function MunaqasyahScheduleManagement() {
   const { data, error, isLoading, mutate } = useSWR(
     '/api/coordinator/munaqasyah/schedule',
     fetcher
@@ -27,7 +27,7 @@ export function MunaqosyahScheduleManagement() {
   return (
     <div className="space-y-6">
       <AddScheduleForm onScheduleAdded={mutate} />
-      <MunaqosyahScheduleTable data={data.data} title="Jadwal Munaqasyah Siswa" />
+      <MunaqasyahScheduleTable data={data.data} title="Jadwal Munaqasyah Siswa" />
     </div>
   );
 }

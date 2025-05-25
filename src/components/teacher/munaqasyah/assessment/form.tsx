@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-interface MunaqosyahSchedule {
+interface MunaqasyahSchedule {
   id: string;
   date: string;
   sessionName: string;
@@ -114,7 +114,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
                 <SelectValue placeholder="Pilih sesi munaqasyah" />
               </SelectTrigger>
               <SelectContent>
-                {schedules?.data?.map((s: MunaqosyahSchedule) => (
+                {schedules?.data?.map((s: MunaqasyahSchedule) => (
                   <SelectItem key={s.id} value={s.id}>
                     {new Date(s.date).toLocaleDateString('id-ID', {
                       day: 'numeric',

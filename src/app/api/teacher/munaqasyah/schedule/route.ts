@@ -17,7 +17,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    const schedules = await prisma.munaqosyahSchedule.findMany({
+    const schedules = await prisma.munaqasyahSchedule.findMany({
       where: { examinerId: teacher.id },
       orderBy: { date: 'desc' },
       select: {
@@ -32,7 +32,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: schedules });
   } catch (error) {
-    console.error('[TEACHER_MUNAQOSYAH_SCHEDULE]', error);
+    console.error('[TEACHER_MUNAQASYAH_SCHEDULE]', error);
     return NextResponse.json({ success: false, message: 'Gagal memuat data' }, { status: 500 });
   }
 }

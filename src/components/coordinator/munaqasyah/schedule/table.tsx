@@ -23,7 +23,7 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester } from '@prisma/client';
 
-interface MunaqosyahSchedule {
+interface MunaqasyahSchedule {
   id: string;
   date: string;
   sessionName: string;
@@ -48,11 +48,11 @@ interface MunaqosyahSchedule {
 }
 
 interface Props {
-  data: MunaqosyahSchedule[];
+  data: MunaqasyahSchedule[];
   title: string;
 }
 
-export function MunaqosyahScheduleTable({ data, title }: Props) {
+export function MunaqasyahScheduleTable({ data, title }: Props) {
   const {
     sorting,
     setSorting,
@@ -60,7 +60,7 @@ export function MunaqosyahScheduleTable({ data, title }: Props) {
     setColumnVisibility,
     columnFilters,
     setColumnFilters,
-  } = useDataTableState<MunaqosyahSchedule, string>();
+  } = useDataTableState<MunaqasyahSchedule, string>();
 
   const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
 
@@ -77,7 +77,7 @@ export function MunaqosyahScheduleTable({ data, title }: Props) {
     return Array.from(set);
   }, [data]);
 
-  const columns = useMemo<ColumnDef<MunaqosyahSchedule>[]>(
+  const columns = useMemo<ColumnDef<MunaqasyahSchedule>[]>(
     () => [
       {
         accessorKey: 'date',

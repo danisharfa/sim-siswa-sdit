@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const schedule = await prisma.munaqosyahSchedule.findFirst({
+    const schedule = await prisma.munaqasyahSchedule.findFirst({
       where: {
         id: scheduleId,
         examinerId: teacher.id,
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({ success: true, data: results });
   } catch (error) {
-    console.error('[TEACHER_GET_MUNAQOSYAH_RESULT_BY_SCHEDULE]', error);
+    console.error('[TEACHER_GET_MUNAQASYAH_RESULT_BY_SCHEDULE]', error);
     return NextResponse.json(
       { success: false, message: 'Gagal mengambil data hasil munaqasyah' },
       { status: 500 }

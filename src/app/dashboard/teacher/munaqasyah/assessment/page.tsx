@@ -1,10 +1,10 @@
-import { MunaqosyahResultManagement } from '@/components/teacher/munaqasyah/assessment/management';
+import { MunaqasyahResultManagement } from '@/components/teacher/munaqasyah/assessment/management';
 
-export default function TeacherMunaqosyahAssessmentPage() {
+export default function TeacherMunaqasyahAssessmentPage() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Penilaian Munaqasyah Siswa</h1>
-      <MunaqosyahResultManagement />
+      <MunaqasyahResultManagement />
     </div>
   );
 }

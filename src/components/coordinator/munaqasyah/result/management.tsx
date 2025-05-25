@@ -3,11 +3,11 @@
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddResultForm } from './add-form';
-import { MunaqosyahResultTable } from './table';
+import { MunaqasyahResultTable } from './table';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function MunaqosyahResultManagement() {
+export function MunaqasyahResultManagement() {
   const { data, error, isLoading, mutate } = useSWR('/api/coordinator/munaqasyah/result', fetcher);
 
   if (isLoading) {
@@ -26,7 +26,7 @@ export function MunaqosyahResultManagement() {
   return (
     <div className="space-y-6">
       <AddResultForm onSaved={mutate} />
-      <MunaqosyahResultTable data={data.data} title="Daftar Munaqasyah Ujian" />
+      <MunaqasyahResultTable data={data.data} title="Daftar Munaqasyah Ujian" />
     </div>
   );
 }

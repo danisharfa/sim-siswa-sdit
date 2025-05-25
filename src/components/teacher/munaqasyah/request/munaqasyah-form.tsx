@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Save, Loader2 } from 'lucide-react';
-import { Semester, MunaqosyahStage } from '@prisma/client';
+import { Semester, MunaqasyahStage } from '@prisma/client';
 
 interface Group {
   groupId: string;
@@ -36,7 +36,7 @@ interface Juz {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function MunaqosyahForm() {
+export function MunaqasyahForm() {
   const [loading, setLoading] = useState(false);
 
   const [groups, setGroups] = useState<Group[]>([]);
@@ -94,7 +94,7 @@ export function MunaqosyahForm() {
         body: JSON.stringify({
           studentId: selectedStudentId,
           juzId: selectedJuzId,
-          stage: MunaqosyahStage.TAHAP_1, // fixed value
+          stage: MunaqasyahStage.TAHAP_1, // fixed value
         }),
       });
       const json = await res.json();
@@ -107,7 +107,7 @@ export function MunaqosyahForm() {
         toast.error(json.message ?? 'Gagal mengirim permintaan');
       }
     } catch (error) {
-      console.error('[MUNAQOSYAH_REQUEST_SUBMIT]', error);
+      console.error('[MUNAQASYAH_REQUEST_SUBMIT]', error);
       toast.error('Terjadi kesalahan saat submit');
     } finally {
       setLoading(false);
