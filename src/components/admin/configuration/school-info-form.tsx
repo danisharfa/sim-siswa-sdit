@@ -7,24 +7,26 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
-  currentPrincipalName: z.string().optional(),
-  schoolName: z.string().optional(),
-  schoolAddress: z.string().optional(),
+  currentPrincipalName: z.string().min(1, 'Nama kepala sekolah wajib diisi'),
+  schoolName: z.string().min(1, 'Nama sekolah wajib diisi'),
+  schoolAddress: z.string().min(1, 'Alamat sekolah wajib diisi'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function SchoolInfoForm({ data, onSave }: {
-  data: FormValues;
-  onSave: () => void;
-}) {
+export function SchoolInfoForm({ data, onSave }: { data: FormValues; onSave: () => void }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: data,
@@ -76,7 +78,9 @@ export function SchoolInfoForm({ data, onSave }: {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nama Kepala Sekolah</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -87,7 +91,9 @@ export function SchoolInfoForm({ data, onSave }: {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nama Sekolah</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -98,7 +104,9 @@ export function SchoolInfoForm({ data, onSave }: {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Alamat Sekolah</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

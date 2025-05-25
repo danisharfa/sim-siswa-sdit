@@ -17,9 +17,9 @@ export async function PUT(req: NextRequest) {
     const updateData: Partial<{
       currentYear: string;
       currentSemester: Semester;
-      currentPrincipalName: string | null;
-      schoolName: string | null;
-      schoolAddress: string | null;
+      currentPrincipalName: string;
+      schoolName: string;
+      schoolAddress: string;
     }> = {};
 
     if (currentYear !== undefined) updateData.currentYear = currentYear;
