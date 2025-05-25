@@ -4,6 +4,7 @@ import { AddUserSchema } from '@/lib/validations/auth';
 import { prisma } from '@/lib/prisma';
 import { AuthError } from 'next-auth';
 import { hash } from 'bcryptjs';
+import { Role } from '@prisma/client';
 
 function generateCustomId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -31,7 +32,7 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
       },
     });
 
-    if (role === 'coordinator') {
+    if (role === Role.coordinator) {
       const coordinatorId = generateCustomId('COORDINATOR');
       try {
         await prisma.coordinatorProfile.create({
@@ -48,7 +49,7 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
       }
     }
 
-    if (role === 'teacher') {
+    if (role === Role.teacher) {
       const teacherId = generateCustomId('GURU');
       try {
         await prisma.teacherProfile.create({
@@ -65,7 +66,7 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
       }
     }
 
-    if (role === 'student') {
+    if (role === Role.student) {
       const studentId = generateCustomId('SISWA');
       try {
         await prisma.studentProfile.create({

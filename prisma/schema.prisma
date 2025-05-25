@@ -43,10 +43,12 @@ model CoordinatorProfile {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
 
-  user                        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  handledTashihRequests       TashihRequest[]
-  scheduledTashihSchedules    TashihSchedule[]
-  evaluatedTashihResults      TashihResult[]
+  user                             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  handledTashihRequests            TashihRequest[]
+  scheduledTashihSchedules         TashihSchedule[]
+  evaluatedTashihResults           TashihResult[]
+  handledMunaqasyahRequests        MunaqasyahRequest[] 
+  scheduledMunaqasyahSchedules     MunaqasyahSchedule[]
 
   @@index([nip])
   @@map("coordinator_profiles")
@@ -69,12 +71,14 @@ model TeacherProfile {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
   
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teacherGroups     TeacherGroup[]
-  groupHistories    GroupHistory[]
-  submissions       Submission[]
-  tashihRequests    TashihRequest[]
-  weeklyTargets     WeeklyTarget[]
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teacherGroups          TeacherGroup[]
+  groupHistories         GroupHistory[]
+  submissions            Submission[]
+  tashihRequests         TashihRequest[]
+  weeklyTargets          WeeklyTarget[]
+  munaqasyahRequests     MunaqasyahRequest[]    @relation("MunaqasyahTeacher")
+  munaqasyahSchedules    MunaqasyahSchedule[]   @relation("MunaqasyahExaminer")
 
   @@index([nip])
   @@map("teacher_profiles")
@@ -115,17 +119,23 @@ model StudentProfile {
   tahsinScores          TahsinScore[]
   tahsinSummaries       TahsinSummary[]
   weeklyTargets         WeeklyTarget[]
+  munaqasyahRequests    MunaqasyahRequest[]   @relation("MunaqasyahStudent")
+  munaqasyahResults     MunaqasyahResult[]
+
 
   @@index([nis])
   @@map("student_profiles")
 }
 
 model AcademicSetting {
-  id                  String    @id
-  currentYear         String
-  currentSemester     Semester
-  updatedAt           DateTime  @updatedAt
-  createdAt           DateTime  @default(now())
+  id                      String    @id
+  currentYear             String
+  currentSemester         Semester
+  currentPrincipalName    String
+  schoolName              String
+  schoolAddress           String
+  updatedAt               DateTime  @updatedAt
+  createdAt               DateTime  @default(now())
 
   @@map("academic_settings")
 }
@@ -217,9 +227,9 @@ model GroupHistory {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
 
-  group      Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  teacher    TeacherProfile?   @relation(fields: [teacherId], references: [id])
-  student    StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group      Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher    TeacherProfile?    @relation(fields: [teacherId], references: [id])
+  student    StudentProfile     @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, academicYear, semester])
   @@map("group_histories")
@@ -265,6 +275,61 @@ model Submission {
   @@map("submissions")
 }
 
+model TahsinSummary {
+  id              String        @id @default(uuid())
+  studentId       String
+  academicYear    String
+  semester        Semester
+  lastMaterial    String?
+  averageScore    Float?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, academicYear, semester])
+  @@map("tahsin_summaries")
+}
+
+model WeeklyTarget {
+  id                String        @id @default(uuid())
+  teacherId         String
+  studentId         String
+  groupId           String
+
+  academicYear      String
+  semester          Semester
+
+  type              SubmissionType
+  startDate         DateTime
+  endDate           DateTime
+  description       String
+  status            TargetStatus  @default(TIDAK_TERCAPAI)
+  progressPercent   Int?          @default(0)
+
+  surahStartId      Int?
+  surahEndId        Int?
+  startAyat         Int?
+  endAyat           Int?
+
+  wafaId            Int?
+  startPage         Int?
+  endPage           Int?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  student           StudentProfile  @relation(fields: [studentId], references: [id])
+  teacher           TeacherProfile  @relation(fields: [teacherId], references: [id])
+  group             Group           @relation(fields: [groupId], references: [id])
+  surahStart        Surah?          @relation("StartSurah", fields: [surahStartId], references: [id])
+  surahEnd          Surah?          @relation("EndSurah", fields: [surahEndId], references: [id])
+  wafa              Wafa?           @relation(fields: [wafaId], references: [id])
+
+  @@map("weekly_targets")
+}
+
 model Surah {
   id            Int       @id
   name          String    @unique
@@ -297,9 +362,11 @@ model Juz {
   id          Int          @id
   name        String       
 
-  surahJuz         SurahJuz[]
-  submissions      Submission[]
-  tashihRequests   TashihRequest[]
+  surahJuz               SurahJuz[]
+  submissions            Submission[]
+  tashihRequests         TashihRequest[]
+  munaqasyahRequests     MunaqasyahRequest[]
+  munaqasyahResults      MunaqasyahResult[]
 
   @@map("juz")
 }
@@ -316,6 +383,7 @@ model Wafa {
   @@map("wafa")
 }
 
+// Tashih models
 model TashihRequest {
   id            String                  @id @default(uuid())
   teacherId     String     
@@ -407,6 +475,7 @@ model TashihResult {
   @@map("tashih_results")
 }
 
+// Score models
 model TahfidzScore {
   id            String        @id @default(uuid())
   studentId     String
@@ -464,61 +533,86 @@ model TahsinScore {
   @@map("tahsin_scores")
 }
 
-model TahsinSummary {
-  id              String        @id @default(uuid())
-  studentId       String
-  academicYear    String
-  semester        Semester
-  lastMaterial    String?
-  averageScore    Float?
+// Munaqasyah models
+model MunaqasyahRequest {
+  id            String        @id @default(uuid())
+  studentId     String
+  teacherId     String
+  academicYear  String
+  semester      Semester
+  stage         MunaqasyahStage
+  juzId         Int
+  status        MunaqasyahRequestStatus
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  handledByCoordinatorId String?
+  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [id])
 
-  @@unique([studentId, academicYear, semester])
-  @@map("tahsin_summaries")
+  student           StudentProfile   @relation("MunaqasyahStudent", fields: [studentId], references: [id])
+  teacher           TeacherProfile   @relation("MunaqasyahTeacher", fields: [teacherId], references: [id])
+  juz               Juz              @relation(fields: [juzId], references: [id])
+  scheduleRequests  MunaqasyahScheduleRequest[]
+
+  @@map("munaqasyah_requests")
 }
 
-model WeeklyTarget {
-  id                String        @id @default(uuid())
-  teacherId         String
-  studentId         String
-  groupId           String
+model MunaqasyahScheduleRequest {
+  id             String        @id @default(uuid())
+  scheduleId     String
+  requestId      String
 
-  academicYear      String
-  semester          Semester
+  schedule       MunaqasyahSchedule @relation(fields: [scheduleId], references: [id])
+  request        MunaqasyahRequest  @relation(fields: [requestId], references: [id])
 
-  type              SubmissionType
-  startDate         DateTime
-  endDate           DateTime
-  description       String
-  status            TargetStatus  @default(TIDAK_TERCAPAI)
-  progressPercent   Int?          @default(0)
-
-  surahStartId      Int?
-  surahEndId        Int?
-  startAyat         Int?
-  endAyat           Int?
-
-  wafaId            Int?
-  startPage         Int?
-  endPage           Int?
-
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  student           StudentProfile  @relation(fields: [studentId], references: [id])
-  teacher           TeacherProfile  @relation(fields: [teacherId], references: [id])
-  group             Group           @relation(fields: [groupId], references: [id])
-  surahStart        Surah?          @relation("StartSurah", fields: [surahStartId], references: [id])
-  surahEnd          Surah?          @relation("EndSurah", fields: [surahEndId], references: [id])
-  wafa              Wafa?           @relation(fields: [wafaId], references: [id])
-
-  @@map("weekly_targets")
+  @@map("munaqasyah_schedule_requests")
 }
 
+model MunaqasyahSchedule {
+  id              String           @id @default(uuid())
+  date            DateTime
+  sessionName     String
+  startTime       String
+  endTime         String
+  location        String
+  examinerId      String?
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  scheduledByCoordinatorId   String?
+  scheduledByCoordinator     CoordinatorProfile? @relation(fields: [scheduledByCoordinatorId], references: [id])
+  
+  examiner          TeacherProfile?   @relation("MunaqasyahExaminer", fields: [examinerId], references: [id])
+  scheduleRequests  MunaqasyahScheduleRequest[]
+  results           MunaqasyahResult[]
+
+  @@map("munaqasyah_schedules")
+}
+
+model MunaqasyahResult {
+  id           String        @id @default(uuid())
+  studentId    String
+  scheduleId   String
+  stage        MunaqasyahStage
+  academicYear String
+  semester     Semester
+  juzId        Int
+  score        Int
+  grade        MunaqasyahGrade
+  passed       Boolean
+  note         String?
+  createdAt    DateTime      @default(now())
+
+  student      StudentProfile @relation(fields: [studentId], references: [id])
+  schedule     MunaqasyahSchedule  @relation(fields: [scheduleId], references: [id])
+  juz          Juz            @relation(fields: [juzId], references: [id])
+
+  @@map("munaqasyah_results")
+}
+
+// Enums
 enum Role {
   admin
   coordinator
@@ -597,4 +691,25 @@ enum TahsinType {
 enum TargetStatus {
   TIDAK_TERCAPAI
   TERCAPAI
+}
+
+enum MunaqasyahStage {
+  TAHAP_1
+  TAHAP_2
+  TAHAP_3
+  MUNAQASYAH
+}
+
+enum MunaqasyahRequestStatus {
+  MENUNGGU
+  DITERIMA
+  DITOLAK
+  SELESAI
+}
+
+enum MunaqasyahGrade {
+  MUMTAZ         // 91–100
+  JAYYID_JIDDAN  // 85–90
+  JAYYID         // 80–84
+  TIDAK_LULUS    // <80
 }

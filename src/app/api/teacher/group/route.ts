@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { Role } from '@prisma/client';
 
 export async function GET() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }

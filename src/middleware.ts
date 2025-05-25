@@ -1,6 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { Role } from '@prisma/client';
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -33,7 +34,9 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL(`/dashboard/${userRole}/account`, req.url));
     }
 
-    const isValidRole = ['admin', 'coordinator', 'teacher', 'student'].includes(expectedRoleInPath);
+    const isValidRole = [Role.admin, Role.coordinator, Role.teacher, Role.student].includes(
+      expectedRoleInPath as Role
+    );
 
     if (isValidRole) {
       if (userRole !== expectedRoleInPath) {

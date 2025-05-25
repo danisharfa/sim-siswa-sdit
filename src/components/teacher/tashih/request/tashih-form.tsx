@@ -192,8 +192,8 @@ export function TashihForm() {
         <CardDescription>
           {settingData?.success && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <span className="font-medium">{settingData.data.currentYear}</span> —
-              Semester: <span className="font-medium">{settingData.data.currentSemester}</span>
+              Tahun Ajaran: <b>{settingData.data.currentYear}</b> — Semester:{' '}
+              <b>{settingData.data.currentSemester}</b>
             </span>
           )}
         </CardDescription>

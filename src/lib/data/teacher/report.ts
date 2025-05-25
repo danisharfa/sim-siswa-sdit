@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Semester } from '@prisma/client';
+import { Role, Semester } from '@prisma/client';
 
 export interface StudentReportData {
   fullName: string;
@@ -87,7 +87,7 @@ export async function getStudentReportData(studentId: string): Promise<StudentRe
     prisma.coordinatorProfile.findFirst({
       where: {
         user: {
-          role: 'coordinator',
+          role: Role.coordinator,
         },
       },
       include: {

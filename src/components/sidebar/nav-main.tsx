@@ -1,66 +1,68 @@
 'use client';
 
 import Link from 'next/link';
-
 import {
-  SidebarGroup,
-  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
+  SidebarMenuButton,
 } from '@/components/ui/sidebar';
 
-type NavItem = {
+type BaseItem = {
   title: string;
-  url?: string;
+  url: string;
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  children?: { title: string; url: string }[];
 };
+
+type GroupItem = {
+  label: string;
+  items: BaseItem[];
+};
+
+type NavItem = BaseItem | GroupItem;
 
 export function NavMain({ items = [] }: { items?: NavItem[] }) {
   return (
-    <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
-          {items.length > 0 ? (
-            items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                {item.children && item.children.length > 0 ? (
-                  <>
-                    <SidebarMenuButton className="flex items-center gap-2">
-                      {item.icon && <item.icon />}
-                      <span className="truncate ">{item.title}</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuSub>
-                      {item.children.map((child) => (
-                        <SidebarMenuSubItem key={child.title}>
-                          <SidebarMenuSubButton asChild>
-                            <Link href={child.url} className="truncate">
-                              {child.title}
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </>
-                ) : (
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <Link href={item.url ?? '#'} className="flex items-center gap-2">
-                      {item.icon && <item.icon />}
-                      <span className="truncate">{item.title}</span>
+    <SidebarMenu className="px-2">
+      {items.map((item, index) => {
+        if ('label' in item) {
+          return (
+            <div key={item.label + index} className="mt-2">
+              <SidebarGroupLabel className="px-2 text-xs font-medium text-muted-foreground mb-1">
+                {item.label}
+              </SidebarGroupLabel>
+              {item.items.map((sub) => (
+                <SidebarMenuItem key={sub.title}>
+                  <SidebarMenuButton asChild tooltip={sub.title}>
+                    <Link
+                      href={sub.url}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted"
+                    >
+                      {sub.icon && <sub.icon className="size-4" />}
+                      <span className="text-sm">{sub.title}</span>
                     </Link>
                   </SidebarMenuButton>
-                )}
-              </SidebarMenuItem>
-            ))
-          ) : (
-            <p className="text-muted-foreground px-4 py-2">No menu available</p>
-          )}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+                </SidebarMenuItem>
+              ))}
+            </div>
+          );
+        }
+
+        // For single item (like Dashboard)
+        return (
+          <SidebarMenuItem key={item.title + index}>
+            <SidebarMenuButton asChild tooltip={item.title}>
+              <Link
+                href={item.url}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted"
+              >
+                {item.icon && <item.icon className="size-4" />}
+                <span className="text-sm">{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
   );
 }

@@ -1,7 +1,8 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { Role } from '@prisma/client';
 
 export default async function StudentDashboardPage() {
-  const user = await requireRole('student');
+  const user = await requireRole(Role.student);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">

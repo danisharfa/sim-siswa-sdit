@@ -1,11 +1,11 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Semester } from '@prisma/client';
+import { Role, Semester } from '@prisma/client';
 
 export async function fetchTeacherGroups() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       throw new Error('Unauthorized');
     }
 
@@ -49,7 +49,7 @@ export async function fetchTeacherGroups() {
 export async function fetchTeacherGroupHistory() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       throw new Error('Unauthorized');
     }
 

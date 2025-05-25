@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { Role } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'admin') {
+    if (!session || session.user.role !== Role.admin) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
@@ -61,7 +62,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'admin') {
+    if (!session || session.user.role !== Role.admin) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { evaluateTargetAchievement } from '@/lib/data/teacher/evaluate-target';
+import { Role } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

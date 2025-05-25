@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { Semester } from '@prisma/client';
 import { auth } from '@/auth';
 import { addOneYearToAcademicYear } from '@/lib/data/classroom';
+import { Role, Semester, StudentStatus } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'admin') {
+    if (!session || session.user.role !== Role.admin) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const students = await prisma.studentProfile.findMany({
       where: {
         id: { in: studentIds },
-        status: 'AKTIF',
+        status: StudentStatus.AKTIF,
       },
       include: {
         classroom: true,
@@ -66,11 +66,12 @@ export async function POST(req: NextRequest) {
       }
 
       // Cek apakah siswa lulus
-      const isGraduating = currentClass.name.startsWith('6') && currentClass.semester === 'GENAP';
+      const isGraduating =
+        currentClass.name.startsWith('6') && currentClass.semester === Semester.GENAP;
       let nextClassroomId: string | null = null;
 
       if (!isGraduating) {
-        if (currentClass.semester === 'GANJIL') {
+        if (currentClass.semester === Semester.GANJIL) {
           // Naik ke semester GENAP
           const kelasGenap = await prisma.classroom.upsert({
             where: {
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
         data: {
           classroomId: isGraduating ? null : nextClassroomId,
           groupId: null,
-          status: isGraduating ? 'LULUS' : 'AKTIF',
+          status: isGraduating ? StudentStatus.LULUS : StudentStatus.AKTIF,
           graduatedAt: isGraduating ? new Date() : null,
         },
       });
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      results.push(`${student.nis} → ${isGraduating ? 'LULUS' : nextClassroomId}`);
+      results.push(`${student.nis} → ${isGraduating ? StudentStatus.LULUS : nextClassroomId}`);
     }
 
     return NextResponse.json({

@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Semester } from '@prisma/client';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   Form,
@@ -22,9 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { Semester } from '@prisma/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
   currentYear: z.string().min(4, 'Tahun ajaran wajib diisi'),
@@ -33,65 +33,39 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface AcademicSettingFormProps {
-  data: {
-    currentYear: string;
-    currentSemester: Semester;
-  };
-  onSave: () => void;
-}
-
-export function AcademicSettingForm({ data, onSave }: AcademicSettingFormProps) {
-  const [loading, setLoading] = useState(false);
-
+export function AcademicPeriodForm({ data, onSave }: { data: FormValues; onSave: () => void }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      currentYear: '',
-      currentSemester: Semester.GANJIL,
-    },
+    defaultValues: data,
   });
 
-  useEffect(() => {
-    if (data) {
-      form.reset(
-        {
-          currentYear: data.currentYear,
-          currentSemester: data.currentSemester,
-        },
-        { keepDefaultValues: true }
-      );
-    }
-  }, [data, form]);
-
+  const [loading, setLoading] = useState(false);
   const isDirty = form.formState.isDirty;
 
-  const onSubmit = async (values: FormValues) => {
-    if (!isDirty) {
-      toast.info('Tidak ada perubahan untuk disimpan.');
-      return;
-    }
+  useEffect(() => {
+    form.reset(data);
+  }, [data, form]);
 
+  const onSubmit = async (values: FormValues) => {
+    if (!isDirty) return toast.info('Tidak ada perubahan.');
     setLoading(true);
+
     try {
       const res = await fetch('/api/admin/configuration', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-
       const result = await res.json();
       if (!res.ok || !result.success) {
-        toast.error(result.message || 'Gagal menyimpan pengaturan');
-        return;
+        return toast.error(result.message || 'Gagal menyimpan');
       }
-
-      toast.success(result.message || 'Academic setting berhasil diperbarui');
-      onSave(); // trigger refetch
-      form.reset(values, { keepDefaultValues: true });
-    } catch (error) {
-      console.error('Error saving academic setting:', error);
-      toast.error('Terjadi kesalahan saat menyimpan pengaturan');
+      toast.success('Tahun ajaran & semester berhasil diperbarui');
+      onSave();
+      form.reset(values);
+    } catch (err) {
+      console.error(err);
+      toast.error('Terjadi kesalahan');
     } finally {
       setLoading(false);
     }
@@ -100,7 +74,7 @@ export function AcademicSettingForm({ data, onSave }: AcademicSettingFormProps) 
   return (
     <Card className="max-w-md">
       <CardHeader>
-        <CardTitle className="text-lg">Pengaturan Tahun Ajaran & Semester Aktif</CardTitle>
+        <CardTitle>Pengaturan Tahun Ajaran & Semester</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -112,13 +86,12 @@ export function AcademicSettingForm({ data, onSave }: AcademicSettingFormProps) 
                 <FormItem>
                   <FormLabel>Tahun Ajaran</FormLabel>
                   <FormControl>
-                    <Input placeholder="Contoh: 2024/2025" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="currentSemester"
@@ -128,7 +101,7 @@ export function AcademicSettingForm({ data, onSave }: AcademicSettingFormProps) 
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih semester" />
+                        <SelectValue />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -140,7 +113,6 @@ export function AcademicSettingForm({ data, onSave }: AcademicSettingFormProps) 
                 </FormItem>
               )}
             />
-
             <Button type="submit" disabled={loading || !isDirty} className="w-full">
               {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
             </Button>

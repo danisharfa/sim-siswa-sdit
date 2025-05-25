@@ -1,18 +1,18 @@
 import {
-  BookOpenIcon,
-  ClipboardPenLine,
   LayoutDashboard,
-  NotebookIcon,
   User2Icon,
   UserCog,
+  BookOpenIcon,
+  ClipboardList,
+  ClipboardCheck,
+  CalendarCheck2,
+  FileCog,
+  BookPlus,
+  Users2,
 } from 'lucide-react';
-import { FaChalkboard } from 'react-icons/fa';
-import { FaUsersGear } from 'react-icons/fa6';
+
+import { FaChalkboardTeacher } from 'react-icons/fa';
 import { ImProfile } from 'react-icons/im';
-// import { MdHomeWork } from 'react-icons/md';
-import { TbBookUpload } from 'react-icons/tb';
-// import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
-import { GrDocumentConfig } from 'react-icons/gr';
 
 export const menuData = {
   admin: [
@@ -22,19 +22,24 @@ export const menuData = {
       icon: LayoutDashboard,
     },
     {
-      title: 'Manajemen Pengguna',
-      url: '/dashboard/admin/users',
-      icon: UserCog,
-    },
-    {
-      title: 'Manajemen Kelas',
-      url: '/dashboard/admin/classroom',
-      icon: FaChalkboard,
-    },
-    {
-      title: 'Konfigurasi & Referensi Data',
-      url: '/dashboard/admin/configuration',
-      icon: GrDocumentConfig,
+      label: 'Manajemen',
+      items: [
+        {
+          title: 'Pengguna',
+          url: '/dashboard/admin/users',
+          icon: UserCog,
+        },
+        {
+          title: 'Kelas',
+          url: '/dashboard/admin/classroom',
+          icon: FaChalkboardTeacher,
+        },
+        {
+          title: 'Data Global',
+          url: '/dashboard/admin/configuration',
+          icon: FileCog,
+        },
+      ],
     },
   ],
   coordinator: [
@@ -44,30 +49,52 @@ export const menuData = {
       icon: LayoutDashboard,
     },
     {
-      title: 'Data Diri',
+      title: 'Profil',
       url: '/dashboard/coordinator/profile',
       icon: ImProfile,
     },
     {
-      title: 'Manajemen Kelompok',
+      title: 'Kelompok',
       url: '/dashboard/coordinator/group',
-      icon: FaUsersGear,
+      icon: Users2,
     },
     {
-      title: 'Tashih',
-      icon: ClipboardPenLine,
-      children: [
+      label: 'Tashih',
+      items: [
         {
           title: 'Permintaan',
           url: '/dashboard/coordinator/tashih/requests',
+          icon: ClipboardList,
         },
         {
           title: 'Penjadwalan',
           url: '/dashboard/coordinator/tashih/schedules',
+          icon: CalendarCheck2,
         },
         {
           title: 'Penilaian',
           url: '/dashboard/coordinator/tashih/results',
+          icon: ClipboardCheck,
+        },
+      ],
+    },
+    {
+      label: 'Munaqasyah',
+      items: [
+        {
+          title: 'Permintaan',
+          url: '/dashboard/coordinator/munaqasyah/requests',
+          icon: ClipboardList,
+        },
+        {
+          title: 'Penjadwalan',
+          url: '/dashboard/coordinator/munaqasyah/schedules',
+          icon: CalendarCheck2,
+        },
+        {
+          title: 'Penilaian',
+          url: '/dashboard/coordinator/munaqasyah/results',
+          icon: ClipboardCheck,
         },
       ],
     },
@@ -79,53 +106,65 @@ export const menuData = {
       icon: LayoutDashboard,
     },
     {
-      title: 'Data Diri',
+      title: 'Profil',
       url: '/dashboard/teacher/profile',
       icon: ImProfile,
     },
     {
-      title: 'Kelompok Bimbingan',
+      title: 'Kelompok',
       url: '/dashboard/teacher/group',
-      icon: FaUsersGear,
+      icon: Users2,
     },
     {
-      title: 'Setoran Siswa',
-      icon: TbBookUpload,
-      children: [
+      label: 'Setoran',
+      items: [
         {
-          title: 'Input Setoran',
+          title: 'Input',
           url: '/dashboard/teacher/submission/input',
+          icon: BookPlus,
         },
         {
-          title: 'Riwayat Setoran',
+          title: 'Riwayat',
           url: '/dashboard/teacher/submission/history',
+          icon: BookOpenIcon,
         },
       ],
     },
     {
-      title: 'Tashih',
-      url: '/dashboard/teacher',
-      icon: ClipboardPenLine,
-      children: [
+      label: 'Tashih',
+      items: [
         {
-          title: 'Daftar',
+          title: 'Pendaftaran',
           url: '/dashboard/teacher/tashih/request',
+          icon: ClipboardList,
         },
         {
           title: 'Jadwal',
           url: '/dashboard/teacher/tashih/schedule',
+          icon: CalendarCheck2,
         },
         {
           title: 'Hasil',
           url: '/dashboard/teacher/tashih/result',
+          icon: ClipboardCheck,
         },
       ],
     },
-    // {
-    //   title: 'Penilaian',
-    //   url: '/dashboard/teacher/avaluation',
-    //   icon: HiOutlineClipboardDocumentList,
-    // },
+    {
+      label: 'Munaqasyah',
+      items: [
+        {
+          title: 'Pendaftaran',
+          url: '/dashboard/teacher/munaqasyah/request',
+          icon: ClipboardList,
+        },
+        {
+          title: 'Penilaian',
+          url: '/dashboard/teacher/munaqasyah/assessment',
+          icon: ClipboardCheck,
+        },
+      ],
+    },
   ],
   student: [
     {
@@ -134,24 +173,44 @@ export const menuData = {
       icon: LayoutDashboard,
     },
     {
-      title: 'Data Diri',
+      title: 'Profil',
       url: '/dashboard/student/profile',
       icon: User2Icon,
     },
-    // {
-    //   title: 'Aktifitas Rumah',
-    //   url: '/dashboard/student/homeActivity',
-    //   icon: MdHomeWork,
-    // },
     {
       title: 'Riwayat Setoran',
       url: '/dashboard/student/submission',
       icon: BookOpenIcon,
     },
     {
-      title: 'Nilai',
-      url: '/dashboard/student/score',
-      icon: NotebookIcon,
+      label: 'Tashih',
+      items: [
+        {
+          title: 'Jadwal',
+          url: '/dashboard/student/tashih/schedule',
+          icon: CalendarCheck2,
+        },
+        {
+          title: 'Hasil',
+          url: '/dashboard/student/tashih/result',
+          icon: ClipboardCheck,
+        },
+      ],
+    },
+    {
+      label: 'Munaqasyah',
+      items: [
+        {
+          title: 'Jadwal',
+          url: '/dashboard/student/munaqasyah/schedule',
+          icon: CalendarCheck2,
+        },
+        {
+          title: 'Hasil',
+          url: '/dashboard/student/munaqasyah/result',
+          icon: ClipboardCheck,
+        },
+      ],
     },
   ],
 };

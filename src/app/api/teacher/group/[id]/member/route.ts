@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { Role } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

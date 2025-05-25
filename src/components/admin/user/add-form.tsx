@@ -15,16 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Loader2, UserPlus2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { addUserCredentials } from '@/lib/actions';
+import { Role } from '@prisma/client';
 
 interface Props {
   onUserAdded: () => void;
 }
 
-const initialRole = 'student';
+const initialRole = Role.student;
 
 export function AddUserForm({ onUserAdded }: Props) {
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<'coordinator' | 'teacher' | 'student'>(initialRole);
+  const [role, setRole] = useState<Role>(initialRole);
   const [state, formAction] = useActionState(addUserCredentials, null);
 
   useEffect(() => {
@@ -66,10 +67,7 @@ export function AddUserForm({ onUserAdded }: Props) {
           <Input name="username" placeholder="Username" required />
           <Input name="fullName" placeholder="Nama Lengkap" required />
 
-          <Select
-            value={role}
-            onValueChange={(val) => setRole(val as 'coordinator' | 'teacher' | 'student')}
-          >
+          <Select value={role} onValueChange={(val) => setRole(val as Role)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Pilih role" />
             </SelectTrigger>

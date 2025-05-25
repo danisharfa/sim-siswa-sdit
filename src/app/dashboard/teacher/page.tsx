@@ -1,9 +1,10 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { Chart } from '@/components/teacher/charts/chart';
 import { WafaChart } from '@/components/teacher/charts/wafa-chart';
+import { Role } from '@prisma/client';
 
 export default async function TeacherDashboardPage() {
-  const user = await requireRole('teacher');
+  const user = await requireRole(Role.teacher);
 
   return (
     <div className="p-6 space-y-4">

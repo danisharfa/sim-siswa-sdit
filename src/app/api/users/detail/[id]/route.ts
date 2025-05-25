@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Role } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
@@ -32,9 +33,9 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     }
 
     let role: 'student' | 'teacher' | 'coordinator' | null = null;
-    if (user.student) role = 'student';
-    else if (user.teacher) role = 'teacher';
-    else if (user.coordinator) role = 'coordinator';
+    if (user.student) role = Role.student;
+    else if (user.teacher) role = Role.teacher;
+    else if (user.coordinator) role = Role.coordinator;
 
     return NextResponse.json({
       success: true,
@@ -88,17 +89,17 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       email,
     };
 
-    if (role === 'coordinator') {
+    if (role === Role.coordinator) {
       await prisma.coordinatorProfile.update({
         where: { userId: id },
         data: { ...updateData, nip },
       });
-    } else if (role === 'teacher') {
+    } else if (role === Role.teacher) {
       await prisma.teacherProfile.update({
         where: { userId: id },
         data: { ...updateData, nip },
       });
-    } else if (role === 'student') {
+    } else if (role === Role.student) {
       await prisma.studentProfile.update({
         where: { userId: id },
         data: { ...updateData, nis, nisn },

@@ -1,12 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import { DashboardStats } from '@/components/dashboard-stats';
+import { Role } from '@prisma/client';
 
 export default async function AdminDashboardPage() {
   const [totalCoordinator, totalTeachers, totalStudents, totalClassrooms, totalGroups] =
     await Promise.all([
-      prisma.user.count({ where: { role: 'coordinator' } }),
-      prisma.user.count({ where: { role: 'teacher' } }),
-      prisma.user.count({ where: { role: 'student' } }),
+      prisma.user.count({ where: { role: Role.coordinator } }),
+      prisma.user.count({ where: { role: Role.teacher } }),
+      prisma.user.count({ where: { role: Role.student } }),
       prisma.classroom.count(),
       prisma.group.count(),
     ]);

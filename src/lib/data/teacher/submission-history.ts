@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { Role } from '@prisma/client';
 
 export async function fetchSubmissionHistory() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       throw new Error('Unauthorized');
     }
 

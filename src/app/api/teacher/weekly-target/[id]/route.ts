@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { evaluateTargetAchievement } from '@/lib/data/teacher/evaluate-target';
+import { Role } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
@@ -11,7 +12,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     const id = params.id;
 
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
@@ -113,7 +114,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
     const id = params.id;
 
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

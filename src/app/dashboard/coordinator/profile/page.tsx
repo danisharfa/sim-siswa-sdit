@@ -1,8 +1,9 @@
 import { requireRole } from '@/lib/auth/require-role';
 import CoordinatorProfileDetail from '@/components/coordinator/profile/detail';
+import { Role } from '@prisma/client';
 
 export default async function CoordinatorProfilePage() {
-  const user = await requireRole('coordinator');
+  const user = await requireRole(Role.coordinator);
 
   return (
     <div className="p-4">

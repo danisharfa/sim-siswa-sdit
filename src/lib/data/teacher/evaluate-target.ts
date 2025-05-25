@@ -1,111 +1,100 @@
 import { prisma } from '@/lib/prisma';
 import { TargetStatus, WeeklyTarget } from '@prisma/client';
 
-// Tipe untuk ayat
-type Ayat = { surahId: number; ayat: number };
-
-// Extended tipe untuk target agar mencakup progress
-type WeeklyTargetWithRelations = WeeklyTarget & {
-  surahStart: { id: number; verseCount: number } | null;
-  surahEnd: { id: number; verseCount: number } | null;
-  progressPercent?: number | null;
+type Verse = {
+  surahId: number;
+  verse: number;
 };
 
-// Cache jumlah ayat per surah
-let surahVerseCache: Record<number, number> | null = null;
+type WeeklyTargetWithSurah = WeeklyTarget & {
+  surahStart: {
+    id: number;
+    verseCount: number;
+  } | null;
+  surahEnd: {
+    id: number;
+    verseCount: number;
+  } | null;
+};
 
-// Prefetch semua jumlah ayat per surah dan simpan ke cache
-export async function prefetchSurahVerseCounts(): Promise<void> {
-  const allSurah = await prisma.surah.findMany({
+let verseCache: Record<number, number> | null = null;
+
+export async function prefetchSurahVerseCounts() {
+  const surahList = await prisma.surah.findMany({
     select: {
       id: true,
       verseCount: true,
     },
   });
-
-  surahVerseCache = allSurah.reduce((acc, surah) => {
-    acc[surah.id] = surah.verseCount;
-    return acc;
-  }, {} as Record<number, number>);
+  verseCache = Object.fromEntries(surahList.map(({ id, verseCount }) => [id, verseCount]));
 }
 
-function getVerseCountFromCache(surahId: number): number {
-  if (!surahVerseCache) {
-    throw new Error(
-      'Surah verse count cache belum diinisialisasi. Panggil prefetchSurahVerseCounts() terlebih dahulu.'
-    );
-  }
-  return surahVerseCache[surahId] ?? 0;
+function getVerseCount(surahId: number): number {
+  if (!verseCache) throw new Error('Cache belum dimuat.');
+  return verseCache[surahId] ?? 0;
 }
 
-function getTargetAyatRange(target: WeeklyTargetWithRelations): Ayat[] {
+function getTargetVerses(target: WeeklyTargetWithSurah): Verse[] {
   const { surahStartId, surahEndId, startAyat, endAyat, surahStart, surahEnd } = target;
-
   if (!surahStartId || !surahEndId || !startAyat || !endAyat) return [];
 
-  const result: Ayat[] = [];
+  const result: Verse[] = [];
+  for (let id = surahStartId; id <= surahEndId; id++) {
+    const totalAyat =
+      id === surahStartId
+        ? surahStart?.verseCount
+        : id === surahEndId
+        ? surahEnd?.verseCount
+        : getVerseCount(id);
 
-  for (let surahId = surahStartId; surahId <= surahEndId; surahId++) {
-    const verseCount =
-      surahId === surahStartId
-        ? surahStart?.verseCount ?? 0
-        : surahId === surahEndId
-        ? surahEnd?.verseCount ?? 0
-        : getVerseCountFromCache(surahId);
+    const from = id === surahStartId ? startAyat : 1;
+    const to = id === surahEndId ? endAyat : totalAyat ?? 0;
 
-    if (!verseCount) continue;
-
-    const from = surahId === surahStartId ? startAyat : 1;
-    const to = surahId === surahEndId ? endAyat : verseCount;
-
-    for (let i = from; i <= to; i++) {
-      result.push({ surahId, ayat: i });
-    }
+    for (let i = from; i <= to; i++) result.push({ surahId: id, verse: i });
   }
 
   return result;
 }
 
-function extractSubmittedAyats(
+function extractSubmittedVerses(
   submissions: {
     surahId: number | null;
     startVerse: number | null;
     endVerse: number | null;
   }[]
-): Set<string> {
-  const set = new Set<string>();
-
-  for (const s of submissions) {
-    if (!s.surahId || !s.startVerse || !s.endVerse) continue;
-
-    for (let i = s.startVerse; i <= s.endVerse; i++) {
-      set.add(`${s.surahId}:${i}`);
+) {
+  const result = new Set<string>();
+  for (const { surahId, startVerse, endVerse } of submissions) {
+    if (!surahId || !startVerse || !endVerse) continue;
+    for (let i = startVerse; i <= endVerse; i++) {
+      result.add(`${surahId}:${i}`);
     }
   }
-
-  return set;
+  return result;
 }
 
-export async function evaluateTargetAchievement(
-  studentId: string,
-  fromDate: Date,
-  toDate: Date
-): Promise<void> {
+export async function evaluateTargetAchievement(studentId: string, from: Date, to: Date) {
   await prefetchSurahVerseCounts();
 
   const targets = await prisma.weeklyTarget.findMany({
-    where: {
-      studentId,
-      startDate: { lte: toDate },
-      endDate: { gte: fromDate },
-    },
+    where: { studentId, startDate: { lte: to }, endDate: { gte: from } },
     include: {
-      surahStart: { select: { id: true, verseCount: true } },
-      surahEnd: { select: { id: true, verseCount: true } },
+      surahStart: {
+        select: {
+          id: true,
+          verseCount: true,
+        },
+      },
+      surahEnd: {
+        select: {
+          id: true,
+          verseCount: true,
+        },
+      },
     },
   });
 
-  for (const target of targets as WeeklyTargetWithRelations[]) {
+  for (const target of targets as WeeklyTargetWithSurah[]) {
     const submissions = await prisma.submission.findMany({
       where: {
         studentId,
@@ -122,29 +111,26 @@ export async function evaluateTargetAchievement(
       },
     });
 
-    const requiredAyats = getTargetAyatRange(target);
-    const submittedAyats = extractSubmittedAyats(submissions);
+    const required = getTargetVerses(target);
+    const submitted = extractSubmittedVerses(submissions);
+    const matched = required.filter((v) => submitted.has(`${v.surahId}:${v.verse}`)).length;
 
-    const achievedCount = requiredAyats.filter((ayat) =>
-      submittedAyats.has(`${ayat.surahId}:${ayat.ayat}`)
-    ).length;
+    const total = required.length;
+    const progress = total ? Math.round((matched / total) * 100) : 0;
+    const status = progress === 100 ? TargetStatus.TERCAPAI : TargetStatus.TIDAK_TERCAPAI;
 
-    const totalTarget = requiredAyats.length;
-    const progress = totalTarget > 0 ? Math.round((achievedCount / totalTarget) * 100) : 0;
-    const newStatus = progress === 100 ? TargetStatus.TERCAPAI : TargetStatus.TIDAK_TERCAPAI;
-
-    if (target.status !== newStatus || target.progressPercent !== progress) {
+    if (target.status !== status || target.progressPercent !== progress) {
       await prisma.weeklyTarget.update({
-        where: { id: target.id },
+        where: {
+          id: target.id,
+        },
         data: {
-          status: newStatus,
+          status,
           progressPercent: progress,
         },
       });
     }
 
-    console.log(
-      `[TARGET] ${target.id} → ${achievedCount}/${totalTarget} = ${progress}% → ${newStatus}`
-    );
+    console.log(`[TARGET] ${target.id} = ${matched}/${total} (${progress}%) → ${status}`);
   }
 }

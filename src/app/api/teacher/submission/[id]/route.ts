@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { Prisma, SubmissionType, Adab, SubmissionStatus } from '@prisma/client';
+import { Prisma, SubmissionType, Adab, SubmissionStatus, Role } from '@prisma/client';
 import { evaluateTargetAchievement } from '@/lib/data/teacher/evaluate-target';
 
 type Params = Promise<{ id: string }>;
@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     const { id } = await segment.params;
     const session = await auth();
 
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
@@ -164,7 +164,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
     const id = params.id;
 
     const session = await auth();
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

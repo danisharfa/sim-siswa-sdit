@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { UserDetail } from '@/components/admin/user/user-detail';
 import { prisma } from '@/lib/prisma';
 import { BackButton } from '@/components/ui/back-button';
+import { Role } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
@@ -20,11 +21,11 @@ export default async function UserPage({ params }: { params: Params }) {
   if (!user) return notFound();
 
   const role = user.student
-    ? 'student'
+    ? Role.student
     : user.teacher
-    ? 'teacher'
+    ? Role.teacher
     : user.coordinator
-    ? 'coordinator'
+    ? Role.coordinator
     : null;
 
   if (!role) return notFound();
@@ -33,9 +34,9 @@ export default async function UserPage({ params }: { params: Params }) {
     <div className="p-4">
       <BackButton href={`/dashboard/admin/users`} />
       <h1 className="text-2xl font-bold mb-4">
-        {role === 'student'
+        {role === Role.student
           ? `Siswa - ${user.fullName}`
-          : role === 'teacher'
+          : role === Role.teacher
           ? `Guru - ${user.fullName}`
           : `Koordinator - ${user.fullName}`}
       </h1>

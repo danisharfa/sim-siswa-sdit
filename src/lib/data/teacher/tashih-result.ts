@@ -1,11 +1,12 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { Role } from '@prisma/client';
 
 export async function fetchTashihResult() {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'teacher') {
+    if (!session || session.user.role !== Role.teacher) {
       throw new Error('Unauthorized');
     }
 

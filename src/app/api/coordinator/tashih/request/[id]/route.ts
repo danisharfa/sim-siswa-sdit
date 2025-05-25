@@ -1,31 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { TashihRequestStatus } from '@prisma/client';
+import { Role, TashihRequestStatus } from '@prisma/client';
 
 type Params = Promise<{ id: string }>;
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const session = await auth();
+    const params = await segmentData.params;
+    const id = params.id;
 
-    if (!session || session.user.role !== 'coordinator') {
+    const session = await auth();
+    if (!session || session.user.role !== Role.coordinator) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!coordinator) {
       return NextResponse.json(
         { success: false, message: 'Koordinator tidak ditemukan' },
         { status: 404 }
       );
     }
-
-    const params = await segmentData.params;
-    const id = params.id;
 
     const { status } = await req.json();
 

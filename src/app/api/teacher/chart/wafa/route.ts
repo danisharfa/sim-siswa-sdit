@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { TashihRequestStatus, TashihType } from '@prisma/client';
+import { Role, TashihRequestStatus, TashihType } from '@prisma/client';
 
 export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user || session.user.role !== 'teacher') {
+    if (!session?.user || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

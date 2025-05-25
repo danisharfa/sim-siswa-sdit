@@ -1,14 +1,12 @@
-// File: src/app/api/coordinator/student/available/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { StudentStatus } from '@prisma/client';
+import { Role, StudentStatus } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'coordinator') {
+    if (!session || session.user.role !== Role.coordinator) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 

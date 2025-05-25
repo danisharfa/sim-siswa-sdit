@@ -1,8 +1,9 @@
 import { requireRole } from '@/lib/auth/require-role';
 import TeacherProfileDetail from '@/components/teacher/profile/detail';
+import { Role } from '@prisma/client';
 
 export default async function TeacherProfilePage() {
-  const user = await requireRole('teacher');
+  const user = await requireRole(Role.teacher);
 
   return (
     <div className="p-4">

@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddUserForm } from '@/components/admin/user/add-form';
 import { UserTable } from '@/components/admin/user/user-table';
+import { Role } from '@prisma/client';
 
 interface User {
   id: string;
@@ -21,9 +22,9 @@ export function UserManagement() {
 
   const users = data?.data ?? [];
 
-  const coordinator: User[] = users.filter((user: User) => user.role === 'coordinator');
-  const teachers: User[] = users.filter((user: User) => user.role === 'teacher');
-  const students: User[] = users.filter((user: User) => user.role === 'student');
+  const coordinator: User[] = users.filter((user: User) => user.role === Role.coordinator);
+  const teachers: User[] = users.filter((user: User) => user.role === Role.teacher);
+  const students: User[] = users.filter((user: User) => user.role === Role.student);
 
   if (isLoading) {
     return (
