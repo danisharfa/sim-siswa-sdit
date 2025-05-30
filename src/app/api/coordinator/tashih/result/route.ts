@@ -15,6 +15,10 @@ export async function GET() {
       include: {
         tashihRequest: {
           select: {
+            academicYear: true,
+            semester: true,
+            classroomName: true,
+            groupName: true,
             tashihType: true,
             surah: { select: { name: true } },
             juz: { select: { name: true } },
@@ -25,14 +29,6 @@ export async function GET() {
               select: {
                 nis: true,
                 user: { select: { fullName: true } },
-                group: {
-                  select: {
-                    name: true,
-                    classroom: {
-                      select: { name: true, academicYear: true, semester: true },
-                    },
-                  },
-                },
               },
             },
             teacher: {
@@ -76,8 +72,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
-    const { tashihScheduleId, tashihRequestId, passed, notes } = await req.json();
-    if (!tashihScheduleId || !tashihRequestId || typeof passed !== 'boolean') {
+    const { scheduleId, requestId, passed, notes } = await req.json();
+    if (!scheduleId || !requestId || typeof passed !== 'boolean') {
       return NextResponse.json(
         { success: false, message: 'Data hasil ujian tidak lengkap' },
         { status: 400 }
@@ -97,9 +93,9 @@ export async function POST(req: NextRequest) {
 
     const existing = await prisma.tashihResult.findUnique({
       where: {
-        tashihScheduleId_tashihRequestId: {
-          tashihScheduleId,
-          tashihRequestId,
+        scheduleId_requestId: {
+          scheduleId,
+          requestId,
         },
       },
     });
@@ -107,9 +103,9 @@ export async function POST(req: NextRequest) {
     const result = existing
       ? await prisma.tashihResult.update({
           where: {
-            tashihScheduleId_tashihRequestId: {
-              tashihScheduleId,
-              tashihRequestId,
+            scheduleId_requestId: {
+              scheduleId,
+              requestId,
             },
           },
           data: {
@@ -120,8 +116,8 @@ export async function POST(req: NextRequest) {
         })
       : await prisma.tashihResult.create({
           data: {
-            tashihScheduleId,
-            tashihRequestId,
+            scheduleId,
+            requestId,
             passed,
             notes: notes ?? null,
             evaluatedByCoordinatorId: coordinator.id,
@@ -129,7 +125,7 @@ export async function POST(req: NextRequest) {
         });
 
     await prisma.tashihRequest.update({
-      where: { id: tashihRequestId },
+      where: { id: requestId },
       data: { status: 'SELESAI' },
     });
 

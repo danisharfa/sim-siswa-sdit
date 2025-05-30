@@ -16,23 +16,20 @@ export async function GET() {
         scheduleRequests: {
           include: {
             request: {
-              include: {
-                student: true,
-              },
+              select: { id: true },
             },
           },
         },
         results: {
-          select: { studentId: true }, // hasil yang sudah ada
+          select: { requestId: true },
         },
       },
     });
 
-    // Filter: hanya jadwal yang punya siswa belum dinilai
     const filtered = schedules.filter((s) => {
-      const studentIdsWithResult = new Set(s.results.map((r) => r.studentId));
+      const requestIdsWithResult = new Set(s.results.map((r) => r.requestId));
       const unscoredExists = s.scheduleRequests.some(
-        (sr) => !studentIdsWithResult.has(sr.request.studentId)
+        (sr) => !requestIdsWithResult.has(sr.request.id)
       );
       return unscoredExists;
     });

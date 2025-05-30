@@ -26,11 +26,17 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
           include: {
             request: {
               include: {
-                juz: { select: { name: true } },
+                juz: { select: { id: true, name: true } },
                 student: {
                   select: {
                     id: true,
                     nis: true,
+                    user: { select: { fullName: true } },
+                  },
+                },
+                teacher: {
+                  select: {
+                    id: true,
                     user: { select: { fullName: true } },
                   },
                 },
@@ -49,18 +55,24 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const resultMap = new Map(schedule.results.map((res) => [res.studentId, res]));
+    // Map result by requestId for easier lookup
+    const resultMap = new Map(schedule.results.map((res) => [res.requestId, res]));
 
     const results = schedule.scheduleRequests.map((sr) => {
       const r = sr.request;
-      const studentResult = resultMap.get(r.student.id);
+      const studentResult = resultMap.get(r.id);
 
       return {
         requestId: r.id,
         scheduleId: schedule.id,
         stage: r.stage,
+        academicYear: r.academicYear,
+        semester: r.semester,
+        classroomName: r.classroomName,
+        groupName: r.groupName,
         juz: r.juz,
         student: r.student,
+        teacher: r.teacher,
         result: studentResult
           ? {
               id: studentResult.id,

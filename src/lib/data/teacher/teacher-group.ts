@@ -21,6 +21,9 @@ export async function fetchTeacherGroups() {
         teacherGroups: {
           some: { teacherId: teacher.id },
         },
+        classroom: {
+          isActive: true,
+        },
       },
       include: {
         classroom: {

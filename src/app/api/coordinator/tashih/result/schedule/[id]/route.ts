@@ -44,7 +44,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                   },
                 },
                 results: {
-                  where: { tashihScheduleId: scheduleId },
+                  where: { scheduleId },
                   select: {
                     id: true,
                     passed: true,
@@ -73,8 +73,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const results = schedule.schedules.map((sr) => {
       const r = sr.tashihRequest;
       return {
-        tashihScheduleId: schedule.id,
-        tashihRequestId: r.id,
+        scheduleId: schedule.id,
+        requestId: r.id,
         tashihType: r.tashihType,
         student: r.student,
         surah: r.surah,

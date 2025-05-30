@@ -28,20 +28,20 @@ export async function GET() {
         scheduleRequests: {
           include: {
             request: {
-              include: { student: true },
+              select: { id: true },
             },
           },
         },
         results: {
-          select: { studentId: true },
+          select: { requestId: true }, // ✅ perbaikan
         },
       },
     });
 
     const filtered = schedules.filter((s) => {
-      const studentIdsWithResult = new Set(s.results.map((r) => r.studentId));
+      const resultRequestIds = new Set(s.results.map((r) => r.requestId));
       const unscoredExists = s.scheduleRequests.some(
-        (sr) => !studentIdsWithResult.has(sr.request.studentId)
+        (sr) => !resultRequestIds.has(sr.request.id) // ✅ perbaikan
       );
       return unscoredExists;
     });

@@ -71,7 +71,16 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
     });
 
-    return NextResponse.json({ tahsin, tahfidz });
+    const tahsinSummary = await prisma.tahsinSummary.findUnique({
+      where: { studentId_academicYear_semester: { studentId, academicYear, semester } },
+      select: { lastMaterial: true },
+    });
+
+    return NextResponse.json({
+      tahsin,
+      tahfidz,
+      lastMaterial: tahsinSummary?.lastMaterial || null,
+    });
   } catch (error) {
     console.error('[GET_SCORE_ERROR]', error);
     return NextResponse.json(

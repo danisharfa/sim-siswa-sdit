@@ -53,6 +53,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 interface ExistingScoreResponse {
   tahsin: (Omit<TahsinEntry, 'type'> & { tahsinType: TahsinType })[];
   tahfidz: (Omit<TahfidzEntry, 'topic'> & { surah: { name: string } })[];
+  lastMaterial: string | null;
 }
 
 export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
@@ -66,9 +67,10 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
     `/api/teacher/score/tahfidz/eligible/${student.id}`,
     fetcher
   );
+  const surahList = surahData?.data || [];
+
   const { data: surahJuzData } = useSWR<{ data: SurahJuz[] }>('/api/surahJuz', fetcher);
   const surahJuzList = surahJuzData?.data || [];
-  const surahList = surahData?.data || [];
 
   const { data: existingScores, isLoading } = useSWR<ExistingScoreResponse>(
     `/api/teacher/score/${student.id}`,
@@ -85,6 +87,7 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
             topic: t.topic,
             scoreNumeric: t.scoreNumeric,
             scoreLetter: t.scoreLetter,
+
             description: t.description || '',
           }))
         );
@@ -102,8 +105,12 @@ export function ScoreInputForm({ groupId, student }: ScoreInputFormProps) {
           }))
         );
       }
+
+      if (!lastMaterial && existingScores.lastMaterial) {
+        setLastMaterial(existingScores.lastMaterial);
+      }
     }
-  }, [existingScores, isLoading]);
+  }, [existingScores, isLoading, lastMaterial]);
 
   function handleAddTahsin(type: TahsinType) {
     setTahsinEntries([

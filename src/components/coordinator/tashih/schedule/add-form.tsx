@@ -16,13 +16,6 @@ interface TashihRequest {
   student: {
     nis: string;
     user: { fullName: string };
-    group?: {
-      name: string;
-      classroom: {
-        name: string;
-        academicYear: string;
-      };
-    };
   };
   teacher: {
     user: { fullName: string };
@@ -122,13 +115,13 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Tanggal Ujian</Label>
+            <Label className="mb-2 block">Tanggal Ujian</Label>
             <DatePickerSimple value={date} onChange={setDate} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Nama Sesi</Label>
+              <Label className="mb-2 block">Nama Sesi</Label>
               <Input
                 value={sessionName}
                 placeholder="Sesi 1"
@@ -136,15 +129,15 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
               />
             </div>
             <div>
-              <Label>Jam Mulai</Label>
+              <Label className="mb-2 block">Jam Mulai</Label>
               <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </div>
             <div>
-              <Label>Jam Selesai</Label>
+              <Label className="mb-2 block">Jam Selesai</Label>
               <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
             <div>
-              <Label>Lokasi</Label>
+              <Label className="mb-2 block">Lokasi</Label>
               <Input
                 value={location}
                 placeholder="Ruang Guru"
@@ -154,7 +147,7 @@ export function AddScheduleForm({ onScheduleAdded }: Props) {
           </div>
 
           <div>
-            <Label>Daftar Permintaan Tashih</Label>
+            <Label className="mb-2 block">Daftar Permintaan Tashih</Label>
             <div className="grid gap-2 max-h-[200px] overflow-auto border p-2 rounded-md">
               {requests.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Tidak ada permintaan DITERIMA.</p>

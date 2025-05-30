@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TeacherTashihResultManagement } from '@/components/teacher/tashih/result/management';
 
-export default function TeacherExamFormPage() {
+export default function TeacherTashihFormPage() {
   return (
     <div className="p-4">
       <Suspense

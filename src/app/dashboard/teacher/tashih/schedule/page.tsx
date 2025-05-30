@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TeacherTashihScheduleManagement } from '@/components/teacher/tashih/schedule/management';
 
-export default function TeacherExamSchedulePage() {
+export default function TeacherTashihSchedulePage() {
   return (
     <div className="p-4">
       <Suspense

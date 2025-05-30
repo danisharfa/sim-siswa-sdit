@@ -33,18 +33,20 @@ import { Semester, MunaqasyahRequestStatus, MunaqasyahStage } from '@prisma/clie
 
 interface MunaqasyahRequest {
   id: string;
-  status: MunaqasyahRequestStatus;
+  academicYear: string;
+  semester: Semester;
+  classroomName: string;
+  groupName: string;
   stage: MunaqasyahStage;
+  status: MunaqasyahRequestStatus;
   createdAt: string;
   student: {
     nis: string;
     user: { fullName: string };
-    group?: {
-      name: string;
-      classroom: { name: string; academicYear: string; semester: Semester };
-    };
   };
-  teacher: { user: { fullName: string } };
+  teacher: {
+    user: { fullName: string };
+  };
   juz: { name: string };
 }
 
@@ -75,10 +77,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
     for (const d of data) {
-      const group = d.student.group;
-      if (group) {
-        set.add(`${group.classroom.academicYear}__${group.classroom.semester}`);
-      }
+      set.add(`${d.academicYear}__${d.semester}`);
     }
     return Array.from(set);
   }, [data]);
@@ -86,13 +85,8 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
   const groupOptions = useMemo(() => {
     if (selectedYearSemester === 'ALL') return [];
     return data
-      .filter(
-        (d) =>
-          d.student.group &&
-          `${d.student.group.classroom.academicYear}__${d.student.group.classroom.semester}` ===
-            selectedYearSemester
-      )
-      .map((d) => `${d.student.group!.name} - ${d.student.group!.classroom.name}`);
+      .filter((d) => `${d.academicYear}__${d.semester}` === selectedYearSemester)
+      .map((d) => `${d.groupName} - ${d.classroomName}`);
   }, [data, selectedYearSemester]);
 
   const handleOpenAcceptDialog = useCallback(
@@ -127,33 +121,32 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         accessorKey: 'student.user.fullName',
         id: 'Nama Siswa',
         header: 'Nama Siswa',
-        cell: ({ row }) => row.original.student.user.fullName,
+        cell: ({ row }) => row.original.student?.user?.fullName ?? '-',
       },
       {
         id: 'Kelompok',
         header: 'Kelompok',
-        accessorFn: (row) =>
-          row.student.group
-            ? `${row.student.group.name} - ${row.student.group.classroom.name}`
-            : '-',
+        accessorFn: (row) => `${row.groupName} - ${row.classroomName}`,
       },
       {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
-        accessorFn: (row) =>
-          row.student.group
-            ? `${row.student.group.classroom.academicYear} ${row.student.group.classroom.semester}`
-            : '-',
+        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
       },
       {
         accessorKey: 'teacher.user.fullName',
         header: 'Guru Pembimbing',
-        cell: ({ row }) => row.original.teacher.user.fullName,
+        cell: ({ row }) => row.original.teacher?.user?.fullName ?? '-',
       },
       {
         accessorKey: 'juz.name',
         header: 'Juz',
-        cell: ({ row }) => <Badge variant="outline">{row.original.juz.name}</Badge>,
+        cell: ({ row }) =>
+          row.original.juz?.name ? (
+            <Badge variant="outline">{row.original.juz.name}</Badge>
+          ) : (
+            <span>-</span>
+          ),
       },
       {
         accessorKey: 'stage',
@@ -228,7 +221,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label>Filter Tahun Ajaran + Semester</Label>
+          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {
@@ -258,7 +251,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         </div>
 
         <div>
-          <Label>Filter Kelompok</Label>
+          <Label className="mb-2 block">Filter Kelompok</Label>
           <Select
             value={selectedGroup}
             disabled={selectedYearSemester === 'ALL'}
@@ -282,7 +275,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         </div>
 
         <div>
-          <Label>Filter Status</Label>
+          <Label className="mb-2 block">Filter Status</Label>
           <Select
             value={selectedStatus}
             onValueChange={(value) => {

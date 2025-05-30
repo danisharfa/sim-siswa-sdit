@@ -37,14 +37,6 @@ export async function GET() {
           select: {
             nis: true,
             user: { select: { fullName: true } },
-            group: {
-              select: {
-                name: true,
-                classroom: {
-                  select: { name: true, academicYear: true, semester: true },
-                },
-              },
-            },
           },
         },
         teacher: {

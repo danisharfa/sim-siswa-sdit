@@ -20,6 +20,21 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { studentId, juzId, stage } = body;
 
+    const student = await prisma.studentProfile.findUnique({
+      where: { id: studentId },
+      include: {
+        classroom: true,
+        group: true,
+      },
+    });
+
+    if (!student || !student.classroom || !student.group) {
+      return NextResponse.json(
+        { success: false, message: 'Siswa belum memiliki kelas atau kelompok' },
+        { status: 400 }
+      );
+    }
+
     if (!studentId || !juzId || !stage) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
@@ -64,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Simpan permintaan baru
-    await prisma.munaqasyahRequest.create({
+    const request = await prisma.munaqasyahRequest.create({
       data: {
         studentId,
         teacherId: teacher.id,
@@ -73,10 +88,18 @@ export async function POST(req: NextRequest) {
         juzId,
         stage,
         status: MunaqasyahRequestStatus.MENUNGGU,
+        classroomId: student.classroom.id,
+        classroomName: student.classroom.name,
+        groupId: student.group.id,
+        groupName: student.group.name,
       },
     });
 
-    return NextResponse.json({ success: true, message: 'Permintaan berhasil dikirim' });
+    return NextResponse.json({
+      success: true,
+      message: 'Permintaan berhasil dikirim',
+      data: request,
+    });
   } catch (error) {
     console.error('[MUNAQASYAH_REQUEST_POST]', error);
     return NextResponse.json(

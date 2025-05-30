@@ -14,22 +14,21 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       include: {
         student: {
-          include: {
-            user: true,
-            group: {
-              include: {
-                classroom: true,
-              },
-            },
+          select: {
+            nis: true,
+            user: { select: { fullName: true } },
           },
         },
         teacher: {
-          include: {
-            user: true,
+          select: {
+            user: { select: { fullName: true } },
           },
         },
-        juz: true,
-        scheduleRequests: true,
+        juz: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 

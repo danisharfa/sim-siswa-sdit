@@ -47,7 +47,6 @@ export type Submission = {
   id: string;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt: Date | null;
   teacherId: string;
   groupId: string;
   studentId: string;

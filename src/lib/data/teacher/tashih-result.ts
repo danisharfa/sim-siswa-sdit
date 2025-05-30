@@ -5,7 +5,6 @@ import { Role } from '@prisma/client';
 export async function fetchTashihResult() {
   try {
     const session = await auth();
-
     if (!session || session.user.role !== Role.teacher) {
       throw new Error('Unauthorized');
     }
@@ -13,7 +12,6 @@ export async function fetchTashihResult() {
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       throw new Error('Profil guru tidak ditemukan');
     }

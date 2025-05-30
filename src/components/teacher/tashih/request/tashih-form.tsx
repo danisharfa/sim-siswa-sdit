@@ -186,14 +186,14 @@ export function TashihForm() {
   };
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>Form Permintaan Tashih</CardTitle>
         <CardDescription>
           {settingData?.success && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <b>{settingData.data.currentYear}</b> — Semester:{' '}
-              <b>{settingData.data.currentSemester}</b>
+              Tahun Ajaran: <strong>{settingData.data.currentYear}</strong> — Semester:{' '}
+              <strong>{settingData.data.currentSemester}</strong>
             </span>
           )}
         </CardDescription>

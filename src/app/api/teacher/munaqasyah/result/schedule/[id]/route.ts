@@ -63,11 +63,12 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const resultMap = new Map(schedule.results.map((res) => [res.studentId, res]));
+    // Gunakan requestId sebagai key
+    const resultMap = new Map(schedule.results.map((res) => [res.requestId, res]));
 
     const results = schedule.scheduleRequests.map((sr) => {
       const r = sr.request;
-      const studentResult = resultMap.get(r.student.id);
+      const studentResult = resultMap.get(r.id);
 
       return {
         requestId: r.id,

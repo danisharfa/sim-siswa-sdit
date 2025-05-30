@@ -6,7 +6,6 @@ import { Role, TashihRequestStatus, TashihType } from '@prisma/client';
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-
     if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Guru tidak ditemukan' },

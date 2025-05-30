@@ -13,7 +13,22 @@ export async function GET() {
     const results = await prisma.munaqasyahResult.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        juz: true,
+        request: {
+          select: {
+            stage: true,
+            academicYear: true,
+            semester: true,
+            classroomName: true,
+            groupName: true,
+            juz: { select: { name: true } },
+            student: {
+              select: {
+                nis: true,
+                user: { select: { fullName: true } },
+              },
+            },
+          },
+        },
         schedule: {
           select: {
             date: true,
@@ -23,28 +38,26 @@ export async function GET() {
             location: true,
           },
         },
-        student: {
-          select: {
-            nis: true,
-            user: { select: { fullName: true } },
-            group: {
-              select: {
-                name: true,
-                classroom: {
-                  select: {
-                    name: true,
-                    academicYear: true,
-                    semester: true,
-                  },
-                },
-              },
-            },
-          },
-        },
       },
     });
 
-    return NextResponse.json({ success: true, data: results });
+    const formatted = results.map((r) => ({
+      id: r.id,
+      score: r.score,
+      grade: r.grade,
+      passed: r.passed,
+      note: r.note,
+      schedule: r.schedule,
+      academicYear: r.request.academicYear,
+      semester: r.request.semester,
+      classroomName: r.request.classroomName,
+      groupName: r.request.groupName,
+      stage: r.request.stage,
+      juz: r.request.juz,
+      student: r.request.student,
+    }));
+
+    return NextResponse.json({ success: true, data: formatted });
   } catch (error) {
     console.error('[GET_MUNAQASYAH_RESULT]', error);
     return NextResponse.json(
@@ -82,15 +95,11 @@ export async function POST(req: NextRequest) {
 
     if (!request) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Permintaan tidak ditemukan',
-        },
+        { success: false, message: 'Permintaan tidak ditemukan' },
         { status: 404 }
       );
     }
 
-    // Hitung grade
     let grade: MunaqasyahGrade = MunaqasyahGrade.TIDAK_LULUS;
     if (score >= 91) grade = MunaqasyahGrade.MUMTAZ;
     else if (score >= 85) grade = MunaqasyahGrade.JAYYID_JIDDAN;
@@ -101,12 +110,8 @@ export async function POST(req: NextRequest) {
     // Simpan hasil munaqasyah
     await prisma.munaqasyahResult.create({
       data: {
-        studentId: request.studentId,
+        requestId,
         scheduleId,
-        stage: request.stage,
-        academicYear: request.academicYear,
-        semester: request.semester,
-        juzId: request.juzId,
         score,
         grade,
         passed,
@@ -114,7 +119,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Jika lulus, buat permintaan ke tahap berikutnya (termasuk MUNAQASYAH)
+    // Buat request tahap selanjutnya jika lulus
     if (passed && request.stage !== MunaqasyahStage.MUNAQASYAH) {
       const nextStageMap: Record<MunaqasyahStage, MunaqasyahStage> = {
         TAHAP_1: MunaqasyahStage.TAHAP_2,
@@ -141,6 +146,10 @@ export async function POST(req: NextRequest) {
             teacherId: request.teacherId,
             academicYear: request.academicYear,
             semester: request.semester,
+            classroomId: request.classroomId,
+            classroomName: request.classroomName,
+            groupId: request.groupId,
+            groupName: request.groupName,
             juzId: request.juzId,
             stage: nextStage,
             status: MunaqasyahRequestStatus.MENUNGGU,

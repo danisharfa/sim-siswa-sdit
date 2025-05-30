@@ -178,9 +178,29 @@ export const menuData = {
       icon: User2Icon,
     },
     {
-      title: 'Riwayat Setoran',
-      url: '/dashboard/student/submission',
-      icon: BookOpenIcon,
+      label: 'Aktivitas Sekolah',
+      items: [
+        {
+          title: 'Riwayat Setoran',
+          url: '/dashboard/student/submission',
+          icon: BookOpenIcon,
+        },
+      ],
+    },
+    {
+      label: 'Aktivitas Rumah',
+      items: [
+        {
+          title: 'Input',
+          url: '/dashboard/student/home-activity/input',
+          icon: BookPlus,
+        },
+        {
+          title: 'Riwayat',
+          url: '/dashboard/student/home-activity/history',
+          icon: BookOpenIcon,
+        },
+      ],
     },
     {
       label: 'Tashih',

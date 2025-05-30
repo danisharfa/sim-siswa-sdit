@@ -62,7 +62,7 @@ interface Props {
 }
 
 const fetchSetting = async () => {
-  const res = await fetch('/api/data/academicSetting');
+  const res = await fetch('/api/academicSetting');
   const json = await res.json();
   if (!json.success) throw new Error(json.message);
   return json.data;
@@ -82,7 +82,7 @@ export function StudentSubmissionHistoryTable({ data, title }: Props) {
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
 
-  const { data: setting } = useSWR('/api/data/academicSetting', fetchSetting);
+  const { data: setting } = useSWR('/api/academicSetting', fetchSetting);
 
   const academicPeriods = useMemo(() => {
     return Array.from(

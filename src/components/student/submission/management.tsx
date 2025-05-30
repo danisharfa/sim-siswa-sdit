@@ -7,7 +7,7 @@ export function StudentSubmissionHistoryManagement() {
 
   return (
     <div className="p-4 space-y-4">
-      <StudentSubmissionHistoryTable data={submissions} title="Riwayat Setoran Saya" />
+      <StudentSubmissionHistoryTable data={submissions} title="Riwayat Setoran" />
     </div>
   );
 }

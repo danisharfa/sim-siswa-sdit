@@ -31,6 +31,8 @@ interface MunaqasyahResult {
   note?: string;
   academicYear: string;
   semester: Semester;
+  classroomName: string;
+  groupName: string;
   juz: { name: string };
   schedule: {
     date: string;
@@ -42,14 +44,6 @@ interface MunaqasyahResult {
   student: {
     nis: string;
     user: { fullName: string };
-    group?: {
-      name: string;
-      classroom: {
-        name: string;
-        academicYear: string;
-        semester: Semester;
-      };
-    };
   };
 }
 
@@ -144,10 +138,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
       {
         id: 'Kelompok',
         header: 'Kelompok',
-        cell: ({ row }) => {
-          const g = row.original.student.group;
-          return g ? `${g.name} - ${g.classroom.name}` : 'Tidak terdaftar';
-        },
+        cell: ({ row }) => `${row.original.groupName} - ${row.original.classroomName}`,
       },
     ],
     []
@@ -181,7 +172,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
   return (
     <>
       <div className="mb-4">
-        <Label>Filter Tahun Ajaran + Semester</Label>
+        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
         <Select
           value={selectedYearSemester}
           onValueChange={(value) => {

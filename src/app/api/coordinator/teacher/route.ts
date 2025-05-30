@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const teachers = await prisma.teacherProfile.findMany({
-      where: { deletedAt: null },
       select: {
         id: true,
         user: {

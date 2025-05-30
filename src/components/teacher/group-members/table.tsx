@@ -82,7 +82,7 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
                       router.push(`/dashboard/teacher/group/${groupId}/report/${siswa.id}`)
                     }
                   >
-                    Rapot
+                    Rapor
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>

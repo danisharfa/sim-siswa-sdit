@@ -57,8 +57,8 @@ export function GroupTable({ data, title }: GroupTableProps) {
       },
       {
         accessorKey: 'classroomName',
-        id: 'Kelas',
-        header: 'Kelas',
+        id: 'Nama Kelas',
+        header: 'Nama Kelas',
       },
       {
         accessorKey: 'classroomAcademicYear',
@@ -72,7 +72,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
       },
       {
         accessorKey: 'totalMember',
-        id: 'Total Anggota',
+        id: 'Jumlah Siswa',
         header: 'Jumlah Siswa',
       },
       {
@@ -124,7 +124,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="Kelas" />
+      <DataTable title={title} table={table} filterColumn="Nama Kelompok" />
     </>
   );
 }

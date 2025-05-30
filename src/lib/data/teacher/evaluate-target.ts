@@ -1,30 +1,19 @@
 import { prisma } from '@/lib/prisma';
-import { TargetStatus, WeeklyTarget } from '@prisma/client';
+import { SubmissionType, TargetStatus, WeeklyTarget } from '@prisma/client';
 
-type Verse = {
-  surahId: number;
-  verse: number;
-};
+type Verse = { surahId: number; verse: number };
+type Page = { wafaId: number; page: number };
 
 type WeeklyTargetWithSurah = WeeklyTarget & {
-  surahStart: {
-    id: number;
-    verseCount: number;
-  } | null;
-  surahEnd: {
-    id: number;
-    verseCount: number;
-  } | null;
+  surahStart: { id: number; verseCount: number } | null;
+  surahEnd: { id: number; verseCount: number } | null;
 };
 
 let verseCache: Record<number, number> | null = null;
 
 export async function prefetchSurahVerseCounts() {
   const surahList = await prisma.surah.findMany({
-    select: {
-      id: true,
-      verseCount: true,
-    },
+    select: { id: true, verseCount: true },
   });
   verseCache = Object.fromEntries(surahList.map(({ id, verseCount }) => [id, verseCount]));
 }
@@ -50,9 +39,10 @@ function getTargetVerses(target: WeeklyTargetWithSurah): Verse[] {
     const from = id === surahStartId ? startAyat : 1;
     const to = id === surahEndId ? endAyat : totalAyat ?? 0;
 
-    for (let i = from; i <= to; i++) result.push({ surahId: id, verse: i });
+    for (let i = from; i <= to; i++) {
+      result.push({ surahId: id, verse: i });
+    }
   }
-
   return result;
 }
 
@@ -62,7 +52,7 @@ function extractSubmittedVerses(
     startVerse: number | null;
     endVerse: number | null;
   }[]
-) {
+): Set<string> {
   const result = new Set<string>();
   for (const { surahId, startVerse, endVerse } of submissions) {
     if (!surahId || !startVerse || !endVerse) continue;
@@ -73,24 +63,42 @@ function extractSubmittedVerses(
   return result;
 }
 
+function getTargetPages(target: WeeklyTarget): Page[] {
+  const { wafaId, startPage, endPage } = target;
+  if (!wafaId || !startPage || !endPage) return [];
+
+  const result: Page[] = [];
+  for (let i = startPage; i <= endPage; i++) {
+    result.push({ wafaId, page: i });
+  }
+  return result;
+}
+
+function extractSubmittedPages(
+  submissions: {
+    wafaId: number | null;
+    startPage: number | null;
+    endPage: number | null;
+  }[]
+): Set<string> {
+  const set = new Set<string>();
+  for (const { wafaId, startPage, endPage } of submissions) {
+    if (!wafaId || !startPage || !endPage) continue;
+    for (let i = startPage; i <= endPage; i++) {
+      set.add(`${wafaId}:${i}`);
+    }
+  }
+  return set;
+}
+
 export async function evaluateTargetAchievement(studentId: string, from: Date, to: Date) {
   await prefetchSurahVerseCounts();
 
   const targets = await prisma.weeklyTarget.findMany({
     where: { studentId, startDate: { lte: to }, endDate: { gte: from } },
     include: {
-      surahStart: {
-        select: {
-          id: true,
-          verseCount: true,
-        },
-      },
-      surahEnd: {
-        select: {
-          id: true,
-          verseCount: true,
-        },
-      },
+      surahStart: { select: { id: true, verseCount: true } },
+      surahEnd: { select: { id: true, verseCount: true } },
     },
   });
 
@@ -99,35 +107,42 @@ export async function evaluateTargetAchievement(studentId: string, from: Date, t
       where: {
         studentId,
         submissionType: target.type,
-        date: {
-          gte: target.startDate,
-          lte: target.endDate,
-        },
+        date: { gte: target.startDate, lte: target.endDate },
       },
       select: {
         surahId: true,
         startVerse: true,
         endVerse: true,
+        wafaId: true,
+        startPage: true,
+        endPage: true,
       },
     });
 
-    const required = getTargetVerses(target);
-    const submitted = extractSubmittedVerses(submissions);
-    const matched = required.filter((v) => submitted.has(`${v.surahId}:${v.verse}`)).length;
+    let total = 0;
+    let matched = 0;
 
-    const total = required.length;
-    const progress = total ? Math.round((matched / total) * 100) : 0;
+    if (target.type === SubmissionType.TAHFIDZ || target.type === SubmissionType.TAHSIN_ALQURAN) {
+      const required = getTargetVerses(target);
+      const submitted = extractSubmittedVerses(submissions);
+      matched = required.filter((v) => submitted.has(`${v.surahId}:${v.verse}`)).length;
+      total = required.length;
+    }
+
+    if (target.type === SubmissionType.TAHSIN_WAFA) {
+      const required = getTargetPages(target);
+      const submitted = extractSubmittedPages(submissions);
+      matched = required.filter((p) => submitted.has(`${p.wafaId}:${p.page}`)).length;
+      total = required.length;
+    }
+
+    const progress = total > 0 ? Math.round((matched / total) * 100) : 0;
     const status = progress === 100 ? TargetStatus.TERCAPAI : TargetStatus.TIDAK_TERCAPAI;
 
     if (target.status !== status || target.progressPercent !== progress) {
       await prisma.weeklyTarget.update({
-        where: {
-          id: target.id,
-        },
-        data: {
-          status,
-          progressPercent: progress,
-        },
+        where: { id: target.id },
+        data: { status, progressPercent: progress },
       });
     }
 

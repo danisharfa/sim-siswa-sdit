@@ -28,8 +28,7 @@ export function TargetManagement({ student }: TargetManagementProps) {
 
   return (
     <div className="space-y-6 mt-6">
-      <TargetForm studentId={student.id} />
-
+      <TargetForm studentId={student.id} onSubmit={mutate} />
       <TargetTable data={data.data} title="Daftar Target Setoran" onRefresh={mutate} />
     </div>
   );

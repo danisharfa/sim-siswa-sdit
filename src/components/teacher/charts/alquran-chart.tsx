@@ -61,8 +61,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function Chart() {
-  const { data, isLoading, error } = useSWR<ChartResponse>('/api/teacher/chart', fetcher);
+export function AlquranChart() {
+  const { data, isLoading, error } = useSWR<ChartResponse>('/api/teacher/chart/alquran', fetcher);
   const [selectedJuz, setSelectedJuz] = useState<ChartData | null>(null);
 
   if (isLoading) return <p className="text-muted-foreground">Memuat data chart...</p>;

@@ -24,8 +24,8 @@ interface TashihSchedule {
 }
 
 interface StudentRequest {
-  tashihRequestId: string;
-  tashihScheduleId: string;
+  scheduleId: string;
+  requestId: string;
   tashihType: 'ALQURAN' | 'WAFA';
   surah?: { name: string };
   juz?: { name: string };
@@ -69,8 +69,8 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        tashihScheduleId: selectedScheduleId,
-        tashihRequestId: selectedRequestId,
+        scheduleId: selectedScheduleId,
+        requestId: selectedRequestId,
         passed,
         notes,
       }),
@@ -103,7 +103,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Pilih Jadwal Ujian</Label>
+            <Label className="mb-2 block">Pilih Jadwal Ujian</Label>
             <Select onValueChange={setSelectedScheduleId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih sesi ujian" />
@@ -126,7 +126,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
           {selectedScheduleId && students && (
             <>
               <div>
-                <Label>Pilih Siswa</Label>
+                <Label className="mb-2 block">Pilih Siswa</Label>
                 <Select onValueChange={setSelectedRequestId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih siswa" />
@@ -145,7 +145,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
                         }
 
                         return (
-                          <SelectItem key={s.tashihRequestId} value={s.tashihRequestId}>
+                          <SelectItem key={s.requestId} value={s.requestId}>
                             {s.student.user.fullName} | {materi}
                           </SelectItem>
                         );
@@ -155,7 +155,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
               </div>
 
               <div>
-                <Label>Status Kelulusan</Label>
+                <Label className="mb-2 block">Status Kelulusan</Label>
                 <div className="flex gap-4">
                   <Button
                     type="button"
@@ -175,7 +175,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
               </div>
 
               <div>
-                <Label>Catatan</Label>
+                <Label className="mb-2 block">Catatan</Label>
                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
 

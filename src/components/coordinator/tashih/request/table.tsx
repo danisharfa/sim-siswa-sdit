@@ -33,16 +33,16 @@ import { Semester, TashihRequestStatus, TashihType } from '@prisma/client';
 
 interface TashihRequest {
   id: string;
+  academicYear: string;
+  semester: Semester;
+  classroomName: string;
+  groupName: string;
   status: TashihRequestStatus;
   notes?: string;
   createdAt: string;
   student: {
     nis: string;
     user: { fullName: string };
-    group?: {
-      name: string;
-      classroom: { name: string; academicYear: string; semester: Semester };
-    };
   };
   teacher: { user: { fullName: string } };
   tashihType?: TashihType;
@@ -80,9 +80,8 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
     for (const d of data) {
-      const group = d.student.group;
-      if (group) {
-        set.add(`${group.classroom.academicYear}__${group.classroom.semester}`);
+      if (d.academicYear && d.semester) {
+        set.add(`${d.academicYear}__${d.semester}`);
       }
     }
     return Array.from(set);
@@ -91,13 +90,8 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
   const groupOptions = useMemo(() => {
     if (selectedYearSemester === 'ALL') return [];
     return data
-      .filter(
-        (d) =>
-          d.student.group &&
-          `${d.student.group.classroom.academicYear}__${d.student.group.classroom.semester}` ===
-            selectedYearSemester
-      )
-      .map((d) => `${d.student.group!.name} - ${d.student.group!.classroom.name}`);
+      .filter((d) => `${d.academicYear}__${d.semester}` === selectedYearSemester)
+      .map((d) => `${d.groupName} - ${d.classroomName}`);
   }, [data, selectedYearSemester]);
 
   const handleOpenAcceptDialog = useCallback(
@@ -144,19 +138,16 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) =>
-          row.student.group
-            ? `${row.student.group.name} - ${row.student.group.classroom.name}`
+          row.groupName && row.classroomName
+            ? `${row.groupName} - ${row.classroomName}`
             : 'Tidak terdaftar',
       },
       {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
         accessorFn: (row) =>
-          row.student.group
-            ? `${row.student.group.classroom.academicYear} ${row.student.group.classroom.semester}`
-            : '-',
+          row.academicYear && row.semester ? `${row.academicYear} ${row.semester}` : '-',
       },
-
       {
         accessorKey: 'teacher.user.fullName',
         id: 'Guru Pembimbing',
@@ -274,7 +265,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label>Filter Tahun Ajaran + Semester</Label>
+          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {
@@ -304,7 +295,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         </div>
 
         <div>
-          <Label>Filter Kelompok</Label>
+          <Label className="mb-2 block">Filter Kelompok</Label>
           <Select
             value={selectedGroup}
             disabled={selectedYearSemester === 'ALL'}
@@ -328,7 +319,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         </div>
 
         <div>
-          <Label>Filter Jenis Tashih</Label>
+          <Label className="mb-2 block">Filter Jenis Tashih</Label>
           <Select
             onValueChange={(value) => {
               table.getColumn('tashihType')?.setFilterValue(value === 'ALL' ? undefined : value);
@@ -347,7 +338,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         </div>
 
         <div>
-          <Label>Filter Status</Label>
+          <Label className="mb-2 block">Filter Status</Label>
           <Select
             value={selectedStatus}
             onValueChange={(value) => {

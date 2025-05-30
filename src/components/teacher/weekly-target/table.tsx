@@ -88,8 +88,9 @@ export function TargetTable({ data, title, onRefresh }: TargetTableProps) {
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
       {
-        id: 'dateRange',
-        header: 'Rentang Tanggal',
+        accessorKey: 'dateRange',
+        id: 'Rentang Tanggal',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Rentang Tanggal" />,
         cell: ({ row }) => {
           const start = new Date(row.original.startDate).toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -106,7 +107,8 @@ export function TargetTable({ data, title, onRefresh }: TargetTableProps) {
       },
       {
         accessorKey: 'type',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Jenis" />,
+        id: 'Jenis Setoran',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Jenis Setoran" />,
         cell: ({ row }) => (
           <Badge variant="outline">
             {row.original.type === 'TAHFIDZ' ? 'Tahfidz' : 'Tahsin (Wafa)'}
@@ -114,6 +116,7 @@ export function TargetTable({ data, title, onRefresh }: TargetTableProps) {
         ),
       },
       {
+        accessorKey: 'materi',
         id: 'materi',
         header: 'Materi',
         cell: ({ row }) => {
@@ -121,18 +124,44 @@ export function TargetTable({ data, title, onRefresh }: TargetTableProps) {
           if (t.type === 'TAHFIDZ') {
             const surahStart = t.surahStart?.name ?? '-';
             const surahEnd = t.surahEnd?.name ?? '-';
-            const ayat = t.startAyat && t.endAyat ? `(${t.startAyat} – ${t.endAyat})` : '';
-            return `${surahStart} s/d ${surahEnd} ${ayat}`.trim();
+            const ayatRange = t.startAyat && t.endAyat ? `(${t.startAyat} – ${t.endAyat})` : '';
+
+            if (surahStart === surahEnd) {
+              return (
+                <div className="flex flex-col">
+                  <span className="font-medium">{surahStart}</span>
+                  {ayatRange && <span className="text-sm text-muted-foreground">{ayatRange}</span>}
+                </div>
+              );
+            }
+
+            return (
+              <div className="flex flex-col">
+                <span className="font-medium">
+                  {surahStart} s/d {surahEnd}
+                </span>
+                {ayatRange && <span className="text-sm text-muted-foreground">{ayatRange}</span>}
+              </div>
+            );
           } else {
             const nama = t.wafa?.name ?? '-';
-            const halaman = t.startPage && t.endPage ? `(${t.startPage} – ${t.endPage})` : '';
-            return `${nama} ${halaman}`.trim();
+            const halamanRange =
+              t.startPage && t.endPage ? `Hal. ${t.startPage} – ${t.endPage}` : '';
+            return (
+              <div className="flex flex-col">
+                <span className="font-medium">{nama}</span>
+                {halamanRange && (
+                  <span className="text-sm text-muted-foreground">{halamanRange}</span>
+                )}
+              </div>
+            );
           }
         },
       },
       {
-        id: 'progress',
-        header: 'Progress',
+        accessorKey: 'progressPercent',
+        id: 'Perkembangan',
+        header: 'Perkembangan',
         cell: ({ row }) => {
           const progress = row.original.progressPercent ?? 0;
           return (

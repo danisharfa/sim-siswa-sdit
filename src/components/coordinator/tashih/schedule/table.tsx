@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import { TashihType } from '@prisma/client';
+import { Semester, TashihType } from '@prisma/client';
 
 interface TashihSchedule {
   id: string;
@@ -32,20 +32,20 @@ interface TashihSchedule {
   location: string;
   schedules: {
     tashihRequest: {
-      student: {
-        nis: string;
-        user: { fullName: string };
-        group?: {
-          name: string;
-          classroom: { name: string; academicYear: string; semester: string };
-        };
-      };
+      academicYear: string;
+      semester: Semester;
+      classroomName: string;
+      groupName: string;
       tashihType?: TashihType;
       surah?: { name: string };
       juz?: { name: string };
       wafa?: { name: string };
       startPage?: number;
       endPage?: number;
+      student: {
+        nis: string;
+        user: { fullName: string };
+      };
       teacher: {
         user: { fullName: string };
       };
@@ -74,9 +74,9 @@ export function TashihScheduleTable({ data, title }: Props) {
     const set = new Set<string>();
     for (const schedule of data) {
       for (const s of schedule.schedules) {
-        const g = s.tashihRequest.student.group;
-        if (g) {
-          set.add(`${g.classroom.academicYear}__${g.classroom.semester}`);
+        const r = s.tashihRequest;
+        if (r.academicYear && r.semester) {
+          set.add(`${r.academicYear}__${r.semester}`);
         }
       }
     }
@@ -151,10 +151,12 @@ export function TashihScheduleTable({ data, title }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => {
-              const group = s.tashihRequest.student.group;
+              const r = s.tashihRequest;
               return (
                 <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar'}
+                  {r.groupName && r.classroomName
+                    ? `${r.groupName} - ${r.classroomName}`
+                    : 'Tidak terdaftar'}
                 </Badge>
               );
             })}
@@ -167,9 +169,9 @@ export function TashihScheduleTable({ data, title }: Props) {
         accessorFn: (row) => {
           const set = new Set<string>();
           row.schedules.forEach((s) => {
-            const group = s.tashihRequest.student.group;
-            if (group) {
-              set.add(`${group.classroom.academicYear} ${group.classroom.semester}`);
+            const r = s.tashihRequest;
+            if (r.academicYear && r.semester) {
+              set.add(`${r.academicYear} ${r.semester}`);
             }
           });
           return Array.from(set).join(', ');
@@ -177,10 +179,10 @@ export function TashihScheduleTable({ data, title }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => {
-              const group = s.tashihRequest.student.group;
+              const r = s.tashihRequest;
               return (
                 <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
+                  {r.academicYear && r.semester ? `${r.academicYear} ${r.semester}` : '-'}
                 </Badge>
               );
             })}
@@ -224,7 +226,7 @@ export function TashihScheduleTable({ data, title }: Props) {
   return (
     <>
       <div className="mb-4">
-        <Label>Tahun Ajaran</Label>
+        <Label className="mb-2 block">Tahun Ajaran</Label>
         <Select
           value={selectedYearSemester}
           onValueChange={(value) => {

@@ -14,43 +14,39 @@ export async function GET() {
       orderBy: { date: 'desc' },
       include: {
         examiner: {
-          include: { user: { select: { fullName: true } } },
-        },
-        scheduledByCoordinator: {
-          include: { user: { select: { fullName: true } } },
-        },
-        scheduleRequests: {
-          include: {
-            request: {
-              include: {
-                student: {
-                  select: {
-                    id: true,
-                    nis: true,
-                    user: { select: { fullName: true } },
-                    group: {
-                      select: {
-                        name: true,
-                        classroom: {
-                          select: { name: true, academicYear: true, semester: true },
-                        },
-                      },
-                    },
-                  },
-                },
-                juz: true,
-              },
-            },
+          select: {
+            user: { select: { fullName: true } },
           },
         },
-        results: {
+        scheduledByCoordinator: {
           select: {
-            studentId: true,
-            stage: true,
-            juzId: true,
-            score: true,
-            grade: true,
-            passed: true,
+            id: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        scheduleRequests: {
+          select: {
+            requestId: true,
+            request: {
+              select: {
+                academicYear: true,
+                semester: true,
+                classroomName: true,
+                groupName: true,
+                stage: true,
+                student: {
+                  select: {
+                    nis: true,
+                    user: { select: { fullName: true } },
+                  },
+                },
+                juz: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },

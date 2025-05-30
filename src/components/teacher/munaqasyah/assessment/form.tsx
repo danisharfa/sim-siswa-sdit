@@ -108,7 +108,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Pilih Jadwal Ujian</Label>
+            <Label className="mb-2 block">Pilih Jadwal Ujian</Label>
             <Select onValueChange={setSelectedScheduleId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih sesi munaqasyah" />
@@ -131,7 +131,7 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
           {selectedScheduleId && students && (
             <>
               <div>
-                <Label>Pilih Siswa</Label>
+                <Label className="mb-2 block">Pilih Siswa</Label>
                 <Select onValueChange={setSelectedRequestId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih siswa" />
@@ -153,9 +153,10 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
               </div>
 
               <div>
-                <Label>Nilai</Label>
+                <Label className="mb-2 block">Nilai</Label>
                 <Input
                   type="number"
+                  placeholder="Masukkan nilai (0-100)"
                   value={score ?? ''}
                   min={0}
                   max={100}
@@ -164,12 +165,12 @@ export function AddResultForm({ onSaved }: { onSaved: () => void }) {
               </div>
 
               <div>
-                <Label>Status & Grade</Label>
+                <Label className="mb-2 block">Status & Grade</Label>
                 <p className="text-muted-foreground">{getStatusLabel()}</p>
               </div>
 
               <div>
-                <Label>Catatan</Label>
+                <Label className="mb-2 block">Catatan</Label>
                 <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
               </div>
 

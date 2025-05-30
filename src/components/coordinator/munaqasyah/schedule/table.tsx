@@ -33,15 +33,15 @@ interface MunaqasyahSchedule {
   examiner?: { user?: { fullName: string } };
   scheduleRequests: {
     request: {
+      academicYear: string;
+      semester: Semester;
+      classroomName: string;
+      groupName: string;
+      stage: string;
       student: {
         nis: string;
         user: { fullName: string };
-        group?: {
-          name: string;
-          classroom: { name: string; academicYear: string; semester: Semester };
-        };
       };
-      stage: string;
       juz: { name: string };
     };
   }[];
@@ -68,10 +68,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
     const set = new Set<string>();
     for (const schedule of data) {
       for (const s of schedule.scheduleRequests) {
-        const g = s.request.student.group;
-        if (g) {
-          set.add(`${g.classroom.academicYear}__${g.classroom.semester}`);
-        }
+        set.add(`${s.request.academicYear}__${s.request.semester}`);
       }
     }
     return Array.from(set);
@@ -137,14 +134,11 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         header: 'Kelompok',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
-            {row.original.scheduleRequests.map((s, i) => {
-              const group = s.request.student.group;
-              return (
-                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar'}
-                </Badge>
-              );
-            })}
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                {`${s.request.groupName} - ${s.request.classroomName}`}
+              </Badge>
+            ))}
           </div>
         ),
       },
@@ -154,23 +148,17 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         accessorFn: (row) => {
           const set = new Set<string>();
           row.scheduleRequests.forEach((s) => {
-            const group = s.request.student.group;
-            if (group) {
-              set.add(`${group.classroom.academicYear} ${group.classroom.semester}`);
-            }
+            set.add(`${s.request.academicYear} ${s.request.semester}`);
           });
           return Array.from(set).join(', ');
         },
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
-            {row.original.scheduleRequests.map((s, i) => {
-              const group = s.request.student.group;
-              return (
-                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
-                </Badge>
-              );
-            })}
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                {`${s.request.academicYear} ${s.request.semester}`}
+              </Badge>
+            ))}
           </div>
         ),
       },
@@ -218,7 +206,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
   return (
     <>
       <div className="mb-4">
-        <Label>Tahun Ajaran</Label>
+        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
         <Select
           value={selectedYearSemester}
           onValueChange={(value) => {

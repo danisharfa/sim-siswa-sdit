@@ -12,7 +12,6 @@ export async function fetchStudentSubmissionHistory() {
     const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!student) {
       throw new Error('Profil siswa tidak ditemukan');
     }

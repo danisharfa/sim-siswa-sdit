@@ -5,7 +5,7 @@ import { StudentSubmissionHistoryManagement } from '@/components/student/submiss
 export default function StudentSubmissionHistoryPage() {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Riwayat Setoran Saya</h1>
+      <h1 className="text-2xl font-bold mb-4">Riwayat Setoran</h1>
       <Suspense
         fallback={
           <div className="space-y-4">

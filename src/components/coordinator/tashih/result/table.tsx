@@ -28,6 +28,10 @@ interface TashihResult {
   passed: boolean;
   notes?: string;
   tashihRequest: {
+    academicYear: string;
+    semester: Semester;
+    classroomName: string;
+    groupName: string;
     tashihType: TashihType;
     surah?: { name: string };
     juz?: { name: string };
@@ -37,16 +41,7 @@ interface TashihResult {
     student: {
       nis: string;
       user: { fullName: string };
-      group?: {
-        name: string;
-        classroom: {
-          name: string;
-          academicYear: string;
-          semester: Semester;
-        };
-      };
     };
-
     teacher: {
       user: { fullName: string };
     };
@@ -75,6 +70,17 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     setColumnVisibility,
   } = useDataTableState<TashihResult, string>();
   const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
+
+  const yearSemesterOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of data) {
+      const r = d.tashihRequest;
+      if (r.academicYear && r.semester) {
+        set.add(`${r.academicYear}__${r.semester}`);
+      }
+    }
+    return Array.from(set);
+  }, [data]);
 
   const columns = useMemo<ColumnDef<TashihResult>[]>(
     () => [
@@ -127,22 +133,24 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         id: 'Kelompok',
         header: 'Kelompok',
         cell: ({ row }) => {
-          const group = row.original.tashihRequest.student.group;
-          return group ? `${group.name} - ${group.classroom.name}` : 'Tidak terdaftar';
+          const r = row.original.tashihRequest;
+          return r.groupName && r.classroomName
+            ? `${r.groupName} - ${r.classroomName}`
+            : 'Tidak terdaftar';
         },
       },
       {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
-        accessorFn: (row) => {
-          const group = row.tashihRequest.student.group;
-          return group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-';
-        },
+        accessorFn: (row) =>
+          row.tashihRequest.academicYear && row.tashihRequest.semester
+            ? `${row.tashihRequest.academicYear} ${row.tashihRequest.semester}`
+            : '-',
         cell: ({ row }) => {
-          const group = row.original.tashihRequest.student.group;
+          const r = row.original.tashihRequest;
           return (
             <Badge variant="outline" className="w-fit text-muted-foreground">
-              {group ? `${group.classroom.academicYear} ${group.classroom.semester}` : '-'}
+              {r.academicYear && r.semester ? `${r.academicYear} ${r.semester}` : '-'}
             </Badge>
           );
         },
@@ -184,17 +192,6 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     []
   );
 
-  const yearSemesterOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const d of data) {
-      const group = d.tashihRequest.student.group;
-      if (group) {
-        set.add(`${group.classroom.academicYear}__${group.classroom.semester}`);
-      }
-    }
-    return Array.from(set);
-  }, [data]);
-
   const table = useReactTable({
     data,
     columns,
@@ -215,7 +212,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
   return (
     <>
       <div className="mb-4">
-        <Label>Filter Tahun Ajaran + Semester</Label>
+        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
         <Select
           value={selectedYearSemester}
           onValueChange={(value) => {
