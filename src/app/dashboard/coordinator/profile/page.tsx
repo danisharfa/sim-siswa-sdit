@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
-import CoordinatorProfileDetail from '@/components/coordinator/profile/detail';
+import CoordinatorProfileDetail from '@/components/coordinator/profile/CoordinatorProfileDetail';
 import { Role } from '@prisma/client';
 
 export default async function CoordinatorProfilePage() {

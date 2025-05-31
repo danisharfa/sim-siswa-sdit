@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { DashboardStats } from '@/components/dashboard-stats';
+import { DashboardStats } from '@/components/admin/stats/DashboardStats';
 import { Role } from '@prisma/client';
 
 export default async function AdminDashboardPage() {

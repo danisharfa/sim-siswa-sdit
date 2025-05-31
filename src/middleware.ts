@@ -6,8 +6,6 @@ import { Role } from '@prisma/client';
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // console.log('🔍 Request cookies:', req.cookies.getAll());
-
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET || '',
@@ -18,6 +16,7 @@ export async function middleware(req: NextRequest) {
         : 'authjs.session-token',
   });
 
+  // console.log('🔍 Request cookies:', req.cookies.getAll());
   // console.log('🔍 Token in middleware:', token);
 
   // Jika belum login dan mengakses halaman dashboard, arahkan ke login

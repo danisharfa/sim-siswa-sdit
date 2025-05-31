@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { BackButton } from '@/components/ui/back-button';
 import { getStudentForTeacherGroup } from '@/lib/data/teacher/teacher-group-member';
-import { TargetManagement } from '@/components/teacher/weekly-target/management';
+import { TargetManagement } from '@/components/teacher/weekly-target/TargetManagement';
 
 type Params = Promise<{ groupId: string; studentId: string }>;
 

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StudentTashihResultManagement } from '@/components/student/tashih/result/management';
+import { TashihResultManagement } from '@/components/student/tashih/result/TashihResultManagement';
 
 export default function StudentTashihFormPage() {
   return (
@@ -13,7 +13,7 @@ export default function StudentTashihFormPage() {
           </div>
         }
       >
-        <StudentTashihResultManagement />
+        <TashihResultManagement />
       </Suspense>
     </div>
   );

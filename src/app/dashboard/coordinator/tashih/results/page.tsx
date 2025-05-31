@@ -1,4 +1,4 @@
-import { TashihResultManagement } from '@/components/coordinator/tashih/result/management';
+import { TashihResultManagement } from '@/components/coordinator/tashih/result/TashihResultManagement';
 
 export default function CoordinatorExamResultPage() {
   return (

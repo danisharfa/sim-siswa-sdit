@@ -1,0 +1,13 @@
+import { use } from 'react';
+import { fetchGroupHistoryMembersForTeacher } from '@/lib/data/teacher/teacher-group-member';
+import { GroupMembersHistoryTable } from './GroupMembersHistoryTable';
+
+export function GroupMembersHistoryManagement({ groupId }: { groupId: string }) {
+  const members = use(fetchGroupHistoryMembersForTeacher(groupId));
+
+  return (
+    <div className="space-y-6">
+      <GroupMembersHistoryTable data={members} title="Daftar Anggota Kelompok" groupId={groupId} />
+    </div>
+  );
+}

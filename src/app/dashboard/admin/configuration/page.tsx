@@ -1,4 +1,4 @@
-import { ConfigurationManagement } from '@/components/admin/configuration/management';
+import { ConfigurationManagement } from '@/components/admin/configuration/ConfigurationManagement';
 
 export default function AcademicSettingPage() {
   return (

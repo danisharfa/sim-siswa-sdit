@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/ui/back-button';
 import { getGroupId } from '@/lib/data/teacher/teacher-group-member';
-import { GroupDetailsManagement } from '@/components/teacher/group-members/management';
+import { GroupMembersManagement } from '@/components/teacher/group-members/GroupMembersManagement';
 
 export default async function GroupDetailPage(props: { params: Promise<{ groupId: string }> }) {
   const params = await props.params;
@@ -31,7 +31,7 @@ export default async function GroupDetailPage(props: { params: Promise<{ groupId
           </div>
         }
       >
-        <GroupDetailsManagement groupId={groupId} />
+        <GroupMembersManagement groupId={groupId} />
       </Suspense>
     </div>
   );

@@ -10,7 +10,6 @@ import {
   BookPlus,
   Users2,
 } from 'lucide-react';
-
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import { ImProfile } from 'react-icons/im';
 

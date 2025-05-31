@@ -3,7 +3,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { getStudentForTeacherGroupHistory } from '@/lib/data/teacher/teacher-group-member';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TargetHistoryManagement } from '@/components/teacher/weekly-target/history/management';
+import { TargetHistoryManagement } from '@/components/teacher/weekly-target/history/TargetHistoryManagement';
 
 type Params = Promise<{ groupId: string; studentId: string }>;
 

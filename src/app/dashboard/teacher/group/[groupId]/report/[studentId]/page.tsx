@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getStudentReportData } from '@/lib/data/teacher/report';
-import { StudentReportCard } from '@/components/teacher/report/student-report-card';
+import { StudentReportCard } from '@/components/teacher/report/StudentReportCard';
 import { BackButton } from '@/components/ui/back-button';
 
 type Params = Promise<{ groupId: string; studentId: string }>;

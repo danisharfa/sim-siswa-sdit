@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/ui/back-button';
 import { getGroupHistoryId } from '@/lib/data/teacher/teacher-group-member';
-import { GroupHistoryDetailsManagement } from '@/components/teacher/group-members/history/management';
+import { GroupMembersHistoryManagement } from '@/components/teacher/group-members/history/GroupMembersHistoryManagement';
 
 export default async function GroupHistoryDetailPage(props: {
   params: Promise<{ groupId: string }>;
@@ -33,7 +33,7 @@ export default async function GroupHistoryDetailPage(props: {
           </div>
         }
       >
-        <GroupHistoryDetailsManagement groupId={groupId} />
+        <GroupMembersHistoryManagement groupId={groupId} />
       </Suspense>
     </div>
   );

@@ -1,4 +1,4 @@
-import { HomeActivityForm } from '@/components/student/home-activity/input/form';
+import { HomeActivityForm } from '@/components/student/home-activity/HomeActivityForm';
 
 export default function HomeActivityInputPage() {
   return (

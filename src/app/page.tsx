@@ -1,6 +1,6 @@
-import { LandingHeader } from '@/components/landing-page/landing-header';
-import { LandingContent } from '@/components/landing-page/landing-content';
-import { LandingFooter } from '@/components/landing-page/landing-footer';
+import { LandingHeader } from '@/components/layout/landing-page/LandingHeader';
+import { LandingContent } from '@/components/layout/landing-page/LandingContent';
+import { LandingFooter } from '@/components/layout/landing-page/LandingFooter';
 
 export default function HomePage() {
   return (

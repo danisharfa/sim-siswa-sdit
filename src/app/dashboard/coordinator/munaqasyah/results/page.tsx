@@ -1,4 +1,4 @@
-import { MunaqasyahResultManagement } from '@/components/coordinator/munaqasyah/result/management';
+import { MunaqasyahResultManagement } from '@/components/coordinator/munaqasyah/result/MunaqasyahResultManagement';
 
 export default function CoordinatorMunaqasyahResultPage() {
   return (

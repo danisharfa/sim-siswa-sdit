@@ -1,4 +1,4 @@
-import { TashihScheduleManagement } from '@/components/coordinator/tashih/schedule/management';
+import { TashihScheduleManagement } from '@/components/coordinator/tashih/schedule/TashihScheduleManagement';
 
 export default function CoordinatorExamSchedulePage() {
   return (

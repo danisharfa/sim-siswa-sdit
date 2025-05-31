@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getStudentForTeacherGroup } from '@/lib/data/teacher/teacher-group-member';
-import { ScoreInputForm } from '@/components/teacher/score/score-form';
+import { ScoreForm } from '@/components/teacher/report/score/ScoreForm';
 import { BackButton } from '@/components/ui/back-button';
 
 type Params = Promise<{ groupId: string; studentId: string }>;
@@ -21,7 +21,7 @@ export default async function ScorePage(props: { params: Params }) {
         </h1>
       </div>
 
-      <ScoreInputForm groupId={groupId} student={student} />
+      <ScoreForm groupId={groupId} student={student} />
     </div>
   );
 }

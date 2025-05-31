@@ -1,4 +1,4 @@
-import { MunaqasyahScheduleManagement } from '@/components/coordinator/munaqasyah/schedule/management';
+import { MunaqasyahScheduleManagement } from '@/components/coordinator/munaqasyah/schedule/MunaqasyahScheduleManagement';
 
 export default function CoordinatorMunaqasyahSchedulePage() {
   return (

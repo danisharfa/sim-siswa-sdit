@@ -1,4 +1,4 @@
-import { MunaqasyahRequestManagement } from '@/components/coordinator/munaqasyah/request/management';
+import { MunaqasyahRequestManagement } from '@/components/coordinator/munaqasyah/request/MunaqasyahRequestManagement';
 
 export default function CoordinatorMunaqasyahRequestsPage() {
   return (

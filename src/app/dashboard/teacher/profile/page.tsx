@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
-import TeacherProfileDetail from '@/components/teacher/profile/detail';
+import TeacherProfileDetail from '@/components/teacher/profile/TeacherProfileDetail';
 import { Role } from '@prisma/client';
 
 export default async function TeacherProfilePage() {

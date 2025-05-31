@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { AlquranChart } from '@/components/teacher/charts/alquran-chart';
-import { WafaChart } from '@/components/teacher/charts/wafa-chart';
+import { AlquranChart } from '@/components/teacher/charts/AlquranChart';
+import { WafaChart } from '@/components/teacher/charts/WafaChart';
 import { Role } from '@prisma/client';
 
 export default async function TeacherDashboardPage() {

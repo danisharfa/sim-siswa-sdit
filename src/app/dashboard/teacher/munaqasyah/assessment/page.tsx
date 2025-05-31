@@ -1,4 +1,4 @@
-import { MunaqasyahResultManagement } from '@/components/teacher/munaqasyah/assessment/management';
+import { MunaqasyahResultManagement } from '@/components/teacher/munaqasyah/assessment/MunaqasyahResultManagement';
 
 export default function TeacherMunaqasyahAssessmentPage() {
   return (

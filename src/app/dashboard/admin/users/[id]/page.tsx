@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { UserDetail } from '@/components/admin/user/user-detail';
+import { UserDetail } from '@/components/admin/user/UserDetail';
 import { prisma } from '@/lib/prisma';
 import { BackButton } from '@/components/ui/back-button';
 import { Role } from '@prisma/client';

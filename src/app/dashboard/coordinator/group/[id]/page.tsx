@@ -1,6 +1,6 @@
 import { getGroupById } from '@/lib/data/group';
 import { notFound } from 'next/navigation';
-import { GroupDetailsManagement } from '@/components/coordinator/group-members/management';
+import { GroupMembersManagement } from '@/components/coordinator/group-members/GroupMembersManagement';
 import { BackButton } from '@/components/ui/back-button';
 
 export default async function GroupDetailPage(props: { params: Promise<{ id: string }> }) {
@@ -19,7 +19,7 @@ export default async function GroupDetailPage(props: { params: Promise<{ id: str
         {group.classroom.semester}
       </h1>
 
-      <GroupDetailsManagement groupId={id} classroomId={group.classroom.id} />
+      <GroupMembersManagement groupId={id} classroomId={group.classroom.id} />
     </div>
   );
 }

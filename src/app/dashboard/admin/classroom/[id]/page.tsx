@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getClassroomById } from '@/lib/data/classroom';
-import { ClassroomDetailsManagement } from '@/components/admin/classroom-members/management';
-import { PromoteDialogWrapper } from '@/components/admin/classroom-members/promote-dialog-wrapper';
+import { ClassroomMembersManagement } from '@/components/admin/classroom-members/ClassroomMembersManagement';
+import { PromoteDialogWrapper } from '@/components/admin/classroom-members/PromoteDialogWrapper';
 import { BackButton } from '@/components/ui/back-button';
 
 export default async function ClassroomPage(props: { params: Promise<{ id: string }> }) {
@@ -26,7 +26,7 @@ export default async function ClassroomPage(props: { params: Promise<{ id: strin
         currentSemester={classroom.semester}
       />
 
-      <ClassroomDetailsManagement classroomId={id} />
+      <ClassroomMembersManagement classroomId={id} />
     </div>
   );
 }

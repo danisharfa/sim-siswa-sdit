@@ -1,4 +1,4 @@
-import { GroupManagement } from '@/components/coordinator/group/management';
+import { GroupManagement } from '@/components/coordinator/group/GroupManagement';
 
 export default function GroupPage() {
   return (

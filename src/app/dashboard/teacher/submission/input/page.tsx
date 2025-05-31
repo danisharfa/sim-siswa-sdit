@@ -1,4 +1,4 @@
-import { SubmissionForm } from '@/components/teacher/submission/input/submission-form';
+import { SubmissionForm } from '@/components/teacher/submission/SubmissionForm';
 
 export default function SubmissionInputPage() {
   return (

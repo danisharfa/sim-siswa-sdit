@@ -1,4 +1,4 @@
-import { ClassroomManagement } from '@/components/admin/classroom/management';
+import { ClassroomManagement } from '@/components/admin/classroom/ClassroomManagement';
 
 export default function ClassroomPage() {
   return (

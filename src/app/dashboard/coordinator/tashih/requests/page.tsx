@@ -1,4 +1,4 @@
-import { TashihRequestManagement } from '@/components/coordinator/tashih/request/management';
+import { TashihRequestManagement } from '@/components/coordinator/tashih/request/TashihRequestManagement';
 
 export default function CoordinatorExamRequestsPage() {
   return (

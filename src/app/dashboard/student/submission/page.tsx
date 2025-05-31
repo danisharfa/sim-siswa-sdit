@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StudentSubmissionHistoryManagement } from '@/components/student/submission/management';
+import { SubmissionManagement } from '@/components/student/submission/SubmissionManagement';
 
 export default function StudentSubmissionHistoryPage() {
   return (
@@ -14,7 +14,7 @@ export default function StudentSubmissionHistoryPage() {
           </div>
         }
       >
-        <StudentSubmissionHistoryManagement />
+        <SubmissionManagement />
       </Suspense>
     </div>
   );

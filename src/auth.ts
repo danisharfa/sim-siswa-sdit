@@ -25,35 +25,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        // console.log('AUTHORIZATION START');
-        // console.log('Authorize called with:', credentials);
-
         const validatedFields = LogInSchema.safeParse(credentials);
-        // console.log('Validated fields:', validatedFields);
-
         if (!validatedFields.success) {
           console.log('Validation failed', validatedFields.error.flatten());
           return null;
         }
 
         const { username, password } = validatedFields.data;
+
         const user = await prisma.user.findUnique({ where: { username } });
-
-        // console.log('User from DB:', user);
-
         if (!user) {
           console.log('No user found');
           return null;
         }
 
         const passwordMatch = await compare(password, user.password);
-
-        // console.log('Password match:', passwordMatch);
-
         if (!passwordMatch) {
           console.log('Password mismatch');
           return null;
         }
+
+        // console.log('AUTHORIZATION START');
+        // console.log('Authorize called with:', credentials);
+        // console.log('Validated fields:', validatedFields);
+        // console.log('User from DB:', user);
+        // console.log('Password match:', passwordMatch);
 
         return user;
       },
