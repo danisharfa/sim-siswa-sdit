@@ -31,6 +31,7 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { ExportToPDFButton } from './ExportToPDFButton';
 import { Semester, SubmissionStatus, SubmissionType, Adab } from '@prisma/client';
+import { Label } from '@/components/ui/label';
 
 export type Submission = {
   id: string;
@@ -128,43 +129,56 @@ export function SubmissionTable({ data, title }: Props) {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
         accessorFn: (row) => `${row.group.classroom.academicYear} ${row.group.classroom.semester}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.group.classroom.academicYear} {row.original.group.classroom.semester}
+            </div>
+            <div className="text-muted-foreground">
+              {row.original.group.name} - {row.original.group.classroom.name}
+            </div>
+          </div>
+        ),
       },
       {
         accessorKey: 'submissionType',
         header: 'Jenis Setoran',
         cell: ({ row }) => (
-          <Badge variant="outline" className="text-muted-foreground px-2">
-            {row.original.submissionType.replaceAll('_', ' ')}
-          </Badge>
+          <Badge variant="secondary">{row.original.submissionType.replaceAll('_', ' ')}</Badge>
         ),
       },
       {
-        header: 'Juz',
-        accessorFn: (row) => row.juz?.name ?? '-',
-      },
-      {
+        id: 'Surah',
         header: 'Surah',
         accessorFn: (row) => row.surah?.name ?? '-',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.surah?.name ? (
+              <>
+                <div className="font-medium">{`${row.original.surah.name} (Ayat ${row.original.startVerse} - ${row.original.endVerse})`}</div>
+                <div className="text-muted-foreground">{row.original.juz?.name}</div>
+              </>
+            ) : (
+              <span>-</span>
+            )}
+          </div>
+        ),
       },
       {
-        header: 'Ayat Mulai',
-        accessorFn: (row) => row.startVerse ?? '-',
-      },
-      {
-        header: 'Ayat Selesai',
-        accessorFn: (row) => row.endVerse ?? '-',
-      },
-      {
+        id: 'Wafa',
         header: 'Wafa',
         accessorFn: (row) => row.wafa?.name ?? '-',
-      },
-      {
-        header: 'Halaman Mulai',
-        accessorFn: (row) => row.startPage ?? '-',
-      },
-      {
-        header: 'Halaman Selesai',
-        accessorFn: (row) => row.endPage ?? '-',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.wafa?.name ? (
+              <>
+                <div className="font-medium">{`${row.original.wafa.name} (Hal ${row.original.startPage} - ${row.original.endPage})`}</div>
+              </>
+            ) : (
+              <span>-</span>
+            )}
+          </div>
+        ),
       },
       {
         header: 'Status',
@@ -246,71 +260,77 @@ export function SubmissionTable({ data, title }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-x-4 gap-y-3 mb-4">
-        {/* Tahun Ajaran */}
-        <Select
-          value={selectedPeriod}
-          onValueChange={(val) => {
-            setSelectedPeriod(val);
-            table
-              .getColumn('Tahun Ajaran')
-              ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
-          }}
-        >
-          <SelectTrigger className="min-w-[200px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Periode</SelectItem>
-            {academicPeriods.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p.replace('-', ' ')}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Select
+            value={selectedPeriod}
+            onValueChange={(val) => {
+              setSelectedPeriod(val);
+              table
+                .getColumn('Tahun Ajaran')
+                ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
+            }}
+          >
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Periode</SelectItem>
+              {academicPeriods.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p.replace('-', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Bulan */}
-        <Select
-          onValueChange={(value) => {
-            const val = value === 'all' ? 'all' : parseInt(value);
-            setSelectedMonth(val);
-            table.getColumn('date')?.setFilterValue('custom');
-          }}
-        >
-          <SelectTrigger className="min-w-[160px]">
-            <SelectValue placeholder="Pilih Bulan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Bulan</SelectItem>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <SelectItem key={i} value={i.toString()}>
-                {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div>
+          <Label className="mb-2 block">Filter Bulan</Label>
+          <Select
+            onValueChange={(value) => {
+              const val = value === 'all' ? 'all' : parseInt(value);
+              setSelectedMonth(val);
+              table.getColumn('date')?.setFilterValue('custom');
+            }}
+          >
+            <SelectTrigger className="min-w-[160px]">
+              <SelectValue placeholder="Pilih Bulan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Bulan</SelectItem>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SelectItem key={i} value={i.toString()}>
+                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Minggu */}
-        <Select
-          onValueChange={(value) => {
-            const val = value === 'all' ? 'all' : parseInt(value);
-            setSelectedWeek(val);
-            table.getColumn('date')?.setFilterValue('custom');
-          }}
-        >
-          <SelectTrigger className="min-w-[160px]">
-            <SelectValue placeholder="Pilih Minggu" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Minggu</SelectItem>
-            {[1, 2, 3, 4, 5].map((w) => (
-              <SelectItem key={w} value={w.toString()}>
-                Minggu ke-{w}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div>
+          <Label className="mb-2 block">Filter Minggu</Label>
+          <Select
+            onValueChange={(value) => {
+              const val = value === 'all' ? 'all' : parseInt(value);
+              setSelectedWeek(val);
+              table.getColumn('date')?.setFilterValue('custom');
+            }}
+          >
+            <SelectTrigger className="min-w-[160px]">
+              <SelectValue placeholder="Pilih Minggu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Minggu</SelectItem>
+              {[1, 2, 3, 4, 5].map((w) => (
+                <SelectItem key={w} value={w.toString()}>
+                  Minggu ke-{w}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex justify-end mb-4">

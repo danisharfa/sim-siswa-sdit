@@ -15,10 +15,6 @@ export async function GET() {
       include: {
         tashihRequest: {
           select: {
-            academicYear: true,
-            semester: true,
-            classroomName: true,
-            groupName: true,
             tashihType: true,
             surah: { select: { name: true } },
             juz: { select: { name: true } },
@@ -34,6 +30,18 @@ export async function GET() {
             teacher: {
               select: {
                 user: { select: { fullName: true } },
+              },
+            },
+            group: {
+              select: {
+                name: true,
+                classroom: {
+                  select: {
+                    name: true,
+                    academicYear: true,
+                    semester: true,
+                  },
+                },
               },
             },
           },

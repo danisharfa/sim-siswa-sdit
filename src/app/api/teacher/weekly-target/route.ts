@@ -23,8 +23,6 @@ export async function POST(req: NextRequest) {
 
     const {
       studentId,
-      academicYear,
-      semester,
       type,
       description,
       startDate,
@@ -38,7 +36,7 @@ export async function POST(req: NextRequest) {
       endPage,
     } = await req.json();
 
-    if (!studentId || !academicYear || !semester || !type || !startDate || !endDate) {
+    if (!studentId || !type || !startDate || !endDate) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
@@ -73,8 +71,6 @@ export async function POST(req: NextRequest) {
         studentId,
         teacherId: teacher.id,
         groupId: student.groupId,
-        academicYear,
-        semester,
         type,
         description,
         startDate: new Date(startDate),

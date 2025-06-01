@@ -80,8 +80,6 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
         studentId,
         teacherId: teacher.id,
         groupId: student.groupId,
-        academicYear,
-        semester,
         type,
         description,
         startDate: new Date(startDate),

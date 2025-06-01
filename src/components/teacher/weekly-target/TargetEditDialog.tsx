@@ -15,7 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { DateRange } from 'react-day-picker';
 import { DatePickerWithRange } from '@/components/ui/date-picker-range';
-import { SubmissionType, Semester } from '@prisma/client';
+import { SubmissionType } from '@prisma/client';
 import { toast } from 'sonner';
 
 interface Surah {
@@ -33,8 +33,6 @@ interface TargetEditDialogProps {
   target: {
     id: string;
     studentId: string;
-    academicYear: string;
-    semester: Semester;
     type: SubmissionType;
     description: string;
     startDate: string;
@@ -91,8 +89,6 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
 
     const payload = {
       studentId: target.studentId,
-      academicYear: target.academicYear,
-      semester: target.semester,
       type,
       description,
       startDate: dateRange.from,

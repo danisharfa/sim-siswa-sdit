@@ -48,17 +48,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Ambil data siswa dengan relasi group dan classroom
     const student = await prisma.studentProfile.findUnique({
       where: { id: studentId },
-      select: {
+      include: {
         group: {
-          select: {
-            id: true,
-            name: true,
+          include: {
             classroom: {
               select: {
-                id: true,
-                name: true,
                 academicYear: true,
                 semester: true,
               },
@@ -78,9 +75,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const classroom = student.group.classroom;
-    const group = student.group;
-
+    // Cek apakah sudah ada request yang sama dan masih menunggu
     const existing = await prisma.tashihRequest.findFirst({
       where: {
         studentId,
@@ -109,12 +104,7 @@ export async function POST(req: NextRequest) {
       data: {
         teacherId: teacher.id,
         studentId,
-        academicYear: classroom.academicYear,
-        semester: classroom.semester,
-        classroomId: classroom.id,
-        classroomName: classroom.name,
-        groupId: group.id,
-        groupName: group.name,
+        groupId: student.group.id,
         tashihType,
         juzId: tashihType === TashihType.ALQURAN ? juzId : null,
         surahId: tashihType === TashihType.ALQURAN ? surahId : null,

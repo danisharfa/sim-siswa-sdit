@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { TashihRequestStatus, TashihType } from '@prisma/client';
+import { Semester, TashihRequestStatus, TashihType } from '@prisma/client';
 
 interface TashihSchedule {
   id: string;
@@ -39,13 +39,17 @@ interface TashihSchedule {
       wafa: { name: string } | null;
       startPage: number | null;
       endPage: number | null;
-      academicYear: string;
-      semester: string;
-      groupName: string;
-      classroomName: string;
       teacher: {
         user: { fullName: string };
-      } | null;
+      };
+      group: {
+        name: string;
+        classroom: {
+          name: string;
+          academicYear: string;
+          semester: Semester;
+        };
+      };
     };
   }[];
 }
@@ -70,7 +74,9 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
     const set = new Set<string>();
     for (const schedule of data) {
       for (const s of schedule.schedules) {
-        set.add(`${s.tashihRequest.academicYear}__${s.tashihRequest.semester}`);
+        set.add(
+          `${s.tashihRequest.group.classroom.academicYear}__${s.tashihRequest.group.classroom.semester}`
+        );
       }
     }
     return Array.from(set);
@@ -79,29 +85,28 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
   const columns = useMemo<ColumnDef<TashihSchedule>[]>(
     () => [
       {
-        accessorKey: 'date',
         id: 'Tanggal',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
-        cell: ({ row }) =>
-          new Date(row.original.date).toLocaleDateString('id-ID', {
+        accessorKey: 'date',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
+        cell: ({ row }) => {
+          const s = row.original;
+          const date = new Date(s.date).toLocaleDateString('id-ID', {
             day: 'numeric',
-            month: 'short',
+            month: 'long',
             year: 'numeric',
-          }),
-      },
-      {
-        accessorKey: 'sessionName',
-        header: 'Sesi',
-        cell: ({ row }) =>
-          `${row.original.sessionName}, ${row.original.startTime} - ${row.original.endTime}`,
+          });
+          return `${date} (${s.sessionName}, ${s.startTime} - ${s.endTime})`;
+        },
       },
       {
         accessorKey: 'location',
+        id: 'Lokasi',
         header: 'Lokasi',
       },
       {
+        aaccessorKey: 'schedules.tashihRequest.tashihType',
         id: 'Materi',
-        header: 'Materi Ujian',
+        header: 'Materi',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s) => {
@@ -126,55 +131,39 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         ),
       },
       {
-        id: 'Kelompok',
-        header: 'Kelompok',
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) =>
+          row.schedules
+            .map(
+              (s) =>
+                `${s.tashihRequest.group.classroom.academicYear} ${s.tashihRequest.group.classroom.semester}`
+            )
+            .join(', '),
         cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s) => {
-              const r = s.tashihRequest;
-              return (
-                <Badge
-                  key={r.id + '-group'}
-                  variant="outline"
-                  className="w-fit text-muted-foreground"
-                >
-                  {`${r.groupName} - ${r.classroomName}`}
-                </Badge>
-              );
-            })}
+          <div className="text-sm">
+            {row.original.schedules.map((s) => (
+              <div key={s.tashihRequest.id} className="mb-2">
+                <div className="font-medium">
+                  {s.tashihRequest.group.classroom.academicYear}{' '}
+                  {s.tashihRequest.group.classroom.semester}
+                </div>
+                <div className="text-muted-foreground">
+                  {s.tashihRequest.group.name} - {s.tashihRequest.group.classroom.name}
+                </div>
+              </div>
+            ))}
           </div>
         ),
       },
       {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => {
-          const set = new Set<string>();
-          row.schedules.forEach((s) => {
-            set.add(`${s.tashihRequest.academicYear} ${s.tashihRequest.semester}`);
-          });
-          return Array.from(set).join(', ');
-        },
-        filterFn: (row, columnId, filterValue) => {
-          const value = row.getValue(columnId) as string;
-          return value.includes(filterValue);
-        },
-      },
-      {
+        accessorKey: 'schedules.tashihRequest.teacher.user.fullName',
         id: 'Guru Pembimbing',
         header: 'Guru Pembimbing',
         cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s) => (
-              <Badge
-                key={s.tashihRequest.id + '-teacher'}
-                variant="outline"
-                className="w-fit text-muted-foreground"
-              >
-                {s.tashihRequest.teacher?.user.fullName ?? 'Belum ditentukan'}
-              </Badge>
-            ))}
-          </div>
+          <Badge variant="secondary">
+            {row.original.schedules[0].tashihRequest.teacher.user?.fullName || '-'}
+          </Badge>
         ),
       },
     ],

@@ -63,8 +63,6 @@ export async function POST(req: NextRequest) {
         studentId,
         juzId,
         stage,
-        academicYear: setting.currentYear,
-        semester: setting.currentSemester,
       },
     });
 
@@ -83,15 +81,10 @@ export async function POST(req: NextRequest) {
       data: {
         studentId,
         teacherId: teacher.id,
-        academicYear: setting.currentYear,
-        semester: setting.currentSemester,
+        groupId: student.group.id,
         juzId,
         stage,
         status: MunaqasyahRequestStatus.MENUNGGU,
-        classroomId: student.classroom.id,
-        classroomName: student.classroom.name,
-        groupId: student.group.id,
-        groupName: student.group.name,
       },
     });
 

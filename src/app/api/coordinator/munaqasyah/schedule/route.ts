@@ -29,15 +29,29 @@ export async function GET() {
             requestId: true,
             request: {
               select: {
-                academicYear: true,
-                semester: true,
-                classroomName: true,
-                groupName: true,
                 stage: true,
                 student: {
                   select: {
                     nis: true,
                     user: { select: { fullName: true } },
+                  },
+                },
+                teacher: {
+                  select: {
+                    user: { select: { fullName: true } },
+                  },
+                },
+                group: {
+                  select: {
+                    id: true,
+                    name: true,
+                    classroom: {
+                      select: {
+                        name: true,
+                        academicYear: true,
+                        semester: true,
+                      },
+                    },
                   },
                 },
                 juz: {

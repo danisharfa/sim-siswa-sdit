@@ -217,8 +217,6 @@ export async function POST(req: NextRequest) {
         teacherId: teacher.id,
         groupId,
         date: date ? new Date(date) : new Date(),
-        academicYear: student.classroom.academicYear,
-        semester: student.classroom.semester,
         submissionType,
         submissionStatus,
         adab,

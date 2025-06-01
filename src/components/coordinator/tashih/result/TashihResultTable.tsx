@@ -28,10 +28,6 @@ interface TashihResult {
   passed: boolean;
   notes?: string;
   tashihRequest: {
-    academicYear: string;
-    semester: Semester;
-    classroomName: string;
-    groupName: string;
     tashihType: TashihType;
     surah?: { name: string };
     juz?: { name: string };
@@ -44,6 +40,14 @@ interface TashihResult {
     };
     teacher: {
       user: { fullName: string };
+    };
+    group: {
+      name: string;
+      classroom: {
+        name: string;
+        academicYear: string;
+        semester: Semester;
+      };
     };
   };
   tashihSchedule: {
@@ -75,8 +79,8 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     const set = new Set<string>();
     for (const d of data) {
       const r = d.tashihRequest;
-      if (r.academicYear && r.semester) {
-        set.add(`${r.academicYear}__${r.semester}`);
+      if (r.group.classroom.academicYear && r.group.classroom.semester) {
+        set.add(`${r.group.classroom.academicYear}__${r.group.classroom.semester}`);
       }
     }
     return Array.from(set);
@@ -87,7 +91,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
       {
         id: 'Tanggal',
         accessorKey: 'tashihSchedule.date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => {
           const s = row.original.tashihSchedule;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
@@ -99,19 +103,53 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         },
       },
       {
-        id: 'Lokasi',
         accessorKey: 'tashihSchedule.location',
+        id: 'Lokasi',
         header: 'Lokasi',
       },
       {
-        id: 'Nama Siswa',
-        accessorKey: 'tashihRequest.student.user.fullName',
-        header: 'Nama Siswa',
-        cell: ({ row }) => row.original.tashihRequest.student.user.fullName,
+        id: 'Siswa',
+        header: 'Siswa',
+        accessorFn: (row) => row.tashihRequest.student.user.fullName,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.tashihRequest.student.user.fullName}</div>
+            <div className="text-muted-foreground">{row.original.tashihRequest.student.nis}</div>
+          </div>
+        ),
       },
       {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) =>
+          `${row.tashihRequest.group.classroom.academicYear} ${row.tashihRequest.group.classroom.semester}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.tashihRequest.group.classroom.academicYear}{' '}
+              {row.original.tashihRequest.group.classroom.semester}
+            </div>
+            <div className="text-muted-foreground">
+              {row.original.tashihRequest.group.name} -{' '}
+              {row.original.tashihRequest.group.classroom.name}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'tashihRequest.teacher.user.fullName',
+        id: 'Guru Pembimbing',
+        header: 'Guru Pembimbing',
+        cell: ({ row }) => (
+          <Badge variant="secondary" className="w-fit">
+            {row.original.tashihRequest.teacher.user.fullName}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: 'tashihRequest.tashihType',
         id: 'Materi',
-        header: 'Materi Ujian',
+        header: 'Materi',
         cell: ({ row }) => {
           const r = row.original.tashihRequest;
           if (r.tashihType === TashihType.ALQURAN) {
@@ -130,45 +168,9 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
         },
       },
       {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        cell: ({ row }) => {
-          const r = row.original.tashihRequest;
-          return r.groupName && r.classroomName
-            ? `${r.groupName} - ${r.classroomName}`
-            : 'Tidak terdaftar';
-        },
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) =>
-          row.tashihRequest.academicYear && row.tashihRequest.semester
-            ? `${row.tashihRequest.academicYear} ${row.tashihRequest.semester}`
-            : '-',
-        cell: ({ row }) => {
-          const r = row.original.tashihRequest;
-          return (
-            <Badge variant="outline" className="w-fit text-muted-foreground">
-              {r.academicYear && r.semester ? `${r.academicYear} ${r.semester}` : '-'}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: 'tashihRequest.teacher.user.fullName',
-        id: 'Guru',
-        header: 'Guru Pembimbing',
-        cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
-            {row.original.tashihRequest.teacher.user.fullName}
-          </Badge>
-        ),
-      },
-      {
         id: 'Status',
         accessorKey: 'passed',
-        header: 'Lulus',
+        header: 'Status',
         cell: ({ row }) => (
           <Badge
             variant="outline"
@@ -238,7 +240,7 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
           </SelectContent>
         </Select>
       </div>
-      <DataTable title={title} table={table} filterColumn="Nama Siswa" />
+      <DataTable title={title} table={table} filterColumn="Siswa" />
     </>
   );
 }

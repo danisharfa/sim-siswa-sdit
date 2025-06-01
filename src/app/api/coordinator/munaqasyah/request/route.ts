@@ -24,9 +24,27 @@ export async function GET() {
             user: { select: { fullName: true } },
           },
         },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            classroom: {
+              select: {
+                name: true,
+                academicYear: true,
+                semester: true,
+              },
+            },
+          },
+        },
         juz: {
           select: {
             name: true,
+          },
+        },
+        scheduleRequests: {
+          select: {
+            id: true,
           },
         },
       },

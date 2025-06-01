@@ -56,7 +56,7 @@ export function ExportToPDFButton({ table }: Props) {
       head: [
         [
           'Tanggal',
-          'Nama Siswa',
+          'Siswa',
           'NIS',
           'Kelompok & Kelas',
           'Tahun Ajaran',

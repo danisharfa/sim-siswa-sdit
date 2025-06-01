@@ -33,10 +33,15 @@ interface TashihResult {
     wafa: { name: string } | null;
     startPage: number | null;
     endPage: number | null;
-    groupName: string;
-    classroomName: string;
-    academicYear: string;
-    semester: Semester;
+    teacher: { user: { fullName: string } | null };
+    group: {
+      name: string;
+      classroom: {
+        name: string;
+        academicYear: string;
+        semester: Semester;
+      };
+    };
   };
   tashihSchedule: {
     date: string;
@@ -65,52 +70,35 @@ export function TashihResultTable({ data }: Props) {
 
   const academicPeriods = useMemo(() => {
     return Array.from(
-      new Set(data.map((d) => `${d.tashihRequest.academicYear}-${d.tashihRequest.semester}`))
+      new Set(
+        data.map(
+          (d) =>
+            `${d.tashihRequest.group.classroom.academicYear}-${d.tashihRequest.group.classroom.semester}`
+        )
+      )
     );
   }, [data]);
 
   const columns = useMemo<ColumnDef<TashihResult>[]>(
     () => [
       {
-        accessorKey: 'date',
         id: 'Tanggal',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
-        cell: ({ row }) =>
-          new Date(row.original.tashihSchedule.date).toLocaleDateString('id-ID', {
+        accessorKey: 'tashihSchedule.date',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
+        cell: ({ row }) => {
+          const s = row.original.tashihSchedule;
+          const date = new Date(s.date).toLocaleDateString('id-ID', {
             day: 'numeric',
-            month: 'short',
+            month: 'long',
             year: 'numeric',
-          }),
-      },
-      {
-        accessorKey: 'sessionName',
-        header: 'Sesi',
-        cell: ({ row }) =>
-          `${row.original.tashihSchedule.sessionName}, ${row.original.tashihSchedule.startTime} - ${row.original.tashihSchedule.endTime}`,
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        accessorFn: (row) => `${row.tashihRequest.groupName} - ${row.tashihRequest.classroomName}`,
-        cell: ({ row }) => (
-          <Badge variant="outline">
-            {`${row.original.tashihRequest.groupName} - ${row.original.tashihRequest.classroomName}`}
-          </Badge>
-        ),
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.tashihRequest.academicYear} ${row.tashihRequest.semester}`,
-        filterFn: (row, columnId, filterValue) => {
-          const value = row.getValue(columnId) as string;
-          return value.includes(filterValue);
+          });
+          return `${date} (${s.sessionName}, ${s.startTime} - ${s.endTime})`;
         },
-        cell: ({ row }) => (
-          <Badge variant="outline">
-            {`${row.original.tashihRequest.academicYear} ${row.original.tashihRequest.semester}`}
-          </Badge>
-        ),
+      },
+      {
+        accessorKey: 'tashihSchedule.location',
+        id: 'Lokasi',
+        header: 'Lokasi',
       },
       {
         id: 'Materi',
@@ -136,7 +124,34 @@ export function TashihResultTable({ data }: Props) {
           );
         },
       },
-
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) =>
+          `${row.tashihRequest.group.classroom.academicYear} ${row.tashihRequest.group.classroom.semester}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.tashihRequest.group.classroom.academicYear}{' '}
+              {row.original.tashihRequest.group.classroom.semester}
+            </div>
+            <div className="text-muted-foreground">
+              {row.original.tashihRequest.group.name} -{' '}
+              {row.original.tashihRequest.group.classroom.name}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'tashihRequest.teacher.user.fullName',
+        id: 'Guru Pembimbing',
+        header: 'Guru Pembimbing',
+        cell: ({ row }) => (
+          <Badge variant="secondary">
+            {row.original.tashihRequest.teacher.user?.fullName || '-'}
+          </Badge>
+        ),
+      },
       {
         id: 'Status',
         accessorKey: 'passed',

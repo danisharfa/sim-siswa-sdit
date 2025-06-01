@@ -24,8 +24,17 @@ export async function GET() {
       where: { studentId: student.id },
       orderBy: { date: 'desc' },
       include: {
-        surah: { select: { name: true } },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            classroom: {
+              select: { name: true, academicYear: true, semester: true },
+            },
+          },
+        },
         juz: { select: { name: true } },
+        surah: { select: { name: true } },
       },
     });
 
@@ -63,6 +72,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!student.groupId) {
+      return NextResponse.json(
+        { success: false, message: 'Siswa belum terdaftar di grup aktif' },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
     const { date, activityType, surahId, juzId, startVerse, endVerse, note } = body;
 
@@ -76,12 +92,11 @@ export async function POST(req: Request) {
     const HomeActivity = await prisma.homeActivity.create({
       data: {
         studentId: student.id,
-        academicYear: student.classroom.academicYear,
-        semester: student.classroom.semester,
-        activityType,
+        groupId: student.groupId,
         date: new Date(date),
-        surahId,
+        activityType,
         juzId,
+        surahId,
         startVerse,
         endVerse,
         note,

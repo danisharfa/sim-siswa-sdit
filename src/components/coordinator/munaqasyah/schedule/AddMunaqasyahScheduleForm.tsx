@@ -1,13 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DatePickerSimple } from '@/components/ui/date-picker-simple';
 import {
   Select,
   SelectTrigger,
@@ -15,6 +8,13 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import { DatePickerSimple } from '@/components/ui/date-picker-simple';
 import { MunaqasyahRequestStatus, Role } from '@prisma/client';
 
 interface Examiner {
@@ -29,18 +29,19 @@ interface MunaqasyahRequest {
   student: {
     nis: string;
     user: { fullName: string };
-    group?: {
-      name: string;
-      classroom: {
-        name: string;
-        academicYear: string;
-        semester: string;
-      };
-    };
   };
   teacher: { user: { fullName: string } };
-  juz?: { name: string };
-  scheduleRequests: [];
+  group: {
+    id: string;
+    name: string;
+    classroom: {
+      name: string;
+      academicYear: string;
+      semester: string;
+    };
+  };
+  juz: { name: string };
+  scheduleRequests: { id: string }[];
 }
 
 interface Props {
@@ -147,7 +148,7 @@ export function AddMunaqasyahScheduleForm({ onScheduleAdded }: Props) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="mb-2 block">Tanggal Ujian</Label>
+            <Label className="mb-2 block">Tanggal</Label>
             <DatePickerSimple value={date} onChange={setDate} />
           </div>
 
@@ -183,7 +184,7 @@ export function AddMunaqasyahScheduleForm({ onScheduleAdded }: Props) {
                   <SelectValue placeholder="Pilih Penguji" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Tanpa Penguji</SelectItem>
+                  <SelectItem value="none">Koordinator Al-Qur&apos;an</SelectItem>
                   {examiners.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
                       {e.name}

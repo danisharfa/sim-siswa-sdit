@@ -37,15 +37,28 @@ export async function fetchTashihResult() {
         tashihRequest: {
           select: {
             tashihType: true,
-            surah: { select: { id: true, name: true } },
-            juz: { select: { id: true, name: true } },
-            wafa: { select: { id: true, name: true } },
             startPage: true,
             endPage: true,
-            groupName: true,
-            classroomName: true,
-            academicYear: true,
-            semester: true,
+            teacher: {
+              select: {
+                user: { select: { fullName: true } },
+              },
+            },
+            group: {
+              select: {
+                name: true,
+                classroom: {
+                  select: {
+                    name: true,
+                    academicYear: true,
+                    semester: true,
+                  },
+                },
+              },
+            },
+            juz: { select: { id: true, name: true } },
+            surah: { select: { id: true, name: true } },
+            wafa: { select: { id: true, name: true } },
           },
         },
       },

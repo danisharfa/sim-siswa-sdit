@@ -32,10 +32,6 @@ interface TashihSchedule {
   location: string;
   schedules: {
     tashihRequest: {
-      academicYear: string;
-      semester: Semester;
-      classroomName: string;
-      groupName: string;
       tashihType?: TashihType;
       surah?: { name: string };
       juz?: { name: string };
@@ -48,6 +44,14 @@ interface TashihSchedule {
       };
       teacher: {
         user: { fullName: string };
+      };
+      group: {
+        name: string;
+        classroom: {
+          name: string;
+          academicYear: string;
+          semester: Semester;
+        };
       };
     };
   }[];
@@ -75,8 +79,8 @@ export function TashihScheduleTable({ data, title }: Props) {
     for (const schedule of data) {
       for (const s of schedule.schedules) {
         const r = s.tashihRequest;
-        if (r.academicYear && r.semester) {
-          set.add(`${r.academicYear}__${r.semester}`);
+        if (r.group.classroom.academicYear && r.group.classroom.semester) {
+          set.add(`${r.group.classroom.academicYear}__${r.group.classroom.semester}`);
         }
       }
     }
@@ -88,7 +92,7 @@ export function TashihScheduleTable({ data, title }: Props) {
       {
         accessorKey: 'date',
         id: 'Tanggal',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) =>
           new Date(row.original.date).toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -105,27 +109,74 @@ export function TashihScheduleTable({ data, title }: Props) {
       },
       {
         accessorKey: 'location',
+        id: 'Lokasi',
         header: 'Lokasi',
       },
       {
-        id: 'Jumlah Siswa',
-        header: 'Jumlah Siswa',
-        cell: ({ row }) => row.original.schedules.length,
-      },
-      {
+        accessorKey: 'schedules.tashihRequest.student.user.fullName',
         id: 'Siswa',
         header: 'Siswa',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => (
               <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                {s.tashihRequest.student.user.fullName}
+                {s.tashihRequest.student.user.fullName} ({s.tashihRequest.student.nis})
               </Badge>
             ))}
           </div>
         ),
       },
       {
+        accessorKey: 'schedules.tashihRequest.group.name',
+        id: 'Kelompok',
+        header: 'Kelompok',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => {
+              const r = s.tashihRequest;
+              return (
+                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                  {r.group.name && r.group.classroom.name
+                    ? `${r.group.name} - ${r.group.classroom.name}`
+                    : 'Tidak terdaftar'}
+                </Badge>
+              );
+            })}
+          </div>
+        ),
+      },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) => {
+          const set = new Set<string>();
+          row.schedules.forEach((s) => {
+            const r = s.tashihRequest;
+            set.add(`${r.group.classroom.academicYear} ${r.group.classroom.semester}`);
+          });
+          return Array.from(set).join(', ');
+        },
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
+      },
+      {
+        accessorKey: 'schedules.tashihRequest.teacher.user.fullName',
+        id: 'Guru Pembimbing',
+        header: 'Guru Pembimbing',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => (
+              <Badge key={i} variant="secondary" className="w-fit">
+                {s.tashihRequest.teacher.user.fullName}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'schedules.tashihRequest.tashihType',
         id: 'Materi',
         header: 'Materi',
         cell: ({ row }) => (
@@ -142,63 +193,6 @@ export function TashihScheduleTable({ data, title }: Props) {
                 </Badge>
               );
             })}
-          </div>
-        ),
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s, i) => {
-              const r = s.tashihRequest;
-              return (
-                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {r.groupName && r.classroomName
-                    ? `${r.groupName} - ${r.classroomName}`
-                    : 'Tidak terdaftar'}
-                </Badge>
-              );
-            })}
-          </div>
-        ),
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => {
-          const set = new Set<string>();
-          row.schedules.forEach((s) => {
-            const r = s.tashihRequest;
-            if (r.academicYear && r.semester) {
-              set.add(`${r.academicYear} ${r.semester}`);
-            }
-          });
-          return Array.from(set).join(', ');
-        },
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s, i) => {
-              const r = s.tashihRequest;
-              return (
-                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                  {r.academicYear && r.semester ? `${r.academicYear} ${r.semester}` : '-'}
-                </Badge>
-              );
-            })}
-          </div>
-        ),
-      },
-      {
-        id: 'Guru Pembimbing',
-        header: 'Guru Pembimbing',
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s, i) => (
-              <Badge key={i} variant="secondary" className="w-fit">
-                {s.tashihRequest.teacher.user.fullName}
-              </Badge>
-            ))}
           </div>
         ),
       },

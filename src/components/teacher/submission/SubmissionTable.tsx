@@ -42,21 +42,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { SubmissionEditDialog } from './SubmissionEditDialog';
 import { SubmissionAlertDialog } from './SubmissionAlertDialog';
+import { Label } from '@/components/ui/label';
 
 export type Submission = {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  teacherId: string;
-  groupId: string;
-  studentId: string;
-  academicYear: string;
-  semester: Semester;
   date: string;
   submissionType: SubmissionType;
-  juz: { id: number; name: string } | null;
-  surah: { id: number; name: string } | null;
-  wafa: { id: number; name: string } | null;
   startVerse: number | null;
   endVerse: number | null;
   startPage: number | null;
@@ -77,6 +68,9 @@ export type Submission = {
       semester: Semester;
     };
   };
+  juz: { id: number; name: string } | null;
+  surah: { id: number; name: string } | null;
+  wafa: { id: number; name: string } | null;
 };
 
 interface Props {
@@ -167,9 +161,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
           const date = new Date(row.getValue(columnId));
-
           const matchMonth = selectedMonth === 'all' || date.getMonth() === selectedMonth;
-
           const matchWeek = selectedWeek === 'all' || getWeekOfMonth(date) === selectedWeek;
 
           return matchMonth && matchWeek;
@@ -185,14 +177,15 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         ),
       },
       {
-        accessorKey: 'student.nis',
-        id: 'NIS',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
-      },
-      {
-        id: 'Nama Siswa',
-        header: 'Nama Siswa',
+        id: 'Siswa',
+        header: 'Siswa',
         accessorFn: (row) => row.student.user.fullName,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.student.user.fullName}</div>
+            <div className="text-muted-foreground">{row.original.student.nis}</div>
+          </div>
+        ),
       },
       {
         id: 'Kelompok',
@@ -209,49 +202,41 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         id: 'Jenis Setoran',
         header: 'Jenis Setoran',
         cell: ({ row }) => (
-          <Badge variant="outline" className="text-muted-foreground px-2">
-            {row.original.submissionType.replaceAll('_', ' ')}
-          </Badge>
+          <Badge variant="secondary">{row.original.submissionType.replaceAll('_', ' ')}</Badge>
         ),
-      },
-      {
-        id: 'Juz',
-        header: 'Juz',
-        accessorFn: (row) => row.juz?.name ?? '-',
       },
       {
         id: 'Surah',
         header: 'Surah',
         accessorFn: (row) => row.surah?.name ?? '-',
-      },
-      {
-        accessorKey: 'startVerse',
-        id: 'Ayat Mulai',
-        header: 'Ayat Mulai',
-        cell: ({ row }) => row.original.startVerse ?? '-',
-      },
-      {
-        accessorKey: 'endVerse',
-        id: 'Ayat Selesai',
-        header: 'Ayat Selesai',
-        cell: ({ row }) => row.original.endVerse ?? '-',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.surah?.name ? (
+              <>
+                <div className="font-medium">{`${row.original.surah.name} (Ayat ${row.original.startVerse} - ${row.original.endVerse})`}</div>
+                <div className="text-muted-foreground">{row.original.juz?.name}</div>
+              </>
+            ) : (
+              <span>-</span>
+            )}
+          </div>
+        ),
       },
       {
         id: 'Wafa',
         header: 'Wafa',
         accessorFn: (row) => row.wafa?.name ?? '-',
-      },
-      {
-        accessorKey: 'startPage',
-        id: 'Halaman Mulai',
-        header: 'Halaman Mulai',
-        cell: ({ row }) => row.original.startPage ?? '-',
-      },
-      {
-        accessorKey: 'endPage',
-        id: 'Halaman Selesai',
-        header: 'Halaman Selesai',
-        cell: ({ row }) => row.original.endPage ?? '-',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.wafa?.name ? (
+              <>
+                <div className="font-medium">{`${row.original.wafa.name} (Hal ${row.original.startPage} - ${row.original.endPage})`}</div>
+              </>
+            ) : (
+              <span>-</span>
+            )}
+          </div>
+        ),
       },
       {
         accessorKey: 'submissionStatus',
@@ -365,9 +350,9 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-x-4 gap-y-3 mb-4">
-        {/* Filter Tahun Ajaran */}
-        <div className="w-full sm:w-auto">
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
           <Select
             onValueChange={(val) => {
               setSelectedPeriod(val);
@@ -377,7 +362,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
                 .getColumn('Tahun Ajaran')
                 ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
               table.getColumn('Kelompok')?.setFilterValue(undefined);
-              table.getColumn('Nama Siswa')?.setFilterValue(undefined);
+              table.getColumn('Siswa')?.setFilterValue(undefined);
             }}
           >
             <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
@@ -394,8 +379,8 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
           </Select>
         </div>
 
-        {/* Filter Kelompok */}
-        <div className="w-full sm:w-auto">
+        <div>
+          <Label className="mb-2 block">Filter Kelompok</Label>
           <Select
             disabled={selectedPeriod === 'all'}
             onValueChange={(val) => {
@@ -410,7 +395,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
                   .getColumn('Tahun Ajaran')
                   ?.setFilterValue(`${group.classroom.academicYear} ${group.classroom.semester}`);
               }
-              table.getColumn('Nama Siswa')?.setFilterValue(undefined);
+              table.getColumn('Siswa')?.setFilterValue(undefined);
             }}
           >
             <SelectTrigger className="min-w-0 w-full sm:min-w-[250px]">
@@ -427,14 +412,14 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
           </Select>
         </div>
 
-        {/* Filter Siswa */}
-        <div className="w-full sm:w-auto">
+        <div>
+          <Label className="mb-2 block">Filter Siswa</Label>
           <Select
             disabled={selectedGroupId === 'all'}
             value={selectedStudent}
             onValueChange={(val) => {
               setSelectedStudent(val);
-              table.getColumn('Nama Siswa')?.setFilterValue(val === 'all' ? undefined : val);
+              table.getColumn('Siswa')?.setFilterValue(val === 'all' ? undefined : val);
             }}
           >
             <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
@@ -451,8 +436,8 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
           </Select>
         </div>
 
-        {/* Filter Jenis Setoran */}
-        <div className="w-full sm:w-auto">
+        <div>
+          <Label className="mb-2 block">Filter Jenis Setoran</Label>
           <Select
             onValueChange={(val) =>
               table.getColumn('Jenis Setoran')?.setFilterValue(val === 'all' ? undefined : val)
@@ -472,8 +457,8 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
           </Select>
         </div>
 
-        {/* Filter Bulan */}
-        <div className="w-full sm:w-auto">
+        <div>
+          <Label className="mb-2 block">Filter Bulan</Label>
           <Select
             onValueChange={(value) => {
               const val = value === 'all' ? 'all' : parseInt(value);
@@ -495,8 +480,8 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
           </Select>
         </div>
 
-        {/* Filter Minggu */}
-        <div className="w-full sm:w-auto">
+        <div>
+          <Label className="mb-2 block">Filter Minggu</Label>
           <Select
             onValueChange={(value) => {
               const val = value === 'all' ? 'all' : parseInt(value);

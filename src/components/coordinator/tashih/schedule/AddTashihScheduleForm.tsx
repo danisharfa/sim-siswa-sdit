@@ -115,7 +115,7 @@ export function AddTashihScheduleForm({ onScheduleAdded }: Props) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="mb-2 block">Tanggal Ujian</Label>
+            <Label className="mb-2 block">Tanggal</Label>
             <DatePickerSimple value={date} onChange={setDate} />
           </div>
 

@@ -24,13 +24,11 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { TargetAlertDialog } from './TargetAlertDialog';
 import { TargetEditDialog } from './TargetEditDialog';
-import { SubmissionType, Semester } from '@prisma/client';
+import { SubmissionType } from '@prisma/client';
 
 interface Target {
   id: string;
   studentId: string;
-  academicYear: string;
-  semester: Semester;
   type: SubmissionType;
   description: string;
   startDate: string;

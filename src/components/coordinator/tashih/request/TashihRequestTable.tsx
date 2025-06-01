@@ -33,24 +33,28 @@ import { Semester, TashihRequestStatus, TashihType } from '@prisma/client';
 
 interface TashihRequest {
   id: string;
-  academicYear: string;
-  semester: Semester;
-  classroomName: string;
-  groupName: string;
-  status: TashihRequestStatus;
-  notes?: string;
   createdAt: string;
+  tashihType?: TashihType;
+  status: TashihRequestStatus;
+  startPage?: number;
+  endPage?: number;
+  notes?: string;
+  juz?: { name: string };
+  surah?: { name: string };
+  wafa?: { name: string };
+  teacher: { user: { fullName: string } };
   student: {
     nis: string;
     user: { fullName: string };
   };
-  teacher: { user: { fullName: string } };
-  tashihType?: TashihType;
-  surah?: { name: string };
-  juz?: { name: string };
-  wafa?: { name: string };
-  startPage?: number;
-  endPage?: number;
+  group: {
+    name: string;
+    classroom: {
+      name: string;
+      academicYear: string;
+      semester: Semester;
+    };
+  };
 }
 
 interface TashihRequestTableProps {
@@ -80,8 +84,8 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
     for (const d of data) {
-      if (d.academicYear && d.semester) {
-        set.add(`${d.academicYear}__${d.semester}`);
+      if (d.group.classroom.academicYear && d.group.classroom.semester) {
+        set.add(`${d.group.classroom.academicYear}__${d.group.classroom.semester}`);
       }
     }
     return Array.from(set);
@@ -90,8 +94,12 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
   const groupOptions = useMemo(() => {
     if (selectedYearSemester === 'ALL') return [];
     return data
-      .filter((d) => `${d.academicYear}__${d.semester}` === selectedYearSemester)
-      .map((d) => `${d.groupName} - ${d.classroomName}`);
+      .filter(
+        (d) =>
+          `${d.group.classroom.academicYear}__${d.group.classroom.semester}` ===
+          selectedYearSemester
+      )
+      .map((d) => `${d.group.name} - ${d.group.classroom.name}`);
   }, [data, selectedYearSemester]);
 
   const handleOpenAcceptDialog = useCallback(
@@ -124,29 +132,31 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
           }),
       },
       {
-        accessorKey: 'student.nis',
-        id: 'NIS',
-        header: 'NIS',
-      },
-      {
-        accessorKey: 'student.user.fullName',
-        id: 'Nama Siswa',
-        header: 'Nama Siswa',
-        cell: ({ row }) => row.original.student.user.fullName,
+        id: 'Siswa',
+        header: 'Siswa',
+        accessorFn: (row) => row.student.user.fullName,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.student.user.fullName}</div>
+            <div className="text-muted-foreground">{row.original.student.nis}</div>
+          </div>
+        ),
       },
       {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) =>
-          row.groupName && row.classroomName
-            ? `${row.groupName} - ${row.classroomName}`
+          row.group.name && row.group.classroom.name
+            ? `${row.group.name} - ${row.group.classroom.name}`
             : 'Tidak terdaftar',
       },
       {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
         accessorFn: (row) =>
-          row.academicYear && row.semester ? `${row.academicYear} ${row.semester}` : '-',
+          row.group.classroom.academicYear && row.group.classroom.semester
+            ? `${row.group.classroom.academicYear} ${row.group.classroom.semester}`
+            : 'Tidak terdaftar',
       },
       {
         accessorKey: 'teacher.user.fullName',
@@ -160,6 +170,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
       },
       {
         accessorKey: 'tashihType',
+        id: 'Jenis Tashih',
         header: 'Jenis Tashih',
         cell: ({ row }) => (
           <Badge variant="outline" className="w-fit">
@@ -169,8 +180,9 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         enableColumnFilter: true,
       },
       {
+        accessorKey: 'tashihType',
         id: 'Materi',
-        header: 'Materi Ujian',
+        header: 'Materi',
         cell: ({ row }) => {
           const { tashihType, surah, juz, wafa, startPage, endPage } = row.original;
           if (tashihType === TashihType.ALQURAN) {
@@ -210,6 +222,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
       },
       {
         accessorKey: 'notes',
+        id: 'Catatan',
         header: 'Catatan',
         cell: ({ row }) => row.original.notes || '-',
       },
@@ -360,7 +373,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         </div>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Nama Siswa" />
+      <DataTable title={title} table={table} filterColumn="Siswa" />
 
       {dialogType === 'accept' && selectedRequest && (
         <RequestStatusAlertDialog

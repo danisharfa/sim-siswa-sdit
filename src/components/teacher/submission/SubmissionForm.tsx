@@ -36,18 +36,23 @@ interface Student {
 
 interface SurahJuz {
   id: number;
+  surahId: number;
   juzId: number;
   startVerse: number;
   endVerse: number;
   surah: {
     id: number;
     name: string;
-    verseCount: number;
   };
   juz: {
     id: number;
     name: string;
   };
+}
+
+interface Juz {
+  id: number;
+  name: string;
 }
 
 interface Wafa {
@@ -77,7 +82,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function SubmissionForm() {
   const [groupList, setGroupList] = useState<Group[]>([]);
   const [studentList, setStudentList] = useState<Student[]>([]);
-  const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
+  const [juzList, setJuzList] = useState<Juz[]>([]);
   const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
 
@@ -102,31 +107,32 @@ export function SubmissionForm() {
   const { data: academic } = useSWR('/api/academicSetting', fetcher);
 
   const filteredGroupList = useMemo(() => {
-    if (!academic?.data) return [];
+    if (!academic?.success || !academic?.data || groupList.length === 0) return [];
+
     const { currentYear, currentSemester } = academic.data;
-    return groupList.filter(
-      (g) => g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
-    );
+    return groupList.filter((group) => {
+      return (
+        group.classroomAcademicYear === currentYear && group.classroomSemester === currentSemester
+      );
+    });
   }, [groupList, academic]);
 
+  // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [groupRes, surahJuzRes, juzRes, wafaRes] = await Promise.all([
-          fetch('/api/teacher/group'),
+        const [surahJuzRes, juzRes, wafaRes] = await Promise.all([
           fetch('/api/surahJuz'),
           fetch('/api/juz'),
           fetch('/api/wafa'),
         ]);
 
-        const [groupData, surahJuzData, juzData, wafaData] = await Promise.all([
-          groupRes.json(),
+        const [surahJuzData, juzData, wafaData] = await Promise.all([
           surahJuzRes.json(),
           juzRes.json(),
           wafaRes.json(),
         ]);
 
-        if (groupData.success) setGroupList(groupData.data);
         if (surahJuzData.success) setSurahJuzList(surahJuzData.data);
         if (juzData.success) setJuzList(juzData.data);
         if (wafaData.success) setWafaList(wafaData.data);
@@ -139,15 +145,48 @@ export function SubmissionForm() {
     fetchData();
   }, []);
 
+  // Load teacher groups
   useEffect(() => {
-    if (!groupId) return;
+    const fetchGroups = async () => {
+      try {
+        const res = await fetch('/api/teacher/group');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setGroupList(json.data);
+        } else {
+          console.error('Groups data is not an array:', json);
+          setGroupList([]);
+        }
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+        toast.error('Gagal memuat data kelompok');
+        setGroupList([]);
+      }
+    };
+    fetchGroups();
+  }, []);
+
+  // Load students when group is selected
+  useEffect(() => {
+    if (!groupId) {
+      setStudentList([]);
+      return;
+    }
+
     const fetchMembers = async () => {
       try {
         const res = await fetch(`/api/teacher/group/${groupId}/member`);
         const resData = await res.json();
-        if (resData.success) setStudentList(resData.data);
-      } catch {
+        if (resData.success && Array.isArray(resData.data)) {
+          setStudentList(resData.data);
+        } else {
+          console.error('Students data is not an array:', resData);
+          setStudentList([]);
+        }
+      } catch (error) {
+        console.error('Error fetching students:', error);
         toast.error('Gagal mengambil siswa');
+        setStudentList([]);
       }
     };
     fetchMembers();
@@ -207,8 +246,9 @@ export function SubmissionForm() {
       if (!resData.success) throw new Error(resData.message);
       toast.success('Setoran berhasil ditambahkan!');
       resetForm();
-    } catch {
-      toast.error('Gagal submit setoran');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Gagal menambahkan setoran');
     } finally {
       setLoading(false);
     }
@@ -216,14 +256,14 @@ export function SubmissionForm() {
 
   const filteredSurahJuz = surahJuzList
     .filter((s) => s.juz.id.toString() === selectedJuz)
-    .sort((a, b) => b.surah.id - a.surah.id);
+    .sort((a, b) => a.surah.id - b.surah.id);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Form Input Setoran</CardTitle>
+        <CardTitle>Form Setoran</CardTitle>
         <CardDescription>
-          {academic?.data && (
+          {academic?.success && (
             <span className="text-sm text-muted-foreground">
               Tahun Ajaran: <b>{academic.data.currentYear}</b> — Semester:{' '}
               <b>{academic.data.currentSemester}</b>
@@ -237,18 +277,25 @@ export function SubmissionForm() {
           <Label className="mb-2 block">Tanggal Setoran</Label>
           <DatePickerSimple value={submissionDate} onChange={setSubmissionDate} />
         </div>
+
         {/* Kelompok dan Siswa */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 min-w-0">
             <Label className="mb-2 block">Kelompok</Label>
-            <Select value={groupId} onValueChange={setGroupId}>
+            <Select
+              value={groupId}
+              onValueChange={(value) => {
+                setGroupId(value);
+                setStudentId(''); // Reset student selection
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Kelompok" />
               </SelectTrigger>
               <SelectContent>
-                {filteredGroupList.map((k) => (
-                  <SelectItem key={k.groupId} value={k.groupId}>
-                    {k.groupName} - {k.classroomName}
+                {filteredGroupList.map((group) => (
+                  <SelectItem key={group.groupId} value={group.groupId}>
+                    {group.groupName} - {group.classroomName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -257,14 +304,14 @@ export function SubmissionForm() {
 
           <div className="flex-1 min-w-0">
             <Label className="mb-2 block">Siswa</Label>
-            <Select value={studentId} onValueChange={setStudentId}>
+            <Select value={studentId} onValueChange={setStudentId} disabled={!groupId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Siswa" />
               </SelectTrigger>
               <SelectContent>
-                {studentList.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.fullName}
+                {studentList.map((student) => (
+                  <SelectItem key={student.id} value={student.id}>
+                    {student.fullName} ({student.nis})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -277,7 +324,17 @@ export function SubmissionForm() {
           <Label className="mb-2 block">Jenis Setoran</Label>
           <Select
             value={submissionType}
-            onValueChange={(val) => setSubmissionType(val as SubmissionType)}
+            onValueChange={(val) => {
+              setSubmissionType(val as SubmissionType);
+              // Reset selections when type changes
+              setSelectedJuz('');
+              setSelectedSurahId('');
+              setStartVerse('');
+              setEndVerse('');
+              setSelectedWafaId('');
+              setStartPage('');
+              setEndPage('');
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Pilih Jenis Setoran" />
@@ -297,14 +354,20 @@ export function SubmissionForm() {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 min-w-0">
                 <Label className="mb-2 block">Juz</Label>
-                <Select value={selectedJuz} onValueChange={setSelectedJuz}>
+                <Select
+                  value={selectedJuz}
+                  onValueChange={(val) => {
+                    setSelectedJuz(val);
+                    setSelectedSurahId(''); // Reset surah when juz changes
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Juz" />
                   </SelectTrigger>
                   <SelectContent>
-                    {juzList.map((j) => (
-                      <SelectItem key={j.id} value={j.id.toString()}>
-                        {j.name}
+                    {juzList.map((juz) => (
+                      <SelectItem key={juz.id} value={juz.id.toString()}>
+                        {juz.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -321,9 +384,9 @@ export function SubmissionForm() {
                     <SelectValue placeholder="Pilih Surah" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredSurahJuz.map((s) => (
-                      <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
-                        {s.surah.name}
+                    {filteredSurahJuz.map((sj) => (
+                      <SelectItem key={sj.surah.id} value={sj.surah.id.toString()}>
+                        {sj.surah.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -338,6 +401,7 @@ export function SubmissionForm() {
                   value={startVerse}
                   onChange={(e) => setStartVerse(e.target.value)}
                   placeholder="1"
+                  min="1"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -347,6 +411,7 @@ export function SubmissionForm() {
                   value={endVerse}
                   onChange={(e) => setEndVerse(e.target.value)}
                   placeholder="7"
+                  min={startVerse || '1'}
                 />
               </div>
             </div>
@@ -360,9 +425,9 @@ export function SubmissionForm() {
                   <SelectValue placeholder="Pilih Wafa" />
                 </SelectTrigger>
                 <SelectContent>
-                  {wafaList.map((w) => (
-                    <SelectItem key={w.id} value={w.id.toString()}>
-                      {w.name}
+                  {wafaList.map((wafa) => (
+                    <SelectItem key={wafa.id} value={wafa.id.toString()}>
+                      {wafa.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -376,6 +441,7 @@ export function SubmissionForm() {
                   value={startPage}
                   onChange={(e) => setStartPage(e.target.value)}
                   placeholder="1"
+                  min="1"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -385,6 +451,7 @@ export function SubmissionForm() {
                   value={endPage}
                   onChange={(e) => setEndPage(e.target.value)}
                   placeholder="10"
+                  min={startPage || '1'}
                 />
               </div>
             </div>

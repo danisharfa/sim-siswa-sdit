@@ -17,31 +17,42 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { Semester, TashihType } from '@prisma/client';
+import { MunaqasyahStage, Semester } from '@prisma/client';
+import { Label } from '@/components/ui/label';
 
-interface TashihSchedule {
+interface MunaqasyahSchedule {
   id: string;
   date: string;
   sessionName: string;
   startTime: string;
   endTime: string;
   location: string;
-  schedules: {
-    tashihRequest: {
+  examiner: {
+    id: string;
+    nip: string;
+    fullName: string;
+  } | null;
+  coordinator: {
+    id: string;
+    nip: string;
+    fullName: string;
+  } | null;
+  scheduleRequests: {
+    id: string;
+    request: {
       id: string;
-      tashihType: TashihType;
-      surah: { name: string } | null;
-      juz: { name: string } | null;
-      wafa: { name: string } | null;
-      startPage: number | null;
-      endPage: number | null;
+      stage: MunaqasyahStage;
+      juz: { name: string };
       student: {
         nis: string;
-        user: { fullName: string };
+        fullName: string;
+      };
+      teacher: {
+        nip: string;
+        fullName: string;
       };
       group: {
         name: string;
@@ -55,11 +66,18 @@ interface TashihSchedule {
   }[];
 }
 
-interface TashihScheduleTableProps {
-  data: TashihSchedule[];
+interface MunaqasyahScheduleTableProps {
+  data: MunaqasyahSchedule[];
 }
 
-export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
+const stageLabels = {
+  TAHAP_1: 'Tahap 1',
+  TAHAP_2: 'Tahap 2',
+  TAHAP_3: 'Tahap 3',
+  MUNAQASYAH: 'Munaqasyah',
+};
+
+export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) {
   const {
     sorting,
     setSorting,
@@ -67,16 +85,27 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-  } = useDataTableState<TashihSchedule, string>();
+  } = useDataTableState<MunaqasyahSchedule, string>();
 
+  const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
   const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
   const [selectedGroupId, setSelectedGroupId] = useState<string | 'ALL'>('ALL');
+
+  const stageOptions = useMemo(() => {
+    const set = new Set<MunaqasyahStage>();
+    for (const schedule of data) {
+      for (const sr of schedule.scheduleRequests) {
+        set.add(sr.request.stage);
+      }
+    }
+    return Array.from(set);
+  }, [data]);
 
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
     for (const schedule of data) {
-      for (const s of schedule.schedules) {
-        const r = s.tashihRequest;
+      for (const sr of schedule.scheduleRequests) {
+        const r = sr.request;
         set.add(`${r.group.classroom.academicYear}__${r.group.classroom.semester}`);
       }
     }
@@ -86,8 +115,8 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
   const groupOptions = useMemo(() => {
     const set = new Map<string, string>();
     for (const schedule of data) {
-      for (const s of schedule.schedules) {
-        const r = s.tashihRequest;
+      for (const sr of schedule.scheduleRequests) {
+        const r = sr.request;
         const key = `${r.group.name}-${r.group.classroom.name}`;
         set.set(key, `${r.group.name} - ${r.group.classroom.name}`);
       }
@@ -95,7 +124,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
     return Array.from(set.entries());
   }, [data]);
 
-  const columns = useMemo<ColumnDef<TashihSchedule>[]>(
+  const columns = useMemo<ColumnDef<MunaqasyahSchedule>[]>(
     () => [
       {
         accessorKey: 'date',
@@ -121,18 +150,14 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         header: 'Lokasi',
       },
       {
-        accessorKey: 'schedules.tashihRequest.student.user.fullName',
+        accessorKey: 'student',
         id: 'Siswa',
         header: 'Siswa',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s) => (
-              <Badge
-                key={s.tashihRequest.id}
-                variant="outline"
-                className="w-fit text-muted-foreground"
-              >
-                {s.tashihRequest.student.user.fullName} ({s.tashihRequest.student.nis})
+            {row.original.scheduleRequests.map((sr) => (
+              <Badge key={sr.request.id} variant="outline" className="w-fit text-muted-foreground">
+                {sr.request.student.fullName} ({sr.request.student.nis})
               </Badge>
             ))}
           </div>
@@ -142,24 +167,21 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) => {
-          return row.schedules
-            .map((s) => `${s.tashihRequest.group.name} - ${s.tashihRequest.group.classroom.name}`)
+          return row.scheduleRequests
+            .map((sr) => `${sr.request.group.name} - ${sr.request.group}`)
             .join(', ');
         },
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s) => {
-              const r = s.tashihRequest;
-              return (
-                <Badge
-                  key={s.tashihRequest.id + '-g'}
-                  variant="outline"
-                  className="w-fit text-muted-foreground"
-                >
-                  {r.group.name} - {r.group.classroom.name}
-                </Badge>
-              );
-            })}
+            {row.original.scheduleRequests.map((sr) => (
+              <Badge
+                key={sr.request.id + '-group'}
+                variant="outline"
+                className="w-fit text-muted-foreground"
+              >
+                {sr.request.group.name} - {sr.request.group.classroom.name}
+              </Badge>
+            ))}
           </div>
         ),
         filterFn: (row, columnId, filterValue) => {
@@ -172,8 +194,8 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         header: 'Tahun Ajaran',
         accessorFn: (row) => {
           const set = new Set<string>();
-          row.schedules.forEach((s) => {
-            const r = s.tashihRequest;
+          row.scheduleRequests.forEach((sr) => {
+            const r = sr.request;
             set.add(`${r.group.classroom.academicYear} ${r.group.classroom.semester}`);
           });
           return Array.from(set).join(', ');
@@ -184,31 +206,57 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         },
       },
       {
-        accessorKey: 'schedules.tashihRequest.tashihType',
-        id: 'Materi',
-        header: 'Materi',
+        accessorKey: 'juz',
+        id: 'Juz',
+        header: 'Juz',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
-            {row.original.schedules.map((s) => {
-              const r = s.tashihRequest;
-
-              const materi =
-                r.tashihType === TashihType.ALQURAN
-                  ? `${r.surah?.name ?? '-'} (${r.juz?.name ?? '-'})`
-                  : `${r.wafa?.name ?? '-'} (Hal ${r.startPage ?? '-'}${
-                      r.endPage ? `–${r.endPage}` : ''
-                    })`;
-
-              return (
-                <Badge
-                  key={r.id + '-materi'}
-                  variant="outline"
-                  className="w-fit text-muted-foreground"
-                >
-                  {materi}
-                </Badge>
-              );
-            })}
+            {row.original.scheduleRequests.map((sr) => (
+              <Badge
+                key={sr.request.id + '-juz'}
+                variant="outline"
+                className="w-fit text-muted-foreground"
+              >
+                {sr.request.juz.name}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: 'Tahapan',
+        header: 'Tahapan',
+        accessorFn: (row) => {
+          return row.scheduleRequests.map((sr) => stageLabels[sr.request.stage]).join(', ');
+        },
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((sr) => (
+              <Badge key={sr.request.id + '-stage'} variant="secondary" className="w-fit">
+                {stageLabels[sr.request.stage]}
+              </Badge>
+            ))}
+          </div>
+        ),
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
+      },
+      {
+        accessorKey: 'examiner',
+        id: 'Penguji',
+        header: 'Penguji',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.examiner ? (
+              <div>
+                <div className="font-medium">{row.original.examiner.fullName}</div>
+                <div className="text-muted-foreground">{row.original.examiner.nip}</div>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">Koordinator Al-Qur&apos;an</span>
+            )}
           </div>
         ),
       },
@@ -286,9 +334,36 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <Label className="mb-2 block">Filter Tahapan</Label>
+          <Select
+            value={selectedStage}
+            onValueChange={(value) => {
+              setSelectedStage(value);
+              table
+                .getColumn('Tahap')
+                ?.setFilterValue(
+                  value === 'ALL' ? undefined : stageLabels[value as MunaqasyahStage]
+                );
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Tahapan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Tahap</SelectItem>
+              {stageOptions.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stageLabels[stage]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <DataTable title="Jadwal Ujian Bimbingan" table={table} filterColumn="Tanggal" />
+      <DataTable title="Jadwal Ujian Munaqasyah" table={table} filterColumn="Tanggal" />
     </>
   );
 }

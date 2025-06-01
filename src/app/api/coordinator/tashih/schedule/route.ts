@@ -29,6 +29,18 @@ export async function GET() {
                     user: { select: { fullName: true } },
                   },
                 },
+                group: {
+                  select: {
+                    name: true,
+                    classroom: {
+                      select: {
+                        name: true,
+                        academicYear: true,
+                        semester: true,
+                      },
+                    },
+                  },
+                },
                 surah: { select: { name: true } },
                 juz: { select: { name: true } },
                 wafa: { select: { name: true } },

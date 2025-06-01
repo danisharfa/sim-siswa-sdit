@@ -94,7 +94,7 @@ export function MunaqasyahRequestForm() {
         body: JSON.stringify({
           studentId: selectedStudentId,
           juzId: selectedJuzId,
-          stage: MunaqasyahStage.TAHAP_1, // fixed value
+          stage: MunaqasyahStage.TAHAP_1,
         }),
       });
       const json = await res.json();

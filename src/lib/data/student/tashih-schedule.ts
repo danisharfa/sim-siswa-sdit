@@ -45,10 +45,6 @@ export async function fetchTashihSchedule() {
                 wafa: { select: { name: true } },
                 startPage: true,
                 endPage: true,
-                academicYear: true,
-                semester: true,
-                classroomName: true,
-                groupName: true,
                 student: {
                   select: {
                     nis: true,
@@ -58,6 +54,18 @@ export async function fetchTashihSchedule() {
                 teacher: {
                   select: {
                     user: { select: { fullName: true } },
+                  },
+                },
+                group: {
+                  select: {
+                    name: true,
+                    classroom: {
+                      select: {
+                        name: true,
+                        academicYear: true,
+                        semester: true,
+                      },
+                    },
                   },
                 },
               },

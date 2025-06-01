@@ -80,14 +80,35 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         },
       },
       {
-        id: 'Nama Siswa',
-        header: 'Nama Siswa',
-        cell: ({ row }) => row.original.student.user.fullName,
+        accessorKey: 'schedule.location',
+        id: 'Lokasi',
+        header: 'Lokasi',
       },
       {
-        id: 'NIS',
-        header: 'NIS',
-        cell: ({ row }) => row.original.student.nis,
+        id: 'Siswa',
+        header: 'Siswa',
+        accessorFn: (row) => row.student.user.fullName,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.student.user.fullName}</div>
+            <div className="text-muted-foreground">{row.original.student.nis}</div>
+          </div>
+        ),
+      },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.academicYear} {row.original.semester}
+            </div>
+            <div className="text-muted-foreground">
+              {row.original.groupName} - {row.original.classroomName}
+            </div>
+          </div>
+        ),
       },
       {
         id: 'Juz',
@@ -124,21 +145,6 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         id: 'Catatan',
         header: 'Catatan',
         cell: ({ row }) => row.original.note ?? '-',
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
-        cell: ({ row }) => (
-          <Badge variant="outline" className="w-fit text-muted-foreground">
-            {row.original.academicYear} {row.original.semester}
-          </Badge>
-        ),
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        cell: ({ row }) => `${row.original.groupName} - ${row.original.classroomName}`,
       },
     ],
     []
@@ -183,7 +189,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
           }}
         >
           <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran & Semester" />
+            <SelectValue placeholder="Pilih Tahun Ajaran" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Semua</SelectItem>
@@ -199,7 +205,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         </Select>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Nama Siswa" />
+      <DataTable title={title} table={table} filterColumn="Siswa" />
     </>
   );
 }

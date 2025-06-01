@@ -17,34 +17,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { DataTableColumnHeader } from '@/components/ui/table-column-header';
-import { DataTable } from '@/components/ui/data-table';
-// import { ExportToPDFButton } from './export-to-pdf-button';
-import { Semester, HomeActivityType } from '@prisma/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
+import { Semester, HomeActivityType } from '@prisma/client';
 import { HomeActivityEditDialog } from './HomeActivityEditDialog';
 import { HomeActivityAlertDialog } from './HomeActivityAlertDialog';
+// import { ExportToPDFButton } from './export-to-pdf-button';
 
 export type HomeActivity = {
   id: string;
   date: string;
   activityType: HomeActivityType;
-  juz: { name: string } | null;
-  surah: { name: string } | null;
   startVerse: number;
   endVerse: number;
   note: string | null;
-  academicYear: string;
-  semester: Semester;
+  group: {
+    name: string;
+    classroom: {
+      name: string;
+      academicYear: string;
+      semester: Semester;
+    };
+  };
+  juz: { name: string };
+  surah: { name: string };
 };
 
 interface Props {
@@ -77,6 +84,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
+  const [selectedActivityType, setSelectedActivityType] = useState<HomeActivityType | 'ALL'>('ALL');
 
   const handleOpenEditDialog = useCallback(
     (activity: HomeActivity) => {
@@ -97,10 +105,20 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
   const { data: setting } = useSWR('/api/academicSetting', fetchSetting);
 
   const academicPeriods = useMemo(() => {
-    return Array.from(new Set(data.map((d) => `${d.academicYear}-${d.semester}`)));
+    return Array.from(
+      new Set(data.map((d) => `${d.group.classroom.academicYear}-${d.group.classroom.semester}`))
+    );
   }, [data]);
 
   const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : 'all';
+
+  const activityTypeOptions = useMemo(() => {
+    const set = new Set<HomeActivityType>();
+    for (const activity of data) {
+      set.add(activity.activityType);
+    }
+    return Array.from(set);
+  }, [data]);
 
   useEffect(() => {
     if (defaultPeriod !== 'all') {
@@ -117,6 +135,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     () => [
       {
         accessorKey: 'date',
+        id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
           const date = new Date(row.getValue(columnId));
@@ -137,32 +156,38 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
       {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
-      },
-      {
-        accessorKey: 'activityType',
-        header: 'Jenis Aktivitas',
+        accessorFn: (row) => `${row.group.classroom.academicYear} ${row.group.classroom.semester}`,
         cell: ({ row }) => (
-          <Badge variant="outline" className="text-muted-foreground px-2">
-            {row.original.activityType}
-          </Badge>
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.group.classroom.academicYear} {row.original.group.classroom.semester}
+            </div>
+            <div className="text-muted-foreground">
+              {row.original.group.name} - {row.original.group.classroom.name}
+            </div>
+          </div>
         ),
       },
       {
-        header: 'Juz',
-        accessorFn: (row) => row.juz?.name ?? '-',
+        accessorKey: 'activityType',
+        id: 'Jenis Aktivitas',
+        header: 'Jenis Aktivitas',
+        cell: ({ row }) => <Badge variant="secondary">{row.original.activityType}</Badge>,
       },
       {
         header: 'Surah',
-        accessorFn: (row) => row.surah?.name ?? '-',
+        id: 'Surah',
+        accessorFn: (row) => row.surah.name,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.surah.name}</div>
+            <div className="text-muted-foreground">{row.original.juz.name}</div>
+          </div>
+        ),
       },
       {
-        header: 'Ayat Mulai',
-        accessorFn: (row) => row.startVerse ?? '-',
-      },
-      {
-        header: 'Ayat Selesai',
-        accessorFn: (row) => row.endVerse ?? '-',
+        header: 'Ayat',
+        accessorFn: (row) => `${row.startVerse}-${row.endVerse}`,
       },
       {
         accessorKey: 'note',
@@ -235,75 +260,109 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-x-4 gap-y-3 mb-4">
-        <Select
-          value={selectedPeriod}
-          onValueChange={(val) => {
-            setSelectedPeriod(val);
-            table
-              .getColumn('Tahun Ajaran')
-              ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
-          }}
-        >
-          <SelectTrigger className="min-w-[200px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Periode</SelectItem>
-            {academicPeriods.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p.replace('-', ' ')}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Select
+            value={selectedPeriod}
+            onValueChange={(val) => {
+              setSelectedPeriod(val);
+              table
+                .getColumn('Tahun Ajaran')
+                ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
+            }}
+          >
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Periode</SelectItem>
+              {academicPeriods.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p.replace('-', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          onValueChange={(value) => {
-            const val = value === 'all' ? 'all' : parseInt(value);
-            setSelectedMonth(val);
-            table.getColumn('date')?.setFilterValue('custom');
-          }}
-        >
-          <SelectTrigger className="min-w-[160px]">
-            <SelectValue placeholder="Pilih Bulan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Bulan</SelectItem>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <SelectItem key={i} value={i.toString()}>
-                {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div>
+          <Label className="mb-2 block">Filter Bulan</Label>
+          <Select
+            onValueChange={(value) => {
+              const val = value === 'all' ? 'all' : parseInt(value);
+              setSelectedMonth(val);
+              table.getColumn('date')?.setFilterValue('custom');
+            }}
+          >
+            <SelectTrigger className="min-w-[160px]">
+              <SelectValue placeholder="Pilih Bulan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Bulan</SelectItem>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SelectItem key={i} value={i.toString()}>
+                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          onValueChange={(value) => {
-            const val = value === 'all' ? 'all' : parseInt(value);
-            setSelectedWeek(val);
-            table.getColumn('date')?.setFilterValue('custom');
-          }}
-        >
-          <SelectTrigger className="min-w-[160px]">
-            <SelectValue placeholder="Pilih Minggu" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Minggu</SelectItem>
-            {[1, 2, 3, 4, 5].map((w) => (
-              <SelectItem key={w} value={w.toString()}>
-                Minggu ke-{w}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div>
+          <Label className="mb-2 block">Filter Minggu</Label>
+          <Select
+            onValueChange={(value) => {
+              const val = value === 'all' ? 'all' : parseInt(value);
+              setSelectedWeek(val);
+              table.getColumn('date')?.setFilterValue('custom');
+            }}
+          >
+            <SelectTrigger className="min-w-[160px]">
+              <SelectValue placeholder="Pilih Minggu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Minggu</SelectItem>
+              {[1, 2, 3, 4, 5].map((w) => (
+                <SelectItem key={w} value={w.toString()}>
+                  Minggu ke-{w}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Filter Jenis Aktivitas</Label>
+          <Select
+            value={selectedActivityType}
+            onValueChange={(value) => {
+              setSelectedActivityType(value as HomeActivityType | 'ALL');
+              table
+                .getColumn('Jenis Aktivitas')
+                ?.setFilterValue(value === 'ALL' ? undefined : value);
+            }}
+          >
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Jenis Aktivitas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Jenis</SelectItem>
+              {activityTypeOptions.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* <div className="flex justify-end mb-4">
         <ExportToPDFButton table={table} />
       </div> */}
 
-      <DataTable title={title} table={table} filterColumn="date" />
+      <DataTable title={title} table={table} filterColumn="Surah" />
 
       {dialogType === 'edit' && selectedHomeActivity && (
         <HomeActivityEditDialog

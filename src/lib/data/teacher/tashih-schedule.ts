@@ -38,24 +38,26 @@ export async function fetchTashihSchedule() {
             tashihRequest: {
               select: {
                 id: true,
-                status: true,
                 tashihType: true,
+                startPage: true,
+                endPage: true,
                 surah: { select: { name: true } },
                 juz: { select: { name: true } },
                 wafa: { select: { name: true } },
-                startPage: true,
-                endPage: true,
                 student: {
                   select: {
                     nis: true,
                     user: { select: { fullName: true } },
-                    group: {
+                  },
+                },
+                group: {
+                  select: {
+                    name: true,
+                    classroom: {
                       select: {
-                        id: true,
                         name: true,
-                        classroom: {
-                          select: { name: true, academicYear: true, semester: true },
-                        },
+                        academicYear: true,
+                        semester: true,
                       },
                     },
                   },

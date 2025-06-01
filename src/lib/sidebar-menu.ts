@@ -130,6 +130,16 @@ export const menuData = {
       ],
     },
     {
+      label: 'Aktivitas Rumah',
+      items: [
+        {
+          title: 'Riwayat',
+          url: '/dashboard/teacher/home-activity',
+          icon: BookOpenIcon,
+        },
+      ],
+    },
+    {
       label: 'Tashih',
       items: [
         {
@@ -158,6 +168,11 @@ export const menuData = {
           icon: ClipboardList,
         },
         {
+          title: 'Jadwal',
+          url: '/dashboard/teacher/munaqasyah/schedule',
+          icon: CalendarCheck2,
+        },
+        {
           title: 'Penilaian',
           url: '/dashboard/teacher/munaqasyah/assessment',
           icon: ClipboardCheck,
@@ -177,7 +192,7 @@ export const menuData = {
       icon: User2Icon,
     },
     {
-      label: 'Aktivitas Sekolah',
+      label: 'Setoran',
       items: [
         {
           title: 'Riwayat Setoran',

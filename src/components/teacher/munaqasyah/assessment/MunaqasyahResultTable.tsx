@@ -9,9 +9,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { DataTable } from '@/components/ui/data-table';
 import {
   Select,
   SelectTrigger,
@@ -20,6 +17,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
+import { DataTable } from '@/components/ui/data-table';
 import { Semester } from '@prisma/client';
 
 interface MunaqasyahResult {
@@ -80,14 +80,35 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         },
       },
       {
-        id: 'Nama Siswa',
-        header: 'Nama Siswa',
-        cell: ({ row }) => row.original.student.user.fullName,
+        accessorKey: 'schedule.location',
+        id: 'Lokasi',
+        header: 'Lokasi',
       },
       {
-        id: 'NIS',
-        header: 'NIS',
-        cell: ({ row }) => row.original.student.nis,
+        id: 'Siswa',
+        header: 'Siswa',
+        accessorFn: (row) => row.student.user.fullName,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.student.user.fullName}</div>
+            <div className="text-muted-foreground">{row.original.student.nis}</div>
+          </div>
+        ),
+      },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.academicYear} {row.original.semester}
+            </div>
+            <div className="text-muted-foreground">
+              {row.original.groupName} - {row.original.classroomName}
+            </div>
+          </div>
+        ),
       },
       {
         id: 'Juz',
@@ -125,21 +146,6 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         header: 'Catatan',
         cell: ({ row }) => row.original.note ?? '-',
       },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
-        cell: ({ row }) => (
-          <Badge variant="outline" className="w-fit text-muted-foreground">
-            {row.original.academicYear} {row.original.semester}
-          </Badge>
-        ),
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        cell: ({ row }) => `${row.original.groupName} - ${row.original.classroomName}`,
-      },
     ],
     []
   );
@@ -172,7 +178,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
   return (
     <>
       <div className="mb-4">
-        <Label>Filter Tahun Ajaran + Semester</Label>
+        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
         <Select
           value={selectedYearSemester}
           onValueChange={(value) => {
@@ -183,10 +189,10 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
           }}
         >
           <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran & Semester" />
+            <SelectValue placeholder="Pilih Tahun Ajaran" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">Semua</SelectItem>
+            <SelectItem value="ALL">Semua Tahun Ajaran</SelectItem>
             {yearSemesterOptions.map((val) => {
               const [year, sem] = val.split('__');
               return (
@@ -199,7 +205,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         </Select>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Nama Siswa" />
+      <DataTable title={title} table={table} filterColumn="Siswa" />
     </>
   );
 }

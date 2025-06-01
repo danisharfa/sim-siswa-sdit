@@ -33,14 +33,19 @@ interface MunaqasyahSchedule {
   examiner?: { user?: { fullName: string } };
   scheduleRequests: {
     request: {
-      academicYear: string;
-      semester: Semester;
-      classroomName: string;
-      groupName: string;
       stage: string;
       student: {
         nis: string;
         user: { fullName: string };
+      };
+      teacher: { user: { fullName: string } };
+      group: {
+        name: string;
+        classroom: {
+          name: string;
+          academicYear: string;
+          semester: Semester;
+        };
       };
       juz: { name: string };
     };
@@ -68,7 +73,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
     const set = new Set<string>();
     for (const schedule of data) {
       for (const s of schedule.scheduleRequests) {
-        set.add(`${s.request.academicYear}__${s.request.semester}`);
+        set.add(`${s.request.group.classroom.academicYear}__${s.request.group.classroom.semester}`);
       }
     }
     return Array.from(set);
@@ -79,7 +84,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
       {
         accessorKey: 'date',
         id: 'Tanggal',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal Ujian" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) =>
           new Date(row.original.date).toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -99,18 +104,62 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         header: 'Lokasi',
       },
       {
-        id: 'Jumlah Siswa',
-        header: 'Jumlah Siswa',
-        cell: ({ row }) => row.original.scheduleRequests.length,
-      },
-      {
         id: 'Siswa',
         header: 'Siswa',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((s, i) => (
               <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                {s.request.student.user.fullName}
+                {s.request.student.user.fullName} ({s.request.student.nis})
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: 'Kelompok',
+        header: 'Kelompok',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                {`${s.request.group.name} - ${s.request.group.classroom.name}`}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: 'Tahun Ajaran',
+        header: 'Tahun Ajaran',
+        accessorFn: (row) => {
+          const set = new Set<string>();
+          row.scheduleRequests.forEach((s) => {
+            set.add(
+              `${s.request.group.classroom.academicYear} ${s.request.group.classroom.semester}`
+            );
+          });
+          return Array.from(set).join(', ');
+        },
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                {`${s.request.group.classroom.academicYear} ${s.request.group.classroom.semester}`}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'schedulesRequests.request.teacher.user.fullName',
+        id: 'Guru Pembimbing',
+        header: 'Guru Pembimbing',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="secondary" className="w-fit">
+                {s.request.teacher.user.fullName}
               </Badge>
             ))}
           </div>
@@ -124,39 +173,6 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
             {row.original.scheduleRequests.map((s, i) => (
               <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
                 {s.request.juz?.name ?? '-'}
-              </Badge>
-            ))}
-          </div>
-        ),
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                {`${s.request.groupName} - ${s.request.classroomName}`}
-              </Badge>
-            ))}
-          </div>
-        ),
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => {
-          const set = new Set<string>();
-          row.scheduleRequests.forEach((s) => {
-            set.add(`${s.request.academicYear} ${s.request.semester}`);
-          });
-          return Array.from(set).join(', ');
-        },
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
-                {`${s.request.academicYear} ${s.request.semester}`}
               </Badge>
             ))}
           </div>
@@ -178,9 +194,21 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        accessorKey: 'examiner',
         id: 'Penguji',
         header: 'Penguji',
-        cell: ({ row }) => row.original.examiner?.user?.fullName ?? '-',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.examiner ? (
+              <div>
+                <div className="font-medium">{row.original.examiner.user?.fullName}</div>
+                <div className="text-muted-foreground">{row.original.examiner.user?.fullName}</div>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">Koordinator Al-Qur&apos;an</span>
+            )}
+          </div>
+        ),
       },
     ],
     []

@@ -12,7 +12,7 @@ import {
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Semester, SubmissionType, TargetStatus } from '@prisma/client';
+import { SubmissionType, TargetStatus } from '@prisma/client';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 
@@ -20,8 +20,6 @@ interface TargetHistory {
   id: string;
   studentId: string;
   teacherId: string;
-  academicYear: string;
-  semester: Semester;
   type: SubmissionType;
   description: string | null;
   startDate: Date;

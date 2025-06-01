@@ -33,10 +33,6 @@ import { Semester, MunaqasyahRequestStatus, MunaqasyahStage } from '@prisma/clie
 
 interface MunaqasyahRequest {
   id: string;
-  academicYear: string;
-  semester: Semester;
-  classroomName: string;
-  groupName: string;
   stage: MunaqasyahStage;
   status: MunaqasyahRequestStatus;
   createdAt: string;
@@ -46,6 +42,14 @@ interface MunaqasyahRequest {
   };
   teacher: {
     user: { fullName: string };
+  };
+  group: {
+    name: string;
+    classroom: {
+      name: string;
+      academicYear: string;
+      semester: Semester;
+    };
   };
   juz: { name: string };
 }
@@ -77,7 +81,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
     for (const d of data) {
-      set.add(`${d.academicYear}__${d.semester}`);
+      set.add(`${d.group.classroom.academicYear}__${d.group.classroom.semester}`);
     }
     return Array.from(set);
   }, [data]);
@@ -85,8 +89,12 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
   const groupOptions = useMemo(() => {
     if (selectedYearSemester === 'ALL') return [];
     return data
-      .filter((d) => `${d.academicYear}__${d.semester}` === selectedYearSemester)
-      .map((d) => `${d.groupName} - ${d.classroomName}`);
+      .filter(
+        (d) =>
+          `${d.group.classroom.academicYear}__${d.group.classroom.semester}` ===
+          selectedYearSemester
+      )
+      .map((d) => `${d.group.name} - ${d.group.classroom.name}`);
   }, [data, selectedYearSemester]);
 
   const handleOpenAcceptDialog = useCallback(
@@ -111,35 +119,47 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         accessorKey: 'createdAt',
         id: 'Tanggal',
         header: 'Tanggal',
-        cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString('id-ID'),
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
       },
       {
-        accessorKey: 'student.nis',
-        header: 'NIS',
-      },
-      {
-        accessorKey: 'student.user.fullName',
-        id: 'Nama Siswa',
-        header: 'Nama Siswa',
-        cell: ({ row }) => row.original.student?.user?.fullName ?? '-',
+        id: 'Siswa',
+        header: 'Siswa',
+        accessorFn: (row) => row.student.user.fullName,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.student.user.fullName}</div>
+            <div className="text-muted-foreground">{row.original.student.nis}</div>
+          </div>
+        ),
       },
       {
         id: 'Kelompok',
         header: 'Kelompok',
-        accessorFn: (row) => `${row.groupName} - ${row.classroomName}`,
+        accessorFn: (row) => `${row.group.name} - ${row.group.classroom.name}`,
       },
       {
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
+        accessorFn: (row) => `${row.group.classroom.academicYear} ${row.group.classroom.semester}`,
       },
       {
         accessorKey: 'teacher.user.fullName',
+        id: 'Guru Pembimbing',
         header: 'Guru Pembimbing',
-        cell: ({ row }) => row.original.teacher?.user?.fullName ?? '-',
+        cell: ({ row }) => (
+          <Badge variant="secondary" className="w-fit">
+            {row.original.teacher.user.fullName}
+          </Badge>
+        ),
       },
       {
         accessorKey: 'juz.name',
+        id: 'Juz',
         header: 'Juz',
         cell: ({ row }) =>
           row.original.juz?.name ? (
@@ -150,6 +170,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
       },
       {
         accessorKey: 'stage',
+        id: 'Tahap',
         header: 'Tahap',
         cell: ({ row }) => row.original.stage.replace('_', ' '),
       },
@@ -234,7 +255,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
             }}
           >
             <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran & Semester" />
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
@@ -296,7 +317,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         </div>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Nama Siswa" />
+      <DataTable title={title} table={table} filterColumn="Siswa" />
 
       {dialogType === 'accept' && selectedRequest && (
         <RequestStatusAlertDialog
