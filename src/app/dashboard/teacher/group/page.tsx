@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GroupManagement } from '@/components/teacher/group/GroupManagement';
 
+export const dynamic = 'force-dynamic';
+
 export default function TeacherGroupPage() {
   return (
     <div className="p-4">

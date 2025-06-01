@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MunaqasyahScheduleManagement } from '@/components/teacher/munaqasyah/schedule/MunaqasyahScheduleManagement';
 
+export const dynamic = 'force-dynamic';
+
 export default function TeacherMunaqasyahSchedulePage() {
   return (
     <div className="p-4">

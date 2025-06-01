@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SubmissionManagement } from '@/components/student/submission/SubmissionManagement';
 
+export const dynamic = 'force-dynamic';
+
 export default function StudentSubmissionHistoryPage() {
   return (
     <div className="p-4">

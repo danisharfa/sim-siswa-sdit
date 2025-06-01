@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TashihScheduleManagement } from '@/components/student/tashih/schedule/TashihScheduleManagement';
 
+export const dynamic = 'force-dynamic';
+
 export default function StudentTashihSchedulePage() {
   return (
     <div className="p-4">

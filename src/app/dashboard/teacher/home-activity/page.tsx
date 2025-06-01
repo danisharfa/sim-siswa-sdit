@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HomeActivityHistoryManagement } from '@/components/teacher/home-activity/HomeActivityHistoryManagement';
 
+export const dynamic = 'force-dynamic';
+
 export default function HomeActivityHistoryPage() {
   return (
     <div className="p-4">
