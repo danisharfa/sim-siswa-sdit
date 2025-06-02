@@ -38,7 +38,6 @@ export async function fetchTashihSchedule() {
             tashihRequest: {
               select: {
                 id: true,
-                status: true,
                 tashihType: true,
                 surah: { select: { name: true } },
                 juz: { select: { name: true } },

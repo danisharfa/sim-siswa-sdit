@@ -5,47 +5,40 @@ import { Role } from '@prisma/client';
 export async function fetchMunaqasyahSchedule() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== Role.teacher) {
+    if (!session || session.user.role !== Role.student) {
       throw new Error('Unauthorized');
     }
 
-    const teacher = await prisma.teacherProfile.findUnique({
+    const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
-    if (!teacher) {
-      throw new Error('Profil guru tidak ditemukan');
+    if (!student) {
+      throw new Error('Profil siswa tidak ditemukan');
     }
 
     const schedules = await prisma.munaqasyahSchedule.findMany({
       orderBy: { date: 'desc' },
       where: {
-        OR: [
-          // Jadwal sebagai examiner
-          { examinerId: teacher.id },
-          // Jadwal untuk request yang ditangani guru
-          {
-            scheduleRequests: {
-              some: {
-                request: {
-                  teacherId: teacher.id,
-                },
-              },
+        scheduleRequests: {
+          some: {
+            request: {
+              studentId: student.id,
             },
           },
-        ],
+        },
       },
       include: {
         examiner: {
-          include: {
-            user: { select: { fullName: true } },
-          },
-        },
-        scheduledByCoordinator: {
-          include: {
+          select: {
             user: { select: { fullName: true } },
           },
         },
         scheduleRequests: {
+          where: {
+            request: {
+              studentId: student.id,
+            },
+          },
           include: {
             request: {
               select: {
@@ -60,7 +53,6 @@ export async function fetchMunaqasyahSchedule() {
                 },
                 teacher: {
                   select: {
-                    nip: true,
                     user: { select: { fullName: true } },
                   },
                 },
@@ -83,37 +75,9 @@ export async function fetchMunaqasyahSchedule() {
       },
     });
 
-    return schedules.map((schedule) => ({
-      ...schedule,
-      date: schedule.date.toISOString(),
-      examiner: schedule.examiner
-        ? {
-            id: schedule.examiner.id,
-            nip: schedule.examiner.nip,
-            fullName: schedule.examiner.user.fullName,
-          }
-        : null,
-      coordinator: schedule.scheduledByCoordinator
-        ? {
-            id: schedule.scheduledByCoordinator.id,
-            nip: schedule.scheduledByCoordinator.nip,
-            fullName: schedule.scheduledByCoordinator.user.fullName,
-          }
-        : null,
-      scheduleRequests: schedule.scheduleRequests.map((sr) => ({
-        id: sr.id,
-        request: {
-          ...sr.request,
-          student: {
-            nis: sr.request.student.nis,
-            fullName: sr.request.student.user.fullName,
-          },
-          teacher: {
-            nip: sr.request.teacher.nip,
-            fullName: sr.request.teacher.user.fullName,
-          },
-        },
-      })),
+    return schedules.map((s) => ({
+      ...s,
+      date: s.date.toISOString(),
     }));
   } catch (error) {
     console.error('[FETCH_MUNAQASYAH_SCHEDULE]', error);

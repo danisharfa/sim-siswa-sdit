@@ -101,7 +101,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     return Array.from(set);
   }, [data]);
 
-  const yearSemesterOptions = useMemo(() => {
+  const academicPeriods = useMemo(() => {
     const set = new Set<string>();
     for (const schedule of data) {
       for (const sr of schedule.scheduleRequests) {
@@ -109,7 +109,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         set.add(`${r.group.classroom.academicYear}__${r.group.classroom.semester}`);
       }
     }
-    return Array.from(set);
+    return Array.from(set).sort();
   }, [data]);
 
   const groupOptions = useMemo(() => {
@@ -130,24 +130,25 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         accessorKey: 'date',
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
-        cell: ({ row }) =>
-          new Date(row.original.date).toLocaleDateString('id-ID', {
+        cell: ({ row }) => {
+          const s = row.original;
+          const date = new Date(s.date).toLocaleDateString('id-ID', {
+            weekday: 'long',
             day: 'numeric',
-            month: 'short',
+            month: 'long',
             year: 'numeric',
-          }),
-      },
-      {
-        accessorKey: 'sessionName',
-        id: 'Sesi',
-        header: 'Sesi',
-        cell: ({ row }) =>
-          `${row.original.sessionName}, ${row.original.startTime} - ${row.original.endTime}`,
-      },
-      {
-        accessorKey: 'location',
-        id: 'Lokasi',
-        header: 'Lokasi',
+          });
+          return (
+            <div className="text-sm min-w-[180px]">
+              <div className="font-medium">{date}</div>
+              <div className="text-muted-foreground">{s.sessionName}</div>
+              <div className="text-muted-foreground text-xs">
+                {s.startTime} - {s.endTime}
+              </div>
+              <div className="text-muted-foreground text-xs">📍 {s.location}</div>
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'student',
@@ -244,21 +245,23 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         },
       },
       {
-        accessorKey: 'examiner',
-        id: 'Penguji',
+        accessorKey: 'scheduleRequests.examiner.user.fullName',
+        id: 'penguji',
         header: 'Penguji',
-        cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.examiner ? (
-              <div>
-                <div className="font-medium">{row.original.examiner.fullName}</div>
-                <div className="text-muted-foreground">{row.original.examiner.nip}</div>
-              </div>
-            ) : (
-              <span className="text-muted-foreground">Koordinator Al-Qur&apos;an</span>
-            )}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const examiner = row.original.examiner;
+          return (
+            <div className="text-sm">
+              {examiner ? (
+                <Badge variant="secondary">
+                  {examiner.fullName}
+                </Badge>
+              ) : (
+                <span className="text-muted-foreground text-xs">Koordinator Al-Qur&apos;an</span>
+              )}
+            </div>
+          );
+        },
       },
     ],
     []
@@ -300,7 +303,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua Tahun Ajaran</SelectItem>
-              {yearSemesterOptions.map((val) => {
+              {academicPeriods.map((val) => {
                 const [year, sem] = val.split('__');
                 return (
                   <SelectItem key={val} value={val}>

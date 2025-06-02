@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { Semester, TashihRequestStatus, TashihType } from '@prisma/client';
+import { Semester, TashihType } from '@prisma/client';
 
 interface TashihSchedule {
   id: string;
@@ -32,7 +32,6 @@ interface TashihSchedule {
   schedules: {
     tashihRequest: {
       id: string;
-      status: TashihRequestStatus;
       tashihType: TashihType;
       surah: { name: string } | null;
       juz: { name: string } | null;
