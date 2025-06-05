@@ -34,208 +34,125 @@ export interface StudentReportHistoryData {
 
 export async function getStudentReportHistoryData(
   studentId: string,
-  groupId?: string // Parameter tambahan untuk group history
-): Promise<StudentReportHistoryData[] | null> {
-  // Pertama, ambil data student
-  const student = await prisma.studentProfile.findUnique({
-    where: { id: studentId },
-    include: {
-      user: true,
-      classroom: true,
-      group: true,
-      tahsinScores: true,
-      tahsinSummaries: true,
-      tahfidzScores: {
-        include: {
-          surah: true,
-        },
-      },
-      tahfidzSummaries: true,
-    },
-  });
-
-  if (!student) return null;
-
-  // Debug: Check groupId
-  console.log('Student current groupId:', student.groupId);
-  console.log('Group history groupId from URL:', groupId);
-
-  // Query untuk mengambil data teacher dari group history
-  const [coordinator, groupHistoryWithTeacher] = await Promise.all([
-    prisma.coordinatorProfile.findFirst({
-      where: {
-        user: {
-          role: Role.coordinator,
-        },
-      },
+  groupId: string
+): Promise<StudentReportHistoryData | null> {
+  // Ambil data student dan group history
+  const [student, groupData, coordinator] = await Promise.all([
+    prisma.studentProfile.findUnique({
+      where: { id: studentId },
       include: {
-        user: { select: { fullName: true } },
+        user: true,
       },
     }),
-    // Query group history untuk mendapatkan teacher pada group dan periode tertentu
-    groupId
-      ? prisma.groupHistory.findFirst({
-          where: {
-            groupId,
-            studentId: studentId,
-          },
+    prisma.group.findUnique({
+      where: { id: groupId },
+      include: {
+        classroom: true,
+        teacherGroups: {
           include: {
             teacher: {
-              include: {
-                user: true,
-              },
-            },
-            group: {
-              include: {
-                classroom: true,
-              },
+              include: { user: true },
             },
           },
-        })
-      : null,
+        },
+      },
+    }),
+    prisma.coordinatorProfile.findFirst({
+      where: {
+        user: { role: Role.coordinator },
+      },
+      include: { user: true },
+    }),
   ]);
 
-  // Debug: Check group history data
-  console.log('GroupHistory found:', {
-    hasGroupHistory: !!groupHistoryWithTeacher,
-    teacherName: groupHistoryWithTeacher?.teacher?.user?.fullName || 'Not found from group history',
-    academicYear: groupHistoryWithTeacher?.academicYear,
-    semester: groupHistoryWithTeacher?.semester,
-  });
+  if (!student || !groupData) return null;
 
-  // Ambil nama teacher dari group history, atau fallback ke teacherGroup query jika tidak ada
-  let teacherName = '-';
-
-  if (groupHistoryWithTeacher?.teacher?.user?.fullName) {
-    teacherName = groupHistoryWithTeacher.teacher.user.fullName;
-  } else if (groupId) {
-    // Fallback: cari teacher dari teacherGroup jika tidak ada di groupHistory
-    const teacherGroup = await prisma.teacherGroup.findFirst({
+  // Ambil data scores berdasarkan groupId
+  const [tahsinScores, tahsinSummary, tahfidzScores, tahfidzSummary, groupHistory] = await Promise.all([
+    prisma.tahsinScore.findMany({
+      where: { 
+        studentId, 
+        groupId 
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.tahsinSummary.findUnique({
+      where: { 
+        studentId_groupId: { 
+          studentId, 
+          groupId 
+        } 
+      },
+    }),
+    prisma.tahfidzScore.findMany({
+      where: { 
+        studentId, 
+        groupId 
+      },
+      include: { surah: true },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.tahfidzSummary.findUnique({
+      where: { 
+        studentId_groupId: { 
+          studentId, 
+          groupId 
+        } 
+      },
+    }),
+    // Ambil group history untuk mendapatkan teacher yang mengajar pada periode tersebut
+    prisma.groupHistory.findFirst({
       where: {
+        studentId,
         groupId,
       },
       include: {
         teacher: {
-          include: {
-            user: true,
-          },
+          include: { user: true },
         },
       },
-    });
-    teacherName = teacherGroup?.teacher?.user?.fullName ?? '-';
+    }),
+  ]);
+
+  // Tentukan teacher name dari group history atau teacher group saat ini
+  let teacherName = '-';
+  if (groupHistory?.teacher?.user?.fullName) {
+    teacherName = groupHistory.teacher.user.fullName;
+  } else if (groupData.teacherGroups?.[0]?.teacher?.user?.fullName) {
+    teacherName = groupData.teacherGroups[0].teacher.user.fullName;
   }
 
-  const coordinatorName = coordinator?.user.fullName ?? '-';
-  const fullName = student.user.fullName;
-  const nis = student.nis;
-  const nisn = student.nisn ?? '-';
-  const address = student.address ?? '-';
-  const className = student.classroom?.name ?? '-';
+  const coordinatorName = coordinator?.user?.fullName ?? '-';
 
-  // Debug final result
-  console.log('Final teacher name:', teacherName);
-
-  // Kelompokkan data berdasarkan tahun ajaran dan semester
-  const grouped: Record<string, StudentReportHistoryData> = {};
-
-  student.tahsinScores.forEach((s) => {
-    const key = `${s.academicYear}__${s.semester}`;
-    if (!grouped[key])
-      grouped[key] = {
-        fullName,
-        nis,
-        nisn,
-        address,
-        className,
-        academicYear: s.academicYear,
-        semester: s.semester,
-        teacherName,
-        coordinatorName,
-        tahsin: [],
-        tahsinSummary: null,
-        tahfidz: [],
-        tahfidzSummary: null,
-      };
-    grouped[key].tahsin.push({
+  // Format data response
+  return {
+    fullName: student.user.fullName,
+    nis: student.nis,
+    nisn: student.nisn ?? '-',
+    address: student.address ?? '-',
+    className: groupData.classroom?.name ?? '-',
+    semester: groupData.classroom?.semester ?? 'GANJIL',
+    academicYear: groupData.classroom?.academicYear ?? '-',
+    teacherName,
+    coordinatorName,
+    tahsin: tahsinScores.map((s) => ({
       topic: s.topic,
       scoreNumeric: s.scoreNumeric,
       scoreLetter: s.scoreLetter,
       description: s.description ?? '-',
-    });
-  });
-
-  student.tahsinSummaries.forEach((s) => {
-    const key = `${s.academicYear}__${s.semester}`;
-    if (!grouped[key])
-      grouped[key] = {
-        fullName,
-        nis,
-        nisn,
-        address,
-        className,
-        academicYear: s.academicYear,
-        semester: s.semester,
-        teacherName,
-        coordinatorName,
-        tahsin: [],
-        tahsinSummary: null,
-        tahfidz: [],
-        tahfidzSummary: null,
-      };
-    grouped[key].tahsinSummary = {
-      averageScore: s.averageScore,
-      lastMaterial: s.lastMaterial,
-    };
-  });
-
-  student.tahfidzScores.forEach((s) => {
-    const key = `${s.academicYear}__${s.semester}`;
-    if (!grouped[key])
-      grouped[key] = {
-        fullName,
-        nis,
-        nisn,
-        address,
-        className,
-        academicYear: s.academicYear,
-        semester: s.semester,
-        teacherName,
-        coordinatorName,
-        tahsin: [],
-        tahsinSummary: null,
-        tahfidz: [],
-        tahfidzSummary: null,
-      };
-    grouped[key].tahfidz.push({
+    })),
+    tahsinSummary: tahsinSummary ? {
+      averageScore: tahsinSummary.averageScore,
+      lastMaterial: tahsinSummary.lastMaterial,
+    } : null,
+    tahfidz: tahfidzScores.map((s) => ({
       surahName: s.surah.name,
       scoreNumeric: s.scoreNumeric,
       scoreLetter: s.scoreLetter,
       description: s.description ?? '-',
-    });
-  });
-
-  student.tahfidzSummaries.forEach((s) => {
-    const key = `${s.academicYear}__${s.semester}`;
-    if (!grouped[key])
-      grouped[key] = {
-        fullName,
-        nis,
-        nisn,
-        address,
-        className,
-        academicYear: s.academicYear,
-        semester: s.semester,
-        teacherName,
-        coordinatorName,
-        tahsin: [],
-        tahsinSummary: null,
-        tahfidz: [],
-        tahfidzSummary: null,
-      };
-    grouped[key].tahfidzSummary = {
-      averageScore: s.averageScore,
-    };
-  });
-
-  return Object.values(grouped);
+    })),
+    tahfidzSummary: tahfidzSummary ? {
+      averageScore: tahfidzSummary.averageScore,
+    } : null,
+  };
 }

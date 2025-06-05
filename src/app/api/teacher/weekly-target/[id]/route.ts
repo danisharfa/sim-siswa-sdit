@@ -18,8 +18,6 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
 
     const {
       studentId,
-      academicYear,
-      semester,
       type,
       description,
       startDate,
@@ -33,7 +31,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       endPage,
     } = await req.json();
 
-    if (!studentId || !academicYear || !semester || !type || !startDate || !endDate) {
+    if (!studentId || !type || !startDate || !endDate) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 

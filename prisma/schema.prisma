@@ -103,20 +103,24 @@ model StudentProfile {
   status      StudentStatus @default(AKTIF)
   graduatedAt DateTime?
 
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  classroom          Classroom?          @relation(fields: [classroomId], references: [id])
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroom          Classroom?         @relation(fields: [classroomId], references: [id])
   classroomHistories ClassroomHistory[]
-  group              Group?              @relation(fields: [groupId], references: [id])
+  group              Group?             @relation(fields: [groupId], references: [id])
   groupHistories     GroupHistory[]
-  submissions        Submission[]
-  homeActivities     HomeActivity[]
-  weeklyTargets      WeeklyTarget[]
+
+  submissions    Submission[]
+  homeActivities HomeActivity[]
+  weeklyTargets  WeeklyTarget[]
+
   tashihRequests     TashihRequest[]
   munaqasyahRequests MunaqasyahRequest[] @relation("MunaqasyahStudent")
-  tahfidzScores      TahfidzScore[]
-  tahfidzSummaries   TahfidzSummary[]
-  tahsinScores       TahsinScore[]
-  tahsinSummaries    TahsinSummary[]
+
+  tahfidzScores    TahfidzScore[]
+  tahfidzSummaries TahfidzSummary[]
+
+  tahsinScores    TahsinScore[]
+  tahsinSummaries TahsinSummary[]
 
   @@index([nis])
   @@map("student_profiles")
@@ -198,11 +202,19 @@ model Group {
   classroom          Classroom           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   teacherGroups      TeacherGroup[]
   students           StudentProfile[]
+  
   submissions        Submission[]
   homeActivities     HomeActivity[]
   weeklyTargets      WeeklyTarget[]
+
   tashihRequests     TashihRequest[]
   munaqasyahRequests MunaqasyahRequest[]
+
+  TahfidzScore       TahfidzScore[]
+  TahfidzSummary     TahfidzSummary[]
+
+  TahsinScore        TahsinScore[]
+  TahsinSummary      TahsinSummary[]
 
   @@unique([name, classroomId])
   @@map("groups")
@@ -470,8 +482,7 @@ model TashihResult {
 model TahfidzScore {
   id           String      @id @default(uuid())
   studentId    String
-  academicYear String
-  semester     Semester
+  groupId      String
   surahId      Int
   scoreNumeric Int
   scoreLetter  GradeLetter
@@ -481,34 +492,34 @@ model TahfidzScore {
   updatedAt DateTime @updatedAt
 
   student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   surah   Surah          @relation(fields: [surahId], references: [id])
 
-  @@unique([studentId, academicYear, semester, surahId])
+  @@unique([studentId, groupId, surahId])
   @@map("tahfidz_scores")
 }
 
 model TahfidzSummary {
-  id           String   @id @default(uuid())
+  id           String @id @default(uuid())
   studentId    String
-  academicYear String
-  semester     Semester
+  groupId      String
   averageScore Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, academicYear, semester])
+  @@unique([studentId, groupId])
   @@map("tahfidz_summaries")
 }
 
 model TahsinScore {
-  id           String     @id @default(uuid())
-  studentId    String
-  academicYear String
-  semester     Semester
-  tahsinType   TahsinType
+  id         String     @id @default(uuid())
+  studentId  String
+  groupId    String
+  tahsinType TahsinType
 
   topic        String
   scoreNumeric Int
@@ -519,16 +530,16 @@ model TahsinScore {
   updatedAt DateTime @updatedAt
 
   student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, academicYear, semester, tahsinType, topic])
+  @@unique([studentId, groupId, tahsinType, topic])
   @@map("tahsin_scores")
 }
 
 model TahsinSummary {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   studentId    String
-  academicYear String
-  semester     Semester
+  groupId      String
   lastMaterial String?
   averageScore Float?
 
@@ -536,8 +547,9 @@ model TahsinSummary {
   updatedAt DateTime @updatedAt
 
   student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, academicYear, semester])
+  @@unique([studentId, groupId])
   @@map("tahsin_summaries")
 }
 

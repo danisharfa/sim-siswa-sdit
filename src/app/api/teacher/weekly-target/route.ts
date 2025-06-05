@@ -42,7 +42,19 @@ export async function POST(req: NextRequest) {
 
     const student = await prisma.studentProfile.findUnique({
       where: { id: studentId },
-      select: { groupId: true },
+     select: { 
+        groupId: true,
+        group: {
+          select: {
+            classroom: {
+              select: {
+                academicYear: true,
+                semester: true
+              }
+            }
+          }
+        }
+      },
     });
 
     if (!student?.groupId) {

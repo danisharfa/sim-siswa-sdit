@@ -6,7 +6,19 @@ import { TargetForm } from './TargetForm';
 import { TargetTable } from './TargetTable';
 
 interface TargetManagementProps {
-  student: { id: string; nis: string; fullName: string };
+  student: {
+    id: string;
+    nis: string;
+    user: { fullName: string };
+    group: {
+      name: string;
+      classroom: {
+        name: string;
+        academicYear: string;
+        semester: string;
+      };
+    } | null;
+  };
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -29,7 +41,7 @@ export function TargetManagement({ student }: TargetManagementProps) {
   return (
     <div className="space-y-6 mt-6">
       <TargetForm studentId={student.id} onSubmit={mutate} />
-      <TargetTable data={data.data} title="Daftar Target Setoran" onRefresh={mutate} />
+      <TargetTable data={data?.data || []} title="Daftar Target Setoran" onRefresh={mutate} />
     </div>
   );
 }

@@ -22,14 +22,14 @@ import {
 import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface Siswa {
+interface Student {
   id: string;
   nis: string;
   fullName: string;
 }
 
 interface Props {
-  data: Siswa[];
+  data: Student[];
   title: string;
   groupId: string;
 }
@@ -42,10 +42,10 @@ export function GroupMembersHistoryTable({ data, title, groupId }: Props) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-  } = useDataTableState<Siswa, string>();
+  } = useDataTableState<Student, string>();
   const router = useRouter();
 
-  const columns = useMemo<ColumnDef<Siswa>[]>(
+  const columns = useMemo<ColumnDef<Student>[]>(
     () => [
       {
         accessorKey: 'nis',
@@ -72,14 +72,14 @@ export function GroupMembersHistoryTable({ data, title, groupId }: Props) {
                 <DropdownMenuContent align="end" className="w-32 z-50">
                   <DropdownMenuItem
                     onClick={() =>
-                      router.push(`/dashboard/teacher/group/${groupId}/history/report/${siswa.id}`)
+                      router.push(`/dashboard/teacher/group/${groupId}/history/student/${siswa.id}/report`)
                     }
                   >
                     Rapor
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
-                      router.push(`/dashboard/teacher/group/${groupId}/history/target/${siswa.id}`)
+                      router.push(`/dashboard/teacher/group/${groupId}/history/student/${siswa.id}/target`)
                     }
                   >
                     Target Setoran

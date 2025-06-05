@@ -19,10 +19,16 @@ export default async function GroupHistoryDetailPage(props: {
     <div className="p-4">
       <div className="flex items-center mb-4">
         <BackButton href={`/dashboard/teacher/group`} />
-        <h1 className="text-2xl font-bold ml-4">
-          {groupHistory.group.name} - Kelas {groupHistory.group.classroom.name}{' '}
-          {groupHistory.group.classroom.academicYear} {groupHistory.group.classroom.semester}
-        </h1>
+        <div className="ml-4">
+          <h1 className="text-2xl font-bold">
+            {groupHistory.group.name} - {groupHistory.group.classroom.name}
+          </h1>
+          <div className="text-sm text-muted-foreground mt-1">
+            <span>
+              {groupHistory.group.classroom.academicYear} {groupHistory.group.classroom.semester}
+            </span>
+          </div>
+        </div>
       </div>
 
       <Suspense

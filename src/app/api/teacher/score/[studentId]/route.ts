@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       return NextResponse.json({ error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    // Cek apakah guru membimbing siswa ini
+    // Cek apakah siswa ini ada dalam kelompok yang dibimbing oleh guru
     const group = await prisma.group.findFirst({
       where: {
         teacherGroups: {
@@ -32,9 +32,6 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         students: {
           some: { id: studentId },
         },
-      },
-      include: {
-        classroom: true,
       },
     });
 
@@ -45,10 +42,12 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const { academicYear, semester } = group.classroom;
-
+    // Ambil data tahsin dan tahfidz berdasarkan studentId dan groupId
     const tahsin = await prisma.tahsinScore.findMany({
-      where: { studentId, academicYear, semester },
+      where: {
+        studentId,
+        groupId: group.id,
+      },
       select: {
         id: true,
         tahsinType: true,
@@ -60,20 +59,34 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     });
 
     const tahfidz = await prisma.tahfidzScore.findMany({
-      where: { studentId, academicYear, semester },
+      where: {
+        studentId,
+        groupId: group.id,
+      },
       select: {
         id: true,
         surahId: true,
         scoreNumeric: true,
         scoreLetter: true,
         description: true,
-        surah: { select: { name: true } },
+        surah: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
     const tahsinSummary = await prisma.tahsinSummary.findUnique({
-      where: { studentId_academicYear_semester: { studentId, academicYear, semester } },
-      select: { lastMaterial: true },
+      where: {
+        studentId_groupId: {
+          studentId,
+          groupId: group.id,
+        },
+      },
+      select: {
+        lastMaterial: true,
+      },
     });
 
     return NextResponse.json({

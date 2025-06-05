@@ -1,9 +1,9 @@
 import { use } from 'react';
-import { fetchGroupMembersForTeacher } from '@/lib/data/teacher/teacher-group-member';
+import { fetchGroupMembers } from '@/lib/data/teacher/teacher-group-member';
 import { GroupMembersTable } from './GroupMembersTable';
 
 export function GroupMembersManagement({ groupId }: { groupId: string }) {
-  const members = use(fetchGroupMembersForTeacher(groupId));
+  const members = use(fetchGroupMembers(groupId));
 
   return (
     <div className="space-y-6">

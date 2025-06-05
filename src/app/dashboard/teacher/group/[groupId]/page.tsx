@@ -17,10 +17,16 @@ export default async function GroupDetailPage(props: { params: Promise<{ groupId
     <div className="p-4">
       <div className="flex items-center mb-4">
         <BackButton href={`/dashboard/teacher/group`} />
-        <h1 className="text-2xl font-bold ml-4">
-          {group.name} - Kelas {group.classroom.name} {group.classroom.academicYear}{' '}
-          {group.classroom.semester}
-        </h1>
+        <div className="ml-4">
+          <h1 className="text-2xl font-bold">
+            {group.name} - {group.classroom.name}
+          </h1>
+          <div className="text-sm text-muted-foreground mt-1">
+            <span>
+              {group.classroom.academicYear} {group.classroom.semester}
+            </span>
+          </div>
+        </div>
       </div>
 
       <Suspense

@@ -1,80 +1,122 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
-type Params = Promise<{ studentId: string }>;
-
-export async function GET(req: NextRequest, segmentData: { params: Params }) {
+export async function getStudentGroupHistory(groupId: string, studentId: string) {
   try {
-    const params = await segmentData.params;
-    const studentId = params.studentId;
+    const session = await auth();
+    if (!session?.user) throw new Error('Unauthorized');
 
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!teacher) throw new Error('Guru tidak ditemukan');
+
+    // Ambil data siswa dari groupHistory dengan relasi lengkap
+    const groupHistory = await prisma.groupHistory.findFirst({
+      where: {
+        groupId: groupId,
+        studentId: studentId,
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            nis: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            classroom: {
+              select: {
+                id: true,
+                name: true,
+                academicYear: true,
+                semester: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!groupHistory || !groupHistory.student) return null;
+
+    return {
+      id: groupHistory.student.id,
+      nis: groupHistory.student.nis,
+      fullName: groupHistory.student.user.fullName,
+      group: {
+        id: groupHistory.group.id,
+        name: groupHistory.group.name,
+      },
+      classroom: groupHistory.group.classroom
+        ? {
+            id: groupHistory.group.classroom.id,
+            name: groupHistory.group.classroom.name,
+            academicYear: groupHistory.group.classroom.academicYear,
+            semester: groupHistory.group.classroom.semester,
+          }
+        : null,
+    };
+  } catch (error) {
+    console.error('Error fetching student group history:', error);
+    return null;
+  }
+}
+
+export async function fetchWeeklyTargetHistory(studentId: string, groupId: string) {
+  try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      throw new Error('Unauthorized');
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
     if (!teacher) {
-      return NextResponse.json(
-        { success: false, message: 'Profil guru tidak ditemukan' },
-        { status: 404 }
-      );
+      throw new Error('Guru tidak ditemukan');
     }
 
-    const student = await prisma.studentProfile.findUnique({
-      where: { id: studentId },
-      select: { 
-        groupId: true,
+    // Verifikasi bahwa grup history ini valid dan guru pernah mengajar di grup tersebut
+    const groupHistory = await prisma.groupHistory.findFirst({
+      where: {
+        studentId,
+        groupId,
+        teacherId: teacher.id, // Pastikan guru ini yang mengajar pada periode tersebut
+      },
+      include: {
         group: {
-          select: {
-            id: true,
+          include: {
             classroom: {
               select: {
                 academicYear: true,
-                semester: true
-              }
-            }
-          }
-        }
-      },
-    });
-    if (!student) {
-      return NextResponse.json(
-        { success: false, message: 'Siswa tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    if (!student.groupId) {
-      return NextResponse.json(
-        { success: false, message: 'Siswa tidak memiliki groupId' },
-        { status: 404 }
-      );
-    }
-
-    const isMembimbing = await prisma.teacherGroup.findFirst({
-      where: {
-        teacherId: teacher.id,
-        groupId: student.groupId,
+                semester: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!isMembimbing) {
-      return NextResponse.json(
-        { success: false, message: 'Guru tidak membimbing siswa ini' },
-        { status: 403 }
-      );
+    if (!groupHistory) {
+      throw new Error('Guru tidak pernah mengajar siswa ini di grup tersebut');
     }
 
+    // Ambil targets berdasarkan groupId history yang spesifik
     const targets = await prisma.weeklyTarget.findMany({
       where: {
-        teacherId: teacher.id,
         studentId: studentId,
-        groupId: student.groupId,
+        teacherId: teacher.id,
+        groupId: groupId, // Filter berdasarkan groupId history
       },
       orderBy: { startDate: 'desc' },
       include: {
@@ -85,23 +127,14 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     });
 
     if (targets.length === 0) {
-      return NextResponse.json({ 
-        success: true, 
-        data: [],
-        meta: {
-          groupId: student.groupId,
-          academicYear: student.group?.classroom?.academicYear,
-          semester: student.group?.classroom?.semester,
-          totalTargets: 0
-        }
-      });
+      return [];
     }
 
-    // Ambil semua setoran siswa dalam rentang semua target
+    // Ambil submissions untuk grup history yang spesifik
     const submissions = await prisma.submission.findMany({
       where: {
         studentId,
-        groupId: student.groupId,
+        groupId: groupId, // Filter berdasarkan groupId history
         date: {
           gte: targets.at(-1)?.startDate,
           lte: targets[0]?.endDate,
@@ -109,8 +142,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
     });
 
-    // Hitung progress persentase per target
-    const withProgress = targets.map((target) => {
+    // Hitung progress percentage untuk setiap target
+    const targetsWithProgress = targets.map((target) => {
       const {
         startDate,
         endDate,
@@ -132,6 +165,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       let achieved = 0;
 
       if (type === 'TAHFIDZ' && surahStartId && surahEndId && startAyat && endAyat) {
+        // Calculate required verses
         const ayats = [];
         for (let surahId = surahStartId; surahId <= surahEndId; surahId++) {
           const verseCount =
@@ -149,6 +183,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         }
         required = ayats.length;
 
+        // Calculate achieved verses
         const submitted = new Set<string>();
         for (const s of relevantSubmissions) {
           if (!s.surahId || !s.startVerse || !s.endVerse) continue;
@@ -183,21 +218,9 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       };
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      data: withProgress,
-      meta: {
-        groupId: student.groupId,
-        academicYear: student.group?.classroom?.academicYear,
-        semester: student.group?.classroom?.semester,
-        totalTargets: withProgress.length
-      }
-    });
+    return targetsWithProgress;
   } catch (error) {
-    console.error('[GET_WEEKLY_TARGET_STUDENT]', error);
-    return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data target siswa' },
-      { status: 500 }
-    );
+    console.error('Error fetching weekly target history:', error);
+    throw new Error('Gagal mengambil data riwayat target');
   }
 }

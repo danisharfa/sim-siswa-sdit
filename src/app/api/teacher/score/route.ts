@@ -26,7 +26,6 @@ interface ScoreRequestBody {
   lastMaterial?: string;
 }
 
-// Untuk menyimpan nilai Tahsin dan Tahfidz
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -50,7 +49,6 @@ export async function POST(req: NextRequest) {
         teacherGroups: { some: { teacherId: teacher.id } },
         students: { some: { id: studentId } },
       },
-      include: { classroom: true },
     });
 
     if (!group) {
@@ -59,8 +57,6 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
-
-    const { academicYear, semester } = group.classroom;
 
     const tahsinAvg = tahsin.length
       ? tahsin.reduce((sum, t) => sum + t.scoreNumeric, 0) / tahsin.length
@@ -71,18 +67,18 @@ export async function POST(req: NextRequest) {
       : null;
 
     await prisma.$transaction(async (tx) => {
+      // Tahsin Scores
       await tx.tahsinScore.deleteMany({
         where: {
           studentId,
-          academicYear,
-          semester,
+          groupId,
         },
       });
+
       await tx.tahsinScore.createMany({
         data: tahsin.map((item) => ({
           studentId,
-          academicYear,
-          semester,
+          groupId,
           tahsinType: item.type,
           topic: item.topic,
           scoreNumeric: item.scoreNumeric,
@@ -90,14 +86,13 @@ export async function POST(req: NextRequest) {
           description: item.description,
         })),
       });
-      // Update TahsinSummary
+
       if (tahsinAvg !== null) {
         await tx.tahsinSummary.upsert({
           where: {
-            studentId_academicYear_semester: {
+            studentId_groupId: {
               studentId,
-              academicYear,
-              semester,
+              groupId,
             },
           },
           update: {
@@ -106,40 +101,38 @@ export async function POST(req: NextRequest) {
           },
           create: {
             studentId,
-            academicYear,
-            semester,
+            groupId,
             averageScore: tahsinAvg,
             lastMaterial: lastMaterial?.trim() || null,
           },
         });
       }
 
+      // Tahfidz Scores
       await tx.tahfidzScore.deleteMany({
         where: {
           studentId,
-          academicYear,
-          semester,
+          groupId,
         },
       });
+
       await tx.tahfidzScore.createMany({
         data: tahfidz.map((item) => ({
           studentId,
-          academicYear,
-          semester,
+          groupId,
           surahId: item.surahId,
           scoreNumeric: item.scoreNumeric,
           scoreLetter: item.scoreLetter,
           description: item.description,
         })),
       });
-      // Update TahfidzSummary
+
       if (tahfidzAvg !== null) {
         await tx.tahfidzSummary.upsert({
           where: {
-            studentId_academicYear_semester: {
+            studentId_groupId: {
               studentId,
-              academicYear,
-              semester,
+              groupId,
             },
           },
           update: {
@@ -147,8 +140,7 @@ export async function POST(req: NextRequest) {
           },
           create: {
             studentId,
-            academicYear,
-            semester,
+            groupId,
             averageScore: tahfidzAvg,
           },
         });

@@ -9,6 +9,24 @@ const styles = StyleSheet.create({
   rightLogo: { width: 88, height: 50 },
   centerHeader: { textAlign: 'center', fontSize: 11 },
   section: { marginVertical: 10 },
+  // Tambahkan style baru untuk data siswa
+  studentDataRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  studentLabel: {
+    width: '20%', // Lebar tetap untuk label
+    fontSize: 11,
+  },
+  studentSeparator: {
+    width: '2%', // Space untuk tanda ":"
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  studentValue: {
+    width: '78%', // Sisanya untuk value
+    fontSize: 11,
+  },
   heading: { fontSize: 14, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
   row: {
     flexDirection: 'row',
@@ -93,16 +111,43 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
 
         {/* Data Siswa */}
         <View style={styles.section}>
-          <Text>Nama Peserta Didik: {fullName}</Text>
-          <Text>
-            NISN / NIS: {nisn} / {nis}
-          </Text>
-          <Text>
-            Kelas / Semester: {className} / {semester === 'GANJIL' ? 'I (Satu)' : 'II (Dua)'}
-          </Text>
-          <Text>Tahun Ajaran: {academicYear}</Text>
-          <Text>Nama Sekolah: SDIT Ulul Albab Mataram</Text>
-          <Text>Alamat Siswa: {address ?? '-'}</Text>
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Nama Peserta Didik</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{fullName}</Text>
+          </View>
+          
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>NISN / NIS</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{nisn} / {nis}</Text>
+          </View>
+          
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Kelas / Semester</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>
+              {className} / {semester === 'GANJIL' ? 'I (Satu)' : 'II (Dua)'}
+            </Text>
+          </View>
+          
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Tahun Ajaran</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{academicYear}</Text>
+          </View>
+          
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Nama Sekolah</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>SDIT Ulul Albab Mataram</Text>
+          </View>
+          
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Alamat Siswa</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{address ?? '-'}</Text>
+          </View>
         </View>
 
         {/* A. Evaluasi Tahsin */}

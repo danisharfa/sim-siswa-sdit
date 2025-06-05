@@ -2,10 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectTrigger,
@@ -13,13 +9,29 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { convertToLetter } from '@/lib/data/score-converter';
 import { GradeLetter, TahsinType } from '@prisma/client';
 
 interface ScoreFormProps {
   groupId: string;
-  student: { id: string; nis: string; fullName: string };
+  student: {
+    id: string;
+    nis: string;
+    user: { fullName: string };
+    group: {
+      name: string;
+      classroom: {
+        name: string;
+        academicYear: string;
+        semester: string;
+      };
+    } | null;
+  };
 }
 
 interface TahsinEntry {

@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil membaut kelompok',
+      message: 'Berhasil membuat kelompok',
       data: formattedGroup,
     });
   } catch (error) {

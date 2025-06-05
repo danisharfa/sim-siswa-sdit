@@ -5,17 +5,17 @@ import { BackButton } from '@/components/ui/back-button';
 
 type Params = Promise<{ groupId: string; studentId: string }>;
 
-export default async function StudentReportPage(props: { params: Params }) {
+export default async function HistoryReportPage(props: { params: Params }) {
   const params = await props.params;
   const { groupId, studentId } = params;
 
-  const data = await getStudentReportData(studentId);
+  const data = await getStudentReportData(studentId, groupId);
   if (!data) return notFound();
 
   return (
     <div className="p-4">
       <div className="flex items-center mb-4">
-        <BackButton href={`/dashboard/teacher/group/${groupId}`} />
+        <BackButton href={`/dashboard/teacher/group/${groupId}/history`} />
         <h1 className="text-2xl font-bold ml-4">Rapor Al-Qur&apos;an</h1>
       </div>
 
