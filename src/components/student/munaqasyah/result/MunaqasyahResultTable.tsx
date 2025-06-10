@@ -19,19 +19,20 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
-import { Semester, MunaqasyahStage, MunaqasyahGrade } from '@prisma/client';
+import { Semester, MunaqasyahStage, MunaqasyahBatch, MunaqasyahGrade } from '@prisma/client';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { Label } from '@/components/ui/label';
 
 interface MunaqasyahResult {
   id: string;
-  score: number;
+  avarageScore: number | null;
   grade: MunaqasyahGrade;
   passed: boolean;
-  note: string | null;
   createdAt: string;
   updatedAt: string;
   request: {
     id: string;
+    batch: MunaqasyahBatch;
     stage: MunaqasyahStage;
     status: string;
     juz: { name: string };
@@ -61,6 +62,19 @@ interface MunaqasyahResult {
       user: { fullName: string };
     } | null;
   };
+  tasmi?: {
+    tajwid: number | null;
+    kelancaran: number | null;
+    adab: number | null;
+    note?: string | null;
+    totalScore: number | null;
+  } | null;
+  munaqasyah?: {
+    tajwid: number | null;
+    kelancaran: number | null;
+    note?: string | null;
+    totalScore: number | null;
+  } | null;
 }
 
 interface Props {
@@ -68,17 +82,22 @@ interface Props {
 }
 
 const gradeLabels: Record<MunaqasyahGrade, string> = {
-  MUMTAZ: 'Mumtaz',
-  JAYYID_JIDDAN: 'Jayyid Jiddan',
-  JAYYID: 'Jayyid',
-  TIDAK_LULUS: 'Tidak Lulus',
+  [MunaqasyahGrade.MUMTAZ]: 'Mumtaz',
+  [MunaqasyahGrade.JAYYID_JIDDAN]: 'Jayyid Jiddan',
+  [MunaqasyahGrade.JAYYID]: 'Jayyid',
+  [MunaqasyahGrade.TIDAK_LULUS]: 'Tidak Lulus',
 };
 
 const stageLabels: Record<MunaqasyahStage, string> = {
-  TAHAP_1: 'Tahap 1',
-  TAHAP_2: 'Tahap 2',
-  TAHAP_3: 'Tahap 3',
-  MUNAQASYAH: 'Munaqasyah',
+  [MunaqasyahStage.TASMI]: 'Tasmi',
+  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
+};
+
+const batchLabels: Record<MunaqasyahBatch, string> = {
+  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
+  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
+  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
+  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
 };
 
 export function MunaqasyahResultTable({ data }: Props) {
@@ -91,24 +110,21 @@ export function MunaqasyahResultTable({ data }: Props) {
     setColumnVisibility,
   } = useDataTableState<MunaqasyahResult, string>();
 
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState<string | 'ALL'>('ALL');
 
   const academicPeriods = useMemo(() => {
-    return Array.from(
-      new Set(
-        data.map(
-          (d) =>
-            `${d.request.group.classroom.academicYear}-${d.request.group.classroom.semester}`
-        )
-      )
-    );
+    const set = new Set<string>();
+    for (const d of data) {
+      set.add(`${d.request.group.classroom.academicYear}__${d.request.group.classroom.semester}`);
+    }
+    return Array.from(set);
   }, [data]);
 
   const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
     () => [
       {
         id: 'Tanggal',
-        accessorKey: 'date',
+        accessorKey: 'schedule.date',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => {
           const s = row.original.schedule;
@@ -130,6 +146,15 @@ export function MunaqasyahResultTable({ data }: Props) {
         },
       },
       {
+        id: 'Batch',
+        header: 'Batch',
+        cell: ({ row }) => (
+          <Badge variant="secondary">
+            {batchLabels[row.original.request.batch]}
+          </Badge>
+        ),
+      },
+      {
         id: 'Tahap',
         accessorKey: 'request.stage',
         header: 'Tahap',
@@ -144,7 +169,7 @@ export function MunaqasyahResultTable({ data }: Props) {
         accessorKey: 'request.juz.name',
         header: 'Juz',
         cell: ({ row }) => (
-          <Badge variant="secondary">
+          <Badge variant="default">
             {row.original.request.juz.name}
           </Badge>
         ),
@@ -178,8 +203,7 @@ export function MunaqasyahResultTable({ data }: Props) {
         ),
       },
       {
-        accessorKey: 'schedule.examiner.user.fullName',
-        id: 'penguji',
+        id: 'Penguji',
         header: 'Penguji',
         cell: ({ row }) => {
           const examiner = row.original.schedule.examiner;
@@ -196,21 +220,25 @@ export function MunaqasyahResultTable({ data }: Props) {
       },
       {
         id: 'Nilai',
-        accessorKey: 'score',
+        accessorKey: 'avarageScore',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nilai" />,
         cell: ({ row }) => (
-          <div className="text-center">
-            <div className="font-bold text-lg">{row.original.score}</div>
-            <Badge
-              variant="outline"
-              className={
-                row.original.passed
-                  ? 'text-green-600 border-green-600'
-                  : 'text-red-600 border-red-600'
-              }
-            >
-              {gradeLabels[row.original.grade]}
-            </Badge>
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.avarageScore?.toFixed(1) || '0.0'} ({gradeLabels[row.original.grade]})
+            </div>
+            <div className="text-xs text-muted-foreground space-y-1">
+              {row.original.tasmi && (
+                <div>
+                  Tasmi: {row.original.tasmi.totalScore?.toFixed(1) || '0.0'}
+                </div>
+              )}
+              {row.original.munaqasyah && (
+                <div>
+                  Munaqasyah: {row.original.munaqasyah.totalScore?.toFixed(1) || '0.0'}
+                </div>
+              )}
+            </div>
           </div>
         ),
       },
@@ -232,14 +260,42 @@ export function MunaqasyahResultTable({ data }: Props) {
         ),
       },
       {
-        id: 'Catatan',
-        accessorKey: 'note',
-        header: 'Catatan',
-        cell: ({ row }) => (
-          <div className="max-w-xs truncate" title={row.original.note || '-'}>
-            {row.original.note || '-'}
-          </div>
-        ),
+        id: 'Detail',
+        header: 'Detail',
+        cell: ({ row }) => {
+          const { tasmi, munaqasyah } = row.original;
+          if (!tasmi && !munaqasyah) return '-';
+
+          return (
+            <div className="text-xs space-y-1">
+              {tasmi && (
+                <div className="space-y-0.5">
+                  <div className="font-medium">Tasmi:</div>
+                  <div>Tajwid: {tasmi.tajwid || 0}</div>
+                  <div>Kelancaran: {tasmi.kelancaran || 0}</div>
+                  <div>Adab: {tasmi.adab || 0}</div>
+                  {tasmi.note && (
+                    <div className="text-muted-foreground">
+                      Catatan: {tasmi.note}
+                    </div>
+                  )}
+                </div>
+              )}
+              {munaqasyah && (
+                <div className="space-y-0.5">
+                  <div className="font-medium">Munaqasyah:</div>
+                  <div>Tajwid: {munaqasyah.tajwid || 0}</div>
+                  <div>Kelancaran: {munaqasyah.kelancaran || 0}</div>
+                  {munaqasyah.note && (
+                    <div className="text-muted-foreground">
+                      Catatan: {munaqasyah.note}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
     ],
     []
@@ -264,26 +320,30 @@ export function MunaqasyahResultTable({ data }: Props) {
 
   return (
     <>
-      <div className="mb-4 w-[260px]">
+      <div className="mb-4">
+        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
         <Select
           value={selectedPeriod}
-          onValueChange={(val) => {
-            setSelectedPeriod(val);
+          onValueChange={(value) => {
+            setSelectedPeriod(value);
             table
               .getColumn('Tahun Ajaran')
-              ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
+              ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-[250px]">
             <SelectValue placeholder="Pilih Tahun Ajaran" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Semua Tahun Ajaran</SelectItem>
-            {academicPeriods.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p.replace('-', ' ')}
-              </SelectItem>
-            ))}
+            <SelectItem value="ALL">Semua Tahun Ajaran</SelectItem>
+            {academicPeriods.map((val) => {
+              const [year, sem] = val.split('__');
+              return (
+                <SelectItem key={val} value={val}>
+                  {year} {sem}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>

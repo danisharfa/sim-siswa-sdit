@@ -43,6 +43,7 @@ export async function fetchMunaqasyahSchedule() {
             request: {
               select: {
                 id: true,
+                batch: true,
                 stage: true,
                 juz: { select: { name: true } },
                 student: {

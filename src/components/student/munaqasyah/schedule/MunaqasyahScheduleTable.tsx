@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { Semester, MunaqasyahStage } from '@prisma/client';
+import { Semester, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
 import { Label } from '@/components/ui/label';
 
 interface MunaqasyahSchedule {
@@ -37,6 +37,7 @@ interface MunaqasyahSchedule {
     id: string;
     request: {
       id: string;
+      batch: MunaqasyahBatch;
       stage: MunaqasyahStage;
       juz: { name: string };
       student: {
@@ -62,20 +63,16 @@ interface MunaqasyahScheduleTableProps {
   data: MunaqasyahSchedule[];
 }
 
-// Helper functions
-const getStageLabel = (stage: MunaqasyahStage): string => {
-  switch (stage) {
-    case MunaqasyahStage.TAHAP_1:
-      return 'Tahap 1';
-    case MunaqasyahStage.TAHAP_2:
-      return 'Tahap 2';
-    case MunaqasyahStage.TAHAP_3:
-      return 'Tahap 3';
-    case MunaqasyahStage.MUNAQASYAH:
-      return 'Munaqasyah';
-    default:
-      return stage;
-  }
+const batchLabels: Record<MunaqasyahBatch, string> = {
+  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
+  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
+  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
+  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
+};
+
+const stageLabels: Record<MunaqasyahStage, string> = {
+  [MunaqasyahStage.TASMI]: 'Tasmi',
+  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
 };
 
 export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) {
@@ -89,7 +86,8 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
   } = useDataTableState<MunaqasyahSchedule, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState<string | 'ALL'>('ALL');
-  const [selectedStage, setSelectedStage] = useState<MunaqasyahStage | 'ALL'>('ALL');
+  const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
+  const [selectedBatch, setSelectedBatch] = useState<string | 'ALL'>('ALL');
 
   // Extract unique academic periods
   const academicPeriods = useMemo(() => {
@@ -114,6 +112,17 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     return Array.from(set);
   }, [data]);
 
+  // Extract unique batches
+  const batchOptions = useMemo(() => {
+    const set = new Set<MunaqasyahBatch>();
+    for (const schedule of data) {
+      for (const sr of schedule.scheduleRequests) {
+        set.add(sr.request.batch);
+      }
+    }
+    return Array.from(set);
+  }, [data]);
+
   const columns = useMemo<ColumnDef<MunaqasyahSchedule>[]>(
     () => [
       {
@@ -123,6 +132,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         cell: ({ row }) => {
           const s = row.original;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
+            weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -140,28 +150,50 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         },
       },
       {
-        accessorKey: 'scheduleRequests.request.stage',
-        id: 'Tahap & Juz',
-        header: 'Tahap & Juz',
+        id: 'Batch & Tahap',
+        header: 'Batch & Tahap',
+        accessorFn: (row) => {
+          return row.scheduleRequests
+            .map((sr) => `${batchLabels[sr.request.batch]} - ${stageLabels[sr.request.stage]}`)
+            .join(', ');
+        },
         cell: ({ row }) => (
-          <div className="flex flex-col gap-1 min-w-[120px]">
+          <div className="flex flex-col gap-1 min-w-[140px]">
             {row.original.scheduleRequests.map((sr) => {
               const r = sr.request;
               return (
                 <div key={r.id} className="flex flex-col gap-1">
-                  <Badge variant="outline" className="text-xs w-fit">
-                    {getStageLabel(r.stage)}
+                  <Badge variant="secondary" className="text-xs w-fit">
+                    {batchLabels[r.batch]}
                   </Badge>
-                  <Badge>{r.juz.name}</Badge>
+                  <Badge variant="outline" className="text-xs w-fit">
+                    {stageLabels[r.stage]}
+                  </Badge>
                 </div>
               );
             })}
           </div>
         ),
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.toLowerCase().includes(filterValue.toLowerCase());
+        },
       },
       {
-        accessorKey: 'scheduleRequests.examiner.user.fullName',
-        id: 'penguji',
+        id: 'Juz',
+        header: 'Juz',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((sr) => (
+              <Badge key={sr.request.id + '-juz'} variant="default" className="w-fit">
+                {sr.request.juz.name}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: 'Penguji',
         header: 'Penguji',
         cell: ({ row }) => {
           const examiner = row.original.examiner;
@@ -198,12 +230,16 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
                 </div>
                 <div className="text-muted-foreground text-xs">👥 {sr.request.group.name}</div>
                 <div className="text-muted-foreground text-xs">
-                  {sr.request.teacher.user.fullName}
+                  👨‍🏫 {sr.request.teacher.user.fullName}
                 </div>
               </div>
             ))}
           </div>
         ),
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
       },
     ],
     []
@@ -258,26 +294,53 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Stage</Label>
+          <Label className="mb-2 block">Filter Batch</Label>
           <Select
-            value={selectedStage}
+            value={selectedBatch}
             onValueChange={(value) => {
-              setSelectedStage(value as MunaqasyahStage | 'ALL');
+              setSelectedBatch(value);
               table
-                .getColumn('Stage')
+                .getColumn('Batch & Tahap')
                 ?.setFilterValue(
-                  value === 'ALL' ? undefined : getStageLabel(value as MunaqasyahStage)
+                  value === 'ALL' ? undefined : batchLabels[value as MunaqasyahBatch]
                 );
             }}
           >
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select Stage" />
+              <SelectValue placeholder="Pilih Batch" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Batch</SelectItem>
+              {batchOptions.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batchLabels[batch]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Filter Tahap</Label>
+          <Select
+            value={selectedStage}
+            onValueChange={(value) => {
+              setSelectedStage(value);
+              table
+                .getColumn('Batch & Tahap')
+                ?.setFilterValue(
+                  value === 'ALL' ? undefined : stageLabels[value as MunaqasyahStage]
+                );
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Tahap" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua Tahap</SelectItem>
               {stageOptions.map((stage) => (
                 <SelectItem key={stage} value={stage}>
-                  {getStageLabel(stage)}
+                  {stageLabels[stage]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -285,7 +348,6 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </div>
       </div>
 
-      {/* Table */}
       <DataTable title="Jadwal Munaqasyah Saya" table={table} filterColumn="Tanggal" />
     </>
   );

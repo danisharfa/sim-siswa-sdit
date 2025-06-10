@@ -27,6 +27,7 @@ export async function fetchMunaqasyahResult() {
         request: {
           select: {
             id: true,
+            batch: true,
             stage: true,
             status: true,
             juz: { select: { name: true } },
@@ -67,6 +68,24 @@ export async function fetchMunaqasyahResult() {
                 user: { select: { fullName: true } },
               },
             },
+          },
+        },
+        tasmi: {
+          select: {
+            tajwid: true,
+            kelancaran: true,
+            adab: true,
+            note: true,
+            totalScore: true,
+          },
+        },
+        munaqasyah: {
+          select: {
+            tajwid: true,
+            kelancaran: true,
+            adab: true,
+            note: true,
+            totalScore: true,
           },
         },
       },
