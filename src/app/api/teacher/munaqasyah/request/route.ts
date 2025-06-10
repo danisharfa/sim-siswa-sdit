@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { studentId, juzId, stage } = body;
+    const { studentId, juzId, batch, stage } = body;
 
     const student = await prisma.studentProfile.findUnique({
       where: { id: studentId },
@@ -35,15 +35,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!studentId || !juzId || !stage) {
+    if (!studentId || !juzId || !batch || !stage) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    if (stage !== MunaqasyahStage.TAHAP_1) {
+    if (stage !== MunaqasyahStage.TASMI) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Hanya tahap pertama (TAHAP_1) yang dapat didaftarkan oleh guru.',
+          message: 'Hanya tahap pertama (TASMI) yang dapat didaftarkan oleh guru.',
         },
         { status: 400 }
       );
@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
         teacherId: teacher.id,
         groupId: student.group.id,
         juzId,
+        batch,
         stage,
         status: MunaqasyahRequestStatus.MENUNGGU,
       },

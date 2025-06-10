@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Save, Loader2 } from 'lucide-react';
-import { Semester, MunaqasyahStage } from '@prisma/client';
+import { Semester, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
 
 interface Group {
   groupId: string;
@@ -46,6 +46,7 @@ export function MunaqasyahRequestForm() {
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [selectedJuzId, setSelectedJuzId] = useState<number | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<MunaqasyahBatch | ''>('');
 
   const { data: settingData } = useSWR('/api/academicSetting', fetcher);
 
@@ -81,7 +82,7 @@ export function MunaqasyahRequestForm() {
   }, [selectedGroupId]);
 
   const handleSubmit = async () => {
-    if (!selectedStudentId || !selectedJuzId) {
+    if (!selectedStudentId || !selectedJuzId || !selectedBatch) {
       toast.error('Lengkapi semua data terlebih dahulu');
       return;
     }
@@ -94,7 +95,8 @@ export function MunaqasyahRequestForm() {
         body: JSON.stringify({
           studentId: selectedStudentId,
           juzId: selectedJuzId,
-          stage: MunaqasyahStage.TAHAP_1,
+          batch: selectedBatch,
+          stage: MunaqasyahStage.TASMI,
         }),
       });
       const json = await res.json();
@@ -103,6 +105,7 @@ export function MunaqasyahRequestForm() {
         setSelectedGroupId('');
         setSelectedStudentId('');
         setSelectedJuzId(null);
+        setSelectedBatch('');
       } else {
         toast.error(json.message ?? 'Gagal mengirim permintaan');
       }
@@ -174,6 +177,20 @@ export function MunaqasyahRequestForm() {
                     {j.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="mb-2 block">Batch</Label>
+            <Select value={selectedBatch} onValueChange={(value) => setSelectedBatch(value as MunaqasyahBatch)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={MunaqasyahBatch.TAHAP_1}>Tahap 1</SelectItem>
+                <SelectItem value={MunaqasyahBatch.TAHAP_2}>Tahap 2</SelectItem>
+                <SelectItem value={MunaqasyahBatch.TAHAP_3}>Tahap 3</SelectItem>
+                <SelectItem value={MunaqasyahBatch.TAHAP_4}>Tahap 4</SelectItem>
               </SelectContent>
             </Select>
           </div>

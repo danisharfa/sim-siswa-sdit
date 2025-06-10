@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { MunaqasyahBatch, MunaqasyahStage } from '@prisma/client';
 
 interface MunaqasyahSchedule {
   id: string;
@@ -27,7 +28,8 @@ interface MunaqasyahSchedule {
 interface StudentRequest {
   requestId: string;
   scheduleId: string;
-  stage: string;
+  batch: MunaqasyahBatch;
+  stage: MunaqasyahStage;
   juz?: { name: string };
   student: {
     nis: string;
@@ -35,7 +37,22 @@ interface StudentRequest {
   };
   result?: {
     passed: boolean;
-    note?: string;
+    avarageScore: number;
+    grade: string;
+    tasmi?: {
+      tajwid: number;
+      kelancaran: number;
+      adab: number;
+      note?: string;
+      totalScore: number;
+    };
+    munaqasyah?: {
+      tajwid: number;
+      kelancaran: number;
+      adab?: number;
+      note?: string;
+      totalScore: number;
+    };
   } | null;
 }
 
@@ -44,8 +61,22 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function AddMunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [score, setScore] = useState<number | null>(null);
-  const [note, setNote] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState<StudentRequest | null>(null);
+
+  // Score states based on stage
+  const [tasmiScores, setTasmiScores] = useState({
+    tajwid: '',
+    kelancaran: '',
+    adab: '',
+    note: '',
+  });
+
+  const [munaqasyahScores, setMunaqasyahScores] = useState({
+    tajwid: '',
+    kelancaran: '',
+    adab: '',
+    note: '',
+  });
 
   const { data: schedules } = useSWR('/api/coordinator/munaqasyah/schedule/available', fetcher);
   const { data: studentsResponse, mutate } = useSWR(
@@ -57,28 +88,56 @@ export function AddMunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedScheduleId || !selectedRequestId || score === null) {
+    if (!selectedScheduleId || !selectedRequestId || !selectedRequest) {
       toast.error('Harap lengkapi semua data');
       return;
     }
 
+    // Validate scores based on stage
+    if (selectedRequest.stage === MunaqasyahStage.TASMI) {
+      if (!tasmiScores.tajwid || !tasmiScores.kelancaran || !tasmiScores.adab) {
+        toast.error('Harap lengkapi semua nilai Tasmi');
+        return;
+      }
+    } else {
+      if (!munaqasyahScores.tajwid || !munaqasyahScores.kelancaran || !munaqasyahScores.adab) {
+        toast.error('Harap lengkapi semua nilai Munaqasyah');
+        return;
+      }
+    }
+
+    const requestData = {
+      scheduleId: selectedScheduleId,
+      requestId: selectedRequestId,
+      stage: selectedRequest.stage,
+      ...(selectedRequest.stage === MunaqasyahStage.TASMI && {
+        tasmi: {
+          tajwid: Number(tasmiScores.tajwid),
+          kelancaran: Number(tasmiScores.kelancaran),
+          adab: Number(tasmiScores.adab),
+          note: tasmiScores.note,
+        },
+      }),
+      ...(selectedRequest.stage === MunaqasyahStage.MUNAQASYAH && {
+        munaqasyah: {
+          tajwid: Number(munaqasyahScores.tajwid),
+          kelancaran: Number(munaqasyahScores.kelancaran),
+          adab: Number(munaqasyahScores.adab),
+          note: munaqasyahScores.note,
+        },
+      }),
+    };
+
     const res = await fetch('/api/coordinator/munaqasyah/result', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        scheduleId: selectedScheduleId,
-        requestId: selectedRequestId,
-        score,
-        note,
-      }),
+      body: JSON.stringify(requestData),
     });
 
     const json = await res.json();
     if (json.success) {
       toast.success(json.message || 'Hasil munaqasyah berhasil disimpan');
-      setSelectedRequestId(null);
-      setScore(null);
-      setNote('');
+      resetForm();
       onSaved();
       mutate();
     } else {
@@ -86,19 +145,23 @@ export function AddMunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
     }
   };
 
-  useEffect(() => {
+  const resetForm = () => {
     setSelectedRequestId(null);
-    setScore(null);
-    setNote('');
+    setSelectedRequest(null);
+    setTasmiScores({ tajwid: '', kelancaran: '', adab: '', note: '' });
+    setMunaqasyahScores({ tajwid: '', kelancaran: '', adab: '', note: '' });
+  };
+
+  useEffect(() => {
+    resetForm();
   }, [selectedScheduleId]);
 
-  const getStatusLabel = () => {
-    if (score === null) return '-';
-    if (score >= 91) return 'MUMTAZ (Lulus)';
-    if (score >= 85) return 'JAYYID JIDDAN (Lulus)';
-    if (score >= 80) return 'JAYYID (Lulus)';
-    return 'TIDAK LULUS';
-  };
+  useEffect(() => {
+    if (selectedRequestId && students) {
+      const request = students.find((s) => s.requestId === selectedRequestId);
+      setSelectedRequest(request || null);
+    }
+  }, [selectedRequestId, students]);
 
   return (
     <Card>
@@ -141,39 +204,139 @@ export function AddMunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
                       .filter((s) => !s.result)
                       .map((s) => (
                         <SelectItem key={s.requestId} value={s.requestId}>
-                          {s.student.user.fullName} | {s.juz?.name ?? '-'} |{' '}
-                          {s.stage
-                            .replace('_', ' ')
-                            .toLowerCase()
-                            .replace(/\b\w/g, (l) => l.toUpperCase())}
+                          {s.student.user.fullName} | {s.juz?.name ?? '-'} | {s.batch} |{' '}
+                          {s.stage === MunaqasyahStage.TASMI ? 'Tasmi' : 'Munaqasyah'}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div>
-                <Label className="mb-2 block">Nilai</Label>
-                <Input
-                  type="number"
-                  value={score ?? ''}
-                  min={0}
-                  max={100}
-                  onChange={(e) => setScore(Number(e.target.value))}
-                />
-              </div>
+              {selectedRequest && (
+                <>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h3 className="font-medium mb-2">
+                      Tahap:{' '}
+                      {selectedRequest.stage === MunaqasyahStage.TASMI ? 'Tasmi' : 'Munaqasyah'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Siswa: {selectedRequest.student.user.fullName} | Juz:{' '}
+                      {selectedRequest.juz?.name} | Batch: {selectedRequest.batch}
+                    </p>
+                  </div>
 
-              <div>
-                <Label className="mb-2 block">Status & Grade</Label>
-                <p className="text-muted-foreground">{getStatusLabel()}</p>
-              </div>
+                  {selectedRequest.stage === MunaqasyahStage.TASMI ? (
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Penilaian Tasmi</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label className="mb-2 block">Tajwid (0-100)</Label>
+                          <Input
+                            type="number"
+                            value={tasmiScores.tajwid}
+                            min={0}
+                            max={100}
+                            onChange={(e) =>
+                              setTasmiScores((prev) => ({ ...prev, tajwid: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2 block">Kelancaran (0-100)</Label>
+                          <Input
+                            type="number"
+                            value={tasmiScores.kelancaran}
+                            min={0}
+                            max={100}
+                            onChange={(e) =>
+                              setTasmiScores((prev) => ({ ...prev, kelancaran: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2 block">Adab (0-100)</Label>
+                          <Input
+                            type="number"
+                            value={tasmiScores.adab}
+                            min={0}
+                            max={100}
+                            onChange={(e) =>
+                              setTasmiScores((prev) => ({ ...prev, adab: e.target.value }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="mb-2 block">Catatan Tasmi</Label>
+                        <Textarea
+                          value={tasmiScores.note}
+                          onChange={(e) =>
+                            setTasmiScores((prev) => ({ ...prev, note: e.target.value }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Penilaian Munaqasyah</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="mb-2 block">Tajwid (0-100)</Label>
+                          <Input
+                            type="number"
+                            value={munaqasyahScores.tajwid}
+                            min={0}
+                            max={100}
+                            onChange={(e) =>
+                              setMunaqasyahScores((prev) => ({ ...prev, tajwid: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2 block">Kelancaran (0-100)</Label>
+                          <Input
+                            type="number"
+                            value={munaqasyahScores.kelancaran}
+                            min={0}
+                            max={100}
+                            onChange={(e) =>
+                              setMunaqasyahScores((prev) => ({
+                                ...prev,
+                                kelancaran: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2 block">Adab (0-100)</Label>
+                          <Input
+                            type="number"
+                            value={munaqasyahScores.adab}
+                            min={0}
+                            max={100}
+                            onChange={(e) =>
+                              setMunaqasyahScores((prev) => ({ ...prev, adab: e.target.value }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="mb-2 block">Catatan Munaqasyah</Label>
+                        <Textarea
+                          value={munaqasyahScores.note}
+                          onChange={(e) =>
+                            setMunaqasyahScores((prev) => ({ ...prev, note: e.target.value }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
 
-              <div>
-                <Label className="mb-2 block">Catatan</Label>
-                <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
-              </div>
-
-              <Button type="submit">Simpan</Button>
+                  <Button type="submit" className="w-full">
+                    Simpan Hasil
+                  </Button>
+                </>
+              )}
             </>
           )}
         </form>

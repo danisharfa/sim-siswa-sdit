@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
           include: {
             request: {
               include: {
-                juz: { select: { name: true } },
+                juz: { select: { id: true, name: true } },
                 student: {
                   select: {
                     id: true,
@@ -48,11 +48,35 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                     user: { select: { fullName: true } },
                   },
                 },
+                teacher: {
+                  select: {
+                    id: true,
+                    user: { select: { fullName: true } },
+                  },
+                },
+                group: {
+                  select: {
+                    id: true,
+                    name: true,
+                    classroom: {
+                      select: {
+                        name: true,
+                        academicYear: true,
+                        semester: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
         },
-        results: true,
+        results: {
+          include: {
+            tasmi: true,
+            munaqasyah: true,
+          },
+        },
       },
     });
 
@@ -63,7 +87,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    // Gunakan requestId sebagai key
+    // Map result by requestId for easier lookup
     const resultMap = new Map(schedule.results.map((res) => [res.requestId, res]));
 
     const results = schedule.scheduleRequests.map((sr) => {
@@ -73,16 +97,23 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       return {
         requestId: r.id,
         scheduleId: schedule.id,
+        batch: r.batch,
         stage: r.stage,
+        academicYear: r.group.classroom.academicYear,
+        semester: r.group.classroom.semester,
+        classroomName: r.group.classroom.name,
+        groupName: r.group.name,
         juz: r.juz,
         student: r.student,
+        teacher: r.teacher,
         result: studentResult
           ? {
               id: studentResult.id,
               passed: studentResult.passed,
-              score: studentResult.score,
+              avarageScore: studentResult.avarageScore,
               grade: studentResult.grade,
-              note: studentResult.note,
+              tasmi: studentResult.tasmi,
+              munaqasyah: studentResult.munaqasyah,
             }
           : null,
       };

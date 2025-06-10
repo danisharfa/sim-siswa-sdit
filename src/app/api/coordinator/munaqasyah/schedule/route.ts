@@ -29,6 +29,7 @@ export async function GET() {
             requestId: true,
             request: {
               select: {
+                batch: true,
                 stage: true,
                 student: {
                   select: {

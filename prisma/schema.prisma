@@ -198,23 +198,23 @@ model Group {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  groupHistories     GroupHistory[]
-  classroom          Classroom           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  teacherGroups      TeacherGroup[]
-  students           StudentProfile[]
-  
-  submissions        Submission[]
-  homeActivities     HomeActivity[]
-  weeklyTargets      WeeklyTarget[]
+  groupHistories GroupHistory[]
+  classroom      Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  teacherGroups  TeacherGroup[]
+  students       StudentProfile[]
+
+  submissions    Submission[]
+  homeActivities HomeActivity[]
+  weeklyTargets  WeeklyTarget[]
 
   tashihRequests     TashihRequest[]
   munaqasyahRequests MunaqasyahRequest[]
 
-  TahfidzScore       TahfidzScore[]
-  TahfidzSummary     TahfidzSummary[]
+  TahfidzScore   TahfidzScore[]
+  TahfidzSummary TahfidzSummary[]
 
-  TahsinScore        TahsinScore[]
-  TahsinSummary      TahsinSummary[]
+  TahsinScore   TahsinScore[]
+  TahsinSummary TahsinSummary[]
 
   @@unique([name, classroomId])
   @@map("groups")
@@ -560,6 +560,7 @@ model MunaqasyahRequest {
   teacherId String
   groupId   String
 
+  batch  MunaqasyahBatch
   stage  MunaqasyahStage
   juzId  Int
   status MunaqasyahRequestStatus
@@ -614,13 +615,15 @@ model MunaqasyahSchedule {
 }
 
 model MunaqasyahResult {
-  id         String          @id @default(uuid())
+  id         String @id @default(uuid())
   requestId  String
   scheduleId String
-  score      Int
-  grade      MunaqasyahGrade
-  passed     Boolean
-  note       String?
+
+  tasmiScoreId      String?         @unique
+  munaqasyahScoreId String?         @unique
+  avarageScore      Float?
+  grade             MunaqasyahGrade
+  passed            Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -628,7 +631,36 @@ model MunaqasyahResult {
   request  MunaqasyahRequest  @relation(fields: [requestId], references: [id])
   schedule MunaqasyahSchedule @relation(fields: [scheduleId], references: [id])
 
+  tasmi      TasmiScore?      @relation(fields: [tasmiScoreId], references: [id])
+  munaqasyah MunaqasyahScore? @relation(fields: [munaqasyahScoreId], references: [id])
+
   @@map("munaqasyah_results")
+}
+
+model TasmiScore {
+  id         String  @id @default(uuid())
+  tajwid     Int?
+  kelancaran Int?
+  adab       Int?
+  note       String?
+  totalScore Float?
+
+  result MunaqasyahResult?
+
+  @@map("tasmi_scores")
+}
+
+model MunaqasyahScore {
+  id         String  @id @default(uuid())
+  tajwid     Int?
+  kelancaran Int?
+  adab       Int?
+  note       String?
+  totalScore Float?
+
+  result MunaqasyahResult?
+
+  @@map("munaqasyah_scores")
 }
 
 // Enums
@@ -718,10 +750,15 @@ enum TargetStatus {
   TERCAPAI
 }
 
-enum MunaqasyahStage {
+enum MunaqasyahBatch {
   TAHAP_1
   TAHAP_2
   TAHAP_3
+  TAHAP_4
+}
+
+enum MunaqasyahStage {
+  TASMI
   MUNAQASYAH
 }
 

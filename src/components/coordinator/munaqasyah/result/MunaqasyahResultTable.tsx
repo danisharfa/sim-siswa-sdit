@@ -20,19 +20,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Semester } from '@prisma/client';
+import { Semester, MunaqasyahStage, MunaqasyahBatch, MunaqasyahGrade } from '@prisma/client';
 
 interface MunaqasyahResult {
   id: string;
-  stage: string;
   score: number;
-  grade: string;
+  grade: MunaqasyahGrade;
   passed: boolean;
-  note?: string;
   academicYear: string;
   semester: Semester;
   classroomName: string;
   groupName: string;
+  batch: MunaqasyahBatch;
+  stage: MunaqasyahStage;
   juz: { name: string };
   schedule: {
     date: string;
@@ -45,12 +45,47 @@ interface MunaqasyahResult {
     nis: string;
     user: { fullName: string };
   };
+  scoreDetails?: {
+    tasmi?: {
+      tajwid: number;
+      kelancaran: number;
+      adab: number;
+      note?: string;
+      totalScore: number;
+    } | null;
+    munaqasyah?: {
+      tajwid: number;
+      kelancaran: number;
+      adab: number;
+      note?: string;
+      totalScore: number;
+    } | null;
+  };
 }
 
 interface MunaqasyahResultTableProps {
   data: MunaqasyahResult[];
   title: string;
 }
+
+const gradeLabels: Record<MunaqasyahGrade, string> = {
+  [MunaqasyahGrade.MUMTAZ]: 'Mumtaz',
+  [MunaqasyahGrade.JAYYID_JIDDAN]: 'Jayyid Jiddan',
+  [MunaqasyahGrade.JAYYID]: 'Jayyid',
+  [MunaqasyahGrade.TIDAK_LULUS]: 'Tidak Lulus',
+};
+
+const stageLabels: Record<MunaqasyahStage, string> = {
+  [MunaqasyahStage.TASMI]: 'Tasmi',
+  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
+};
+
+const batchLabels: Record<MunaqasyahBatch, string> = {
+  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
+  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
+  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
+  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
+};
 
 export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProps) {
   const {
@@ -76,7 +111,14 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
             month: 'long',
             year: 'numeric',
           });
-          return `${date} (${s.sessionName}, ${s.startTime} - ${s.endTime})`;
+          return (
+            <div className="text-sm">
+              <div className="font-medium">{date}</div>
+              <div className="text-muted-foreground">
+                {s.sessionName} ({s.startTime} - {s.endTime})
+              </div>
+            </div>
+          );
         },
       },
       {
@@ -116,14 +158,43 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         cell: ({ row }) => <Badge variant="outline">{row.original.juz.name}</Badge>,
       },
       {
+        id: 'Batch',
+        header: 'Batch',
+        cell: ({ row }) => (
+          <Badge variant="secondary">{batchLabels[row.original.batch]}</Badge>
+        ),
+      },
+      {
         id: 'Tahap',
         header: 'Tahap',
-        cell: ({ row }) => <Badge variant="secondary">{row.original.stage}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant="default">{stageLabels[row.original.stage]}</Badge>
+        ),
       },
       {
         id: 'Nilai',
         header: 'Nilai',
-        cell: ({ row }) => `${row.original.score} (${row.original.grade})`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">
+              {row.original.score.toFixed(1)} ({gradeLabels[row.original.grade]})
+            </div>
+            {row.original.scoreDetails && (
+              <div className="text-xs text-muted-foreground space-y-1">
+                {row.original.scoreDetails.tasmi && (
+                  <div>
+                    Tasmi: {row.original.scoreDetails.tasmi.totalScore.toFixed(1)}
+                  </div>
+                )}
+                {row.original.scoreDetails.munaqasyah && (
+                  <div>
+                    Munaqasyah: {row.original.scoreDetails.munaqasyah.totalScore.toFixed(1)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ),
       },
       {
         id: 'Status',
@@ -142,9 +213,43 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         ),
       },
       {
-        id: 'Catatan',
-        header: 'Catatan',
-        cell: ({ row }) => row.original.note ?? '-',
+        id: 'Detail',
+        header: 'Detail',
+        cell: ({ row }) => {
+          const { scoreDetails } = row.original;
+          if (!scoreDetails) return '-';
+
+          return (
+            <div className="text-xs space-y-1">
+              {scoreDetails.tasmi && (
+                <div className="space-y-0.5">
+                  <div className="font-medium">Tasmi:</div>
+                  <div>Tajwid: {scoreDetails.tasmi.tajwid}</div>
+                  <div>Kelancaran: {scoreDetails.tasmi.kelancaran}</div>
+                  <div>Adab: {scoreDetails.tasmi.adab}</div>
+                  {scoreDetails.tasmi.note && (
+                    <div className="text-muted-foreground">
+                      Catatan: {scoreDetails.tasmi.note}
+                    </div>
+                  )}
+                </div>
+              )}
+              {scoreDetails.munaqasyah && (
+                <div className="space-y-0.5">
+                  <div className="font-medium">Munaqasyah:</div>
+                  <div>Tajwid: {scoreDetails.munaqasyah.tajwid}</div>
+                  <div>Kelancaran: {scoreDetails.munaqasyah.kelancaran}</div>
+                  <div>Adab: {scoreDetails.munaqasyah.adab}</div>
+                  {scoreDetails.munaqasyah.note && (
+                    <div className="text-muted-foreground">
+                      Catatan: {scoreDetails.munaqasyah.note}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
     ],
     []

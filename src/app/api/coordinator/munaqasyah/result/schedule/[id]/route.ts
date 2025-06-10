@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, message: 'ID tidak ditemukan' }, { status: 400 });
     }
 
-    const schedule = await prisma.munaqasyahSchedule.findUnique({
+        const schedule = await prisma.munaqasyahSchedule.findUnique({
       where: { id: scheduleId },
       include: {
         scheduleRequests: {
@@ -57,7 +57,12 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
             },
           },
         },
-        results: true,
+        results: {
+          include: {
+            tasmi: true,
+            munaqasyah: true,
+          },
+        },
       },
     });
 
@@ -78,6 +83,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       return {
         requestId: r.id,
         scheduleId: schedule.id,
+        batch: r.batch,
         stage: r.stage,
         academicYear: r.group.classroom.academicYear,
         semester: r.group.classroom.semester,
@@ -90,9 +96,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
           ? {
               id: studentResult.id,
               passed: studentResult.passed,
-              score: studentResult.score,
+              avarageScore: studentResult.avarageScore,
               grade: studentResult.grade,
-              note: studentResult.note,
+              tasmi: studentResult.tasmi,
+              munaqasyah: studentResult.munaqasyah,
             }
           : null,
       };

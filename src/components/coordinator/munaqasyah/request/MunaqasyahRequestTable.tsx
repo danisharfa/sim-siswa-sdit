@@ -29,10 +29,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Semester, MunaqasyahRequestStatus, MunaqasyahStage } from '@prisma/client';
+import { Semester, MunaqasyahRequestStatus, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
 
 interface MunaqasyahRequest {
   id: string;
+  batch: MunaqasyahBatch;
   stage: MunaqasyahStage;
   status: MunaqasyahRequestStatus;
   createdAt: string;
@@ -167,6 +168,16 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
           ) : (
             <span>-</span>
           ),
+      },
+      {
+        accessorKey: 'batch',
+        id: 'Batch',
+        header: 'Batch',
+        cell: ({ row }) => (
+          <Badge variant="secondary" className="w-fit">
+            {row.original.batch.replace('_', ' ')}
+          </Badge>
+        ),
       },
       {
         accessorKey: 'stage',

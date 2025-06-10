@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import { Semester } from '@prisma/client';
+import { MunaqasyahBatch, MunaqasyahStage, Semester } from '@prisma/client';
 
 interface MunaqasyahSchedule {
   id: string;
@@ -33,7 +33,8 @@ interface MunaqasyahSchedule {
   examiner?: { user?: { fullName: string } };
   scheduleRequests: {
     request: {
-      stage: string;
+      batch: MunaqasyahBatch;
+      stage: MunaqasyahStage;
       student: {
         nis: string;
         user: { fullName: string };
@@ -179,6 +180,19 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        id: 'Batch',
+        header: 'Batch',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                {s.request.batch.replace('_', ' ')}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
         id: 'Tahap',
         header: 'Tahap',
         cell: ({ row }) => (
@@ -202,10 +216,9 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
             {row.original.examiner ? (
               <div>
                 <div className="font-medium">{row.original.examiner.user?.fullName}</div>
-                <div className="text-muted-foreground">{row.original.examiner.user?.fullName}</div>
               </div>
             ) : (
-              <span className="text-muted-foreground">Koordinator Al-Qur&apos;an</span>
+              <span className="text-medium">Koordinator Al-Qur&apos;an</span>
             )}
           </div>
         ),

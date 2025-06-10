@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { MunaqasyahStage, Semester } from '@prisma/client';
+import { MunaqasyahStage, MunaqasyahBatch, Semester } from '@prisma/client';
 import { Label } from '@/components/ui/label';
 
 interface MunaqasyahSchedule {
@@ -44,6 +44,7 @@ interface MunaqasyahSchedule {
     id: string;
     request: {
       id: string;
+      batch: MunaqasyahBatch;
       stage: MunaqasyahStage;
       juz: { name: string };
       student: {
@@ -70,11 +71,16 @@ interface MunaqasyahScheduleTableProps {
   data: MunaqasyahSchedule[];
 }
 
-const stageLabels = {
-  TAHAP_1: 'Tahap 1',
-  TAHAP_2: 'Tahap 2',
-  TAHAP_3: 'Tahap 3',
-  MUNAQASYAH: 'Munaqasyah',
+const batchLabels: Record<MunaqasyahBatch, string> = {
+  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
+  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
+  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
+  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
+};
+
+const stageLabels: Record<MunaqasyahStage, string> = {
+  [MunaqasyahStage.TASMI]: 'Tasmi',
+  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
 };
 
 export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) {
@@ -88,6 +94,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
   } = useDataTableState<MunaqasyahSchedule, string>();
 
   const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
+  const [selectedBatch, setSelectedBatch] = useState<string | 'ALL'>('ALL');
   const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
   const [selectedGroupId, setSelectedGroupId] = useState<string | 'ALL'>('ALL');
 
@@ -96,6 +103,16 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     for (const schedule of data) {
       for (const sr of schedule.scheduleRequests) {
         set.add(sr.request.stage);
+      }
+    }
+    return Array.from(set);
+  }, [data]);
+
+  const batchOptions = useMemo(() => {
+    const set = new Set<MunaqasyahBatch>();
+    for (const schedule of data) {
+      for (const sr of schedule.scheduleRequests) {
+        set.add(sr.request.batch);
       }
     }
     return Array.from(set);
@@ -169,7 +186,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         header: 'Kelompok',
         accessorFn: (row) => {
           return row.scheduleRequests
-            .map((sr) => `${sr.request.group.name} - ${sr.request.group}`)
+            .map((sr) => `${sr.request.group.name} - ${sr.request.group.classroom.name}`)
             .join(', ');
         },
         cell: ({ row }) => (
@@ -225,6 +242,26 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         ),
       },
       {
+        id: 'Batch',
+        header: 'Batch',
+        accessorFn: (row) => {
+          return row.scheduleRequests.map((sr) => batchLabels[sr.request.batch]).join(', ');
+        },
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((sr) => (
+              <Badge key={sr.request.id + '-batch'} variant="secondary" className="w-fit">
+                {batchLabels[sr.request.batch]}
+              </Badge>
+            ))}
+          </div>
+        ),
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
+      },
+      {
         id: 'Tahapan',
         header: 'Tahapan',
         accessorFn: (row) => {
@@ -233,7 +270,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((sr) => (
-              <Badge key={sr.request.id + '-stage'} variant="secondary" className="w-fit">
+              <Badge key={sr.request.id + '-stage'} variant="default" className="w-fit">
                 {stageLabels[sr.request.stage]}
               </Badge>
             ))}
@@ -245,8 +282,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         },
       },
       {
-        accessorKey: 'scheduleRequests.examiner.user.fullName',
-        id: 'penguji',
+        id: 'Penguji',
         header: 'Penguji',
         cell: ({ row }) => {
           const examiner = row.original.examiner;
@@ -339,13 +375,40 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </div>
 
         <div>
+          <Label className="mb-2 block">Filter Batch</Label>
+          <Select
+            value={selectedBatch}
+            onValueChange={(value) => {
+              setSelectedBatch(value);
+              table
+                .getColumn('Batch')
+                ?.setFilterValue(
+                  value === 'ALL' ? undefined : batchLabels[value as MunaqasyahBatch]
+                );
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Batch" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Batch</SelectItem>
+              {batchOptions.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batchLabels[batch]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
           <Label className="mb-2 block">Filter Tahapan</Label>
           <Select
             value={selectedStage}
             onValueChange={(value) => {
               setSelectedStage(value);
               table
-                .getColumn('Tahap')
+                .getColumn('Tahapan')
                 ?.setFilterValue(
                   value === 'ALL' ? undefined : stageLabels[value as MunaqasyahStage]
                 );
