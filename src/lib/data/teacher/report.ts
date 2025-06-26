@@ -11,24 +11,26 @@ export interface StudentReportData {
   academicYear: string;
   teacherName: string;
   coordinatorName: string;
+  schoolInfo:{
+    schoolName: string;
+    currrentPrincipalName: string;
+  }
   tahsin: {
     topic: string;
     scoreNumeric: number;
     scoreLetter: string;
     description: string;
   }[];
-  tahsinSummary: {
-    averageScore: number | null;
-    lastMaterial: string | null;
-  };
   tahfidz: {
     surahName: string;
     scoreNumeric: number;
     scoreLetter: string;
     description: string;
   }[];
-  tahfidzSummary: {
-    averageScore: number | null;
+  report: {
+    tahfidzScore: number | null;
+    tahsinScore: number | null;
+    lastTahsinMaterial: string | null;
   };
 }
 
@@ -36,48 +38,59 @@ export async function getStudentReportData(
   studentId: string,
   groupId: string
 ): Promise<StudentReportData | null> {
-  const [student, group, coordinator, tahsinScores, tahsinSummary, tahfidzScores, tahfidzSummary] =
-    await Promise.all([
-      prisma.studentProfile.findUnique({
-        where: { id: studentId },
+  const student = await prisma.studentProfile.findUnique({
+    where: { id: studentId },
+    include: {
+      user: true,
+      classroom: true,
+    },
+  });
+
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: {
+      teacherGroups: {
         include: {
-          user: true,
-          classroom: true,
-        },
-      }),
-      prisma.group.findUnique({
-        where: { id: groupId },
-        include: {
-          teacherGroups: {
-            include: {
-              teacher: {
-                include: { user: true },
-              },
-            },
+          teacher: {
+            include: { user: true },
           },
-          classroom: true,
         },
-      }),
-      prisma.coordinatorProfile.findFirst({
-        where: {
-          user: { role: Role.coordinator },
+      },
+      classroom: true,
+    },
+  });
+
+  const [coordinator, schoolInfo, tahsinScores, tahfidzScores, report] = await Promise.all([
+    prisma.coordinatorProfile.findFirst({
+      where: {
+        user: { role: Role.coordinator },
+      },
+      include: { user: true },
+    }),
+    prisma.academicSetting.findFirst({
+      select: {
+        schoolName: true,
+        currentPrincipalName: true,
+      },
+    }),
+    prisma.tahsinScore.findMany({
+      where: { studentId, groupId },
+    }),
+    prisma.tahfidzScore.findMany({
+      where: { studentId, groupId },
+      include: { surah: true },
+    }),
+    prisma.report.findUnique({
+      where: {
+        studentId_groupId_academicYear_semester: {
+          studentId,
+          groupId,
+          academicYear: group?.classroom?.academicYear ?? '',
+          semester: group?.classroom?.semester ?? 'GANJIL',
         },
-        include: { user: true },
-      }),
-      prisma.tahsinScore.findMany({
-        where: { studentId, groupId },
-      }),
-      prisma.tahsinSummary.findUnique({
-        where: { studentId_groupId: { studentId, groupId } },
-      }),
-      prisma.tahfidzScore.findMany({
-        where: { studentId, groupId },
-        include: { surah: true },
-      }),
-      prisma.tahfidzSummary.findUnique({
-        where: { studentId_groupId: { studentId, groupId } },
-      }),
-    ]);
+      },
+    }),
+  ]);
 
   if (!student || !group) return null;
 
@@ -91,25 +104,26 @@ export async function getStudentReportData(
     academicYear: group.classroom.academicYear,
     teacherName: group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
     coordinatorName: coordinator?.user?.fullName ?? '-',
+    schoolInfo: {
+      schoolName: schoolInfo?.schoolName ?? '-',
+      currrentPrincipalName: schoolInfo?.currentPrincipalName ?? '-',
+    },
     tahsin: tahsinScores.map((s) => ({
       topic: s.topic,
       scoreNumeric: s.scoreNumeric,
       scoreLetter: s.scoreLetter,
       description: s.description ?? '-',
     })),
-    tahsinSummary: {
-      averageScore: tahsinSummary?.averageScore ?? null,
-      lastMaterial: tahsinSummary?.lastMaterial ?? null,
-    },
     tahfidz: tahfidzScores.map((s) => ({
       surahName: s.surah.name,
       scoreNumeric: s.scoreNumeric,
       scoreLetter: s.scoreLetter,
       description: s.description ?? '-',
     })),
-    tahfidzSummary: {
-      averageScore: tahfidzSummary?.averageScore ?? null,
+    report: {
+      tahfidzScore: report?.tahfidzScore ?? null,
+      tahsinScore: report?.tahsinScore ?? null,
+      lastTahsinMaterial: report?.lastTahsinMaterial ?? null,
     },
   };
 }
-

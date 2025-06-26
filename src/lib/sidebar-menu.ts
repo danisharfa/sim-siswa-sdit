@@ -9,6 +9,8 @@ import {
   FileCog,
   BookPlus,
   Users2,
+  ScrollText,
+  Target,
 } from 'lucide-react';
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import { ImProfile } from 'react-icons/im';
@@ -192,10 +194,20 @@ export const menuData = {
       icon: User2Icon,
     },
     {
+      title: 'Rapor',
+      url: '/dashboard/student/report',
+      icon: ScrollText,
+    },
+    {
       label: 'Setoran',
       items: [
         {
-          title: 'Riwayat Setoran',
+          title: 'Target',
+          url: '/dashboard/student/submission/target',
+          icon: Target,
+        },
+        {
+          title: 'Riwayat',
           url: '/dashboard/student/submission',
           icon: BookOpenIcon,
         },

@@ -1,11 +1,8 @@
 'use client';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { StudentReportPdf } from '@/components/teacher/report/StudentReportPdf';
-import type { StudentReportData } from '@/lib/data/teacher/report';
+import type { StudentReportData } from '@/lib/data/student/report';
 
-export function StudentReportCard({ data }: { data: StudentReportData }) {
+export function ReportCard({ data }: { data: StudentReportData }) {
   const {
     fullName,
     nis,
@@ -88,15 +85,6 @@ export function StudentReportCard({ data }: { data: StudentReportData }) {
         <div>
           <strong>Guru Pembimbing:</strong> {teacherName}
         </div>
-
-        <PDFDownloadLink
-          document={<StudentReportPdf data={data} />}
-          fileName={`Rapot_${fullName}.pdf`}
-        >
-          {({ loading }) =>
-            loading ? <Button disabled>Loading PDF...</Button> : <Button>Download Rapot PDF</Button>
-          }
-        </PDFDownloadLink>
       </CardContent>
     </Card>
   );

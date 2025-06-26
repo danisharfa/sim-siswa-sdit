@@ -49,6 +49,18 @@ export async function POST(req: NextRequest) {
         teacherGroups: { some: { teacherId: teacher.id } },
         students: { some: { id: studentId } },
       },
+      select: {
+        id: true,
+        name: true,
+        classroom: {
+          select: {
+            id: true,
+            name: true,
+            academicYear: true,
+            semester: true,
+          },
+        },
+      },
     });
 
     if (!group) {
@@ -67,7 +79,7 @@ export async function POST(req: NextRequest) {
       : null;
 
     await prisma.$transaction(async (tx) => {
-      // Tahsin Scores
+      // Delete existing Tahsin Scores
       await tx.tahsinScore.deleteMany({
         where: {
           studentId,
@@ -75,40 +87,22 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await tx.tahsinScore.createMany({
-        data: tahsin.map((item) => ({
-          studentId,
-          groupId,
-          tahsinType: item.type,
-          topic: item.topic,
-          scoreNumeric: item.scoreNumeric,
-          scoreLetter: item.scoreLetter,
-          description: item.description,
-        })),
-      });
-
-      if (tahsinAvg !== null) {
-        await tx.tahsinSummary.upsert({
-          where: {
-            studentId_groupId: {
-              studentId,
-              groupId,
-            },
-          },
-          update: {
-            averageScore: tahsinAvg,
-            lastMaterial: lastMaterial?.trim() || null,
-          },
-          create: {
+      // Create new Tahsin Scores
+      if (tahsin.length > 0) {
+        await tx.tahsinScore.createMany({
+          data: tahsin.map((item) => ({
             studentId,
             groupId,
-            averageScore: tahsinAvg,
-            lastMaterial: lastMaterial?.trim() || null,
-          },
+            tahsinType: item.type,
+            topic: item.topic,
+            scoreNumeric: item.scoreNumeric,
+            scoreLetter: item.scoreLetter,
+            description: item.description,
+          })),
         });
       }
 
-      // Tahfidz Scores
+      // Delete existing Tahfidz Scores
       await tx.tahfidzScore.deleteMany({
         where: {
           studentId,
@@ -116,35 +110,45 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await tx.tahfidzScore.createMany({
-        data: tahfidz.map((item) => ({
-          studentId,
-          groupId,
-          surahId: item.surahId,
-          scoreNumeric: item.scoreNumeric,
-          scoreLetter: item.scoreLetter,
-          description: item.description,
-        })),
-      });
-
-      if (tahfidzAvg !== null) {
-        await tx.tahfidzSummary.upsert({
-          where: {
-            studentId_groupId: {
-              studentId,
-              groupId,
-            },
-          },
-          update: {
-            averageScore: tahfidzAvg,
-          },
-          create: {
+      // Create new Tahfidz Scores
+      if (tahfidz.length > 0) {
+        await tx.tahfidzScore.createMany({
+          data: tahfidz.map((item) => ({
             studentId,
             groupId,
-            averageScore: tahfidzAvg,
-          },
+            surahId: item.surahId,
+            scoreNumeric: item.scoreNumeric,
+            scoreLetter: item.scoreLetter,
+            description: item.description,
+          })),
         });
       }
+
+      // Update or create Report
+      await tx.report.upsert({
+        where: {
+          studentId_groupId_academicYear_semester: {
+            studentId,
+            groupId,
+            academicYear: group.classroom.academicYear,
+            semester: group.classroom.semester,
+          },
+        },
+        update: {
+          tahfidzScore: tahfidzAvg,
+          tahsinScore: tahsinAvg,
+          lastTahsinMaterial: lastMaterial?.trim() || null,
+        },
+        create: {
+          studentId,
+          groupId,
+          academicYear: group.classroom.academicYear,
+          semester: group.classroom.semester,
+          tahfidzScore: tahfidzAvg,
+          tahsinScore: tahsinAvg,
+          lastTahsinMaterial: lastMaterial?.trim() || null,
+        },
+      });
     });
 
     return NextResponse.json({ success: true });

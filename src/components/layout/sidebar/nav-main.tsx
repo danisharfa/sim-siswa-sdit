@@ -28,7 +28,7 @@ export function NavMain({ items = [] }: { items?: NavItem[] }) {
         if ('label' in item) {
           return (
             <div key={item.label + index} className="mt-2">
-              <SidebarGroupLabel className="px-2 text-xs font-medium text-muted-foreground mb-1">
+              <SidebarGroupLabel className="px-2 text-xs font-medium text-muted-foreground">
                 {item.label}
               </SidebarGroupLabel>
               {item.items.map((sub) => (

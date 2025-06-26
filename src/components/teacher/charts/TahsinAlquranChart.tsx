@@ -6,24 +6,24 @@ import { ChartCard, type ChartDataItem } from './ChartCard';
 type ChartResponse = {
   studentId: string;
   studentName: string;
-  currentWafa: number | null;
-  lastWafa: string;
+  currentJuz: number | null;
+  lastJuz: string;
   progress: {
-    wafaId: number;
-    wafaName: string;
-    completedPages: number;
-    totalPages: number | null;
+    juzId: number;
+    juzName: string;
+    completedAyah: number;
+    totalAyah: number;
     percent: number;
     status: 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI';
   }[];
 }[];
 
-type WafaDetailItem = {
+type TahsinDetailItem = {
   studentName: string;
   percent: number;
   status: 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI';
-  completedPages: number;
-  totalPages: number | null;
+  completedAyah: number;
+  totalAyah: number;
 };
 
 const fetcher = async (url: string) => {
@@ -33,7 +33,6 @@ const fetcher = async (url: string) => {
   }
   const data = await res.json();
 
-  // Check if API returned an error object instead of data array
   if (data && typeof data === 'object' && 'success' in data && data.success === false) {
     throw new Error(data.error || data.message || 'API returned an error');
   }
@@ -45,18 +44,18 @@ const fetcher = async (url: string) => {
   return data;
 };
 
-type WafaChartProps = {
+type TahsinAlquranChartProps = {
   academicYear: string;
   semester: string;
   groupId: string;
 };
 
-export function WafaChart({ academicYear, semester, groupId }: WafaChartProps) {
+export function TahsinAlquranChart({ academicYear, semester, groupId }: TahsinAlquranChartProps) {
   const period = `${encodeURIComponent(academicYear)}-${semester}`;
   const group = groupId || 'all';
 
   const { data, isLoading, error } = useSWR<ChartResponse>(
-    `/api/teacher/chart/${period}/${group}/tahsin/wafa`,
+    `/api/teacher/chart/${period}/${group}/tahsin/alquran`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -67,59 +66,58 @@ export function WafaChart({ academicYear, semester, groupId }: WafaChartProps) {
 
   const countMap: Record<
     number,
-    { selesai: number; proses: number; belumDimulai: number; detail: WafaDetailItem[] }
+    { selesai: number; proses: number; belumDimulai: number; detail: TahsinDetailItem[] }
   > = {};
 
-  const allWafaIds = new Set<number>();
+  // Inisialisasi semua juz berdasarkan data yang ada
+  const allJuzIds = new Set<number>();
   if (Array.isArray(data)) {
     data.forEach((student) => {
       student.progress.forEach((p) => {
-        allWafaIds.add(p.wafaId);
+        allJuzIds.add(p.juzId);
       });
     });
   }
 
-  Array.from(allWafaIds).forEach((wafaId) => {
-    countMap[wafaId] = { selesai: 0, proses: 0, belumDimulai: 0, detail: [] };
+  Array.from(allJuzIds).forEach((juzId) => {
+    countMap[juzId] = { selesai: 0, proses: 0, belumDimulai: 0, detail: [] };
   });
 
   if (Array.isArray(data)) {
     data.forEach((student) => {
       student.progress.forEach((p) => {
         if (p.status === 'SELESAI') {
-          countMap[p.wafaId].selesai += 1;
+          countMap[p.juzId].selesai += 1;
         } else if (p.status === 'SEDANG_DIJALANI') {
-          countMap[p.wafaId].proses += 1;
+          countMap[p.juzId].proses += 1;
         } else {
-          countMap[p.wafaId].belumDimulai += 1;
+          countMap[p.juzId].belumDimulai += 1;
         }
-        countMap[p.wafaId].detail.push({
+        countMap[p.juzId].detail.push({
           studentName: student.studentName,
           percent: p.percent,
           status: p.status,
-          completedPages: p.completedPages,
-          totalPages: p.totalPages,
+          completedAyah: p.completedAyah,
+          totalAyah: p.totalAyah,
         });
       });
     });
   }
 
   const chartData: ChartDataItem[] = Object.entries(countMap)
-    .map(([wafaId, value]) => ({
-      wafa:
-        data?.flatMap((s) => s.progress).find((p) => String(p.wafaId) === wafaId)?.wafaName ??
-        `Wafa ${wafaId}`,
+    .map(([juzId, value]) => ({
+      juz:
+        data?.flatMap((s) => s.progress).find((p) => String(p.juzId) === juzId)?.juzName ??
+        `Juz ${juzId}`,
       selesai: value.selesai,
       proses: value.proses,
       belumDimulai: value.belumDimulai,
       detail: value.detail,
     }))
-    .sort((a, b) =>
-      (a.wafa as string).localeCompare(b.wafa as string, undefined, { numeric: true })
-    );
+    .sort((a, b) => (a.juz as string).localeCompare(b.juz as string, undefined, { numeric: true }));
 
   const renderDetailItem = (siswa: ChartDataItem['detail'][0], idx: number) => {
-    const wafaSiswa = siswa as WafaDetailItem;
+    const tahsinSiswa = siswa as TahsinDetailItem;
     return (
       <div key={idx} className="flex flex-col border-b pb-2 gap-1">
         <div className="flex justify-between">
@@ -139,7 +137,7 @@ export function WafaChart({ academicYear, semester, groupId }: WafaChartProps) {
         </div>
         <div className="text-xs text-muted-foreground flex gap-2">
           <span>
-            Halaman: <b>{wafaSiswa.completedPages || 0}</b> / {wafaSiswa.totalPages ?? '-'}
+            Ayat: <b>{tahsinSiswa.completedAyah || 0}</b> / {tahsinSiswa.totalAyah || 0}
           </span>
         </div>
       </div>
@@ -148,10 +146,10 @@ export function WafaChart({ academicYear, semester, groupId }: WafaChartProps) {
 
   return (
     <ChartCard
-      title="Progres Tahsin Wafa Siswa"
-      description="Progres kumulatif tahsin Wafa berdasarkan total halaman yang sudah ditashih (per range halaman)"
+      title="Progres Tahsin Al-Qur'an Siswa"
+      description="Progres kumulatif tahsin Al-Qur'an siswa sampai dengan periode yang dipilih"
       data={chartData}
-      xAxisKey="wafa"
+      xAxisKey="juz"
       isLoading={isLoading}
       error={error}
       renderDetailItem={renderDetailItem}

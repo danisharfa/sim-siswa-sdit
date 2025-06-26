@@ -45,7 +45,13 @@ export function DatePickerSimple({ value, onChange, className }: DatePickerSimpl
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={date} onSelect={handleSelect} autoFocus />
+        <Calendar
+      mode="single"
+      defaultMonth={date}
+      selected={date}
+      onSelect={handleSelect}
+      className="rounded-lg border shadow-sm"
+    />
       </PopoverContent>
     </Popover>
   );

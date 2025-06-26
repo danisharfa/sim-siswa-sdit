@@ -5,9 +5,11 @@ export default async function StudentDashboardPage() {
   const user = await requireRole(Role.student);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-3xl font-bold">Student Dashboard</h1>
-      <p className="mt-2 text-lg">Welcome, {user.fullName}!</p>
+    <div className="p-4">
+      <div className="flex items-baseline gap-2 mb-4">
+        <h1 className="text-2xl font-bold">{user.fullName}</h1>
+        <span className="text-muted-foreground">{user.role.toUpperCase()}</span>
+      </div>
     </div>
   );
 }

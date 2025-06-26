@@ -74,14 +74,14 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
     nisn,
     address,
     className,
-    semester,
     academicYear,
+    semester,
     teacherName,
     coordinatorName,
+    schoolInfo,
     tahsin,
-    tahsinSummary,
     tahfidz,
-    tahfidzSummary,
+    report,
   } = data;
 
   const leftLogo = '/logo-sekolah.png';
@@ -100,7 +100,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
         <View style={styles.headerSection}>
           <Image src={leftLogo} style={styles.leftLogo} />
           <View style={[styles.centerHeader, { flex: 1 }]}>
-            <Text>SDIT ULUL ALBAB MATARAM</Text>
+            <Text>{schoolInfo.schoolName.toUpperCase()}</Text>
             <Text>LAPORAN PENILAIAN TAHSIN DAN TAHFIDZ AL-QUR&apos;AN</Text>
             <Text>ASESMEN AKHIR SEMESTER {semester}</Text>
             <Text>TAHUN AJARAN {academicYear}</Text>
@@ -140,7 +140,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
           <View style={styles.studentDataRow}>
             <Text style={styles.studentLabel}>Nama Sekolah</Text>
             <Text style={styles.studentSeparator}>:</Text>
-            <Text style={styles.studentValue}>SDIT Ulul Albab Mataram</Text>
+            <Text style={styles.studentValue}>{schoolInfo.schoolName}</Text>
           </View>
           
           <View style={styles.studentDataRow}>
@@ -181,7 +181,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {tahsinSummary.averageScore?.toFixed(1) ?? '-'}
+                {report.tahsinScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -192,7 +192,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Bacaan Terakhir</Text>
             <View style={styles.cellScoreDouble}></View>
             <Text style={[styles.cellDesc, { fontWeight: 'bold' }]}>
-              {tahsinSummary.lastMaterial ?? '-'}
+              {report.lastTahsinMaterial ?? '-'}
             </Text>
           </View>
         </View>
@@ -228,7 +228,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {tahfidzSummary.averageScore?.toFixed(1) ?? '-'}
+                {report.tahfidzScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -280,8 +280,8 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <View style={{ width: '45%', alignItems: 'center' }}>
               <Text>Kepala Sekolah</Text>
-              <Text>SDIT Ulul Albab Mataram</Text>
-              <Text style={{ marginTop: 40 }}>Muhammad Chaery Hazmi, S. Pd</Text>
+              <Text>{schoolInfo.schoolName}</Text>
+              <Text style={{ marginTop: 40 }}>{schoolInfo.currrentPrincipalName}</Text>
             </View>
             <View style={{ width: '45%', alignItems: 'center' }}>
               <Text>Mataram, {today}</Text>

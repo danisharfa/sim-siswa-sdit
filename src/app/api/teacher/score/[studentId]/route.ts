@@ -33,6 +33,14 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
           some: { id: studentId },
         },
       },
+      include: {
+        classroom: {
+          select: {
+            academicYear: true,
+            semester: true,
+          },
+        },
+      },
     });
 
     if (!group) {
@@ -77,22 +85,31 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
     });
 
-    const tahsinSummary = await prisma.tahsinSummary.findUnique({
+    // Ambil data report untuk mendapatkan lastTahsinMaterial
+    const report = await prisma.report.findUnique({
       where: {
-        studentId_groupId: {
+        studentId_groupId_academicYear_semester: {
           studentId,
           groupId: group.id,
+          academicYear: group.classroom.academicYear,
+          semester: group.classroom.semester,
         },
       },
       select: {
-        lastMaterial: true,
+        lastTahsinMaterial: true,
+        tahsinScore: true,
+        tahfidzScore: true,
       },
     });
 
     return NextResponse.json({
       tahsin,
       tahfidz,
-      lastMaterial: tahsinSummary?.lastMaterial || null,
+      lastMaterial: report?.lastTahsinMaterial || null,
+      averageScores: {
+        tahsin: report?.tahsinScore || null,
+        tahfidz: report?.tahfidzScore || null,
+      },
     });
   } catch (error) {
     console.error('[GET_SCORE_ERROR]', error);

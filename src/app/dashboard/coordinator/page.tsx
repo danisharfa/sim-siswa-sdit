@@ -1,13 +1,17 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { Role } from '@prisma/client';
+// import { Management } from '@/components/coordinator/charts/CoordinatorManagement';
 
 export default async function CoordinatorDashboardPage() {
   const user = await requireRole(Role.coordinator);
 
   return (
-    <div className="p-6 space-y-4">
-      <p className="mt-2 text-lg">Selamat Datang, {user.fullName}!</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    <div className="p-4">
+      <div className="flex items-baseline gap-2 mb-4">
+        <h1 className="text-2xl font-bold">{user.fullName}</h1>
+        <span className="text-muted-foreground">{user.role.toUpperCase()}</span>
+      </div>
+      {/* <Management /> */}
     </div>
   );
 }

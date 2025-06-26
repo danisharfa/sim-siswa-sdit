@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
 import { SubmissionType } from '@prisma/client';
 import { DateRange } from 'react-day-picker';
-import { DatePickerWithRange } from '@/components/ui/date-picker-range';
+import { Calendar23 } from '@/components/calendar/calendar-23';
 
 interface SurahJuz {
   id: number;
@@ -172,8 +172,7 @@ export function TargetForm({ studentId, onSubmit }: TargetFormProps) {
       <CardContent className="space-y-6">
         {/* Tanggal Target */}
         <div>
-          <Label className="mb-2 block">Tanggal Target</Label>
-          <DatePickerWithRange value={dateRange} onChange={setDateRange} />
+          <Calendar23 value={dateRange} onChange={setDateRange}/>
         </div>
 
         {/* Jenis Setoran */}

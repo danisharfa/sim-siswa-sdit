@@ -1,18 +1,17 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { AlquranChart } from '@/components/teacher/charts/AlquranChart';
-import { WafaChart } from '@/components/teacher/charts/WafaChart';
 import { Role } from '@prisma/client';
+import { Management } from '@/components/teacher/charts/Management';
 
 export default async function TeacherDashboardPage() {
   const user = await requireRole(Role.teacher);
 
   return (
-    <div className="p-6 space-y-4">
-      <p className="mt-2 text-lg">Selamat Datang, {user.fullName}!</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <AlquranChart />
-        <WafaChart />
+    <div className="p-4">
+      <div className="flex items-baseline gap-2 mb-4">
+        <h1 className="text-2xl font-bold">{user.fullName}</h1>
+        <span className="text-muted-foreground">{user.role.toUpperCase()}</span>
       </div>
+      <Management />
     </div>
   );
 }
