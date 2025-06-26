@@ -1,6 +1,5 @@
-/* eslint-disable jsx-a11y/alt-text */
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import type { StudentReportHistoryData } from '@/lib/data/teacher/report-history';
+import type { StudentReportData } from '@/lib/data/student/report';
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 11, fontFamily: 'Helvetica' },
@@ -9,6 +8,23 @@ const styles = StyleSheet.create({
   rightLogo: { width: 88, height: 50 },
   centerHeader: { textAlign: 'center', fontSize: 11 },
   section: { marginVertical: 10 },
+  studentDataRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  studentLabel: {
+    width: '20%',
+    fontSize: 11,
+  },
+  studentSeparator: {
+    width: '2%',
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  studentValue: {
+    width: '78%',
+    fontSize: 11,
+  },
   heading: { fontSize: 14, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
   row: {
     flexDirection: 'row',
@@ -49,22 +65,32 @@ const styles = StyleSheet.create({
   },
 });
 
-export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryData }) {
+interface ExportPdfProps {
+  data: StudentReportData;
+  selectedPeriodIndex?: number;
+}
+
+export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
+  const { fullName, nis, nisn, address, schoolInfo, coordinatorName, allReports } = data;
+
+  const selectedReport = allReports[selectedPeriodIndex] || allReports[0];
+
+  if (!selectedReport) {
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <Text>Tidak ada data rapor tersedia</Text>
+        </Page>
+      </Document>
+    );
+  }
+
   const {
-    fullName,
-    nis,
-    nisn,
-    address,
-    className,
-    semester,
-    academicYear,
-    teacherName,
-    coordinatorName,
-    schoolInfo,
+    period: { className, academicYear, semester, teacherName },
     tahsin,
     tahfidz,
     report,
-  } = data;
+  } = selectedReport;
 
   const leftLogo = '/logo-sekolah.png';
   const rightLogo = '/logo-wafa.png';
@@ -80,6 +106,7 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
       <Page size="A4" style={styles.page}>
         {/* Header Logo + Title */}
         <View style={styles.headerSection}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={leftLogo} style={styles.leftLogo} />
           <View style={[styles.centerHeader, { flex: 1 }]}>
             <Text>{schoolInfo.schoolName.toUpperCase()}</Text>
@@ -87,22 +114,52 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
             <Text>ASESMEN AKHIR SEMESTER {semester}</Text>
             <Text>TAHUN AJARAN {academicYear}</Text>
           </View>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={rightLogo} style={styles.rightLogo} />
         </View>
         <View style={styles.separator} />
 
         {/* Data Siswa */}
         <View style={styles.section}>
-          <Text>Nama Peserta Didik: {fullName}</Text>
-          <Text>
-            NISN / NIS: {nisn} / {nis}
-          </Text>
-          <Text>
-            Kelas / Semester: {className} / {semester === 'GANJIL' ? 'I (Satu)' : 'II (Dua)'}
-          </Text>
-          <Text>Tahun Ajaran: {academicYear}</Text>
-          <Text>Nama Sekolah: {schoolInfo.schoolName}</Text>
-          <Text>Alamat Siswa: {address ?? '-'}</Text>
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Nama Peserta Didik</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{fullName}</Text>
+          </View>
+
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>NISN / NIS</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>
+              {nisn} / {nis}
+            </Text>
+          </View>
+
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Kelas / Semester</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>
+              {className} / {semester === 'GANJIL' ? 'I (Satu)' : 'II (Dua)'}
+            </Text>
+          </View>
+
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Tahun Ajaran</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{academicYear}</Text>
+          </View>
+
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Nama Sekolah</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{schoolInfo.schoolName}</Text>
+          </View>
+
+          <View style={styles.studentDataRow}>
+            <Text style={styles.studentLabel}>Alamat Siswa</Text>
+            <Text style={styles.studentSeparator}>:</Text>
+            <Text style={styles.studentValue}>{address ?? '-'}</Text>
+          </View>
         </View>
 
         {/* A. Evaluasi Tahsin */}
@@ -120,17 +177,22 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
             </View>
             <Text style={styles.cellDesc}>Deskripsi</Text>
           </View>
-          {tahsin.map((s, i) => (
-            <View style={styles.row} key={i}>
-              <Text style={styles.cellNo}>{i + 1}</Text>
-              <Text style={styles.cellTopic}>{s.topic}</Text>
-              <View style={styles.cellScoreDouble}>
-                <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+          {tahsin.map(
+            (
+              s: { topic: string; scoreNumeric: number; scoreLetter: string; description: string },
+              i: number
+            ) => (
+              <View style={styles.row} key={i}>
+                <Text style={styles.cellNo}>{i + 1}</Text>
+                <Text style={styles.cellTopic}>{s.topic}</Text>
+                <View style={styles.cellScoreDouble}>
+                  <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
+                  <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                </View>
+                <Text style={styles.cellDesc}>{s.description}</Text>
               </View>
-              <Text style={styles.cellDesc}>{s.description}</Text>
-            </View>
-          ))}
+            )
+          )}
           <View style={styles.row}>
             <Text style={styles.cellNo}></Text>
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
@@ -167,17 +229,27 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
             </View>
             <Text style={styles.cellDesc}>Deskripsi</Text>
           </View>
-          {tahfidz.map((s, i) => (
-            <View style={styles.row} key={i}>
-              <Text style={styles.cellNo}>{i + 1}</Text>
-              <Text style={styles.cellTopic}>{s.surahName}</Text>
-              <View style={styles.cellScoreDouble}>
-                <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+          {tahfidz.map(
+            (
+              s: {
+                surahName: string;
+                scoreNumeric: number;
+                scoreLetter: string;
+                description: string;
+              },
+              i: number
+            ) => (
+              <View style={styles.row} key={i}>
+                <Text style={styles.cellNo}>{i + 1}</Text>
+                <Text style={styles.cellTopic}>{s.surahName}</Text>
+                <View style={styles.cellScoreDouble}>
+                  <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
+                  <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                </View>
+                <Text style={styles.cellDesc}>{s.description}</Text>
               </View>
-              <Text style={styles.cellDesc}>{s.description}</Text>
-            </View>
-          ))}
+            )
+          )}
           <View style={styles.row}>
             <Text style={styles.cellNo}></Text>
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
@@ -201,12 +273,14 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
               <Text>Keterangan Nilai</Text>
             </View>
           </View>
-          {[
-            ['92-100', 'A', 'Sangat Baik'],
-            ['83-91', 'B', 'Baik'],
-            ['75-82', 'C', 'Cukup'],
-            ['< 75', 'D', 'Kurang'],
-          ].map(([range, grade, desc], i) => (
+          {(
+            [
+              ['92-100', 'A', 'Sangat Baik'],
+              ['83-91', 'B', 'Baik'],
+              ['75-82', 'C', 'Cukup'],
+              ['< 75', 'D', 'Kurang'],
+            ] as const
+          ).map(([range, grade, desc], i: number) => (
             <View style={styles.kkmRow} key={i}>
               <View style={[styles.kkmCell, { width: '25%' }]}>
                 {i === 0 ? <Text>75</Text> : null}

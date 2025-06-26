@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePickerPlus } from '@/components/ui/date-picker-plus';
 import { toast } from 'sonner';
+import { Calendar22 } from '@/components/calendar/calendar-22';
 import { Role, Gender, BloodType } from '@prisma/client';
 
 type UpdatedUserProfile = {
@@ -134,8 +134,7 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
               onChange={(e) => handleChange('birthPlace', e.target.value)}
             />
 
-            <Label>Tanggal Lahir</Label>
-            <DatePickerPlus value={date} onChange={setDate} />
+            <Calendar22 value={date} onChange={setDate} label='Tanggal Lahir'/>
 
             <Label>Jenis Kelamin</Label>
             <Select

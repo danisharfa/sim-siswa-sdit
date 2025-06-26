@@ -16,10 +16,10 @@ export function StudentReportHistoryCard({ data }: { data: StudentReportHistoryD
     academicYear,
     teacherName,
     coordinatorName,
+    schoolInfo,
     tahsin,
-    tahsinSummary,
     tahfidz,
-    tahfidzSummary,
+    report,
   } = data;
 
   console.log('Report data received:', {
@@ -56,7 +56,7 @@ export function StudentReportHistoryCard({ data }: { data: StudentReportHistoryD
           <br />
           <strong>Tahun Ajaran:</strong> {academicYear}
           <br />
-          <strong>Nama Sekolah:</strong> SDIT Ulul Albab Mataram
+          <strong>Nama Sekolah:</strong> {schoolInfo.schoolName}
           <br />
           <strong>Alamat Siswa:</strong> {address || '-'}
         </div>
@@ -73,8 +73,8 @@ export function StudentReportHistoryCard({ data }: { data: StudentReportHistoryD
             ))}
           </ul>
           <p>
-            <strong>Rata-rata:</strong> {tahsinSummary?.averageScore?.toFixed(1) ?? '-'} <br />
-            <strong>Bacaan Terakhir:</strong> {tahsinSummary?.lastMaterial ?? '-'}
+            <strong>Rata-rata:</strong> {report.tahsinScore?.toFixed(1) ?? '-'} <br />
+            <strong>Bacaan Terakhir:</strong> {report.lastTahsinMaterial ?? '-'}
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export function StudentReportHistoryCard({ data }: { data: StudentReportHistoryD
             ))}
           </ul>
           <p>
-            <strong>Rata-rata:</strong> {tahfidzSummary?.averageScore?.toFixed(1) ?? '-'}
+            <strong>Rata-rata:</strong> {report.tahfidzScore?.toFixed(1) ?? '-'}
           </p>
         </div>
 

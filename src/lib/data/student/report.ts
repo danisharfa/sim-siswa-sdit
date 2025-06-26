@@ -2,27 +2,26 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { Role, Semester } from '@prisma/client';
 
+// Separate interface for academic period info
+export interface AcademicPeriodInfo {
+  academicYear: string;
+  semester: Semester;
+  className: string;
+  teacherName: string;
+}
+
 export interface StudentReportData {
   fullName: string;
   nis: string;
   nisn: string;
   address: string | null;
-  academicPeriods: {
-    academicYear: string;
-    semester: Semester;
-    className: string;
-    teacherName: string;
-  }[];
   schoolInfo: {
     schoolName: string;
     currrentPrincipalName: string;
   };
   coordinatorName: string;
   allReports: {
-    academicYear: string;
-    semester: Semester;
-    className: string;
-    teacherName: string;
+    period: AcademicPeriodInfo;
     tahsin: {
       topic: string;
       scoreNumeric: number;
@@ -207,7 +206,12 @@ export async function fetchReportData() {
     });
 
     const academicPeriods = Array.from(periodsMap.values())
-      .map((period) => period)
+      .map((period) => ({
+        academicYear: period.academicYear,
+        semester: period.semester,
+        className: period.className,
+        teacherName: period.teacherName,
+      }))
       .sort((a, b) => {
         // Sort by year desc, then by semester desc
         if (a.academicYear !== b.academicYear) {
@@ -229,15 +233,15 @@ export async function fetchReportData() {
       const tahfidzForPeriod = allTahfidzScores.filter(
         (score) => score.groupId === periodInfo.groupId
       );
-      const reportForPeriod = allReports.find(
-        (report) => report.groupId === periodInfo.groupId
-      );
+      const reportForPeriod = allReports.find((report) => report.groupId === periodInfo.groupId);
 
       return {
-        academicYear,
-        semester: semester as Semester,
-        className: periodInfo.className,
-        teacherName: periodInfo.teacherName,
+        period: {
+          academicYear,
+          semester: semester as Semester,
+          className: periodInfo.className,
+          teacherName: periodInfo.teacherName,
+        },
         tahsin: tahsinForPeriod.map((s) => ({
           topic: s.topic,
           scoreNumeric: s.scoreNumeric,
@@ -260,10 +264,10 @@ export async function fetchReportData() {
 
     // Sort report data by academic year and semester
     const sortedReportData = reportData.sort((a, b) => {
-      if (a.academicYear !== b.academicYear) {
-        return b.academicYear.localeCompare(a.academicYear);
+      if (a.period.academicYear !== b.period.academicYear) {
+        return b.period.academicYear.localeCompare(a.period.academicYear);
       }
-      return b.semester.localeCompare(a.semester);
+      return b.period.semester.localeCompare(a.period.semester);
     });
 
     console.log('All Reports:', sortedReportData); // Debug log
@@ -273,7 +277,6 @@ export async function fetchReportData() {
       nis: student.nis,
       nisn: student.nisn ?? '-',
       address: student.address ?? '-',
-      academicPeriods,
       coordinatorName: coordinator?.user?.fullName ?? '-',
       schoolInfo: {
         schoolName: schoolInfo?.schoolName ?? '-',
