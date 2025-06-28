@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -11,12 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { DatePickerSimple } from '@/components/ui/date-picker-simple';
+import { Calendar01 } from '@/components/calendar/calendar-01';
 import { HomeActivityType } from '@prisma/client';
 
 interface Surah {
@@ -33,7 +33,7 @@ interface Juz {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function HomeActivityForm() {
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>();
   const [activityType, setActivityType] = useState<HomeActivityType>(HomeActivityType.MURAJAAH);
   const [juzId, setJuzId] = useState('');
   const [surahId, setSurahId] = useState('');
@@ -98,10 +98,7 @@ export function HomeActivityForm() {
         <CardDescription>Silakan isi aktivitas harian Anda</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div>
-          <Label className="mb-2 block">Tanggal</Label>
-          <DatePickerSimple value={date} onChange={setDate} />
-        </div>
+        <Calendar01 value={date} onChange={setDate} label="Tanggal Setoran" />
 
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 min-w-0">

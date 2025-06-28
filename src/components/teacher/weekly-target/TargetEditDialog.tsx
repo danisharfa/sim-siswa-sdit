@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,11 +13,10 @@ import {
   SelectItem,
   SelectContent,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { DateRange } from 'react-day-picker';
-import { DatePickerWithRange } from '@/components/ui/date-picker-range';
-import { SubmissionType } from '@prisma/client';
 import { toast } from 'sonner';
+import { DateRange } from 'react-day-picker';
+import { Calendar23 } from '@/components/calendar/calendar-23';
+import { SubmissionType } from '@prisma/client';
 
 interface Surah {
   id: number;
@@ -35,8 +35,8 @@ interface TargetEditDialogProps {
     studentId: string;
     type: SubmissionType;
     description: string;
-    startDate: string;
-    endDate: string;
+    startDate: Date;
+    endDate: Date;
     surahStartId?: number;
     surahEndId?: number;
     startAyat?: number;
@@ -134,8 +134,14 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
         </DialogHeader>
 
         <div className="space-y-4">
-          <Label>Rentang Tanggal</Label>
-          <DatePickerWithRange value={dateRange} onChange={setDateRange} />
+          <Calendar23
+            value={dateRange}
+            onChange={(range) => {
+              if (range) {
+                setDateRange(range);
+              }
+            }}
+          />
 
           <Label>Jenis Setoran</Label>
           <Select value={type} onValueChange={(v) => setType(v as SubmissionType)}>

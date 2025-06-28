@@ -2,8 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -11,12 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { DatePickerSimple } from '@/components/ui/date-picker-simple';
+import { Calendar01 } from '@/components/calendar/calendar-01';
 import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 
 interface Group {
@@ -88,7 +95,7 @@ export function SubmissionForm() {
 
   const [groupId, setGroupId] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [submissionDate, setSubmissionDate] = useState<Date>(new Date());
+  const [submissionDate, setSubmissionDate] = useState<Date>();
   const [submissionType, setSubmissionType] = useState<SubmissionType>(SubmissionType.TAHFIDZ);
   const [selectedJuz, setSelectedJuz] = useState('');
   const [selectedSurahId, setSelectedSurahId] = useState('');
@@ -212,7 +219,7 @@ export function SubmissionForm() {
     }
 
     const formData: FormData = {
-      date: submissionDate,
+      date: submissionDate || new Date(),
       groupId,
       studentId,
       submissionType,
@@ -273,10 +280,7 @@ export function SubmissionForm() {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Tanggal Setoran */}
-        <div>
-          <Label className="mb-2 block">Tanggal Setoran</Label>
-          <DatePickerSimple value={submissionDate} onChange={setSubmissionDate} />
-        </div>
+        <Calendar01 value={submissionDate} onChange={setSubmissionDate} label="Tanggal Setoran" />
 
         {/* Kelompok dan Siswa */}
         <div className="flex flex-col md:flex-row gap-4">
@@ -501,9 +505,9 @@ export function SubmissionForm() {
             className="min-h-24"
           />
         </div>
-
-        {/* Submit Button */}
-        <Button onClick={handleSubmit} disabled={loading} className="w-full mt-6">
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <Button onClick={handleSubmit} disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -516,7 +520,7 @@ export function SubmissionForm() {
             </>
           )}
         </Button>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

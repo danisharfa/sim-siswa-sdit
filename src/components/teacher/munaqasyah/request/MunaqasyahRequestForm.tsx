@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -195,8 +195,9 @@ export function MunaqasyahRequestForm() {
             </Select>
           </div>
         </div>
-
-        <Button onClick={handleSubmit} disabled={loading} className="w-full mt-6">
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <Button onClick={handleSubmit} disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -209,7 +210,7 @@ export function MunaqasyahRequestForm() {
             </>
           )}
         </Button>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

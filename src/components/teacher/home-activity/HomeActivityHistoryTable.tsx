@@ -196,7 +196,7 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-4 mb-4">
+      <div className="flex flex-wrap gap-4 items-end">
         <div>
           <Label className="mb-2 block">Filter Tahun Ajaran</Label>
           <Select

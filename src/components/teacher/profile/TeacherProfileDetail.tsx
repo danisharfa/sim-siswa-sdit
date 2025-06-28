@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 import { Calendar22 } from '@/components/calendar/calendar-22';
 import { Gender, BloodType, Role } from '@prisma/client';
+import { Loader2, Save } from 'lucide-react';
 
 type TeacherProfile = {
   birthDate?: string;
@@ -189,8 +190,20 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Button onClick={handleSubmit}>Simpan Perubahan</Button>
-      </CardFooter>
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Menyimpan Perubahan...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Simpan Perubahan
+                  </>
+                )}
+              </Button>
+            </CardFooter>
     </Card>
   );
 }

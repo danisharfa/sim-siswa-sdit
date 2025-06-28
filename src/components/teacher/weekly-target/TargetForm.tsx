@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -51,7 +51,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function TargetForm({ studentId, onSubmit }: TargetFormProps) {
   const [type, setType] = useState<SubmissionType>('TAHFIDZ');
   const [description, setDescription] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange>();
   const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
   const [startJuzId, setStartJuzId] = useState('');
   const [endJuzId, setEndJuzId] = useState('');
@@ -170,10 +170,7 @@ export function TargetForm({ studentId, onSubmit }: TargetFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Tanggal Target */}
-        <div>
           <Calendar23 value={dateRange} onChange={setDateRange}/>
-        </div>
 
         {/* Jenis Setoran */}
         <div>
@@ -337,22 +334,22 @@ export function TargetForm({ studentId, onSubmit }: TargetFormProps) {
           <Label className="mb-2 block">Deskripsi</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
-
-        {/* Button */}
-        <Button disabled={loading} onClick={handleSubmit} className="w-full mt-4">
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <Button onClick={handleSubmit} disabled={loading}>
           {loading ? (
             <>
-              <Loader2 className="animate-spin w-4 h-4 mr-2" />
-              Menyimpan...
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Mendaftar ujian...
             </>
           ) : (
             <>
               <Save className="w-4 h-4 mr-2" />
-              Simpan Target
+              Daftarkan Ujian
             </>
           )}
         </Button>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { DatePickerSimple } from '@/components/ui/date-picker-simple';
+import { Calendar01 } from '@/components/calendar/calendar-01';
 import { MunaqasyahRequestStatus, Role } from '@prisma/client';
 
 interface Examiner {
@@ -49,7 +49,7 @@ interface Props {
 }
 
 export function AddMunaqasyahScheduleForm({ onScheduleAdded }: Props) {
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>();
   const [sessionName, setSessionName] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -147,10 +147,7 @@ export function AddMunaqasyahScheduleForm({ onScheduleAdded }: Props) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label className="mb-2 block">Tanggal</Label>
-            <DatePickerSimple value={date} onChange={setDate} />
-          </div>
+          <Calendar01 value={date} onChange={setDate} label="Tanggal Setoran" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

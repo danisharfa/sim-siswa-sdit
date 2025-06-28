@@ -350,7 +350,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-4 mb-4">
+      <div className="flex flex-wrap gap-4 items-end">
         <div>
           <Label className="mb-2 block">Filter Tahun Ajaran</Label>
           <Select
@@ -369,7 +369,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
               <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua Periode</SelectItem>
+              <SelectItem value="all">Semua Tahun Ajaran</SelectItem>
               {academicPeriods.map((p) => (
                 <SelectItem key={p} value={p}>
                   {p.replace('-', ' ')}
@@ -502,10 +502,10 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      <div className="flex justify-end mb-4">
-        <ExportToPDFButton table={table} />
+        <div>
+          <ExportToPDFButton table={table} />
+        </div>
       </div>
 
       <DataTable title={title} table={table} filterColumn="Tanggal" />
@@ -514,10 +514,27 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         <SubmissionEditDialog
           submission={{
             ...selectedSubmission,
-            juz: selectedSubmission.juz === null ? undefined : { id: selectedSubmission.juz.id },
+            juz:
+              selectedSubmission.juz === null
+                ? undefined
+                : {
+                    id: selectedSubmission.juz.id,
+                    name: selectedSubmission.juz.name,
+                  },
             surah:
-              selectedSubmission.surah === null ? undefined : { id: selectedSubmission.surah.id },
-            wafa: selectedSubmission.wafa === null ? undefined : { id: selectedSubmission.wafa.id },
+              selectedSubmission.surah === null
+                ? undefined
+                : {
+                    id: selectedSubmission.surah.id,
+                    name: selectedSubmission.surah.name,
+                  },
+            wafa:
+              selectedSubmission.wafa === null
+                ? undefined
+                : {
+                    id: selectedSubmission.wafa.id,
+                    name: selectedSubmission.wafa.name,
+                  },
             startVerse:
               selectedSubmission.startVerse === null ? undefined : selectedSubmission.startVerse,
             endVerse:

@@ -1,10 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -12,19 +20,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 import { toast } from 'sonner';
+import { Calendar01 } from '@/components/calendar/calendar-01';
+import { SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 
 interface Props {
   submission: {
     id: string;
+    date: string;
     submissionType: SubmissionType;
-    juz?: { id: number };
-    surah?: { id: number };
+    juz?: { id: number; name: string };
+    surah?: { id: number; name: string };
     startVerse?: number;
     endVerse?: number;
-    wafa?: { id: number };
+    wafa?: { id: number; name: string };
     startPage?: number;
     endPage?: number;
     submissionStatus: SubmissionStatus;
@@ -38,7 +47,13 @@ interface Props {
 
 export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }: Props) {
   const [loading, setLoading] = useState(false);
+  const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
+  const [surahList, setSurahList] = useState<{ id: number; name: string; verseCount: number }[]>(
+    []
+  );
+  const [wafaList, setWafaList] = useState<{ id: number; name: string }[]>([]);
   const [form, setForm] = useState({
+    date: submission.date,
     submissionType: submission.submissionType,
     juzId: submission.juz?.id ?? undefined,
     surahId: submission.surah?.id ?? undefined,
@@ -51,6 +66,52 @@ export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }:
     adab: submission.adab,
     note: submission.note ?? '',
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [juzRes, surahRes, wafaRes] = await Promise.all([
+          fetch('/api/juz'),
+          fetch('/api/surah'),
+          fetch('/api/wafa'),
+        ]);
+
+        const [juzData, surahData, wafaData] = await Promise.all([
+          juzRes.json(),
+          surahRes.json(),
+          wafaRes.json(),
+        ]);
+
+        if (juzData.success) setJuzList(juzData.data);
+        if (surahData.success) setSurahList(surahData.data);
+        if (wafaData.success) setWafaList(wafaData.data);
+      } catch (error) {
+        console.error('Error fetching dropdown data:', error);
+      }
+    };
+
+    if (open) {
+      fetchData();
+    }
+  }, [open]);
+
+  // Reset form when submission changes
+  useEffect(() => {
+    setForm({
+      date: submission.date,
+      submissionType: submission.submissionType,
+      juzId: submission.juz?.id ?? undefined,
+      surahId: submission.surah?.id ?? undefined,
+      startVerse: submission.startVerse ?? undefined,
+      endVerse: submission.endVerse ?? undefined,
+      wafaId: submission.wafa?.id ?? undefined,
+      startPage: submission.startPage ?? undefined,
+      endPage: submission.endPage ?? undefined,
+      submissionStatus: submission.submissionStatus,
+      adab: submission.adab,
+      note: submission.note ?? '',
+    });
+  }, [submission]);
 
   type FormKey = keyof typeof form;
   const handleChange = (key: FormKey, value: string | number | undefined) => {
@@ -92,6 +153,13 @@ export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }:
           <DialogTitle>Edit Setoran</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <Calendar01
+            value={new Date(form.date)}
+            onChange={(date) => handleChange('date', date?.toISOString())}
+            label="Tanggal"
+            placeholder="Pilih tanggal"
+          />
+
           <div>
             <Label>Jenis Setoran</Label>
             <Select
@@ -114,20 +182,40 @@ export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }:
           {isQuran && (
             <>
               <div>
-                <Label>ID Juz</Label>
-                <Input
-                  type="number"
-                  value={form.juzId ?? ''}
-                  onChange={(e) => handleChange('juzId', parseInt(e.target.value))}
-                />
+                <Label>Juz</Label>
+                <Select
+                  value={form.juzId?.toString() ?? ''}
+                  onValueChange={(val) => handleChange('juzId', val ? parseInt(val) : undefined)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Juz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {juzList.map((juz) => (
+                      <SelectItem key={juz.id} value={juz.id.toString()}>
+                        {juz.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label>ID Surah</Label>
-                <Input
-                  type="number"
-                  value={form.surahId ?? ''}
-                  onChange={(e) => handleChange('surahId', parseInt(e.target.value))}
-                />
+                <Label>Surah</Label>
+                <Select
+                  value={form.surahId?.toString() ?? ''}
+                  onValueChange={(val) => handleChange('surahId', val ? parseInt(val) : undefined)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Surah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {surahList.map((surah) => (
+                      <SelectItem key={surah.id} value={surah.id.toString()}>
+                        {surah.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
@@ -153,12 +241,22 @@ export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }:
           {isWafa && (
             <>
               <div>
-                <Label>ID Wafa</Label>
-                <Input
-                  type="number"
-                  value={form.wafaId ?? ''}
-                  onChange={(e) => handleChange('wafaId', parseInt(e.target.value))}
-                />
+                <Label>Wafa</Label>
+                <Select
+                  value={form.wafaId?.toString() ?? ''}
+                  onValueChange={(val) => handleChange('wafaId', val ? parseInt(val) : undefined)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Wafa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wafaList.map((wafa) => (
+                      <SelectItem key={wafa.id} value={wafa.id.toString()}>
+                        {wafa.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
@@ -220,16 +318,15 @@ export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }:
             <Label>Catatan</Label>
             <Textarea value={form.note} onChange={(e) => handleChange('note', e.target.value)} />
           </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Menyimpan...' : 'Simpan'}
-            </Button>
-          </div>
         </div>
+      <DialogFooter>
+        <DialogClose>
+          <Button variant="outline">Batal</Button>
+        </DialogClose>
+        <Button onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Menyimpan...' : 'Simpan'}
+        </Button>
+      </DialogFooter>
       </DialogContent>
     </Dialog>
   );

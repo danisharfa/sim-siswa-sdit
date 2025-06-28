@@ -18,7 +18,7 @@ import { Calendar22 } from '@/components/calendar/calendar-22';
 import { Role, Gender, BloodType } from '@prisma/client';
 
 type StudentProfile = {
-  birthDate?: string;
+  birthDate?: Date;
   birthPlace?: string;
   gender?: Gender;
   bloodType?: BloodType;

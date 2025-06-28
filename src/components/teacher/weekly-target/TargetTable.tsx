@@ -31,8 +31,8 @@ interface Target {
   studentId: string;
   type: SubmissionType;
   description: string;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   status: string;
   progressPercent: number;
   surahStartId?: number;

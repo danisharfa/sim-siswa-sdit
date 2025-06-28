@@ -46,6 +46,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     }
 
     const body = (await req.json()) as {
+      date?: string;
       submissionType: SubmissionType;
       juzId?: number;
       surahId?: number;
@@ -60,6 +61,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     };
 
     const {
+      date,
       submissionType,
       juzId,
       surahId,
@@ -78,6 +80,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       submissionStatus,
       adab,
       note,
+      ...(date && { date: new Date(date) }),
       juz: juzId ? { connect: { id: juzId } } : { disconnect: true },
       surah: { disconnect: true },
       startVerse: null,
