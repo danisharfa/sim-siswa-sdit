@@ -39,8 +39,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate font-semibold">Sistem Informasi Monitoring</span>
-                  <span className="truncate text-xs">SD IT Ulul Albab</span>
+                  <span className="truncate font-semibold">SIM-Qur&apos;an</span>
+                  <span className="truncate text-xs">SDIT Ulul Albab Mataram</span>
                 </div>
               </Link>
             </SidebarMenuButton>

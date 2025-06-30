@@ -5,7 +5,8 @@ export async function requireRole(allowedRoles: string | string[]) {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    redirect('/');
+    // redirect('/login');
   }
 
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];

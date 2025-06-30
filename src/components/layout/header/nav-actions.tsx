@@ -49,7 +49,8 @@ export function NavActions() {
 
   const handleClick = async (url: string) => {
     if (url === '/logout') {
-      await signOut({ callbackUrl: '/login' });
+      await signOut({ callbackUrl: '/' });
+      // await signOut({ callbackUrl: '/login' });
     } else {
       router.push(url);
     }

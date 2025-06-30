@@ -68,7 +68,8 @@ export function ChangePasswordForm() {
         form.reset();
         form.clearErrors();
         setTimeout(() => {
-          signOut({ callbackUrl: '/login' });
+          signOut({ callbackUrl: '/' });
+          // signOut({ callbackUrl: '/login' });
         }, 1000);
       } else {
         toast.error(json.message || 'Gagal mengubah password');

@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 export default async function DashboardRedirect() {
   const session = await auth();
 
-  if (!session) return redirect('/login');
+  if (!session) return redirect('/');
+  // if (!session) return redirect('/login');
 
   const { role } = session.user;
 

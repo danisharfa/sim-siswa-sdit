@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { Role } from '@prisma/client';
+import { Management } from '@/components/student/charts/Management';
 
 export default async function StudentDashboardPage() {
   const user = await requireRole(Role.student);
@@ -10,6 +11,7 @@ export default async function StudentDashboardPage() {
         <h1 className="text-2xl font-bold">{user.fullName}</h1>
         <span className="text-muted-foreground">{user.role.toUpperCase()}</span>
       </div>
+      <Management />
     </div>
   );
 }
