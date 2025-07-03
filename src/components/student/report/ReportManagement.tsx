@@ -7,7 +7,7 @@ export function ReportManagement() {
 
   return (
     <div className="p-4 space-y-4">
-      <ReportTable data={report} title="Rapor"/>
+      <ReportTable data={report} title="Detail Nilai"/>
     </div>
   );
 }

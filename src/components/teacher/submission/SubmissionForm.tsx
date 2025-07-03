@@ -272,7 +272,7 @@ export function SubmissionForm() {
         <CardDescription>
           {academic?.success && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <b>{academic.data.currentYear}</b> — Semester:{' '}
+              Tahun Ajaran: <b>{academic.data.currentYear}</b> - Semester:{' '}
               <b>{academic.data.currentSemester}</b>
             </span>
           )}

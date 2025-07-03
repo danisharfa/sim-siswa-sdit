@@ -79,7 +79,7 @@ export function ExportToPDFButton({ table }: Props) {
   return (
     <Button variant="outline" onClick={handleExport} className="ml-auto flex gap-2">
       <Download className="w-4 h-4" />
-      Export PDF
+      Cetak
     </Button>
   );
 }

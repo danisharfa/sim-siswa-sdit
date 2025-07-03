@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -163,14 +170,14 @@ export function TargetForm({ studentId, onSubmit }: TargetFormProps) {
         <CardDescription>
           {academicSetting?.data && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <strong>{academicSetting.data.currentYear}</strong> — Semester:{' '}
+              Tahun Ajaran: <strong>{academicSetting.data.currentYear}</strong> - Semester:{' '}
               <strong>{academicSetting.data.currentSemester}</strong>
             </span>
           )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-          <Calendar23 value={dateRange} onChange={setDateRange}/>
+        <Calendar23 value={dateRange} onChange={setDateRange} />
 
         {/* Jenis Setoran */}
         <div>
@@ -340,12 +347,12 @@ export function TargetForm({ studentId, onSubmit }: TargetFormProps) {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Mendaftar ujian...
+              Menyimpan...
             </>
           ) : (
             <>
               <Save className="w-4 h-4 mr-2" />
-              Daftarkan Ujian
+              Simpan Target
             </>
           )}
         </Button>

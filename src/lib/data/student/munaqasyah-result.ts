@@ -70,7 +70,7 @@ export async function fetchMunaqasyahResult() {
             },
           },
         },
-        tasmi: {
+        tasmiScore: {
           select: {
             tajwid: true,
             kelancaran: true,
@@ -79,27 +79,67 @@ export async function fetchMunaqasyahResult() {
             totalScore: true,
           },
         },
-        munaqasyah: {
+        munaqasyahScore: {
           select: {
             tajwid: true,
             kelancaran: true,
             adab: true,
             note: true,
             totalScore: true,
+          },
+        },
+        // Include final result if this result is used in final calculation
+        tasmiForFinal: {
+          select: {
+            finalScore: true,
+            finalGrade: true,
+            passed: true,
+          },
+        },
+        munaqasyahForFinal: {
+          select: {
+            finalScore: true,
+            finalGrade: true,
+            passed: true,
           },
         },
       },
     });
 
-    return results.map((result) => ({
-      ...result,
-      createdAt: result.createdAt.toISOString(),
-      updatedAt: result.updatedAt.toISOString(),
-      schedule: {
-        ...result.schedule,
-        date: result.schedule.date.toISOString(),
-      },
-    }));
+    return results.map((result) => {
+      // Calculate score based on stage
+      let score = 0;
+      if (result.request.stage === 'TASMI' && result.tasmiScore) {
+        score = result.tasmiScore.totalScore;
+      } else if (result.request.stage === 'MUNAQASYAH' && result.munaqasyahScore) {
+        score = result.munaqasyahScore.totalScore;
+      }
+
+      // Get final result (if any)
+      const finalResult = result.tasmiForFinal || result.munaqasyahForFinal;
+
+      return {
+        ...result,
+        score,
+        scoreDetails: {
+          tasmi: result.tasmiScore,
+          munaqasyah: result.munaqasyahScore,
+        },
+        finalResult: finalResult
+          ? {
+              finalScore: finalResult.finalScore,
+              finalGrade: finalResult.finalGrade,
+              passed: finalResult.passed,
+            }
+          : null,
+        createdAt: result.createdAt.toISOString(),
+        updatedAt: result.updatedAt.toISOString(),
+        schedule: {
+          ...result.schedule,
+          date: result.schedule.date.toISOString(),
+        },
+      };
+    });
   } catch (error) {
     console.error('[FETCH_MUNAQASYAH_RESULT]', error);
     throw new Error('Gagal mengambil data hasil munaqasyah');

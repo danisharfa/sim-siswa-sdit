@@ -1,13 +1,19 @@
+import { requireStudentRole } from '@/lib/auth/require-role';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TargetManagement } from '@/components/student/submission/target/Management';
 
 export const dynamic = 'force-dynamic';
 
-export default function TargetPage() {
+export default async function TargetPage() {
+  const user = await requireStudentRole();
+
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Target</h1>
+      <div className="flex items-baseline gap-2 mb-4">
+        <h1 className="text-2xl font-bold">Target</h1>
+        <span className="text-muted-foreground">{user.profile?.nis}</span>
+      </div>
       <Suspense
         fallback={
           <div className="space-y-4">

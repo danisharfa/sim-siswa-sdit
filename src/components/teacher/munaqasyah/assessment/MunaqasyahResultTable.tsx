@@ -20,12 +20,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
-import { Semester, MunaqasyahStage, MunaqasyahBatch, MunaqasyahGrade } from '@prisma/client';
+import { Semester, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
 
 interface MunaqasyahResult {
   id: string;
   score: number;
-  grade: MunaqasyahGrade;
+  grade: string; // Changed to string to support MunaqasyahGrade enum values
   passed: boolean;
   academicYear: string;
   semester: Semester;
@@ -61,6 +61,12 @@ interface MunaqasyahResult {
       totalScore: number;
     } | null;
   };
+  // Add final result data if this result is part of a completed final result
+  finalResult?: {
+    finalScore: number;
+    finalGrade: string;
+    passed: boolean;
+  } | null;
 }
 
 interface MunaqasyahResultTableProps {
@@ -68,11 +74,11 @@ interface MunaqasyahResultTableProps {
   title: string;
 }
 
-const gradeLabels: Record<MunaqasyahGrade, string> = {
-  [MunaqasyahGrade.MUMTAZ]: 'Mumtaz',
-  [MunaqasyahGrade.JAYYID_JIDDAN]: 'Jayyid Jiddan',
-  [MunaqasyahGrade.JAYYID]: 'Jayyid',
-  [MunaqasyahGrade.TIDAK_LULUS]: 'Tidak Lulus',
+const gradeLabels: Record<string, string> = {
+  MUMTAZ: 'Mumtaz',
+  JAYYID_JIDDAN: 'Jayyid Jiddan',
+  JAYYID: 'Jayyid',
+  TIDAK_LULUS: 'Tidak Lulus',
 };
 
 const stageLabels: Record<MunaqasyahStage, string> = {
@@ -99,7 +105,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
 
   const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
 
-const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
+  const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
     () => [
       {
         id: 'Tanggal',
@@ -160,16 +166,12 @@ const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
       {
         id: 'Batch',
         header: 'Batch',
-        cell: ({ row }) => (
-          <Badge variant="secondary">{batchLabels[row.original.batch]}</Badge>
-        ),
+        cell: ({ row }) => <Badge variant="secondary">{batchLabels[row.original.batch]}</Badge>,
       },
       {
         id: 'Tahap',
         header: 'Tahap',
-        cell: ({ row }) => (
-          <Badge variant="default">{stageLabels[row.original.stage]}</Badge>
-        ),
+        cell: ({ row }) => <Badge variant="default">{stageLabels[row.original.stage]}</Badge>,
       },
       {
         id: 'Nilai',
@@ -177,14 +179,13 @@ const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
         cell: ({ row }) => (
           <div className="text-sm">
             <div className="font-medium">
-              {row.original.score.toFixed(1)} ({gradeLabels[row.original.grade]})
+              {row.original.score.toFixed(1)} (
+              {gradeLabels[row.original.grade] || row.original.grade})
             </div>
             {row.original.scoreDetails && (
               <div className="text-xs text-muted-foreground space-y-1">
                 {row.original.scoreDetails.tasmi && (
-                  <div>
-                    Tasmi: {row.original.scoreDetails.tasmi.totalScore.toFixed(1)}
-                  </div>
+                  <div>Tasmi: {row.original.scoreDetails.tasmi.totalScore.toFixed(1)}</div>
                 )}
                 {row.original.scoreDetails.munaqasyah && (
                   <div>
@@ -213,6 +214,31 @@ const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
         ),
       },
       {
+        id: 'Nilai Final',
+        header: 'Nilai Final',
+        cell: ({ row }) => {
+          const finalResult = row.original.finalResult;
+          if (!finalResult) {
+            return <div className="text-xs text-muted-foreground">Belum ada hasil final</div>;
+          }
+
+          return (
+            <div className="text-sm">
+              <div className="font-bold text-base">{finalResult.finalScore.toFixed(1)}</div>
+              <div className="font-medium text-primary text-xs">
+                {gradeLabels[finalResult.finalGrade] || finalResult.finalGrade}
+              </div>
+              <Badge
+                variant={finalResult.passed ? 'default' : 'destructive'}
+                className="text-xs mt-1"
+              >
+                {finalResult.passed ? '✅ LULUS' : '❌ TIDAK LULUS'}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
         id: 'Detail',
         header: 'Detail',
         cell: ({ row }) => {
@@ -228,9 +254,7 @@ const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
                   <div>Kelancaran: {scoreDetails.tasmi.kelancaran}</div>
                   <div>Adab: {scoreDetails.tasmi.adab}</div>
                   {scoreDetails.tasmi.note && (
-                    <div className="text-muted-foreground">
-                      Catatan: {scoreDetails.tasmi.note}
-                    </div>
+                    <div className="text-muted-foreground">Catatan: {scoreDetails.tasmi.note}</div>
                   )}
                 </div>
               )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -112,10 +112,7 @@ export default function CoordinatorProfileDetail({ userId }: { userId: string })
 
   return (
     <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">Detail Koordinator</h2>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Label>Nama Lengkap</Label>
@@ -130,7 +127,7 @@ export default function CoordinatorProfileDetail({ userId }: { userId: string })
               onChange={(e) => handleChange('birthPlace', e.target.value)}
             />
 
-            <Calendar22 value={date} onChange={setDate} label='Tanggal Lahir'/>
+            <Calendar22 value={date} onChange={setDate} label="Tanggal Lahir" />
 
             <Label>Jenis Kelamin</Label>
             <Select

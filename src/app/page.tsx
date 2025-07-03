@@ -1,17 +1,3 @@
-// import { LandingHeader } from '@/components/layout/landing-page/LandingHeader';
-// import { LandingContent } from '@/components/layout/landing-page/LandingContent';
-// import { LandingFooter } from '@/components/layout/landing-page/LandingFooter';
-
-// export default function HomePage() {
-//   return (
-//     <main className="flex min-h-screen flex-col">
-//       <LandingHeader />
-//       <LandingContent />
-//       <LandingFooter />
-//     </main>
-//   );
-// }
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { LoginForm } from '@/components/layout/login/LoginForm';
@@ -41,21 +27,17 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {/* Login Form Container */}
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm space-y-6">
-            {/* Welcome Section */}
             <div className="space-y-2 text-center">
               <h1 className="text-3xl font-bold tracking-tight">Selamat Datang</h1>
               <p className="text-muted-foreground">
-                Masuk ke akun Anda untuk mengakses sistem monitoring Al-Qur&apos;an
+                Masuk ke akun Anda untuk mengakses SIM-Qur&apos;an
               </p>
             </div>
 
-            {/* Login Form */}
             <LoginForm />
 
-            {/* Help Text */}
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Butuh bantuan? Hubungi administrator sekolah
@@ -64,10 +46,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            &copy; 2024 SDIT Ulul Albab Mataram. All rights reserved.
+            Copyright &copy; 2025 SDIT Ulul Albab Mataram. All Rights Reserved.
           </p>
         </div>
       </div>
@@ -77,10 +58,8 @@ export default function LoginPage() {
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
         
-        {/* Content Overlay */}
         <div className="relative flex h-full flex-col items-center justify-center p-8 text-center">
           <div className="max-w-md space-y-6">
-            {/* Icon/Illustration */}
             <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-primary/10 backdrop-blur-sm">
               <Image 
                 src="/logo-sekolah.png" 
@@ -91,10 +70,9 @@ export default function LoginPage() {
               />
             </div>
             
-            {/* Text Content */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold text-primary">
-                Sistem Monitoring Al-Qur&apos;an
+                Sistem Informasi Monitoring Al-Qur&apos;an
               </h2>
               <p className="text-muted-foreground">
                 Platform digital terpadu untuk monitoring dan pengelolaan kegiatan 

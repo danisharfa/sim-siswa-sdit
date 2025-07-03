@@ -5,56 +5,38 @@ import { Role, SubmissionStatus, SubmissionType, Semester } from '@prisma/client
 
 type Params = Promise<{ period: string }>;
 
+type ChartLegend = 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI';
+
 interface AlquranProgress {
   juzId: number;
   juzName: string;
   completedAyah: number;
   totalAyah: number;
   percent: number;
-  status: 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI';
+  status: ChartLegend;
 }
 
 interface StudentTahsinAlquranResponse {
   studentId: string;
   studentName: string;
-  currentPeriod: string;
-  currentGroup: {
-    id: string;
-    name: string;
-    className: string;
-  } | null;
   lastJuz: string;
   currentJuz: number | null;
-  totalProgress: {
-    completedJuz: number;
-    totalJuz: number;
-    overallPercent: number;
-  };
   progress: AlquranProgress[];
 }
 
 export async function GET(req: Request, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const { period } = params;
+    const { period } = await segmentData.params;
 
-    let academicYear: string | null = null;
-    let semester: Semester | null = null;
+    const [year, smstr] = period.split('-');
+    const academicYear = decodeURIComponent(year);
+    const semester = Object.values(Semester).includes(smstr as Semester)
+      ? (smstr as Semester)
+      : null;
 
-    if (period && period !== 'all') {
-      const [year, smstr] = period.split('-');
-      academicYear = decodeURIComponent(year);
-      if (Object.values(Semester).includes(smstr as Semester)) {
-        semester = smstr as Semester;
-      } else {
-        return NextResponse.json(
-          { success: false, error: `Invalid semester: ${smstr}` },
-          { status: 400 }
-        );
-      }
-    } else {
+    if (!semester) {
       return NextResponse.json(
-        { success: false, error: 'Period parameter is required' },
+        { success: false, error: `Invalid semester: ${smstr}` },
         { status: 400 }
       );
     }
@@ -83,52 +65,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       );
     }
 
-    console.log('Fetching tahsin alquran progress for student:', {
-      studentId: student.id,
-      studentName: student.user.fullName,
-      academicYear,
-      semester,
-    });
-
-    // Get current group for the period
-    let currentGroup = null;
-
-    if (
-      student.group &&
-      student.group.classroom.academicYear === academicYear &&
-      student.group.classroom.semester === semester
-    ) {
-      currentGroup = {
-        id: student.group.id,
-        name: student.group.name,
-        className: student.group.classroom.name,
-      };
-    } else {
-      const groupHistory = await prisma.groupHistory.findFirst({
-        where: {
-          studentId: student.id,
-          academicYear,
-          semester,
-        },
-        include: {
-          group: {
-            include: {
-              classroom: true,
-            },
-          },
-        },
-      });
-
-      if (groupHistory) {
-        currentGroup = {
-          id: groupHistory.group.id,
-          name: groupHistory.group.name,
-          className: groupHistory.group.classroom.name,
-        };
-      }
-    }
-
-    // Get cumulative submissions (all passed submissions up to the selected period)
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
         studentId: student.id,
@@ -158,13 +94,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    console.log('Alquran submissions found for cumulative period:', {
-      academicYear,
-      semester,
-      submissionCount: alquranSubmissions.length,
-    });
-
-    // Get all juz for reference
     const allJuz = await prisma.juz.findMany({
       include: {
         surahJuz: {
@@ -176,11 +105,9 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       orderBy: { id: 'asc' },
     });
 
-    // Calculate progress for each juz
     const progressList: AlquranProgress[] = [];
     let currentJuz: number | null = null;
     let lastJuz = 'Belum ada';
-    let completedJuzCount = 0;
 
     for (const juz of allJuz) {
       const surahIdsInJuz = juz.surahJuz.map((sj) => sj.surahId);
@@ -188,18 +115,33 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         (s) => s.surahId && surahIdsInJuz.includes(s.surahId)
       );
 
-      // Calculate total ayat in juz
-      const totalAyah = juz.surahJuz.reduce((total, sj) => total + (sj.surah.verseCount || 0), 0);
+      const totalAyah = juz.surahJuz.reduce((total, sj) => {
+        const ayatInJuz = sj.endVerse - sj.startVerse + 1;
+        return total + ayatInJuz;
+      }, 0);
 
-      // Calculate completed ayat
       const completedAyah = juzSubmissions.reduce((total, submission) => {
-        if (submission.surah) {
-          return total + (submission.surah.verseCount || 0);
+        if (submission.surah && submission.startVerse && submission.endVerse) {
+          const surahJuzInfo = juz.surahJuz.find((sj) => sj.surahId === submission.surahId);
+          if (surahJuzInfo) {
+            const juzStart = surahJuzInfo.startVerse;
+            const juzEnd = surahJuzInfo.endVerse;
+            const submissionStart = submission.startVerse;
+            const submissionEnd = submission.endVerse;
+
+            const overlapStart = Math.max(juzStart, submissionStart);
+            const overlapEnd = Math.min(juzEnd, submissionEnd);
+
+            if (overlapStart <= overlapEnd) {
+              const overlapAyat = overlapEnd - overlapStart + 1;
+              return total + overlapAyat;
+            }
+          }
         }
         return total;
       }, 0);
 
-      let status: 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI' = 'BELUM_DIMULAI';
+      let status: ChartLegend = 'BELUM_DIMULAI';
       let percent = 0;
 
       if (completedAyah > 0) {
@@ -208,7 +150,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         if (completedAyah >= totalAyah) {
           status = 'SELESAI';
           lastJuz = `Juz ${juz.id}`;
-          completedJuzCount++;
         } else {
           status = 'SEDANG_DIJALANI';
           currentJuz = juz.id;
@@ -225,35 +166,13 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    const totalJuz = allJuz.length;
-    const overallPercent =
-      totalJuz > 0 ? Math.round((completedJuzCount / totalJuz) * 100 * 100) / 100 : 0;
-
     const result: StudentTahsinAlquranResponse = {
       studentId: student.id,
       studentName: student.user.fullName,
-      currentPeriod: `${academicYear} ${semester === 'GANJIL' ? 'Ganjil' : 'Genap'}${
-        currentGroup ? ` | ${currentGroup.name} - ${currentGroup.className}` : ''
-      }`,
-      currentGroup,
       lastJuz,
       currentJuz,
-      totalProgress: {
-        completedJuz: completedJuzCount,
-        totalJuz,
-        overallPercent,
-      },
       progress: progressList,
     };
-
-    console.log('Student tahsin alquran progress result:', {
-      studentName: result.studentName,
-      period: result.currentPeriod,
-      completedJuz: result.totalProgress.completedJuz,
-      overallPercent: result.totalProgress.overallPercent,
-      lastJuz: result.lastJuz,
-      currentJuz: result.currentJuz,
-    });
 
     return NextResponse.json(result);
   } catch (error) {

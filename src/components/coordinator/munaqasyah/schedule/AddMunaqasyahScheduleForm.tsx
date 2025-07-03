@@ -209,7 +209,7 @@ export function AddMunaqasyahScheduleForm({ onScheduleAdded }: Props) {
                         {req.student.user.fullName} ({req.student.nis})
                       </div>
                       <div className="text-muted-foreground text-sm">
-                        {req.juz?.name ? `Juz ${req.juz.name}` : 'Materi tidak tersedia'}
+                        {req.juz?.name ? req.juz.name : 'Materi tidak tersedia'}
                       </div>
                     </div>
                   </label>

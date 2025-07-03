@@ -18,7 +18,7 @@ import { ImProfile } from 'react-icons/im';
 export const menuData = {
   admin: [
     {
-      title: 'Dashboard',
+      title: 'Beranda',
       url: '/dashboard/admin',
       icon: LayoutDashboard,
     },
@@ -45,12 +45,12 @@ export const menuData = {
   ],
   coordinator: [
     {
-      title: 'Dashboard',
+      title: 'Beranda',
       url: '/dashboard/coordinator',
       icon: LayoutDashboard,
     },
     {
-      title: 'Profil',
+      title: 'Koordinator',
       url: '/dashboard/coordinator/profile',
       icon: ImProfile,
     },
@@ -102,12 +102,12 @@ export const menuData = {
   ],
   teacher: [
     {
-      title: 'Dashboard',
+      title: 'Beranda',
       url: '/dashboard/teacher',
       icon: LayoutDashboard,
     },
     {
-      title: 'Profil',
+      title: 'Guru',
       url: '/dashboard/teacher/profile',
       icon: ImProfile,
     },
@@ -184,12 +184,12 @@ export const menuData = {
   ],
   student: [
     {
-      title: 'Dashboard',
+      title: 'Beranda',
       url: '/dashboard/student',
       icon: LayoutDashboard,
     },
     {
-      title: 'Profil',
+      title: 'Siswa',
       url: '/dashboard/student/profile',
       icon: User2Icon,
     },

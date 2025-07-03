@@ -53,8 +53,8 @@ export function ExportToPDFButton({ table }: Props) {
 
   return (
     <Button variant="outline" onClick={handleExport}>
-      <Download className="w-4 h-4 mr-2" />
-      Export PDF
+      <Download className="mr-2" />
+      Cetak
     </Button>
   );
 }

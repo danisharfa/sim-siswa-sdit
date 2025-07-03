@@ -1,5 +1,4 @@
 import { requireRole } from '@/lib/auth/require-role';
-
 import StudentProfileDetail from '@/components/student/profile/StudentProfileDetail';
 import { Role } from '@prisma/client';
 

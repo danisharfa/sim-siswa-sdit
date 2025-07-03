@@ -31,6 +31,18 @@ export async function GET() {
             classroom: {
               select: { name: true, academicYear: true, semester: true },
             },
+            teacherGroups: {
+              select: {
+                teacher: {
+                  select: {
+                    user: {
+                      select: { fullName: true },
+                    },
+                  },
+                },
+              },
+              take: 1,
+            },
           },
         },
         juz: { select: { name: true } },

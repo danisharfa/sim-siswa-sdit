@@ -23,6 +23,11 @@ export async function fetchStudentSubmissionHistory() {
         surah: { select: { id: true, name: true } },
         juz: { select: { id: true, name: true } },
         wafa: { select: { id: true, name: true } },
+        teacher: {
+          select: {
+            user: { select: { fullName: true } },
+          },
+        },
         student: {
           select: {
             nis: true,

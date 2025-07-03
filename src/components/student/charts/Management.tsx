@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent } from '@/components/ui/card';
 import { ChartFilters } from './ChartFilters';
 import { TahfidzChart } from './TahfidzChart';
 import { WafaChart } from './WafaChart';
 import { TahsinAlquranChart } from './TahsinAlquranChart';
+import { TodayTargets } from './TodayTargets';
+import { StudentInfoCard } from './StudentInfoCard';
 
 type Period = {
   value: string;
   label: string;
   academicYear: string;
   semester: string;
+  groupInfo?: {
+    id: string;
+    name: string;
+    className: string;
+  } | null;
 };
 
 type FilterData = {
@@ -30,17 +36,6 @@ type FilterData = {
   };
 };
 
-type StudentPeriodInfo = {
-  studentId: string;
-  studentName: string;
-  currentPeriod: string;
-  currentGroup: {
-    id: string;
-    name: string;
-    className: string;
-  } | null;
-};
-
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function Management() {
@@ -49,17 +44,6 @@ export function Management() {
   const { data: filterData, error: filterError } = useSWR<FilterData>(
     '/api/student/chart/filters',
     fetcher
-  );
-
-  // Fetch student info for the selected period
-  const { data: periodInfo } = useSWR<StudentPeriodInfo>(
-    selectedPeriod ? `/api/student/chart/${selectedPeriod}/tahfidz` : null,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      refreshInterval: 0,
-    }
   );
 
   useEffect(() => {
@@ -82,72 +66,28 @@ export function Management() {
     return <div className="text-muted-foreground">Loading filters...</div>;
   }
 
-  // Use period-specific group info if available, otherwise fall back to current group
-  const displayGroupInfo = periodInfo?.currentGroup || filterData.studentInfo?.currentGroup;
-
   return (
     <div className="space-y-4">
-      <div className="flex flex-row items-end gap-4">
-        <div className="w-72">
-          <Card>
-            <CardContent>
-              <div className="space-y-2">
-                {displayGroupInfo ? (
-                  <>
-                    <p className="text-sm text-muted-foreground">Kelompok:</p>
-                    <p className="text-sm font-medium">{displayGroupInfo.name}</p>
-                    <p className="text-sm text-muted-foreground">Kelas:</p>
-                    <p className="text-sm font-medium">{displayGroupInfo.className}</p>
-                    {/* {periodInfo && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Periode: {periodInfo.currentPeriod}
-                      </p>
-                    )} */}
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Tidak ada kelompok untuk periode ini
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1">
+          <StudentInfoCard />
         </div>
-        <div>
-          <ChartFilters
-            periods={filterData.periods}
-            groups={[]}
-            selectedPeriod={selectedPeriod}
-            selectedGroup=""
-            onPeriodChange={handlePeriodChange}
-            onGroupChange={() => {}}
-          />
+        <div className="flex-2">
+          <TodayTargets />
         </div>
       </div>
 
+      <ChartFilters
+        periods={filterData.periods}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={handlePeriodChange}
+      />
+
       {selectedPeriod && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <TahfidzChart
-            key={`tahfidz-${selectedPeriod}`}
-            academicYear=""
-            semester=""
-            groupId=""
-            period={selectedPeriod}
-          />
-          <WafaChart
-            key={`wafa-${selectedPeriod}`}
-            academicYear=""
-            semester=""
-            groupId=""
-            period={selectedPeriod}
-          />
-          <TahsinAlquranChart
-            key={`tahsin-${selectedPeriod}`}
-            academicYear=""
-            semester=""
-            groupId=""
-            period={selectedPeriod}
-          />
+          <TahfidzChart key={`tahfidz-${selectedPeriod}`} period={selectedPeriod} />
+          <WafaChart key={`wafa-${selectedPeriod}`} period={selectedPeriod} />
+          <TahsinAlquranChart key={`tahsin-${selectedPeriod}`} period={selectedPeriod} />
         </div>
       )}
     </div>

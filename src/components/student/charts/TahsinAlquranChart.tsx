@@ -6,19 +6,8 @@ import { ProgressBarCard, type ProgressItem } from './ProgressBarCard';
 type StudentChartResponse = {
   studentId: string;
   studentName: string;
-  currentPeriod: string;
-  currentGroup: {
-    id: string;
-    name: string;
-    className: string;
-  } | null;
   lastJuz: string;
   currentJuz: number | null;
-  totalProgress: {
-    completedJuz: number;
-    totalJuz: number;
-    overallPercent: number;
-  };
   progress: {
     juzId: number;
     juzName: string;
@@ -29,39 +18,23 @@ type StudentChartResponse = {
   }[];
 };
 
-const fetcher = async (url: string): Promise<StudentChartResponse> => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  }
-  const data = await res.json();
-
-  if (data && typeof data === 'object' && 'success' in data && data.success === false) {
-    throw new Error(data.error || data.message || 'API returned an error');
-  }
-
-  return data;
-};
-
 type TahsinAlquranChartProps = {
-  academicYear: string;
-  semester: string;
-  groupId: string;
-  period?: string;
+  period: string;
 };
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function TahsinAlquranChart({ period }: TahsinAlquranChartProps) {
-  const apiUrl = `/api/student/chart/${period}/tahsin/alquran`;
+  const { data, isLoading, error } = useSWR<StudentChartResponse>(
+    `/api/student/chart/${period}/tahsin/alquran`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      refreshInterval: 0,
+    }
+  );
 
-  console.log('TahsinAlquranChart render:', { period, apiUrl });
-
-  const { data, isLoading, error } = useSWR<StudentChartResponse>(apiUrl, fetcher, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    refreshInterval: 0,
-  });
-
-  // Convert data to ProgressItem format
   const progressItems: ProgressItem[] =
     data?.progress.map((item) => ({
       id: item.juzId,
@@ -73,13 +46,12 @@ export function TahsinAlquranChart({ period }: TahsinAlquranChartProps) {
       subtitle: `${item.completedAyah} dari ${item.totalAyah} ayat`,
     })) || [];
 
-  // Sort by juz number
+  // Sort juz
   progressItems.sort((a, b) => Number(a.id) - Number(b.id));
 
   return (
     <ProgressBarCard
-      title="Progres Tahsin Al-Quran Saya"
-      description="Progres kumulatif tahsin Al-Quran saya sampai dengan periode yang dipilih"
+      title="Progres Tahsin Al-Quran"
       items={progressItems}
       isLoading={isLoading}
       error={error}

@@ -5,6 +5,7 @@ import { Role, Semester, SubmissionType, TargetStatus } from '@prisma/client';
 export interface AcademicPeriodInfo {
   academicYear: string;
   semester: Semester;
+  groupName: string;
   className: string;
   teacherName: string;
 }
@@ -78,13 +79,11 @@ export async function fetchTargets(): Promise<StudentTargetData> {
         surahEnd: { select: { id: true, name: true, verseCount: true } },
         wafa: { select: { id: true, name: true, pageCount: true } },
         group: {
-          include: {
+          select: {
+            id: true,
+            name: true,
             classroom: {
-              select: {
-                name: true,
-                academicYear: true,
-                semester: true,
-              },
+              select: { name: true, academicYear: true, semester: true },
             },
             teacherGroups: {
               include: {
@@ -109,6 +108,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
           periodsMap.set(key, {
             academicYear: target.group.classroom.academicYear,
             semester: target.group.classroom.semester,
+            groupName: target.group.name,
             className: target.group.classroom.name,
             teacherName: target.group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
             groupId: target.groupId,
@@ -254,6 +254,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
         period: {
           academicYear,
           semester: semester as Semester,
+          groupName: periodInfo.groupName,
           className: periodInfo.className,
           teacherName: periodInfo.teacherName,
         },

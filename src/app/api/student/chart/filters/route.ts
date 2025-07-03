@@ -11,7 +11,6 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
-    // Get student profile
     const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
       include: {
@@ -25,24 +24,23 @@ export async function GET() {
     });
 
     if (!student) {
-      return NextResponse.json({ success: false, error: 'Student profile tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'Student profile tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    // Get academic setting for default period
     const academicSetting = await prisma.academicSetting.findUnique({
       where: { id: 'default' },
     });
 
-    // Get all periods where this student has been active
     const periodsSet = new Set();
 
-    // From current group
     if (student.group) {
       const periodKey = `${student.group.classroom.academicYear}|${student.group.classroom.semester}`;
       periodsSet.add(periodKey);
     }
 
-    // From group history
     const groupHistories = await prisma.groupHistory.findMany({
       where: {
         studentId: student.id,
@@ -62,26 +60,56 @@ export async function GET() {
       periodsSet.add(periodKey);
     });
 
-    // Format periods
     const periods = Array.from(periodsSet)
       .map((period) => {
         const [academicYear, semester] = (period as string).split('|');
+
+        // Cari group untuk periode ini
+        let groupInfo = null;
+
+        // Cek current group
+        if (
+          student.group &&
+          student.group.classroom.academicYear === academicYear &&
+          student.group.classroom.semester === semester
+        ) {
+          groupInfo = {
+            id: student.group.id,
+            name: student.group.name,
+            className: student.group.classroom.name,
+          };
+        } else {
+          // Cek group history
+          const historyGroup = groupHistories.find(
+            (gh) => gh.academicYear === academicYear && gh.semester === semester
+          );
+          if (historyGroup) {
+            groupInfo = {
+              id: historyGroup.group.id,
+              name: historyGroup.group.name,
+              className: historyGroup.group.classroom.name,
+            };
+          }
+        }
+
+        const baseLabel = `${academicYear} ${semester === 'GANJIL' ? 'Ganjil' : 'Genap'}`;
+        const groupLabel = groupInfo ? ` | ${groupInfo.name} - ${groupInfo.className}` : '';
+
         return {
           value: `${encodeURIComponent(academicYear)}-${semester}`,
-          label: `${academicYear} ${semester === 'GANJIL' ? 'Ganjil' : 'Genap'}`,
+          label: baseLabel + groupLabel,
           academicYear,
           semester,
+          groupInfo,
         };
       })
       .sort((a, b) => {
-        // Sort by year first, then semester (Ganjil before Genap)
         if (a.academicYear !== b.academicYear) {
           return b.academicYear.localeCompare(a.academicYear);
         }
         return a.semester === 'GANJIL' ? -1 : 1;
       });
 
-    // Default period from academic setting or latest period
     const defaultPeriod = academicSetting
       ? `${encodeURIComponent(academicSetting.currentYear)}-${academicSetting.currentSemester}`
       : periods[0]?.value || '';
@@ -100,11 +128,13 @@ export async function GET() {
         id: student.id,
         name: student.user.fullName,
         nis: student.nis,
-        currentGroup: student.group ? {
-          id: student.group.id,
-          name: student.group.name,
-          className: student.group.classroom.name,
-        } : null,
+        currentGroup: student.group
+          ? {
+              id: student.group.id,
+              name: student.group.name,
+              className: student.group.classroom.name,
+            }
+          : null,
       },
     });
   } catch (error) {

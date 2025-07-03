@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -113,10 +113,7 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
 
   return (
     <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">Detail Guru</h2>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Label>Nama Lengkap</Label>
@@ -131,7 +128,7 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
               onChange={(e) => handleChange('birthPlace', e.target.value)}
             />
 
-            <Calendar22 value={date} onChange={setDate} label='Tanggal Lahir'/>
+            <Calendar22 value={date} onChange={setDate} label="Tanggal Lahir" />
 
             <Label>Jenis Kelamin</Label>
             <Select
@@ -190,20 +187,20 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-center">
-              <Button onClick={handleSubmit} disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Menyimpan Perubahan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Simpan Perubahan
-                  </>
-                )}
-              </Button>
-            </CardFooter>
+        <Button onClick={handleSubmit} disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Menyimpan Perubahan...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Simpan Perubahan
+            </>
+          )}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

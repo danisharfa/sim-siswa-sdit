@@ -44,6 +44,7 @@ export function HomeActivityForm() {
 
   const { data: juzList } = useSWR('/api/juz', fetcher);
   const { data: surahList } = useSWR('/api/surah', fetcher);
+  const { data: academic } = useSWR('/api/academicSetting', fetcher);
 
   const resetForm = () => {
     setDate(new Date());
@@ -95,7 +96,14 @@ export function HomeActivityForm() {
     <Card>
       <CardHeader>
         <CardTitle>Form Aktivitas Rumah</CardTitle>
-        <CardDescription>Silakan isi aktivitas harian Anda</CardDescription>
+        <CardDescription>
+          {academic?.success && (
+            <span className="block text-sm text-muted-foreground mt-1">
+              Tahun Ajaran: <b>{academic.data.currentYear}</b> - Semester:{' '}
+              <b>{academic.data.currentSemester}</b>
+            </span>
+          )}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Calendar01 value={date} onChange={setDate} label="Tanggal Setoran" />

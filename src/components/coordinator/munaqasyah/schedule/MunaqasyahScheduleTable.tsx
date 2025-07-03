@@ -83,28 +83,31 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
   const columns = useMemo<ColumnDef<MunaqasyahSchedule>[]>(
     () => [
       {
+        id: 'Waktu & Tempat',
         accessorKey: 'date',
-        id: 'Tanggal',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
-        cell: ({ row }) =>
-          new Date(row.original.date).toLocaleDateString('id-ID', {
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Waktu & Tempat" />,
+        cell: ({ row }) => {
+          const s = row.original;
+          const date = new Date(s.date).toLocaleDateString('id-ID', {
+            weekday: 'long',
             day: 'numeric',
-            month: 'short',
+            month: 'long',
             year: 'numeric',
-          }),
+          });
+          return (
+            <div className="text-sm min-w-[180px]">
+              <div className="font-medium">{date}</div>
+              <div className="text-muted-foreground">{s.sessionName}</div>
+              <div className="text-muted-foreground text-xs">
+                {s.startTime} - {s.endTime}
+              </div>
+              <div className="text-muted-foreground text-xs">📍 {s.location}</div>
+            </div>
+          );
+        },
       },
       {
-        accessorKey: 'sessionName',
-        id: 'Sesi',
-        header: 'Sesi',
-        cell: ({ row }) =>
-          `${row.original.sessionName}, ${row.original.startTime} - ${row.original.endTime}`,
-      },
-      {
-        accessorKey: 'location',
-        header: 'Lokasi',
-      },
-      {
+        accessorKey: 'scheduleRequests.request.student.user.fullName',
         id: 'Siswa',
         header: 'Siswa',
         cell: ({ row }) => (
@@ -118,6 +121,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        accessorKey: 'scheduleRequests.request.group.name',
         id: 'Kelompok',
         header: 'Kelompok',
         cell: ({ row }) => (
@@ -131,6 +135,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        accessorKey: 'scheduleRequests.request.group.classroom.academicYear',
         id: 'Tahun Ajaran',
         header: 'Tahun Ajaran',
         accessorFn: (row) => {
@@ -167,6 +172,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        accessorKey: 'scheduleRequests.request.juz.name',
         id: 'Juz',
         header: 'Juz',
         cell: ({ row }) => (
@@ -180,6 +186,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        accessorKey: 'scheduleRequests.request.batch',
         id: 'Batch',
         header: 'Batch',
         cell: ({ row }) => (
@@ -193,6 +200,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         ),
       },
       {
+        accessorKey: 'scheduleRequests.request.stage',
         id: 'Tahap',
         header: 'Tahap',
         cell: ({ row }) => (
@@ -274,7 +282,7 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
         </Select>
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Tanggal" />
+      <DataTable title={title} table={table} />
     </>
   );
 }

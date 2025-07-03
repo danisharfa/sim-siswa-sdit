@@ -17,23 +17,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
-import { Semester, MunaqasyahStage, MunaqasyahBatch, MunaqasyahGrade } from '@prisma/client';
+import { Semester, MunaqasyahBatch } from '@prisma/client';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
-import { Label } from '@/components/ui/label';
 
 interface MunaqasyahResult {
   id: string;
-  avarageScore: number | null;
-  grade: MunaqasyahGrade;
+  score: number | null;
+  grade: string;
   passed: boolean;
   createdAt: string;
   updatedAt: string;
   request: {
     id: string;
     batch: MunaqasyahBatch;
-    stage: MunaqasyahStage;
+    stage: string;
     status: string;
     juz: { name: string };
     student: {
@@ -62,18 +63,26 @@ interface MunaqasyahResult {
       user: { fullName: string };
     } | null;
   };
-  tasmi?: {
-    tajwid: number | null;
-    kelancaran: number | null;
-    adab: number | null;
-    note?: string | null;
-    totalScore: number | null;
-  } | null;
-  munaqasyah?: {
-    tajwid: number | null;
-    kelancaran: number | null;
-    note?: string | null;
-    totalScore: number | null;
+  scoreDetails?: {
+    tasmi?: {
+      tajwid: number;
+      kelancaran: number;
+      adab: number;
+      note?: string | null;
+      totalScore: number;
+    } | null;
+    munaqasyah?: {
+      tajwid: number;
+      kelancaran: number;
+      adab: number;
+      note?: string | null;
+      totalScore: number;
+    } | null;
+  };
+  finalResult?: {
+    finalScore: number;
+    finalGrade: string;
+    passed: boolean;
   } | null;
 }
 
@@ -81,16 +90,16 @@ interface Props {
   data: MunaqasyahResult[];
 }
 
-const gradeLabels: Record<MunaqasyahGrade, string> = {
-  [MunaqasyahGrade.MUMTAZ]: 'Mumtaz',
-  [MunaqasyahGrade.JAYYID_JIDDAN]: 'Jayyid Jiddan',
-  [MunaqasyahGrade.JAYYID]: 'Jayyid',
-  [MunaqasyahGrade.TIDAK_LULUS]: 'Tidak Lulus',
+const gradeLabels: Record<string, string> = {
+  MUMTAZ: 'Mumtaz',
+  JAYYID_JIDDAN: 'Jayyid Jiddan',
+  JAYYID: 'Jayyid',
+  TIDAK_LULUS: 'Tidak Lulus',
 };
 
-const stageLabels: Record<MunaqasyahStage, string> = {
-  [MunaqasyahStage.TASMI]: 'Tasmi',
-  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
+const stageLabels: Record<string, string> = {
+  TASMI: 'Tasmi',
+  MUNAQASYAH: 'Munaqasyah',
 };
 
 const batchLabels: Record<MunaqasyahBatch, string> = {
@@ -111,24 +120,63 @@ export function MunaqasyahResultTable({ data }: Props) {
   } = useDataTableState<MunaqasyahResult, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState<string | 'ALL'>('ALL');
+  const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
 
   const academicPeriods = useMemo(() => {
     const set = new Set<string>();
     for (const d of data) {
       set.add(`${d.request.group.classroom.academicYear}__${d.request.group.classroom.semester}`);
     }
+    return Array.from(set).sort();
+  }, [data]);
+
+  const stageOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of data) {
+      set.add(d.request.stage);
+    }
     return Array.from(set);
   }, [data]);
+
+  const filteredData = useMemo(() => {
+    return data.filter((result) => {
+      // Filter by period
+      if (selectedPeriod !== 'ALL') {
+        const periodKey = `${result.request.group.classroom.academicYear}__${result.request.group.classroom.semester}`;
+        if (periodKey !== selectedPeriod) return false;
+      }
+
+      if (selectedStage !== 'ALL') {
+        if (result.request.stage !== selectedStage) return false;
+      }
+
+      return true;
+    });
+  }, [data, selectedPeriod, selectedStage]);
+
+  const currentPeriodInfo = useMemo(() => {
+    if (filteredData.length === 0) return null;
+
+    const firstResult = filteredData[0];
+    return {
+      academicYear: firstResult.request.group.classroom.academicYear,
+      semester: firstResult.request.group.classroom.semester,
+      className: firstResult.request.group.classroom.name,
+      groupName: firstResult.request.group.name,
+      teacherName: firstResult.request.teacher.user.fullName,
+    };
+  }, [filteredData]);
 
   const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
     () => [
       {
-        id: 'Tanggal',
+        id: 'Tanggal dan Waktu',
         accessorKey: 'schedule.date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal dan Waktu" />,
         cell: ({ row }) => {
           const s = row.original.schedule;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
+            weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -146,60 +194,20 @@ export function MunaqasyahResultTable({ data }: Props) {
         },
       },
       {
-        id: 'Batch',
-        header: 'Batch',
+        id: 'Materi Ujian',
+        header: 'Materi Ujian',
         cell: ({ row }) => (
-          <Badge variant="secondary">
-            {batchLabels[row.original.request.batch]}
-          </Badge>
-        ),
-      },
-      {
-        id: 'Tahap',
-        accessorKey: 'request.stage',
-        header: 'Tahap',
-        cell: ({ row }) => (
-          <Badge variant="outline">
-            {stageLabels[row.original.request.stage]}
-          </Badge>
-        ),
-      },
-      {
-        id: 'Juz',
-        accessorKey: 'request.juz.name',
-        header: 'Juz',
-        cell: ({ row }) => (
-          <Badge variant="default">
-            {row.original.request.juz.name}
-          </Badge>
-        ),
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) =>
-          `${row.request.group.classroom.academicYear} ${row.request.group.classroom.semester}`,
-        cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.request.group.classroom.academicYear}{' '}
-              {row.original.request.group.classroom.semester}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.request.group.name} -{' '}
-              {row.original.request.group.classroom.name}
-            </div>
+          <div className="flex flex-col gap-1 min-w-[140px]">
+            <Badge variant="secondary" className="text-xs w-fit">
+              {batchLabels[row.original.request.batch]}
+            </Badge>
+            <Badge variant="outline" className="text-xs w-fit">
+              {stageLabels[row.original.request.stage]}
+            </Badge>
+            <Badge variant="default" className="text-xs w-fit">
+              {row.original.request.juz.name}
+            </Badge>
           </div>
-        ),
-      },
-      {
-        accessorKey: 'request.teacher.user.fullName',
-        id: 'Guru Pembimbing',
-        header: 'Guru Pembimbing',
-        cell: ({ row }) => (
-          <Badge variant="secondary">
-            {row.original.request.teacher.user.fullName}
-          </Badge>
         ),
       },
       {
@@ -220,22 +228,21 @@ export function MunaqasyahResultTable({ data }: Props) {
       },
       {
         id: 'Nilai',
-        accessorKey: 'avarageScore',
+        accessorKey: 'score',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nilai" />,
         cell: ({ row }) => (
           <div className="text-sm">
             <div className="font-medium">
-              {row.original.avarageScore?.toFixed(1) || '0.0'} ({gradeLabels[row.original.grade]})
+              {row.original.score?.toFixed(1) || '0.0'} (
+              {gradeLabels[row.original.grade] || row.original.grade})
             </div>
             <div className="text-xs text-muted-foreground space-y-1">
-              {row.original.tasmi && (
-                <div>
-                  Tasmi: {row.original.tasmi.totalScore?.toFixed(1) || '0.0'}
-                </div>
+              {row.original.scoreDetails?.tasmi && (
+                <div>Tasmi: {row.original.scoreDetails.tasmi.totalScore?.toFixed(1) || '0.0'}</div>
               )}
-              {row.original.munaqasyah && (
+              {row.original.scoreDetails?.munaqasyah && (
                 <div>
-                  Munaqasyah: {row.original.munaqasyah.totalScore?.toFixed(1) || '0.0'}
+                  Munaqasyah: {row.original.scoreDetails.munaqasyah.totalScore?.toFixed(1) || '0.0'}
                 </div>
               )}
             </div>
@@ -260,35 +267,59 @@ export function MunaqasyahResultTable({ data }: Props) {
         ),
       },
       {
+        id: 'Nilai Final',
+        header: 'Nilai Final',
+        cell: ({ row }) => {
+          const finalResult = row.original.finalResult;
+          if (!finalResult) {
+            return <div className="text-xs text-muted-foreground">Belum ada hasil final</div>;
+          }
+
+          return (
+            <div className="text-sm">
+              <div className="font-bold text-base">{finalResult.finalScore.toFixed(1)}</div>
+              <div className="font-medium text-primary text-xs">
+                {gradeLabels[finalResult.finalGrade] || finalResult.finalGrade}
+              </div>
+              <Badge
+                variant={finalResult.passed ? 'default' : 'destructive'}
+                className="text-xs mt-1"
+              >
+                {finalResult.passed ? '✅ LULUS' : '❌ TIDAK LULUS'}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
         id: 'Detail',
         header: 'Detail',
         cell: ({ row }) => {
-          const { tasmi, munaqasyah } = row.original;
-          if (!tasmi && !munaqasyah) return '-';
+          const { scoreDetails } = row.original;
+          if (!scoreDetails || (!scoreDetails.tasmi && !scoreDetails.munaqasyah)) return '-';
 
           return (
             <div className="text-xs space-y-1">
-              {tasmi && (
+              {scoreDetails.tasmi && (
                 <div className="space-y-0.5">
                   <div className="font-medium">Tasmi:</div>
-                  <div>Tajwid: {tasmi.tajwid || 0}</div>
-                  <div>Kelancaran: {tasmi.kelancaran || 0}</div>
-                  <div>Adab: {tasmi.adab || 0}</div>
-                  {tasmi.note && (
-                    <div className="text-muted-foreground">
-                      Catatan: {tasmi.note}
-                    </div>
+                  <div>Tajwid: {scoreDetails.tasmi.tajwid || 0}</div>
+                  <div>Kelancaran: {scoreDetails.tasmi.kelancaran || 0}</div>
+                  <div>Adab: {scoreDetails.tasmi.adab || 0}</div>
+                  {scoreDetails.tasmi.note && (
+                    <div className="text-muted-foreground">Catatan: {scoreDetails.tasmi.note}</div>
                   )}
                 </div>
               )}
-              {munaqasyah && (
+              {scoreDetails.munaqasyah && (
                 <div className="space-y-0.5">
                   <div className="font-medium">Munaqasyah:</div>
-                  <div>Tajwid: {munaqasyah.tajwid || 0}</div>
-                  <div>Kelancaran: {munaqasyah.kelancaran || 0}</div>
-                  {munaqasyah.note && (
+                  <div>Tajwid: {scoreDetails.munaqasyah.tajwid || 0}</div>
+                  <div>Kelancaran: {scoreDetails.munaqasyah.kelancaran || 0}</div>
+                  <div>Adab: {scoreDetails.munaqasyah.adab || 0}</div>
+                  {scoreDetails.munaqasyah.note && (
                     <div className="text-muted-foreground">
-                      Catatan: {munaqasyah.note}
+                      Catatan: {scoreDetails.munaqasyah.note}
                     </div>
                   )}
                 </div>
@@ -302,7 +333,7 @@ export function MunaqasyahResultTable({ data }: Props) {
   );
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
@@ -320,35 +351,73 @@ export function MunaqasyahResultTable({ data }: Props) {
 
   return (
     <>
-      <div className="mb-4">
-        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
-        <Select
-          value={selectedPeriod}
-          onValueChange={(value) => {
-            setSelectedPeriod(value);
-            table
-              .getColumn('Tahun Ajaran')
-              ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
-          }}
-        >
-          <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua Tahun Ajaran</SelectItem>
-            {academicPeriods.map((val) => {
-              const [year, sem] = val.split('__');
-              return (
-                <SelectItem key={val} value={val}>
-                  {year} {sem}
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <Label className="mb-2 block">Filter Periode</Label>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Pilih Periode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Periode</SelectItem>
+              {academicPeriods.map((val) => {
+                const [year, sem] = val.split('__');
+                return (
+                  <SelectItem key={val} value={val}>
+                    {year} {sem}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Filter Jenis Munaqasyah</Label>
+          <Select value={selectedStage} onValueChange={setSelectedStage}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Jenis" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Jenis</SelectItem>
+              {stageOptions.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stageLabels[stage]}
                 </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <DataTable title="Hasil Munaqasyah Saya" table={table} filterColumn="Juz" />
+      {currentPeriodInfo && (
+        <Card>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <p className="font-semibold">
+                  {currentPeriodInfo.academicYear} {currentPeriodInfo.semester}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelas</h4>
+                <p className="font-semibold">{currentPeriodInfo.className}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelompok</h4>
+                <p className="font-semibold">{currentPeriodInfo.groupName}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Guru Pembimbing</h4>
+                <p className="font-semibold">{currentPeriodInfo.teacherName}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <DataTable title="Hasil Munaqasyah Saya" table={table} />
     </>
   );
 }

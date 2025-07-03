@@ -22,7 +22,6 @@ export async function middleware(req: NextRequest) {
   // Jika belum login dan mengakses halaman dashboard, arahkan ke login
   if (pathname.startsWith('/dashboard') && !token) {
     return NextResponse.redirect(new URL('/', req.url));
-    // return NextResponse.redirect(new URL('/login', req.url));
   }
 
   if (token) {

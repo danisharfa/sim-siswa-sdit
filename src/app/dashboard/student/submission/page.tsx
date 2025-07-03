@@ -1,13 +1,19 @@
+import { requireStudentRole } from '@/lib/auth/require-role';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SubmissionManagement } from '@/components/student/submission/SubmissionManagement';
 
 export const dynamic = 'force-dynamic';
 
-export default function StudentSubmissionHistoryPage() {
+export default async function StudentSubmissionHistoryPage() {
+  const user = await requireStudentRole();
+
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Riwayat Setoran</h1>
+      <div className="flex items-baseline gap-2 mb-4">
+        <h1 className="text-2xl font-bold">Setoran</h1>
+        <span className="text-muted-foreground">{user.profile?.nis}</span>
+      </div>
       <Suspense
         fallback={
           <div className="space-y-4">

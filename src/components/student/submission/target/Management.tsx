@@ -7,7 +7,7 @@ export function TargetManagement() {
 
   return (
     <div className="p-4 space-y-4">
-      <TargetTable data={targetData} title="Daftar Target Mingguan" />
+      <TargetTable data={targetData} title="Detail Target Mingguan" />
     </div>
   );
 }

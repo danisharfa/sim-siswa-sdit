@@ -14,7 +14,6 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
-import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { StudentReportData } from '@/lib/data/student/report';
 import {
@@ -26,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ExportPdf } from './ExportPdf';
+import { Download } from 'lucide-react';
 
 export type ReportItem = {
   subject: 'Tahsin' | 'Tahfidz';
@@ -40,12 +40,7 @@ interface Props {
   title: string;
 }
 
-const fetchSetting = async () => {
-  const res = await fetch('/api/academicSetting');
-  const json = await res.json();
-  if (!json.success) throw new Error(json.message);
-  return json.data;
-};
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function ReportTable({ data, title }: Props) {
   const {
@@ -59,24 +54,16 @@ export function ReportTable({ data, title }: Props) {
 
   const [selectedPeriod, setSelectedPeriod] = useState('all');
 
-  const { data: setting } = useSWR('/api/academicSetting', fetchSetting);
-
-  // Debug logs
-  console.log('Report data:', data);
-  console.log('All reports:', data.allReports);
+  const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
   const academicPeriods = useMemo(() => {
     const periods = data.allReports.map((r) => `${r.period.academicYear}-${r.period.semester}`);
-    console.log('Mapped periods:', periods);
     return periods;
   }, [data.allReports]);
 
   const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : 'all';
 
   useEffect(() => {
-    console.log('Default period:', defaultPeriod);
-    console.log('Available periods:', academicPeriods);
-
     if (defaultPeriod !== 'all' && academicPeriods.includes(defaultPeriod)) {
       setSelectedPeriod(defaultPeriod);
     } else if (academicPeriods.length > 0) {
@@ -84,7 +71,6 @@ export function ReportTable({ data, title }: Props) {
     }
   }, [defaultPeriod, academicPeriods]);
 
-  // Get current period data
   const currentPeriodData = useMemo(() => {
     if (selectedPeriod === 'all') {
       return data.allReports[0] || null;
@@ -94,11 +80,9 @@ export function ReportTable({ data, title }: Props) {
     const foundData = data.allReports.find(
       (report) => report.period.academicYear === academicYear && report.period.semester === semester
     );
-    console.log('Current period data:', foundData);
     return foundData || null;
   }, [selectedPeriod, data.allReports]);
 
-  // Transform the data to flatten tahsin and tahfidz scores
   const tableData = useMemo<ReportItem[]>(() => {
     if (!currentPeriodData) return [];
 
@@ -125,7 +109,8 @@ export function ReportTable({ data, title }: Props) {
     () => [
       {
         accessorKey: 'subject',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Mata Pelajaran" />,
+        id: 'Mata Pelajaran',
+        header: 'Mata Pelajaran',
         cell: ({ row }) => (
           <Badge variant={row.original.subject === 'Tahfidz' ? 'default' : 'secondary'}>
             {row.original.subject}
@@ -134,19 +119,18 @@ export function ReportTable({ data, title }: Props) {
       },
       {
         accessorKey: 'topic',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Materi" />,
-        cell: ({ row }) => <div className="font-medium">{row.original.topic}</div>,
+        id: 'Materi',
+        header: 'Materi',
       },
       {
         accessorKey: 'scoreNumeric',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Nilai" />,
-        cell: ({ row }) => (
-          <div className="text-center font-medium">{row.original.scoreNumeric}</div>
-        ),
+        id: 'Nilai',
+        header: 'Nilai',
       },
       {
         accessorKey: 'scoreLetter',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Predikat" />,
+        id: 'Predikat',
+        header: 'Predikat',
         cell: ({ row }) => {
           const grade = row.original.scoreLetter;
           const variant =
@@ -167,12 +151,8 @@ export function ReportTable({ data, title }: Props) {
       },
       {
         accessorKey: 'description',
+        id: 'Deskripsi',
         header: 'Deskripsi',
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {row.original.description === '-' ? '-' : row.original.description}
-          </span>
-        ),
       },
     ],
     []
@@ -195,7 +175,6 @@ export function ReportTable({ data, title }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // Show loading state while data is being fetched
   if (!data || !data.allReports) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
@@ -204,7 +183,6 @@ export function ReportTable({ data, title }: Props) {
     );
   }
 
-  // Show message if no academic periods found
   if (academicPeriods.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
@@ -215,55 +193,27 @@ export function ReportTable({ data, title }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Period Filter and Export */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Periode</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
+              <SelectValue placeholder="Pilih Periode" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => {
-                const periodData = data.allReports.find(
+                data.allReports.find(
                   (r) => `${r.period.academicYear}-${r.period.semester}` === period
                 );
                 return (
                   <SelectItem key={period} value={period}>
-                    {period.replace('-', ' ')} - {periodData?.period.className}
+                    {period.replace('-', ' ')}
                   </SelectItem>
                 );
               })}
             </SelectContent>
           </Select>
         </div>
-
-        {/* Export PDF Button */}
-        {currentPeriodData && (
-          <div>
-            <PDFDownloadLink
-              document={
-                <ExportPdf
-                  data={data}
-                  selectedPeriodIndex={data.allReports.findIndex(
-                    (r) =>
-                      r.period.academicYear === currentPeriodData.period.academicYear &&
-                      r.period.semester === currentPeriodData.period.semester
-                  )}
-                />
-              }
-              fileName={`Rapor-${currentPeriodData.period.academicYear}-${
-                currentPeriodData.period.semester
-              }-${data.fullName.replace(/\s+/g, '_')}.pdf`}
-            >
-              {({ loading }) => (
-                <Button disabled={loading} variant="outline">
-                  {loading ? 'Menyiapkan PDF...' : 'Export PDF'}
-                </Button>
-              )}
-            </PDFDownloadLink>
-          </div>
-        )}
       </div>
 
       {/* Student Info Header */}
@@ -271,18 +221,22 @@ export function ReportTable({ data, title }: Props) {
         <div className="rounded-lg border bg-card p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="font-medium text-muted-foreground">Kelas:</span>
-              <p className="font-medium">{currentPeriodData.period.className}</p>
-            </div>
-            <div>
-              <span className="font-medium text-muted-foreground">Guru:</span>
-              <p className="font-medium">{currentPeriodData.period.teacherName}</p>
-            </div>
-            <div>
               <span className="font-medium text-muted-foreground">Periode:</span>
               <p className="font-medium">
                 {currentPeriodData.period.academicYear} {currentPeriodData.period.semester}
               </p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Kelas:</span>
+              <p className="font-medium">{currentPeriodData.period.className}</p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Kelompok:</span>
+              <p className="font-medium">{currentPeriodData.period.groupName}</p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Guru Pembimbing:</span>
+              <p className="font-medium">{currentPeriodData.period.teacherName}</p>
             </div>
           </div>
 
@@ -319,9 +273,37 @@ export function ReportTable({ data, title }: Props) {
         </div>
       )}
 
+      <div className="flex justify-end mb-4">
+        {currentPeriodData && (
+          <div>
+            <PDFDownloadLink
+              document={
+                <ExportPdf
+                  data={data}
+                  selectedPeriodIndex={data.allReports.findIndex(
+                    (r) =>
+                      r.period.academicYear === currentPeriodData.period.academicYear &&
+                      r.period.semester === currentPeriodData.period.semester
+                  )}
+                />
+              }
+              fileName={`Rapor-${currentPeriodData.period.academicYear}-${
+                currentPeriodData.period.semester
+              }-${data.fullName.replace(/\s+/g, '_')}.pdf`}
+            >
+              {({ loading }) => (
+                <Button disabled={loading} variant="outline">
+                  <Download className="mr-2" /> {loading ? 'Menyetak...' : 'Cetak'}
+                </Button>
+              )}
+            </PDFDownloadLink>
+          </div>
+        )}
+      </div>
+
       {/* Data Table */}
       {currentPeriodData && tableData.length > 0 ? (
-        <DataTable title={title} table={table} filterColumn="topic" />
+        <DataTable title={title} table={table} showColumnFilter={false} />
       ) : (
         <div className="rounded-lg border bg-card p-8 text-center">
           <p className="text-muted-foreground">

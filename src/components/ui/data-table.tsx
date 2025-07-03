@@ -23,10 +23,11 @@ import { Button } from './button';
 import { DataTablePagination } from './table-pagination';
 
 interface Props<T> {
-  title: string;
+  title?: string;
   table: TanStackTable<T>;
   filterColumn?: string;
   emptyMessage?: string;
+  showColumnFilter?: boolean;
 }
 
 export function DataTable<T>({
@@ -34,53 +35,59 @@ export function DataTable<T>({
   table,
   filterColumn,
   emptyMessage = 'Tidak ada hasil.',
+  showColumnFilter = true,
 }: Props<T>) {
   return (
     <Card>
-      <CardHeader>
-        <h2 className="text-xl font-semibold">{title}</h2>
-      </CardHeader>
+      {title && (
+        <CardHeader>
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </CardHeader>
+      )}
       <CardContent>
+        {' '}
         <div className="flex items-center py-4">
-          {filterColumn ? (
-            table.getColumn(filterColumn) ? (
-              <Input
-                placeholder={`Cari ${filterColumn}...`}
-                onChange={(event) =>
-                  table.getColumn(filterColumn)?.setFilterValue(event.target.value)
-                }
-                className="max-w-sm"
-              />
-            ) : null
-          ) : null}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Kolom <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => typeof column.accessorFn !== 'undefined' && column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {filterColumn && table.getColumn(filterColumn) && (
+            <Input
+              placeholder={`Cari ${filterColumn}...`}
+              onChange={(event) =>
+                table.getColumn(filterColumn)?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+          )}
+          {showColumnFilter && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  Kolom <ChevronDown />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) => typeof column.accessorFn !== 'undefined' && column.getCanHide()
+                  )
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <div className="rounded-md border">
           <Table>
-            <TableCaption>{title} dalam sistem.</TableCaption>
+            {title && <TableCaption>{title} dalam sistem.</TableCaption>}
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>

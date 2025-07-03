@@ -17,11 +17,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { Semester, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
-import { Label } from '@/components/ui/label';
 
 interface MunaqasyahSchedule {
   id: string;
@@ -87,9 +88,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
 
   const [selectedPeriod, setSelectedPeriod] = useState<string | 'ALL'>('ALL');
   const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
-  const [selectedBatch, setSelectedBatch] = useState<string | 'ALL'>('ALL');
 
-  // Extract unique academic periods
   const academicPeriods = useMemo(() => {
     const set = new Set<string>();
     for (const schedule of data) {
@@ -112,23 +111,53 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     return Array.from(set);
   }, [data]);
 
-  // Extract unique batches
-  const batchOptions = useMemo(() => {
-    const set = new Set<MunaqasyahBatch>();
-    for (const schedule of data) {
-      for (const sr of schedule.scheduleRequests) {
-        set.add(sr.request.batch);
+  // Filter data berdasarkan periode dan stage yang dipilih
+  const filteredData = useMemo(() => {
+    return data.filter((schedule) => {
+      // Filter by period
+      if (selectedPeriod !== 'ALL') {
+        const periodMatch = schedule.scheduleRequests.some((sr) => {
+          const r = sr.request;
+          const periodKey = `${r.group.classroom.academicYear}__${r.group.classroom.semester}`;
+          return periodKey === selectedPeriod;
+        });
+        if (!periodMatch) return false;
       }
-    }
-    return Array.from(set);
-  }, [data]);
+
+      // Filter by stage
+      if (selectedStage !== 'ALL') {
+        const stageMatch = schedule.scheduleRequests.some(
+          (sr) => sr.request.stage === selectedStage
+        );
+        if (!stageMatch) return false;
+      }
+
+      return true;
+    });
+  }, [data, selectedPeriod, selectedStage]);
+
+  const currentPeriodInfo = useMemo(() => {
+    if (filteredData.length === 0) return null;
+
+    const firstSchedule = filteredData[0];
+    if (firstSchedule.scheduleRequests.length === 0) return null;
+
+    const firstRequest = firstSchedule.scheduleRequests[0].request;
+    return {
+      academicYear: firstRequest.group.classroom.academicYear,
+      semester: firstRequest.group.classroom.semester,
+      className: firstRequest.group.classroom.name,
+      groupName: firstRequest.group.name,
+      teacherName: firstRequest.teacher.user.fullName,
+    };
+  }, [filteredData]);
 
   const columns = useMemo<ColumnDef<MunaqasyahSchedule>[]>(
     () => [
       {
-        id: 'Tanggal',
+        id: 'Tanggal dan Waktu',
         accessorKey: 'date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal dan Waktu" />,
         cell: ({ row }) => {
           const s = row.original;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
@@ -150,13 +179,8 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         },
       },
       {
-        id: 'Batch & Tahap',
-        header: 'Batch & Tahap',
-        accessorFn: (row) => {
-          return row.scheduleRequests
-            .map((sr) => `${batchLabels[sr.request.batch]} - ${stageLabels[sr.request.stage]}`)
-            .join(', ');
-        },
+        id: 'Materi Ujian',
+        header: 'Materi Ujian',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1 min-w-[140px]">
             {row.original.scheduleRequests.map((sr) => {
@@ -169,26 +193,12 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
                   <Badge variant="outline" className="text-xs w-fit">
                     {stageLabels[r.stage]}
                   </Badge>
+                  <Badge variant="default" className="text-xs w-fit">
+                    {r.juz.name}
+                  </Badge>
                 </div>
               );
             })}
-          </div>
-        ),
-        filterFn: (row, columnId, filterValue) => {
-          const value = row.getValue(columnId) as string;
-          return value.toLowerCase().includes(filterValue.toLowerCase());
-        },
-      },
-      {
-        id: 'Juz',
-        header: 'Juz',
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            {row.original.scheduleRequests.map((sr) => (
-              <Badge key={sr.request.id + '-juz'} variant="default" className="w-fit">
-                {sr.request.juz.name}
-              </Badge>
-            ))}
           </div>
         ),
       },
@@ -208,45 +218,12 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
           );
         },
       },
-      {
-        id: 'Info Akademik',
-        header: 'Info Akademik',
-        accessorFn: (row) =>
-          row.scheduleRequests
-            .map(
-              (sr) =>
-                `${sr.request.group.classroom.academicYear} ${sr.request.group.classroom.semester}`
-            )
-            .join(', '),
-        cell: ({ row }) => (
-          <div className="text-sm min-w-[160px]">
-            {row.original.scheduleRequests.map((sr) => (
-              <div key={sr.request.id + '-period'} className="mb-2 last:mb-0">
-                <div className="font-medium text-xs">
-                  📅 {sr.request.group.classroom.academicYear} {sr.request.group.classroom.semester}
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  🏫 {sr.request.group.classroom.name}
-                </div>
-                <div className="text-muted-foreground text-xs">👥 {sr.request.group.name}</div>
-                <div className="text-muted-foreground text-xs">
-                  👨‍🏫 {sr.request.teacher.user.fullName}
-                </div>
-              </div>
-            ))}
-          </div>
-        ),
-        filterFn: (row, columnId, filterValue) => {
-          const value = row.getValue(columnId) as string;
-          return value.includes(filterValue);
-        },
-      },
     ],
     []
   );
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
@@ -266,21 +243,13 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(value) => {
-              setSelectedPeriod(value);
-              table
-                .getColumn('Info Akademik')
-                ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
-            }}
-          >
+          <Label className="mb-2 block">Filter Periode</Label>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
+              <SelectValue placeholder="Pilih Periode" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Tahun Ajaran</SelectItem>
+              <SelectItem value="ALL">Semua Periode</SelectItem>
               {academicPeriods.map((val) => {
                 const [year, sem] = val.split('__');
                 return (
@@ -294,50 +263,13 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Batch</Label>
-          <Select
-            value={selectedBatch}
-            onValueChange={(value) => {
-              setSelectedBatch(value);
-              table
-                .getColumn('Batch & Tahap')
-                ?.setFilterValue(
-                  value === 'ALL' ? undefined : batchLabels[value as MunaqasyahBatch]
-                );
-            }}
-          >
+          <Label className="mb-2 block">Filter Jenis Munaqasyah</Label>
+          <Select value={selectedStage} onValueChange={setSelectedStage}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Pilih Batch" />
+              <SelectValue placeholder="Pilih Jenis" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Batch</SelectItem>
-              {batchOptions.map((batch) => (
-                <SelectItem key={batch} value={batch}>
-                  {batchLabels[batch]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Filter Tahap</Label>
-          <Select
-            value={selectedStage}
-            onValueChange={(value) => {
-              setSelectedStage(value);
-              table
-                .getColumn('Batch & Tahap')
-                ?.setFilterValue(
-                  value === 'ALL' ? undefined : stageLabels[value as MunaqasyahStage]
-                );
-            }}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Pilih Tahap" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Semua Tahap</SelectItem>
+              <SelectItem value="ALL">Semua Jenis</SelectItem>
               {stageOptions.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stageLabels[stage]}
@@ -348,7 +280,34 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </div>
       </div>
 
-      <DataTable title="Jadwal Munaqasyah Saya" table={table} filterColumn="Tanggal" />
+      {currentPeriodInfo && (
+        <Card>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <p className="font-semibold">
+                  {currentPeriodInfo.academicYear} {currentPeriodInfo.semester}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelas</h4>
+                <p className="font-semibold">{currentPeriodInfo.className}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelompok</h4>
+                <p className="font-semibold">{currentPeriodInfo.groupName}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Guru Pembimbing</h4>
+                <p className="font-semibold">{currentPeriodInfo.teacherName}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <DataTable title="Jadwal Munaqasyah Saya" table={table} />
     </>
   );
 }

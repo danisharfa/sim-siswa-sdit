@@ -5,56 +5,38 @@ import { Role, TashihRequestStatus, TashihType, Semester } from '@prisma/client'
 
 type Params = Promise<{ period: string }>;
 
+type ChartLegend = 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI';
+
 interface WafaProgress {
   wafaId: number;
   wafaName: string;
   completedPages: number;
   totalPages: number | null;
   percent: number;
-  status: 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI';
+  status: ChartLegend;
 }
 
 interface StudentTahsinWafaResponse {
   studentId: string;
   studentName: string;
-  currentPeriod: string;
-  currentGroup: {
-    id: string;
-    name: string;
-    className: string;
-  } | null;
   currentWafa: number | null;
   lastWafa: string;
-  totalProgress: {
-    completedBooks: number;
-    totalBooks: number;
-    overallPercent: number;
-  };
   progress: WafaProgress[];
 }
 
 export async function GET(req: Request, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const { period } = params;
+    const { period } = await segmentData.params;
 
-    let academicYear: string | null = null;
-    let semester: Semester | null = null;
+    const [year, smstr] = period.split('-');
+    const academicYear = decodeURIComponent(year);
+    const semester = Object.values(Semester).includes(smstr as Semester)
+      ? (smstr as Semester)
+      : null;
 
-    if (period && period !== 'all') {
-      const [year, smstr] = period.split('-');
-      academicYear = decodeURIComponent(year);
-      if (Object.values(Semester).includes(smstr as Semester)) {
-        semester = smstr as Semester;
-      } else {
-        return NextResponse.json(
-          { success: false, error: `Invalid semester: ${smstr}` },
-          { status: 400 }
-        );
-      }
-    } else {
+    if (!semester) {
       return NextResponse.json(
-        { success: false, error: 'Period parameter is required' },
+        { success: false, error: `Invalid semester: ${smstr}` },
         { status: 400 }
       );
     }
@@ -83,52 +65,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       );
     }
 
-    console.log('Fetching tahsin wafa progress for student:', {
-      studentId: student.id,
-      studentName: student.user.fullName,
-      academicYear,
-      semester,
-    });
-
-    // Get current group for the period
-    let currentGroup = null;
-
-    if (
-      student.group &&
-      student.group.classroom.academicYear === academicYear &&
-      student.group.classroom.semester === semester
-    ) {
-      currentGroup = {
-        id: student.group.id,
-        name: student.group.name,
-        className: student.group.classroom.name,
-      };
-    } else {
-      const groupHistory = await prisma.groupHistory.findFirst({
-        where: {
-          studentId: student.id,
-          academicYear,
-          semester,
-        },
-        include: {
-          group: {
-            include: {
-              classroom: true,
-            },
-          },
-        },
-      });
-
-      if (groupHistory) {
-        currentGroup = {
-          id: groupHistory.group.id,
-          name: groupHistory.group.name,
-          className: groupHistory.group.classroom.name,
-        };
-      }
-    }
-
-    // Get cumulative wafa requests (all completed requests up to the selected period)
     const wafaRequests = await prisma.tashihRequest.findMany({
       where: {
         studentId: student.id,
@@ -157,28 +93,17 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         },
       },
     });
-
-    console.log('Wafa requests found for cumulative period:', {
-      academicYear,
-      semester,
-      requestCount: wafaRequests.length,
-    });
-
-    // Get all wafa books for reference
     const wafaBooks = await prisma.wafa.findMany({
       orderBy: { id: 'asc' },
     });
 
-    // Calculate progress for each wafa book
     const progressList: WafaProgress[] = [];
     let currentWafa: number | null = null;
     let lastWafa = 'Belum ada';
-    let completedBooksCount = 0;
 
     for (const wafaBook of wafaBooks) {
       const wafaBookRequests = wafaRequests.filter((r) => r.wafaId === wafaBook.id);
 
-      // Calculate total completed pages based on page ranges
       const completedPages = wafaBookRequests.reduce((total, request) => {
         if (request.startPage && request.endPage) {
           const pagesInRange = request.endPage - request.startPage + 1;
@@ -189,7 +114,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       const totalPages = wafaBook.pageCount;
 
-      let status: 'SELESAI' | 'SEDANG_DIJALANI' | 'BELUM_DIMULAI' = 'BELUM_DIMULAI';
+      let status: ChartLegend = 'BELUM_DIMULAI';
       let percent = 0;
 
       if (completedPages > 0) {
@@ -198,7 +123,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         if (completedPages >= (totalPages || 0)) {
           status = 'SELESAI';
           lastWafa = wafaBook.name;
-          completedBooksCount++;
         } else {
           status = 'SEDANG_DIJALANI';
           currentWafa = wafaBook.id;
@@ -215,35 +139,13 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    const totalBooks = wafaBooks.length;
-    const overallPercent =
-      totalBooks > 0 ? Math.round((completedBooksCount / totalBooks) * 100 * 100) / 100 : 0;
-
     const result: StudentTahsinWafaResponse = {
       studentId: student.id,
       studentName: student.user.fullName,
-      currentPeriod: `${academicYear} ${semester === 'GANJIL' ? 'Ganjil' : 'Genap'}${
-        currentGroup ? ` | ${currentGroup.name} - ${currentGroup.className}` : ''
-      }`,
-      currentGroup,
       currentWafa,
       lastWafa,
-      totalProgress: {
-        completedBooks: completedBooksCount,
-        totalBooks,
-        overallPercent,
-      },
       progress: progressList,
     };
-
-    console.log('Student tahsin wafa progress result:', {
-      studentName: result.studentName,
-      period: result.currentPeriod,
-      completedBooks: result.totalProgress.completedBooks,
-      overallPercent: result.totalProgress.overallPercent,
-      lastWafa: result.lastWafa,
-      currentWafa: result.currentWafa,
-    });
 
     return NextResponse.json(result);
   } catch (error) {

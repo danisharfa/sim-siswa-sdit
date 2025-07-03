@@ -83,7 +83,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
 
-    // Ambil siswa dari GroupHistory untuk periode spesifik
     const groupHistories = await prisma.groupHistory.findMany({
       where: {
         academicYear,
@@ -99,7 +98,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    // Ambil siswa dari grup aktif yang sesuai dengan periode
     const activeGroups = await prisma.group.findMany({
       include: {
         students: {
@@ -118,7 +116,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    // Kombinasikan siswa dari historical dan active
     const historicalStudents = groupHistories.map((gh) => gh.student);
     const activeStudents = activeGroups.flatMap((group) => group.students);
 
@@ -134,7 +131,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     console.log('Students found:', students.length);
 
-    // Dapatkan semua submission alquran yang sudah lulus (kumulatif sampai periode yang dipilih)
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
         studentId: { in: students.map((s) => s.id) },
@@ -171,7 +167,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       uniqueStudents: new Set(alquranSubmissions.map((s) => s.studentId)).size,
     });
 
-    // Ambil semua juz untuk referensi
     const allJuz = await prisma.juz.findMany({
       include: {
         surahJuz: {
@@ -188,25 +183,38 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     for (const student of students) {
       const studentSubmissions = alquranSubmissions.filter((s) => s.studentId === student.id);
 
-      // Hitung progress untuk setiap juz
       const progressList: AlquranProgress[] = [];
       let currentJuz: number | null = null;
       let lastJuz = 'Belum ada';
 
-      // Cari juz terakhir yang diselesaikan (berdasarkan completion status)
       for (const juz of allJuz) {
         const surahIdsInJuz = juz.surahJuz.map((sj) => sj.surahId);
         const juzSubmissions = studentSubmissions.filter(
           (s) => s.surahId && surahIdsInJuz.includes(s.surahId)
         );
 
-        // Hitung total ayat dalam juz
-        const totalAyah = juz.surahJuz.reduce((total, sj) => total + (sj.surah.verseCount || 0), 0);
+        const totalAyah = juz.surahJuz.reduce((total, sj) => {
+          const ayatInJuz = sj.endVerse - sj.startVerse + 1;
+          return total + ayatInJuz;
+        }, 0);
 
-        // Hitung ayat yang sudah diselesaikan
         const completedAyah = juzSubmissions.reduce((total, submission) => {
-          if (submission.surah) {
-            return total + (submission.surah.verseCount || 0);
+          if (submission.surah && submission.startVerse && submission.endVerse) {
+            const surahJuzInfo = juz.surahJuz.find(sj => sj.surahId === submission.surahId);
+            if (surahJuzInfo) {
+              const juzStart = surahJuzInfo.startVerse;
+              const juzEnd = surahJuzInfo.endVerse;
+              const submissionStart = submission.startVerse;
+              const submissionEnd = submission.endVerse;
+              
+              const overlapStart = Math.max(juzStart, submissionStart);
+              const overlapEnd = Math.min(juzEnd, submissionEnd);
+              
+              if (overlapStart <= overlapEnd) {
+                const overlapAyat = overlapEnd - overlapStart + 1;
+                return total + overlapAyat;
+              }
+            }
           }
           return total;
         }, 0);

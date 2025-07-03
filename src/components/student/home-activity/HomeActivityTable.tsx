@@ -49,6 +49,13 @@ export type HomeActivity = {
       academicYear: string;
       semester: Semester;
     };
+    teacherGroups: {
+      teacher: {
+        user: {
+          fullName: string;
+        };
+      };
+    }[];
   };
   juz: { name: string };
   surah: { name: string };
@@ -81,7 +88,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     setDialogType,
   } = useDataTableState<HomeActivity, 'edit' | 'delete'>();
 
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
   const [selectedActivityType, setSelectedActivityType] = useState<HomeActivityType | 'ALL'>('ALL');
@@ -110,7 +117,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     );
   }, [data]);
 
-  const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : 'all';
+  const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : '';
 
   const activityTypeOptions = useMemo(() => {
     const set = new Set<HomeActivityType>();
@@ -121,10 +128,53 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
   }, [data]);
 
   useEffect(() => {
-    if (defaultPeriod !== 'all') {
-      setSelectedPeriod(defaultPeriod);
+    if (defaultPeriod && !selectedPeriod) {
+      if (academicPeriods.includes(defaultPeriod)) {
+        setSelectedPeriod(defaultPeriod);
+      } else if (academicPeriods.length > 0) {
+        setSelectedPeriod(academicPeriods[0]);
+      }
     }
-  }, [defaultPeriod]);
+  }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  const currentPeriodData = useMemo(() => {
+    if (!selectedPeriod) return null;
+
+    const [academicYear, semester] = selectedPeriod.split('-');
+    const foundData = data.find(
+      (activity) =>
+        activity.group.classroom.academicYear === academicYear &&
+        activity.group.classroom.semester === semester
+    );
+
+    if (foundData) {
+      const teacherName =
+        foundData.group.teacherGroups[0]?.teacher.user.fullName || 'Tidak tersedia';
+
+      return {
+        period: {
+          academicYear,
+          semester,
+          className: foundData.group.classroom.name,
+          groupName: foundData.group.name,
+          teacherName,
+        },
+      };
+    }
+
+    return null;
+  }, [selectedPeriod, data]);
+
+  const filteredData = useMemo(() => {
+    if (!selectedPeriod) return data;
+
+    const [academicYear, semester] = selectedPeriod.split('-');
+    return data.filter(
+      (activity) =>
+        activity.group.classroom.academicYear === academicYear &&
+        activity.group.classroom.semester === semester
+    );
+  }, [data, selectedPeriod]);
 
   function getWeekOfMonth(date: Date): number {
     const adjustedDate = date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -151,21 +201,6 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
               year: 'numeric',
             })}
           </span>
-        ),
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.group.classroom.academicYear} ${row.group.classroom.semester}`,
-        cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.group.classroom.academicYear} {row.original.group.classroom.semester}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.group.name} - {row.original.group.classroom.name}
-            </div>
-          </div>
         ),
       },
       {
@@ -236,7 +271,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
   );
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
@@ -252,34 +287,24 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     onColumnVisibilityChange: setColumnVisibility,
   });
 
-  useEffect(() => {
-    if (selectedPeriod !== 'all') {
-      table.getColumn('Tahun Ajaran')?.setFilterValue(selectedPeriod.replace('-', ' '));
-    }
-  }, [selectedPeriod, table]);
-
   return (
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Periode</Label>
           <Select
             value={selectedPeriod}
             onValueChange={(val) => {
               setSelectedPeriod(val);
-              table
-                .getColumn('Tahun Ajaran')
-                ?.setFilterValue(val === 'all' ? undefined : val.replace('-', ' '));
             }}
           >
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
+              <SelectValue placeholder="Pilih Periode" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua Periode</SelectItem>
-              {academicPeriods.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p.replace('-', ' ')}
+              {academicPeriods.map((period) => (
+                <SelectItem key={period} value={period}>
+                  {period.replace('-', ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -358,11 +383,45 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
         </div>
       </div>
 
+      {/* Student Info Header */}
+      {currentPeriodData && (
+        <div className="rounded-lg border bg-card p-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-muted-foreground">Periode:</span>
+              <p className="font-medium">
+                {currentPeriodData.period.academicYear} {currentPeriodData.period.semester}
+              </p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Kelas:</span>
+              <p className="font-medium">{currentPeriodData.period.className}</p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Kelompok:</span>
+              <p className="font-medium">{currentPeriodData.period.groupName}</p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Guru Pembimbing:</span>
+              <p className="font-medium">{currentPeriodData.period.teacherName}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* <div className="flex justify-end mb-4">
         <ExportToPDFButton table={table} />
       </div> */}
 
-      <DataTable title={title} table={table} filterColumn="Surah" />
+      <DataTable title={title} table={table} filterColumn="Surah" showColumnFilter={false} />
+
+      {selectedPeriod && filteredData.length === 0 && (
+        <div className="rounded-lg border bg-card p-8 text-center mt-4">
+          <p className="text-muted-foreground">
+            Tidak ada data aktivitas rumah untuk periode {selectedPeriod.replace('-', ' ')}.
+          </p>
+        </div>
+      )}
 
       {dialogType === 'edit' && selectedHomeActivity && (
         <HomeActivityEditDialog

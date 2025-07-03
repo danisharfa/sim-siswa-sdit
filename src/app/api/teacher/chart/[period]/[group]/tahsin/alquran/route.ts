@@ -34,14 +34,12 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const { period, group } = params;
 
-    // Parse period jika format "2024-1" atau handle "all"
     let academicYear: string | null = null;
     let semester: Semester | null = null;
 
     if (period && period !== 'all') {
       const [encodedYear, sem] = period.split('-');
       academicYear = decodeURIComponent(encodedYear);
-      // ✅ Validasi dan konversi ke enum Semester
       if (Object.values(Semester).includes(sem as Semester)) {
         semester = sem as Semester;
       } else {
@@ -84,10 +82,8 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     let students: StudentData[] = [];
 
     if (academicYear && semester) {
-      // Jika periode spesifik dipilih, ambil dari kombinasi GroupHistory dan data aktif
       console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
 
-      // 1. Ambil dari GroupHistory untuk periode historis
       const groupHistoryFilter: Record<string, string> = {
         teacherId: teacher.id,
         academicYear,
@@ -109,7 +105,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         },
       });
 
-      // 2. Ambil dari data aktif (tanpa filter periode classroom)
       const activeGroupFilter: Record<string, string> = {
         teacherId: teacher.id,
       };
@@ -134,11 +129,9 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         },
       });
 
-      // Gabungkan siswa dari historis dan aktif
       const studentsFromHistory = groupHistories.map((gh) => gh.student);
       const studentsFromActive = activeGroups.flatMap((ag) => ag.group.students);
 
-      // Gabungkan dan deduplikasi berdasarkan ID
       const allStudents = [...studentsFromHistory, ...studentsFromActive];
       const uniqueStudents = allStudents.reduce((acc, student) => {
         if (!acc.find((s) => s.id === student.id)) {
@@ -149,7 +142,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       students = uniqueStudents;
     } else {
-      // Jika "all" dipilih, ambil semua siswa dari TeacherGroup yang aktif
       console.log('Fetching all tahsin alquran data');
 
       const teacherGroupFilter: Record<string, string> = {
@@ -180,22 +172,18 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     console.log('Students found:', students.length);
 
-    // Dapatkan semua submission alquran yang sudah lulus (kumulatif sampai periode yang dipilih)
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
         studentId: { in: students.map((s) => s.id) },
         submissionType: SubmissionType.TAHSIN_ALQURAN,
         submissionStatus: SubmissionStatus.LULUS,
-        // ✅ Filter kumulatif: ambil semua data sampai periode yang dipilih
         group: {
           classroom: {
             OR: [
               {
-                // Periode sebelum tahun yang dipilih
                 academicYear: { lt: academicYear },
               },
               {
-                // Tahun yang sama, tapi semester sebelumnya atau sama
                 academicYear,
                 semester: semester === 'GENAP' ? { in: ['GANJIL', 'GENAP'] } : 'GANJIL',
               },
@@ -220,7 +208,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       uniqueStudents: new Set(alquranSubmissions.map((s) => s.studentId)).size,
     });
 
-    // Ambil semua juz untuk referensi
     const allJuz = await prisma.juz.findMany({
       include: {
         surahJuz: {
@@ -237,25 +224,38 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     for (const student of students) {
       const studentSubmissions = alquranSubmissions.filter((s) => s.studentId === student.id);
 
-      // Hitung progress untuk setiap juz
       const progressList: AlquranProgress[] = [];
       let currentJuz: number | null = null;
       let lastJuz = 'Belum ada';
 
-      // Cari juz terakhir yang diselesaikan (berdasarkan completion status)
-      for (const juz of allJuz) {
+     for (const juz of allJuz) {
         const surahIdsInJuz = juz.surahJuz.map((sj) => sj.surahId);
         const juzSubmissions = studentSubmissions.filter(
           (s) => s.surahId && surahIdsInJuz.includes(s.surahId)
         );
 
-        // Hitung total ayat dalam juz
-        const totalAyah = juz.surahJuz.reduce((total, sj) => total + (sj.surah.verseCount || 0), 0);
+        const totalAyah = juz.surahJuz.reduce((total, sj) => {
+          const ayatInJuz = sj.endVerse - sj.startVerse + 1;
+          return total + ayatInJuz;
+        }, 0);
 
-        // Hitung ayat yang sudah diselesaikan
         const completedAyah = juzSubmissions.reduce((total, submission) => {
-          if (submission.surah) {
-            return total + (submission.surah.verseCount || 0);
+          if (submission.surah && submission.startVerse && submission.endVerse) {
+            const surahJuzInfo = juz.surahJuz.find(sj => sj.surahId === submission.surahId);
+            if (surahJuzInfo) {
+              const juzStart = surahJuzInfo.startVerse;
+              const juzEnd = surahJuzInfo.endVerse;
+              const submissionStart = submission.startVerse;
+              const submissionEnd = submission.endVerse;
+              
+              const overlapStart = Math.max(juzStart, submissionStart);
+              const overlapEnd = Math.min(juzEnd, submissionEnd);
+              
+              if (overlapStart <= overlapEnd) {
+                const overlapAyat = overlapEnd - overlapStart + 1;
+                return total + overlapAyat;
+              }
+            }
           }
           return total;
         }, 0);
@@ -268,7 +268,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
           if (completedAyah >= totalAyah) {
             status = 'SELESAI';
-            // Update lastJuz jika juz ini selesai
             lastJuz = `Juz ${juz.id}`;
           } else {
             status = 'SEDANG_DIJALANI';

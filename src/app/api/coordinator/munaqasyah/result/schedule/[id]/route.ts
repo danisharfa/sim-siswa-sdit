@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, message: 'ID tidak ditemukan' }, { status: 400 });
     }
 
-        const schedule = await prisma.munaqasyahSchedule.findUnique({
+    const schedule = await prisma.munaqasyahSchedule.findUnique({
       where: { id: scheduleId },
       include: {
         scheduleRequests: {
@@ -59,8 +59,24 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         },
         results: {
           include: {
-            tasmi: true,
-            munaqasyah: true,
+            tasmiScore: {
+              select: {
+                tajwid: true,
+                kelancaran: true,
+                adab: true,
+                note: true,
+                totalScore: true,
+              },
+            },
+            munaqasyahScore: {
+              select: {
+                tajwid: true,
+                kelancaran: true,
+                adab: true,
+                note: true,
+                totalScore: true,
+              },
+            },
           },
         },
       },
@@ -80,6 +96,21 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       const r = sr.request;
       const studentResult = resultMap.get(r.id);
 
+      // Determine if this stage has been completed
+      let hasResult = false;
+      if (studentResult) {
+        if (r.stage === 'TASMI' && studentResult.tasmiScore) {
+          hasResult = true;
+        } else if (r.stage === 'MUNAQASYAH' && studentResult.munaqasyahScore) {
+          hasResult = true;
+        }
+        // Also hide students who have completed MUNAQASYAH stage completely
+        // (they shouldn't appear in any further assessment forms)
+        if (studentResult.munaqasyahScore) {
+          hasResult = true;
+        }
+      }
+
       return {
         requestId: r.id,
         scheduleId: schedule.id,
@@ -92,16 +123,16 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         juz: r.juz,
         student: r.student,
         teacher: r.teacher,
-        result: studentResult
-          ? {
-              id: studentResult.id,
-              passed: studentResult.passed,
-              avarageScore: studentResult.avarageScore,
-              grade: studentResult.grade,
-              tasmi: studentResult.tasmi,
-              munaqasyah: studentResult.munaqasyah,
-            }
-          : null,
+        result:
+          hasResult && studentResult
+            ? {
+                id: studentResult.id,
+                passed: studentResult.passed,
+                grade: studentResult.grade,
+                tasmiScore: studentResult.tasmiScore,
+                munaqasyahScore: studentResult.munaqasyahScore,
+              }
+            : null,
       };
     });
 

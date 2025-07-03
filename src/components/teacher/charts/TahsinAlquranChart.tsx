@@ -26,29 +26,13 @@ type TahsinDetailItem = {
   totalAyah: number;
 };
 
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  }
-  const data = await res.json();
-
-  if (data && typeof data === 'object' && 'success' in data && data.success === false) {
-    throw new Error(data.error || data.message || 'API returned an error');
-  }
-
-  if (!Array.isArray(data)) {
-    throw new Error('Invalid data format received from API');
-  }
-
-  return data;
-};
-
 type TahsinAlquranChartProps = {
   academicYear: string;
   semester: string;
   groupId: string;
 };
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function TahsinAlquranChart({ academicYear, semester, groupId }: TahsinAlquranChartProps) {
   const period = `${encodeURIComponent(academicYear)}-${semester}`;

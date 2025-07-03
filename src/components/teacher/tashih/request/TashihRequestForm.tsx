@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -192,7 +199,7 @@ export function TashihRequestForm() {
         <CardDescription>
           {settingData?.success && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <strong>{settingData.data.currentYear}</strong> — Semester:{' '}
+              Tahun Ajaran: <strong>{settingData.data.currentYear}</strong> - Semester:{' '}
               <strong>{settingData.data.currentSemester}</strong>
             </span>
           )}

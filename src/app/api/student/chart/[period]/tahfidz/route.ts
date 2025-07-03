@@ -19,19 +19,8 @@ interface TahfidzProgress {
 interface StudentTahfidzResponse {
   studentId: string;
   studentName: string;
-  currentPeriod: string;
-  currentGroup: {
-    id: string;
-    name: string;
-    className: string;
-  } | null;
   lastSurah: string;
   currentJuz: number | null;
-  totalProgress: {
-    completedJuz: number;
-    totalJuz: number;
-    overallPercent: number;
-  };
   progress: TahfidzProgress[];
 }
 
@@ -39,7 +28,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
   try {
     const { period } = await segmentData.params;
 
-    // Parse period parameter
     const [year, smstr] = period.split('-');
     const academicYear = decodeURIComponent(year);
     const semester = Object.values(Semester).includes(smstr as Semester)
@@ -48,8 +36,8 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     if (!semester) {
       return NextResponse.json(
-      { success: false, error: `Invalid semester: ${smstr}` },
-      { status: 400 }
+        { success: false, error: `Invalid semester: ${smstr}` },
+        { status: 400 }
       );
     }
 
@@ -77,45 +65,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       );
     }
 
-    // Get current group for the period
-    let currentGroup = null;
-
-    if (
-      student.group &&
-      student.group.classroom.academicYear === academicYear &&
-      student.group.classroom.semester === semester
-    ) {
-      currentGroup = {
-        id: student.group.id,
-        name: student.group.name,
-        className: student.group.classroom.name,
-      };
-    } else {
-      const groupHistory = await prisma.groupHistory.findFirst({
-        where: {
-          studentId: student.id,
-          academicYear,
-          semester,
-        },
-        include: {
-          group: {
-            include: {
-              classroom: true,
-            },
-          },
-        },
-      });
-
-      if (groupHistory) {
-        currentGroup = {
-          id: groupHistory.group.id,
-          name: groupHistory.group.name,
-          className: groupHistory.group.classroom.name,
-        };
-      }
-    }
-
-    // Get all juz data
     const allJuz = await prisma.juz.findMany({
       include: {
         surahJuz: {
@@ -129,7 +78,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const surahCountMap = Object.fromEntries(allJuz.map((juz) => [juz.id, juz.surahJuz.length]));
 
-    // Get cumulative tashih requests (all completed requests up to the selected period)
     const tashihRequests = await prisma.tashihRequest.findMany({
       where: {
         studentId: student.id,
@@ -144,7 +92,10 @@ export async function GET(req: Request, segmentData: { params: Params }) {
               },
               {
                 academicYear,
-                semester: semester === Semester.GENAP ? { in: [Semester.GANJIL, Semester.GENAP] } : Semester.GANJIL,
+                semester:
+                  semester === Semester.GENAP
+                    ? { in: [Semester.GANJIL, Semester.GENAP] }
+                    : Semester.GANJIL,
               },
             ],
           },
@@ -166,22 +117,9 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       orderBy: [{ juzId: 'asc' }, { surah: { id: 'asc' } }],
     });
 
-    console.log('Tahfidz requests found:', {
-      count: tashihRequests.length,
-      periods: [
-        ...new Set(
-          tashihRequests.map(
-            (r) => `${r.group.classroom.academicYear}-${r.group.classroom.semester}`
-          )
-        ),
-      ],
-    });
-
-    // Process progress data
     const progressList: TahfidzProgress[] = [];
     let currentJuz: number | null = null;
     let lastSurah = 'Belum ada hafalan';
-    let completedJuzCount = 0;
 
     let highestJuzWithProgress = 0;
     let lastCompletedSurah: string | null = null;
@@ -199,7 +137,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
         if (completedSurah >= totalSurah) {
           status = 'SELESAI';
-          completedJuzCount++;
           highestJuzWithProgress = juz.id;
         } else {
           status = 'SEDANG_DIJALANI';
@@ -235,35 +172,13 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       lastSurah = lastCompletedSurah;
     }
 
-    const totalJuz = allJuz.length;
-    const overallPercent =
-      totalJuz > 0 ? Math.round((completedJuzCount / totalJuz) * 100 * 100) / 100 : 0;
-
     const result: StudentTahfidzResponse = {
       studentId: student.id,
       studentName: student.user.fullName,
-      currentPeriod: `${academicYear} ${semester === 'GANJIL' ? 'Ganjil' : 'Genap'}${
-        currentGroup ? ` | ${currentGroup.name} - ${currentGroup.className}` : ''
-      }`,
-      currentGroup,
       lastSurah,
       currentJuz,
-      totalProgress: {
-        completedJuz: completedJuzCount,
-        totalJuz,
-        overallPercent,
-      },
       progress: progressList,
     };
-
-    console.log('Student tahfidz progress result:', {
-      studentName: result.studentName,
-      period: result.currentPeriod,
-      completedJuz: result.totalProgress.completedJuz,
-      overallPercent: result.totalProgress.overallPercent,
-      lastSurah: result.lastSurah,
-      currentJuz: result.currentJuz,
-    });
 
     return NextResponse.json(result);
   } catch (error) {

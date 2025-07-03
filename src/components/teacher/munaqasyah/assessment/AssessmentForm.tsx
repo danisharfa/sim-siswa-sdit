@@ -36,23 +36,23 @@ interface StudentRequest {
     user: { fullName: string };
   };
   result?: {
+    id: string;
     passed: boolean;
-    avarageScore: number;
     grade: string;
-    tasmi?: {
+    tasmiScore?: {
       tajwid: number;
       kelancaran: number;
       adab: number;
       note?: string;
       totalScore: number;
-    };
-    munaqasyah?: {
+    } | null;
+    munaqasyahScore?: {
       tajwid: number;
       kelancaran: number;
-      adab?: number;
+      adab: number;
       note?: string;
       totalScore: number;
-    };
+    } | null;
   } | null;
 }
 
@@ -195,9 +195,18 @@ export function AssessmentForm({ onSaved }: { onSaved: () => void }) {
             <>
               <div>
                 <Label className="mb-2 block">Pilih Siswa</Label>
-                <Select onValueChange={setSelectedRequestId}>
+                <Select
+                  onValueChange={setSelectedRequestId}
+                  disabled={students?.filter((s) => !s.result).length === 0}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih siswa" />
+                    <SelectValue
+                      placeholder={
+                        students?.filter((s) => !s.result).length === 0
+                          ? 'Tidak ada siswa yang perlu dinilai'
+                          : 'Pilih siswa'
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {students

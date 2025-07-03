@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddMunaqasyahResultForm } from './AddMunaqasyahResultForm';
+import { MunaqasyahResultForm } from './MunaqasyahResultForm';
 import { MunaqasyahResultTable } from './MunaqasyahResultTable';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -25,7 +25,7 @@ export function MunaqasyahResultManagement() {
 
   return (
     <div className="space-y-6">
-      <AddMunaqasyahResultForm onSaved={mutate} />
+      <MunaqasyahResultForm onSaved={mutate} />
       <MunaqasyahResultTable data={data.data} title="Daftar Munaqasyah Ujian" />
     </div>
   );

@@ -14,73 +14,35 @@ type Period = {
   label: string;
   academicYear: string;
   semester: string;
-};
-
-type GroupOption = {
-  id: string;
-  name: string;
-  classroomName: string;
-  academicYear: string;
-  semester: string;
-  period: string;
-  label: string;
+  groupInfo?: {
+    id: string;
+    name: string;
+    className: string;
+  } | null;
 };
 
 type ChartFiltersProps = {
   periods: Period[];
-  groups: GroupOption[];
   selectedPeriod: string;
-  selectedGroup: string;
   onPeriodChange: (value: string) => void;
-  onGroupChange: (value: string) => void;
 };
 
-export function ChartFilters({
-  periods,
-  groups,
-  selectedPeriod,
-  selectedGroup,
-  onPeriodChange,
-  onGroupChange,
-}: ChartFiltersProps) {
-  const filteredGroups = groups.filter((group) => group.period === selectedPeriod);
-
+export function ChartFilters({ periods, selectedPeriod, onPeriodChange }: ChartFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-4">
-      <div>
-        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
-        <Select value={selectedPeriod} onValueChange={onPeriodChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih periode" />
-          </SelectTrigger>
-          <SelectContent>
-            {periods.map((period) => (
-              <SelectItem key={period.value} value={period.value}>
-                {period.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {groups.length > 0 && (
-        <div>
-          <Label className="mb-2 block">Filter Kelompok</Label>
-          <Select value={selectedGroup} onValueChange={onGroupChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih kelompok" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Kelompok</SelectItem>
-              {filteredGroups.map((group) => (
-                <SelectItem key={group.id} value={group.id}>
-                  {group.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-    </div>
+    <>
+      <Label className="mb-2 block">Filter Periode</Label>
+      <Select value={selectedPeriod} onValueChange={onPeriodChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Pilih periode" />
+        </SelectTrigger>
+        <SelectContent>
+          {periods.map((period) => (
+            <SelectItem key={period.value} value={period.value}>
+              {period.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
   );
 }

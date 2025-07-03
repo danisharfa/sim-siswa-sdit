@@ -23,9 +23,9 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { DataTable } from '@/components/ui/data-table';
-import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { StudentTargetData } from '@/lib/data/student/target';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type TargetItem = {
   id: string;
@@ -36,7 +36,7 @@ export type TargetItem = {
   status: 'TERCAPAI' | 'TIDAK_TERCAPAI' | 'SEBAGIAN_TERCAPAI';
   progressPercent: number;
   material: string;
-  deadline: string;
+  deadline: string; // Format: "dd MMM - dd MMM yyyy"
 };
 
 interface Props {
@@ -44,12 +44,7 @@ interface Props {
   title: string;
 }
 
-const fetchSetting = async () => {
-  const res = await fetch('/api/academicSetting');
-  const json = await res.json();
-  if (!json.success) throw new Error(json.message);
-  return json.data;
-};
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function TargetTable({ data, title }: Props) {
   const {
@@ -63,24 +58,16 @@ export function TargetTable({ data, title }: Props) {
 
   const [selectedPeriod, setSelectedPeriod] = useState('all');
 
-  const { data: setting } = useSWR('/api/academicSetting', fetchSetting);
-
-  // Debug logs
-  console.log('Target data:', data);
-  console.log('All targets:', data.allTargets);
+  const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
   const academicPeriods = useMemo(() => {
     const periods = data.allTargets.map((r) => `${r.period.academicYear}-${r.period.semester}`);
-    console.log('Mapped periods:', periods);
     return periods;
   }, [data.allTargets]);
 
   const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : 'all';
 
   useEffect(() => {
-    console.log('Default period:', defaultPeriod);
-    console.log('Available periods:', academicPeriods);
-
     if (defaultPeriod !== 'all' && academicPeriods.includes(defaultPeriod)) {
       setSelectedPeriod(defaultPeriod);
     } else if (academicPeriods.length > 0) {
@@ -88,8 +75,7 @@ export function TargetTable({ data, title }: Props) {
     }
   }, [defaultPeriod, academicPeriods]);
 
-  // Get current period data
-  const currentPeriodData = useMemo(() => {
+  const currentPeriodInfo = useMemo(() => {
     if (selectedPeriod === 'all') {
       return data.allTargets[0] || null;
     }
@@ -98,15 +84,13 @@ export function TargetTable({ data, title }: Props) {
     const foundData = data.allTargets.find(
       (target) => target.period.academicYear === academicYear && target.period.semester === semester
     );
-    console.log('Current period data:', foundData);
     return foundData || null;
   }, [selectedPeriod, data.allTargets]);
 
-  // Transform the data to flatten targets
   const tableData = useMemo<TargetItem[]>(() => {
-    if (!currentPeriodData) return [];
+    if (!currentPeriodInfo) return [];
 
-    return currentPeriodData.targets.map((target) => {
+    return currentPeriodInfo.targets.map((target) => {
       let material = '';
 
       if (target.type === 'TAHFIDZ' || target.type === 'TAHSIN_ALQURAN') {
@@ -132,10 +116,14 @@ export function TargetTable({ data, title }: Props) {
         status: target.status,
         progressPercent: target.progressPercent,
         material,
-        deadline: format(target.endDate, 'dd MMM yyyy', { locale: id }),
+        deadline: `${format(target.startDate, 'dd MMM', { locale: id })} - ${format(
+          target.endDate,
+          'dd MMM yyyy',
+          { locale: id }
+        )}`,
       };
     });
-  }, [currentPeriodData]);
+  }, [currentPeriodInfo]);
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -193,7 +181,7 @@ export function TargetTable({ data, title }: Props) {
     () => [
       {
         accessorKey: 'type',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Jenis" />,
+        header: 'Jenis',
         cell: ({ row }) => (
           <Badge variant={getTypeVariant(row.original.type)}>
             {getTypeLabel(row.original.type)}
@@ -202,22 +190,19 @@ export function TargetTable({ data, title }: Props) {
       },
       {
         accessorKey: 'description',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Deskripsi" />,
-        cell: ({ row }) => <div className="font-medium max-w-xs">{row.original.description}</div>,
+        header: 'Deskripsi',
       },
       {
         accessorKey: 'material',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Materi" />,
-        cell: ({ row }) => <div className="max-w-xs">{row.original.material}</div>,
+        header: 'Materi',
       },
       {
         accessorKey: 'deadline',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Deadline" />,
-        cell: ({ row }) => <div className="text-center">{row.original.deadline}</div>,
+        header: 'Rentang Waktu',
       },
       {
         accessorKey: 'progressPercent',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Progress" />,
+        header: 'Progress',
         cell: ({ row }) => (
           <div className="flex items-center gap-2 min-w-[120px]">
             <Progress value={row.original.progressPercent} className="h-2 flex-1" />
@@ -229,7 +214,7 @@ export function TargetTable({ data, title }: Props) {
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: 'Status',
         cell: ({ row }) => (
           <Badge variant={getStatusVariant(row.original.status)}>
             {getStatusLabel(row.original.status)}
@@ -257,7 +242,6 @@ export function TargetTable({ data, title }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // Show loading state while data is being fetched
   if (!data || !data.allTargets) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
@@ -266,7 +250,6 @@ export function TargetTable({ data, title }: Props) {
     );
   }
 
-  // Show message if no academic periods found
   if (academicPeriods.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
@@ -277,13 +260,12 @@ export function TargetTable({ data, title }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Period Filter */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Periode</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
+              <SelectValue placeholder="Pilih Periode" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => {
@@ -299,50 +281,60 @@ export function TargetTable({ data, title }: Props) {
         </div>
       </div>
 
-      {/* Student Info Header */}
-      {currentPeriodData && (
-        <div className="rounded-lg border bg-card p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-muted-foreground">Kelas:</span>
-              <p className="font-medium">{currentPeriodData.period.className}</p>
-            </div>
-            <div>
-              <span className="font-medium text-muted-foreground">Guru:</span>
-              <p className="font-medium">{currentPeriodData.period.teacherName}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      {currentPeriodInfo && (
+        <Card>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <span className="font-medium text-muted-foreground">Total Target:</span>
-                <p className="font-medium">{currentPeriodData.targets.length}</p>
-              </div>
-              <div>
-                <span className="font-medium text-muted-foreground">Tercapai:</span>
-                <p className="font-medium text-green-600">
-                  {currentPeriodData.targets.filter((t) => t.status === 'TERCAPAI').length}
+                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <p className="font-semibold">
+                  {currentPeriodInfo.period.academicYear} {currentPeriodInfo.period.semester}
                 </p>
               </div>
               <div>
-                <span className="font-medium text-muted-foreground">Tidak Tercapai:</span>
-                <p className="font-medium text-red-600">
-                  {currentPeriodData.targets.filter((t) => t.status === 'TIDAK_TERCAPAI').length}
-                </p>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelas</h4>
+                <p className="font-semibold">{currentPeriodInfo.period.className}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelompok</h4>
+                <p className="font-semibold">{currentPeriodInfo.period.groupName}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Guru Pembimbing</h4>
+                <p className="font-semibold">{currentPeriodInfo.period.teacherName}</p>
               </div>
             </div>
-          </div>
-        </div>
+            <div className="mt-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <h4 className="font-medium text-muted-foreground">Total Target:</h4>
+                  <p className="font-semibold">{currentPeriodInfo.targets.length}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-muted-foreground">Tercapai:</h4>
+                  <p className="font-semibold text-green-600">
+                    {currentPeriodInfo.targets.filter((t) => t.status === 'TERCAPAI').length}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-muted-foreground">Tidak Tercapai:</h4>
+                  <p className="font-semibold text-red-600">
+                    {currentPeriodInfo.targets.filter((t) => t.status === 'TIDAK_TERCAPAI').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Data Table */}
-      {currentPeriodData && tableData.length > 0 ? (
-        <DataTable title={title} table={table} filterColumn="description" />
+      {currentPeriodInfo && tableData.length > 0 ? (
+        <DataTable title={title} table={table} showColumnFilter={false} />
       ) : (
         <div className="rounded-lg border bg-card p-8 text-center">
           <p className="text-muted-foreground">
-            {!currentPeriodData
+            {!currentPeriodInfo
               ? 'Pilih periode untuk melihat data target'
               : 'Tidak ada data target untuk periode ini'}
           </p>

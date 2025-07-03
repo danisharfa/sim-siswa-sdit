@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaUserGraduate } from 'react-icons/fa';
+import { FaUserGraduate, FaUsers, FaSchool } from 'react-icons/fa';
 import { ChartFilters } from './ChartFilters';
 import { TahfidzChart } from './TahfidzChart';
 import { WafaChart } from './WafaChart';
@@ -43,6 +43,8 @@ export function Management() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [totalStudents, setTotalStudents] = useState<number>(0);
+  const [totalGroups, setTotalGroups] = useState<number>(0);
+  const [totalClasses, setTotalClasses] = useState<number>(0);
 
   const { data: filterData, error: filterError } = useSWR<FilterData>(
     '/api/coordinator/chart/filters',
@@ -54,6 +56,27 @@ export function Management() {
       setSelectedPeriod(filterData.defaultPeriod);
     }
   }, [filterData?.defaultPeriod, selectedPeriod]);
+
+  // Calculate total groups and classes from filter data
+  useEffect(() => {
+    if (filterData?.groups && selectedPeriod) {
+      const [academicYear, semester] = selectedPeriod.split('|');
+
+      // Filter groups for selected period
+      const groupsForPeriod = filterData.groups.filter(
+        (group) => group.academicYear === academicYear && group.semester === semester
+      );
+
+      setTotalGroups(groupsForPeriod.length);
+
+      // Count unique classes for selected period
+      const uniqueClasses = new Set(groupsForPeriod.map((group) => group.classroomName));
+      setTotalClasses(uniqueClasses.size);
+    } else {
+      setTotalGroups(0);
+      setTotalClasses(0);
+    }
+  }, [filterData?.groups, selectedPeriod]);
 
   const handlePeriodChange = (newPeriod: string) => {
     console.log('Period changed from', selectedPeriod, 'to', newPeriod);
@@ -99,21 +122,48 @@ export function Management() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-row items-end gap-4">
-        <div className="w-72">
+      <div className="flex flex-col gap-4">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">Total Siswa Bimbingan</CardTitle>
-              <FaUserGraduate className="w-10 h-10 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Siswa
+              </CardTitle>
+              <FaUserGraduate className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div>
-                <p className="text-4xl font-bold text-primary">{totalStudents}</p>
-              </div>
+              <div className="text-2xl font-bold text-primary">{totalStudents}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Kelompok
+              </CardTitle>
+              <FaUsers className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{totalGroups}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Kelas
+              </CardTitle>
+              <FaSchool className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{totalClasses}</div>
             </CardContent>
           </Card>
         </div>
-        <div>
+
+        {/* Filters */}
+        <div className="flex justify-end">
           <ChartFilters
             periods={filterData.periods}
             groups={filterData.groups}

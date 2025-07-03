@@ -36,29 +36,29 @@ interface StudentRequest {
     user: { fullName: string };
   };
   result?: {
+    id: string;
     passed: boolean;
-    avarageScore: number;
     grade: string;
-    tasmi?: {
+    tasmiScore?: {
       tajwid: number;
       kelancaran: number;
       adab: number;
       note?: string;
       totalScore: number;
-    };
-    munaqasyah?: {
+    } | null;
+    munaqasyahScore?: {
       tajwid: number;
       kelancaran: number;
-      adab?: number;
+      adab: number;
       note?: string;
       totalScore: number;
-    };
+    } | null;
   } | null;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function AddMunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
+export function MunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<StudentRequest | null>(null);
@@ -195,13 +195,22 @@ export function AddMunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
             <>
               <div>
                 <Label className="mb-2 block">Pilih Siswa</Label>
-                <Select onValueChange={setSelectedRequestId}>
+                <Select
+                  onValueChange={setSelectedRequestId}
+                  disabled={students?.filter((s) => !s.result).length === 0}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih siswa" />
+                    <SelectValue
+                      placeholder={
+                        students?.filter((s) => !s.result).length === 0
+                          ? 'Tidak ada siswa yang perlu dinilai'
+                          : 'Pilih siswa'
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {students
-                      .filter((s) => !s.result)
+                      ?.filter((s) => !s.result)
                       .map((s) => (
                         <SelectItem key={s.requestId} value={s.requestId}>
                           {s.student.user.fullName} | {s.juz?.name ?? '-'} | {s.batch} |{' '}

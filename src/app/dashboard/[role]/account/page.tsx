@@ -7,7 +7,6 @@ export default async function AccountPage({ params }: { params: Promise<{ role: 
   const session = await getSession();
 
   if (!session?.user) return redirect('/');
-  // if (!session?.user) return redirect('/login');
 
   const actualRole = session.user.role;
 

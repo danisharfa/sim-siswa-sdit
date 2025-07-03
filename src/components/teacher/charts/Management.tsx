@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaUserGraduate } from 'react-icons/fa';
+import { FaUserGraduate, FaUsers } from 'react-icons/fa';
 import { ChartFilters } from './ChartFilters';
 import { TahfidzChart } from './TahfidzChart';
 import { WafaChart } from './WafaChart';
 import { TahsinAlquranChart } from './TahsinAlquranChart';
+import { TeacherInfoCard } from './TeacherInfoCard';
 
 type Period = {
   value: string;
@@ -43,6 +44,7 @@ export function Management() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [totalStudents, setTotalStudents] = useState<number>(0);
+  const [totalGroups, setTotalGroups] = useState<number>(0);
 
   const { data: filterData, error: filterError } = useSWR<FilterData>(
     '/api/teacher/chart/filters',
@@ -54,6 +56,22 @@ export function Management() {
       setSelectedPeriod(filterData.defaultPeriod);
     }
   }, [filterData?.defaultPeriod, selectedPeriod]);
+
+  // Calculate total groups for teacher
+  useEffect(() => {
+    if (filterData?.groups && selectedPeriod) {
+      const [academicYear, semester] = selectedPeriod.split('|');
+
+      // Filter groups for selected period (teacher only sees their own groups)
+      const groupsForPeriod = filterData.groups.filter(
+        (group) => group.academicYear === academicYear && group.semester === semester
+      );
+
+      setTotalGroups(groupsForPeriod.length);
+    } else {
+      setTotalGroups(0);
+    }
+  }, [filterData?.groups, selectedPeriod]);
 
   const handlePeriodChange = (newPeriod: string) => {
     console.log('Period changed from', selectedPeriod, 'to', newPeriod);
@@ -99,31 +117,47 @@ export function Management() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-row items-end gap-4">
-        <div className="w-72">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">Total Siswa Bimbingan</CardTitle>
-              <FaUserGraduate className="w-10 h-10 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div>
-                <p className="text-4xl font-bold text-primary">{totalStudents}</p>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1">
+          <TeacherInfoCard />
         </div>
-        <div>
-          <ChartFilters
-            periods={filterData.periods}
-            groups={filterData.groups}
-            selectedPeriod={selectedPeriod}
-            selectedGroup={selectedGroup}
-            onPeriodChange={handlePeriodChange}
-            onGroupChange={setSelectedGroup}
-          />
+        <div className="flex-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Siswa Bimbingan
+                </CardTitle>
+                <FaUserGraduate className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{totalStudents}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Kelompok Bimbingan
+                </CardTitle>
+                <FaUsers className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{totalGroups}</div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      <ChartFilters
+        periods={filterData.periods}
+        groups={filterData.groups}
+        selectedPeriod={selectedPeriod}
+        selectedGroup={selectedGroup}
+        onPeriodChange={handlePeriodChange}
+        onGroupChange={setSelectedGroup}
+      />
 
       {selectedPeriod && (
         <div className="grid grid-cols-1 gap-6">

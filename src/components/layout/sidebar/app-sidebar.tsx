@@ -9,7 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarRail,
 } from '@/components/ui/sidebar';
 
 import { useUser } from '@/lib/context/user-context';
@@ -23,7 +22,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar variant="floating" collapsible="icon" {...props}>
-      {/* Header Logo */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -48,12 +46,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* Konten Menu */}
       <SidebarContent>
         {role ? <NavMain items={menuItems} /> : <p className="px-4 py-2">Loading...</p>}
       </SidebarContent>
-
-      <SidebarRail />
     </Sidebar>
   );
 }
