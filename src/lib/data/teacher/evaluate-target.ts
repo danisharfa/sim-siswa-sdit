@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { SubmissionType, TargetStatus, WeeklyTarget } from '@prisma/client';
+import { SubmissionType, TargetStatus, WeeklyTarget, SubmissionStatus } from '@prisma/client';
 
 type Verse = { surahId: number; verse: number };
 type Page = { wafaId: number; page: number };
@@ -51,11 +51,15 @@ function extractSubmittedVerses(
     surahId: number | null;
     startVerse: number | null;
     endVerse: number | null;
+    submissionStatus: SubmissionStatus;
   }[]
 ): Set<string> {
   const result = new Set<string>();
-  for (const { surahId, startVerse, endVerse } of submissions) {
+  for (const { surahId, startVerse, endVerse, submissionStatus } of submissions) {
+    // Hanya hitung submission yang LULUS
+    if (submissionStatus !== SubmissionStatus.LULUS) continue;
     if (!surahId || !startVerse || !endVerse) continue;
+    
     for (let i = startVerse; i <= endVerse; i++) {
       result.add(`${surahId}:${i}`);
     }
@@ -79,11 +83,15 @@ function extractSubmittedPages(
     wafaId: number | null;
     startPage: number | null;
     endPage: number | null;
+    submissionStatus: SubmissionStatus;
   }[]
 ): Set<string> {
   const set = new Set<string>();
-  for (const { wafaId, startPage, endPage } of submissions) {
+  for (const { wafaId, startPage, endPage, submissionStatus } of submissions) {
+    // Hanya hitung submission yang LULUS
+    if (submissionStatus !== SubmissionStatus.LULUS) continue;
     if (!wafaId || !startPage || !endPage) continue;
+    
     for (let i = startPage; i <= endPage; i++) {
       set.add(`${wafaId}:${i}`);
     }
@@ -116,6 +124,7 @@ export async function evaluateTargetAchievement(studentId: string, from: Date, t
         wafaId: true,
         startPage: true,
         endPage: true,
+        submissionStatus: true, // Tambahkan field ini
       },
     });
 

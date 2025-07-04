@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Role, Semester, SubmissionType, TargetStatus } from '@prisma/client';
+import { Role, Semester, SubmissionType, TargetStatus, SubmissionStatus } from '@prisma/client';
 
 export interface AcademicPeriodInfo {
   academicYear: string;
@@ -117,7 +117,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
       }
     });
 
-    // Get all submissions for progress calculation
+    // Get all submissions for progress calculation - INCLUDE submissionStatus
     const submissions = await prisma.submission.findMany({
       where: {
         studentId: student.id,
@@ -125,6 +125,17 @@ export async function fetchTargets(): Promise<StudentTargetData> {
           gte: allTargets.length > 0 ? allTargets[allTargets.length - 1].startDate : new Date(),
           lte: allTargets.length > 0 ? allTargets[0].endDate : new Date(),
         },
+      },
+      select: {
+        date: true,
+        submissionType: true,
+        surahId: true,
+        startVerse: true,
+        endVerse: true,
+        wafaId: true,
+        startPage: true,
+        endPage: true,
+        submissionStatus: true, // Tambahkan field ini
       },
     });
 
@@ -150,8 +161,13 @@ export async function fetchTargets(): Promise<StudentTargetData> {
           endPage,
         } = target;
 
+        // Filter submissions by date, type, and ONLY LULUS status
         const relevantSubmissions = submissions.filter(
-          (s) => s.date >= startDate && s.date <= endDate && s.submissionType === type
+          (s) => 
+            s.date >= startDate && 
+            s.date <= endDate && 
+            s.submissionType === type &&
+            s.submissionStatus === SubmissionStatus.LULUS // Hanya hitung yang LULUS
         );
 
         let required = 0;
@@ -239,7 +255,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
           endDate: target.endDate,
           description: target.description,
           status: target.status,
-          progressPercent,
+          progressPercent, // Gunakan progressPercent yang dihitung ulang
           surahStart: target.surahStart,
           surahEnd: target.surahEnd,
           wafa: target.wafa,

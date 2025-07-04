@@ -279,10 +279,6 @@ export function SubmissionForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Tanggal Setoran */}
-        <Calendar01 value={submissionDate} onChange={setSubmissionDate} label="Tanggal Setoran" />
-
-        {/* Kelompok dan Siswa */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 min-w-0">
             <Label className="mb-2 block">Kelompok</Label>
@@ -322,6 +318,8 @@ export function SubmissionForm() {
             </Select>
           </div>
         </div>
+
+        <Calendar01 value={submissionDate} onChange={setSubmissionDate} label="Tanggal Setoran" />
 
         {/* Jenis Setoran */}
         <div>

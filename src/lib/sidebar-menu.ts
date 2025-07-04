@@ -120,6 +120,16 @@ export const menuData = {
       label: 'Setoran',
       items: [
         {
+          title: 'Input Target',
+          url: '/dashboard/teacher/submission/target/input',
+          icon: Target,
+        },
+        {
+          title: 'Riwayat Target',
+          url: '/dashboard/teacher/submission/target/history',
+          icon: BookOpenIcon,
+        },
+        {
           title: 'Input',
           url: '/dashboard/teacher/submission/input',
           icon: BookPlus,

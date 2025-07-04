@@ -84,13 +84,13 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
                   >
                     Rapor
                   </DropdownMenuItem>
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() =>
                       router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/target`)
                     }
                   >
                     Target Setoran
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>

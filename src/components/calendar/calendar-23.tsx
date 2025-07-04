@@ -39,7 +39,7 @@ export function Calendar23({
       </Label>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" id="dates" className="w-100 justify-between font-normal">
+          <Button variant="outline" id="dates" className="max-w-[230px] justify-between font-normal">
             <div className="flex items-center gap-2">
               <CalendarIcon className="mr-2 h-4 w-4" />
               {currentRange?.from && currentRange?.to

@@ -17,23 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import {
-  CheckCircle2Icon,
-  MinusCircle,
-  MoreVertical,
-  Pencil,
-  RefreshCcw,
-  ThumbsDown,
-  ThumbsUp,
-  Trash2,
-  XCircle,
-} from 'lucide-react';
-import { useDataTableState } from '@/lib/hooks/use-data-table';
-import { DataTableColumnHeader } from '@/components/ui/table-column-header';
-import { DataTable } from '@/components/ui/data-table';
-import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
-import { ExportToPDFButton } from './ExportToPDFButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,24 +24,45 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { SubmissionEditDialog } from './SubmissionEditDialog';
-import { SubmissionAlertDialog } from './SubmissionAlertDialog';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
+import {
+  Target,
+  BookOpen,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  MoreVertical,
+  Edit,
+  Trash2,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import { SubmissionType, TargetStatus, Semester } from '@prisma/client';
+import { TargetEditDialog } from './TargetEditDialog';
+import { TargetAlertDialog } from './TargetAlertDialog';
+import { useDataTableState } from '@/lib/hooks/use-data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { DataTable } from '@/components/ui/data-table';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 
-export type Submission = {
+export type WeeklyTarget = {
   id: string;
-  date: string;
-  submissionType: SubmissionType;
-  startVerse: number | null;
-  endVerse: number | null;
-  startPage: number | null;
-  endPage: number | null;
-  submissionStatus: SubmissionStatus;
-  adab: Adab;
-  note: string | null;
+  type: SubmissionType;
+  startDate: string;
+  endDate: string;
+  description: string;
+  status: TargetStatus;
+  progressPercent: number;
+  createdAt: string;
   student: {
+    id: string;
     nis: string;
-    user: { fullName: string };
+    user: {
+      fullName: string;
+    };
   };
   group: {
     id: string;
@@ -69,20 +73,48 @@ export type Submission = {
       semester: Semester;
     };
   };
-  juz: { id: number; name: string } | null;
-  surah: { id: number; name: string } | null;
-  wafa: { id: number; name: string } | null;
+  surahStart?: {
+    id: number;
+    name: string;
+  };
+  surahEnd?: {
+    id: number;
+    name: string;
+  };
+  wafa?: {
+    id: number;
+    name: string;
+  };
+  startAyat?: number;
+  endAyat?: number;
+  startPage?: number;
+  endPage?: number;
 };
 
 interface Props {
-  data: Submission[];
+  data: WeeklyTarget[];
   title: string;
   onRefresh: () => void;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function SubmissionTable({ data, title, onRefresh }: Props) {
+const statusConfig = {
+  TERCAPAI: { label: 'Tercapai', variant: 'default' as const, color: 'text-green-600' },
+  TIDAK_TERCAPAI: {
+    label: 'Tidak Tercapai',
+    variant: 'destructive' as const,
+    color: 'text-red-600',
+  },
+};
+
+const typeConfig = {
+  TAHFIDZ: { label: 'Tahfidz', icon: Target },
+  TAHSIN_WAFA: { label: 'Tahsin Wafa', icon: BookOpen },
+  TAHSIN_ALQURAN: { label: 'Tahsin Al-Quran', icon: BookOpen },
+};
+
+export function TargetHistoryTable({ data, title, onRefresh }: Props) {
   const {
     sorting,
     setSorting,
@@ -90,11 +122,11 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-    selectedItem: selectedSubmission,
-    setSelectedItem: setSelectedSubmission,
+    selectedItem: selectedTarget,
+    setSelectedItem: setSelectedTarget,
     dialogType,
     setDialogType,
-  } = useDataTableState<Submission, 'edit' | 'delete'>();
+  } = useDataTableState<WeeklyTarget, 'edit' | 'delete'>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
@@ -105,19 +137,19 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
   const handleOpenEditDialog = useCallback(
-    (submission: Submission) => {
-      setSelectedSubmission(submission);
+    (target: WeeklyTarget) => {
+      setSelectedTarget(target);
       setDialogType('edit');
     },
-    [setSelectedSubmission, setDialogType]
+    [setSelectedTarget, setDialogType]
   );
 
   const handleOpenDeleteDialog = useCallback(
-    (submission: Submission) => {
-      setSelectedSubmission(submission);
+    (target: WeeklyTarget) => {
+      setSelectedTarget(target);
       setDialogType('delete');
     },
-    [setSelectedSubmission, setDialogType]
+    [setSelectedTarget, setDialogType]
   );
 
   const academicPeriods = useMemo(() => {
@@ -143,14 +175,14 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
 
     const [academicYear, semester] = selectedPeriod.split('-');
     return data.filter(
-      (submission) =>
-        submission.group.classroom.academicYear === academicYear &&
-        submission.group.classroom.semester === semester
+      (target) =>
+        target.group.classroom.academicYear === academicYear &&
+        target.group.classroom.semester === semester
     );
   }, [data, selectedPeriod]);
 
   const groupList = useMemo(() => {
-    const map = new Map<string, Submission['group']>();
+    const map = new Map<string, WeeklyTarget['group']>();
     for (const d of filteredData) {
       if (!map.has(d.group.id)) {
         map.set(d.group.id, d.group);
@@ -175,10 +207,30 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     return Math.ceil(adjustedDate / 7);
   }
 
-  const columns = useMemo<ColumnDef<Submission>[]>(
+  const getTargetDetail = useCallback((target: WeeklyTarget) => {
+    if (target.type === SubmissionType.TAHSIN_WAFA) {
+      return `${target.wafa?.name || ''} Hal. ${target.startPage}-${target.endPage}`;
+    } else {
+      return `${target.surahStart?.name || ''} ${target.startAyat ? `(${target.startAyat}` : ''}${
+        target.endAyat ? `-${target.endAyat})` : ''
+      }${
+        target.surahEnd && target.surahEnd.name !== target.surahStart?.name
+          ? ` - ${target.surahEnd.name}`
+          : ''
+      }`;
+    }
+  }, []);
+
+  const getStatusIcon = useCallback((status: TargetStatus) => {
+    if (status === 'TERCAPAI') return <TrendingUp className="w-4 h-4 text-green-600" />;
+    if (status === 'TIDAK_TERCAPAI') return <TrendingDown className="w-4 h-4 text-red-600" />;
+    return <Clock className="w-4 h-4 text-blue-600" />;
+  }, []);
+
+  const columns = useMemo<ColumnDef<WeeklyTarget>[]>(
     () => [
       {
-        accessorKey: 'date',
+        accessorKey: 'createdAt',
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
@@ -189,13 +241,20 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
           return matchMonth && matchWeek;
         },
         cell: ({ row }) => (
-          <span>
-            {new Date(row.getValue('Tanggal')).toLocaleDateString('id-ID', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </span>
+          <span>{format(new Date(row.getValue('Tanggal')), 'dd MMM yyyy', { locale: id })}</span>
+        ),
+      },
+      {
+        id: 'Periode Target',
+        header: 'Periode Target',
+        accessorFn: (row) => `${row.startDate} - ${row.endDate}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div>{format(new Date(row.original.startDate), 'dd MMM', { locale: id })}</div>
+            <div className="text-muted-foreground">
+              - {format(new Date(row.original.endDate), 'dd MMM yyyy', { locale: id })}
+            </div>
+          </div>
         ),
       },
       {
@@ -213,98 +272,63 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) => `${row.group.name} - ${row.group.classroom.name}`,
-      },
-      {
-        accessorKey: 'submissionType',
-        id: 'Jenis Setoran',
-        header: 'Jenis Setoran',
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.submissionType.replaceAll('_', ' ')}</Badge>
+          <div className="text-sm">
+            <div className="font-medium">{row.original.group.name}</div>
+            <div className="text-muted-foreground">{row.original.group.classroom.name}</div>
+          </div>
         ),
       },
       {
-        id: 'Surah',
-        header: 'Surah',
-        accessorFn: (row) => row.surah?.name ?? '-',
+        accessorKey: 'type',
+        id: 'Jenis Target',
+        header: 'Jenis Target',
         cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.surah?.name ? (
-              <>
-                <div className="font-medium">{`${row.original.surah.name} (Ayat ${row.original.startVerse} - ${row.original.endVerse})`}</div>
-                <div className="text-muted-foreground">{row.original.juz?.name}</div>
-              </>
-            ) : (
-              <span>-</span>
+          <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+            {React.createElement(typeConfig[row.original.type].icon, {
+              className: 'w-3 h-3',
+            })}
+            {typeConfig[row.original.type].label}
+          </Badge>
+        ),
+      },
+      {
+        id: 'Detail Target',
+        header: 'Detail Target',
+        cell: ({ row }) => (
+          <div className="max-w-xs">
+            <div className="font-medium">{getTargetDetail(row.original)}</div>
+            {row.original.description && (
+              <div className="text-sm text-muted-foreground truncate">
+                {row.original.description}
+              </div>
             )}
           </div>
         ),
       },
       {
-        id: 'Wafa',
-        header: 'Wafa',
-        accessorFn: (row) => row.wafa?.name ?? '-',
+        accessorKey: 'progressPercent',
+        id: 'Progress',
+        header: 'Progress',
         cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.wafa?.name ? (
-              <>
-                <div className="font-medium">{`${row.original.wafa.name} (Hal ${row.original.startPage} - ${row.original.endPage})`}</div>
-              </>
-            ) : (
-              <span>-</span>
-            )}
+          <div className="space-y-1">
+            <Progress value={row.original.progressPercent || 0} className="w-20" />
+            <div className="text-xs text-center">{row.original.progressPercent || 0}%</div>
           </div>
         ),
       },
       {
-        accessorKey: 'submissionStatus',
+        accessorKey: 'status',
         id: 'Status',
         header: 'Status',
         cell: ({ row }) => {
-          const status = row.original.submissionStatus;
-          const icon =
-            status === SubmissionStatus.LULUS ? (
-              <CheckCircle2Icon className="text-green-500" />
-            ) : status === SubmissionStatus.MENGULANG ? (
-              <RefreshCcw className="text-yellow-500" />
-            ) : (
-              <XCircle className="text-red-500" />
-            );
+          const status = row.original.status;
           return (
-            <Badge variant="outline" className="flex gap-1 text-muted-foreground">
-              {icon}
-              {status.replaceAll('_', ' ')}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {getStatusIcon(status)}
+              <Badge variant={statusConfig[status].variant}>{statusConfig[status].label}</Badge>
+            </div>
           );
-        },
-      },
-      {
-        accessorKey: 'adab',
-        header: 'Adab',
-        cell: ({ row }) => {
-          const adab = row.original.adab;
-          const icon =
-            adab === Adab.BAIK ? (
-              <ThumbsUp className="text-green-500" />
-            ) : adab === Adab.KURANG_BAIK ? (
-              <MinusCircle className="text-yellow-500" />
-            ) : (
-              <ThumbsDown className="text-red-500" />
-            );
-          return (
-            <Badge variant="outline" className="flex gap-1 text-muted-foreground">
-              {icon}
-              {adab.replaceAll('_', ' ')}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: 'note',
-        id: 'Catatan',
-        header: 'Catatan',
-        cell: ({ row }) => {
-          const note = row.original.note;
-          return <span className="text-muted-foreground">{note ? note : '-'}</span>;
         },
       },
       {
@@ -312,40 +336,44 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
-          const user = row.original;
+          const target = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Target Option</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-50 z-50">
-                  <DropdownMenuItem
-                    onClick={() => handleOpenEditDialog(user)}
-                    className="flex items-center gap-2"
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleOpenDeleteDialog(user)}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Menu aksi</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => handleOpenEditDialog(target)}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Target
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleOpenDeleteDialog(target)}
+                  className="flex items-center gap-2 text-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Hapus Target
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
     ],
-    [selectedMonth, selectedWeek, handleOpenEditDialog, handleOpenDeleteDialog]
+    [
+      selectedMonth,
+      selectedWeek,
+      handleOpenEditDialog,
+      handleOpenDeleteDialog,
+      getTargetDetail,
+      getStatusIcon,
+    ]
   );
 
   const table = useReactTable({
@@ -448,20 +476,41 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Jenis Setoran</Label>
+          <Label className="mb-2 block">Filter Jenis Target</Label>
           <Select
             onValueChange={(val) =>
-              table.getColumn('Jenis Setoran')?.setFilterValue(val === 'all' ? undefined : val)
+              table.getColumn('Jenis Target')?.setFilterValue(val === 'all' ? undefined : val)
             }
           >
             <SelectTrigger className="min-w-0 w-full sm:min-w-[180px]">
-              <SelectValue placeholder="Jenis Setoran" />
+              <SelectValue placeholder="Jenis Target" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Jenis</SelectItem>
-              {Array.from(new Set(filteredData.map((d) => d.submissionType))).map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st.replaceAll('_', ' ')}
+              {Array.from(new Set(filteredData.map((d) => d.type))).map((type) => (
+                <SelectItem key={type} value={type}>
+                  {typeConfig[type].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Filter Status</Label>
+          <Select
+            onValueChange={(val) =>
+              table.getColumn('Status')?.setFilterValue(val === 'all' ? undefined : val)
+            }
+          >
+            <SelectTrigger className="min-w-0 w-full sm:min-w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              {Array.from(new Set(filteredData.map((d) => d.status))).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {statusConfig[status].label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -513,75 +562,78 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
             </SelectContent>
           </Select>
         </div>
-
-        <div>
-          <ExportToPDFButton table={table} />
-        </div>
       </div>
+
+      {/* Card Statistik Target */}
+      <Card>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <h4 className="font-medium text-muted-foreground">Total Target</h4>
+              <p className="font-semibold">{filteredData.length}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-muted-foreground">Tercapai</h4>
+              <p className="font-semibold text-green-600">
+                {filteredData.filter((target) => target.status === 'TERCAPAI').length}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium text-muted-foreground">Tidak Tercapai</h4>
+              <p className="font-semibold text-red-600">
+                {filteredData.filter((target) => target.status === 'TIDAK_TERCAPAI').length}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <DataTable title={title} table={table} filterColumn="Tanggal" />
 
-      {dialogType === 'edit' && selectedSubmission && (
-        <SubmissionEditDialog
-          submission={{
-            ...selectedSubmission,
-            juz:
-              selectedSubmission.juz === null
-                ? undefined
-                : {
-                    id: selectedSubmission.juz.id,
-                    name: selectedSubmission.juz.name,
-                  },
-            surah:
-              selectedSubmission.surah === null
-                ? undefined
-                : {
-                    id: selectedSubmission.surah.id,
-                    name: selectedSubmission.surah.name,
-                  },
-            wafa:
-              selectedSubmission.wafa === null
-                ? undefined
-                : {
-                    id: selectedSubmission.wafa.id,
-                    name: selectedSubmission.wafa.name,
-                  },
-            startVerse:
-              selectedSubmission.startVerse === null ? undefined : selectedSubmission.startVerse,
-            endVerse:
-              selectedSubmission.endVerse === null ? undefined : selectedSubmission.endVerse,
-            startPage:
-              selectedSubmission.startPage === null ? undefined : selectedSubmission.startPage,
-            endPage: selectedSubmission.endPage === null ? undefined : selectedSubmission.endPage,
-            note: selectedSubmission.note === null ? undefined : selectedSubmission.note,
+      {dialogType === 'edit' && selectedTarget && (
+        <TargetEditDialog
+          target={{
+            id: selectedTarget.id,
+            studentId: selectedTarget.student.id,
+            type: selectedTarget.type,
+            description: selectedTarget.description,
+            startDate: new Date(selectedTarget.startDate),
+            endDate: new Date(selectedTarget.endDate),
+            surahStartId: selectedTarget.surahStart?.id,
+            surahEndId: selectedTarget.surahEnd?.id,
+            startAyat: selectedTarget.startAyat,
+            endAyat: selectedTarget.endAyat,
+            wafaId: selectedTarget.wafa?.id,
+            startPage: selectedTarget.startPage,
+            endPage: selectedTarget.endPage,
           }}
           open={true}
           onOpenChange={(open) => {
             if (!open) {
-              setSelectedSubmission(null);
+              setSelectedTarget(null);
               setDialogType(null);
             }
           }}
           onSave={() => {
             onRefresh();
-            setSelectedSubmission(null);
+            setSelectedTarget(null);
             setDialogType(null);
           }}
         />
       )}
-      {dialogType === 'delete' && selectedSubmission && (
-        <SubmissionAlertDialog
-          submission={selectedSubmission}
+      {dialogType === 'delete' && selectedTarget && (
+        <TargetAlertDialog
+          target={{ id: selectedTarget.id }}
           open={true}
           onOpenChange={(open) => {
             if (!open) {
-              setSelectedSubmission(null);
+              setSelectedTarget(null);
               setDialogType(null);
             }
           }}
           onConfirm={() => {
             onRefresh();
-            setSelectedSubmission(null);
+            setSelectedTarget(null);
             setDialogType(null);
           }}
         />

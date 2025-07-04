@@ -286,26 +286,26 @@ export function TargetTable({ data, title }: Props) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <h4 className="font-medium text-muted-foreground">Periode</h4>
                 <p className="font-semibold">
                   {currentPeriodInfo.period.academicYear} {currentPeriodInfo.period.semester}
                 </p>
               </div>
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Kelas</h4>
+                <h4 className="font-medium text-muted-foreground">Kelas</h4>
                 <p className="font-semibold">{currentPeriodInfo.period.className}</p>
               </div>
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Kelompok</h4>
+                <h4 className="font-medium text-muted-foreground">Kelompok</h4>
                 <p className="font-semibold">{currentPeriodInfo.period.groupName}</p>
               </div>
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Guru Pembimbing</h4>
+                <h4 className="font-medium text-muted-foreground">Guru Pembimbing</h4>
                 <p className="font-semibold">{currentPeriodInfo.period.teacherName}</p>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <h4 className="font-medium text-muted-foreground">Total Target:</h4>
                   <p className="font-semibold">{currentPeriodInfo.targets.length}</p>

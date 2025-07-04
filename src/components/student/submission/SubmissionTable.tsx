@@ -329,7 +329,7 @@ export function SubmissionTable({ data, title }: Props) {
             onValueChange={(value) => {
               const val = value === 'all' ? 'all' : parseInt(value);
               setSelectedMonth(val);
-              table.getColumn('date')?.setFilterValue('custom');
+              table.getColumn('Tanggal')?.setFilterValue('custom');
             }}
           >
             <SelectTrigger className="min-w-[160px]">
@@ -352,7 +352,7 @@ export function SubmissionTable({ data, title }: Props) {
             onValueChange={(value) => {
               const val = value === 'all' ? 'all' : parseInt(value);
               setSelectedWeek(val);
-              table.getColumn('date')?.setFilterValue('custom');
+              table.getColumn('Tanggal')?.setFilterValue('custom');
             }}
           >
             <SelectTrigger className="min-w-[160px]">

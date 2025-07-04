@@ -18,10 +18,20 @@ import { DateRange } from 'react-day-picker';
 import { Calendar23 } from '@/components/calendar/calendar-23';
 import { SubmissionType } from '@prisma/client';
 
-interface Surah {
+interface SurahJuz {
   id: number;
-  name: string;
-  verseCount: number;
+  juzId: number;
+  startVerse: number;
+  endVerse: number;
+  surah: {
+    id: number;
+    name: string;
+    verseCount: number;
+  };
+  juz: {
+    id: number;
+    name: string;
+  };
 }
 
 interface Wafa {
@@ -58,9 +68,12 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
     to: new Date(target.endDate),
   });
 
-  const [surahList, setSurahList] = useState<Surah[]>([]);
+  const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
+  const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
   const [wafaList, setWafaList] = useState<Wafa[]>([]);
 
+  const [startJuzId, setStartJuzId] = useState('');
+  const [endJuzId, setEndJuzId] = useState('');
   const [surahStartId, setSurahStartId] = useState(target.surahStartId?.toString() || '');
   const [surahEndId, setSurahEndId] = useState(target.surahEndId?.toString() || '');
   const [startAyat, setStartAyat] = useState(target.startAyat?.toString() || '');
@@ -72,14 +85,48 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
 
   useEffect(() => {
     const fetchData = async () => {
-      const [surahRes, wafaRes] = await Promise.all([fetch('/api/surah'), fetch('/api/wafa')]);
-      const [surahData, wafaData] = await Promise.all([surahRes.json(), wafaRes.json()]);
+      const [juzRes, surahJuzRes, wafaRes] = await Promise.all([
+        fetch('/api/juz'),
+        fetch('/api/surahJuz'),
+        fetch('/api/wafa'),
+      ]);
+      const [juzData, surahJuzData, wafaData] = await Promise.all([
+        juzRes.json(),
+        surahJuzRes.json(),
+        wafaRes.json(),
+      ]);
 
-      if (surahData.success) setSurahList(surahData.data);
+      if (juzData.success) setJuzList(juzData.data);
+      if (surahJuzData.success) setSurahJuzList(surahJuzData.data);
       if (wafaData.success) setWafaList(wafaData.data);
     };
     fetchData();
   }, []);
+
+  // Filter surah berdasarkan juz
+  const filteredSurahStart = surahJuzList
+    .filter((s) => s.juzId.toString() === startJuzId)
+    .sort((a, b) => a.surah.id - b.surah.id);
+
+  const filteredSurahEnd = surahJuzList
+    .filter((s) => s.juzId.toString() === endJuzId)
+    .sort((a, b) => a.surah.id - b.surah.id);
+
+  // Set initial juz values based on existing surah
+  useEffect(() => {
+    if (surahJuzList.length > 0 && target.surahStartId && !startJuzId) {
+      const startSurahJuz = surahJuzList.find((s) => s.surah.id === target.surahStartId);
+      if (startSurahJuz) {
+        setStartJuzId(startSurahJuz.juzId.toString());
+      }
+    }
+    if (surahJuzList.length > 0 && target.surahEndId && !endJuzId) {
+      const endSurahJuz = surahJuzList.find((s) => s.surah.id === target.surahEndId);
+      if (endSurahJuz) {
+        setEndJuzId(endSurahJuz.juzId.toString());
+      }
+    }
+  }, [surahJuzList, target.surahStartId, target.surahEndId, startJuzId, endJuzId]);
 
   const handleSubmit = async () => {
     if (!dateRange?.from || !dateRange?.to) {
@@ -93,13 +140,13 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
       description,
       startDate: dateRange.from,
       endDate: dateRange.to,
-      surahStartId: type === 'TAHFIDZ' ? parseInt(surahStartId) || null : null,
-      surahEndId: type === 'TAHFIDZ' ? parseInt(surahEndId) || null : null,
-      startAyat: type === 'TAHFIDZ' ? parseInt(startAyat) || null : null,
-      endAyat: type === 'TAHFIDZ' ? parseInt(endAyat) || null : null,
-      wafaId: type === 'TAHSIN_WAFA' ? parseInt(wafaId) || null : null,
-      startPage: type === 'TAHSIN_WAFA' ? parseInt(startPage) || null : null,
-      endPage: type === 'TAHSIN_WAFA' ? parseInt(endPage) || null : null,
+      surahStartId: type !== SubmissionType.TAHSIN_WAFA ? parseInt(surahStartId) || null : null,
+      surahEndId: type !== SubmissionType.TAHSIN_WAFA ? parseInt(surahEndId) || null : null,
+      startAyat: type !== SubmissionType.TAHSIN_WAFA ? parseInt(startAyat) || null : null,
+      endAyat: type !== SubmissionType.TAHSIN_WAFA ? parseInt(endAyat) || null : null,
+      wafaId: type === SubmissionType.TAHSIN_WAFA ? parseInt(wafaId) || null : null,
+      startPage: type === SubmissionType.TAHSIN_WAFA ? parseInt(startPage) || null : null,
+      endPage: type === SubmissionType.TAHSIN_WAFA ? parseInt(endPage) || null : null,
     };
 
     setLoading(true);
@@ -128,12 +175,12 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Target Setoran</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Calendar23
             value={dateRange}
             onChange={(range) => {
@@ -143,69 +190,123 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
             }}
           />
 
-          <Label>Jenis Setoran</Label>
-          <Select value={type} onValueChange={(v) => setType(v as SubmissionType)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TAHFIDZ">Tahfidz</SelectItem>
-              <SelectItem value="TAHSIN_WAFA">Tahsin (Wafa)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <Label className="mb-2 block">Jenis Setoran</Label>
+            <Select value={type} onValueChange={(v) => setType(v as SubmissionType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SubmissionType.TAHFIDZ}>Tahfidz</SelectItem>
+                <SelectItem value={SubmissionType.TAHSIN_WAFA}>Tahsin (Wafa)</SelectItem>
+                <SelectItem value={SubmissionType.TAHSIN_ALQURAN}>Tahsin (Al-Quran)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          {type === 'TAHFIDZ' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Surah Awal</Label>
-                <Select value={surahStartId} onValueChange={setSurahStartId}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {surahList.map((s) => (
-                      <SelectItem key={s.id} value={s.id.toString()}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {/* Bagian Juz dan Surah untuk TAHFIDZ dan TAHSIN_ALQURAN */}
+          {(type === SubmissionType.TAHFIDZ || type === SubmissionType.TAHSIN_ALQURAN) && (
+            <div className="flex flex-col space-y-4">
+              {/* Juz Awal dan Juz Akhir */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Juz Awal</Label>
+                  <Select value={startJuzId} onValueChange={setStartJuzId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Juz Awal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {juzList.map((j) => (
+                        <SelectItem key={j.id} value={j.id.toString()}>
+                          {j.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Juz Akhir</Label>
+                  <Select value={endJuzId} onValueChange={setEndJuzId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Juz Akhir" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {juzList.map((j) => (
+                        <SelectItem key={j.id} value={j.id.toString()}>
+                          {j.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label>Surah Akhir</Label>
-                <Select value={surahEndId} onValueChange={setSurahEndId}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {surahList.map((s) => (
-                      <SelectItem key={s.id} value={s.id.toString()}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+              {/* Surah Awal dan Surah Akhir */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Surah Awal</Label>
+                  <Select value={surahStartId} onValueChange={setSurahStartId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Surah Awal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredSurahStart.map((s) => (
+                        <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
+                          {s.surah.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Surah Akhir</Label>
+                  <Select value={surahEndId} onValueChange={setSurahEndId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Surah Akhir" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredSurahEnd.map((s) => (
+                        <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
+                          {s.surah.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <Input
-                placeholder="Ayat Awal"
-                value={startAyat}
-                onChange={(e) => setStartAyat(e.target.value)}
-              />
-              <Input
-                placeholder="Ayat Akhir"
-                value={endAyat}
-                onChange={(e) => setEndAyat(e.target.value)}
-              />
+
+              {/* Ayat Awal dan Ayat Akhir */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Ayat Awal</Label>
+                  <Input
+                    type="number"
+                    value={startAyat}
+                    onChange={(e) => setStartAyat(e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Ayat Akhir</Label>
+                  <Input
+                    type="number"
+                    value={endAyat}
+                    onChange={(e) => setEndAyat(e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          {type === 'TAHSIN_WAFA' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Materi Wafa</Label>
+          {/* Bagian Wafa untuk TAHSIN_WAFA */}
+          {type === SubmissionType.TAHSIN_WAFA && (
+            <div className="flex flex-col space-y-4">
+              <div className="flex-1 min-w-0">
+                <Label className="mb-2 block">Materi Wafa</Label>
                 <Select value={wafaId} onValueChange={setWafaId}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Pilih Wafa" />
                   </SelectTrigger>
                   <SelectContent>
                     {wafaList.map((w) => (
@@ -216,21 +317,33 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
                   </SelectContent>
                 </Select>
               </div>
-              <Input
-                placeholder="Halaman Awal"
-                value={startPage}
-                onChange={(e) => setStartPage(e.target.value)}
-              />
-              <Input
-                placeholder="Halaman Akhir"
-                value={endPage}
-                onChange={(e) => setEndPage(e.target.value)}
-              />
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Halaman Awal</Label>
+                  <Input
+                    type="number"
+                    value={startPage}
+                    onChange={(e) => setStartPage(e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="mb-2 block">Halaman Akhir</Label>
+                  <Input
+                    type="number"
+                    value={endPage}
+                    onChange={(e) => setEndPage(e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          <Label>Deskripsi</Label>
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+          <div>
+            <Label className="mb-2 block">Deskripsi</Label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
