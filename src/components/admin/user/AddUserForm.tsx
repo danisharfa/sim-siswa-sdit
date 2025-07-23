@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useActionState } from 'react';
+import { useEffect, useState, useActionState, useRef } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -24,9 +24,9 @@ interface Props {
 const initialRole = Role.student;
 
 export function AddUserForm({ onUserAdded }: Props) {
-  const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<Role>(initialRole);
-  const [state, formAction] = useActionState(addUserCredentials, null);
+  const [state, formAction, isPending] = useActionState(addUserCredentials, null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!state) return;
@@ -35,37 +35,31 @@ export function AddUserForm({ onUserAdded }: Props) {
       toast.success(state.message || 'User berhasil ditambah!');
       onUserAdded();
       setRole(initialRole);
+
+      // Reset form
+      if (formRef.current) {
+        formRef.current.reset();
+      }
     } else if (state.error) {
       const first = Object.values(state.error)[0]?.[0];
-
       toast.error(first || 'Validasi gagal');
     } else if (state.message && !state.success) {
       toast.error(state.message);
     }
   }, [state, onUserAdded]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    setLoading(true);
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    formData.set('role', role);
-
-    await formAction(formData);
-
-    setLoading(false);
-  };
-
   return (
     <Card className="shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl">Tambah User</CardTitle>
+        <CardTitle className="text-2xl">Tambah Pengguna</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} action={formAction} className="space-y-4">
           <Input name="username" placeholder="Username" required />
           <Input name="fullName" placeholder="Nama Lengkap" required />
+
+          {/* Hidden input untuk role */}
+          <input type="hidden" name="role" value={role} />
 
           <Select value={role} onValueChange={(val) => setRole(val as Role)}>
             <SelectTrigger className="w-full">
@@ -83,9 +77,9 @@ export function AddUserForm({ onUserAdded }: Props) {
           <Button
             type="submit"
             className="w-full flex items-center justify-center"
-            disabled={loading}
+            disabled={isPending}
           >
-            {loading ? (
+            {isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 Menambahkan...
@@ -93,7 +87,7 @@ export function AddUserForm({ onUserAdded }: Props) {
             ) : (
               <>
                 <UserPlus2 />
-                Tambah User
+                Tambah Pengguna
               </>
             )}
           </Button>
