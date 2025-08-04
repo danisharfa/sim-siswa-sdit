@@ -31,8 +31,8 @@ interface Group {
   classroomName: string;
   classroomAcademicYear: string;
   classroomSemester: Semester;
-  nip: string[];
-  teacherName: string[];
+  nip: string;
+  teacherName: string;
   studentCount: number;
 }
 
@@ -99,7 +99,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
       {
         accessorKey: 'teacherName',
         id: 'Nama Guru',
-        accessorFn: (row) => row.teacherName.join(', '),
+        accessorFn: (row) => row.teacherName || '-',
         header: 'Nama Guru',
       },
       {

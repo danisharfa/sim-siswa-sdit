@@ -31,16 +31,12 @@ export async function GET() {
             students: true,
           },
         },
-        teacherGroups: {
+        teacher: {
           select: {
-            teacher: {
+            nip: true,
+            user: {
               select: {
-                nip: true,
-                user: {
-                  select: {
-                    fullName: true,
-                  },
-                },
+                fullName: true,
               },
             },
           },
@@ -55,8 +51,8 @@ export async function GET() {
       classroomAcademicYear: g.classroom.academicYear,
       classroomSemester: g.classroom.semester,
       studentCount: g._count.students,
-      nip: g.teacherGroups.map((tg) => tg.teacher.nip),
-      teacherName: g.teacherGroups.map((tg) => tg.teacher.user.fullName),
+      nip: g.teacher?.nip || '-',
+      teacherName: g.teacher?.user.fullName || '-',
     }));
 
     return NextResponse.json({
@@ -157,13 +153,7 @@ export async function POST(req: NextRequest) {
         id: kelompokId,
         name: groupName,
         classroomId: classroom.id,
-      },
-    });
-
-    await prisma.teacherGroup.create({
-      data: {
         teacherId: teacher.id,
-        groupId: newGroup.id,
       },
     });
 

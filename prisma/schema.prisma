@@ -69,7 +69,7 @@ model TeacherProfile {
   updatedAt DateTime @updatedAt
 
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teacherGroups       TeacherGroup[]
+  groups              Group[]
   groupHistories      GroupHistory[]
   submissions         Submission[]
   tashihRequests      TashihRequest[]
@@ -175,31 +175,18 @@ model ClassroomHistory {
   @@map("classroom_histories")
 }
 
-model TeacherGroup {
-  id        String @id @default(uuid())
-  teacherId String
-  groupId   String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  teacher TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@map("teacher_groups")
-}
-
 model Group {
   id          String @id @unique
   name        String
   classroomId String
+  teacherId   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   groupHistories GroupHistory[]
   classroom      Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  teacherGroups  TeacherGroup[]
+  teacher        TeacherProfile   @relation(fields: [teacherId], references: [id])
   students       StudentProfile[]
 
   submissions    Submission[]

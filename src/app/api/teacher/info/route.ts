@@ -59,17 +59,13 @@ export async function GET() {
     }
 
     // Get teacher's groups for current period with student count
-    const teacherGroups = await prisma.teacherGroup.findMany({
+    const teacherGroups = await prisma.group.findMany({
       where: { teacherId: teacher.id },
       include: {
-        group: {
-          include: {
-            classroom: true,
-            _count: {
-              select: {
-                students: true,
-              },
-            },
+        classroom: true,
+        _count: {
+          select: {
+            students: true,
           },
         },
       },
@@ -77,23 +73,23 @@ export async function GET() {
 
     // Filter groups for current active period
     const currentGroups = teacherGroups.filter(
-      (tg) =>
-        tg.group.classroom.academicYear === academicSetting.currentYear &&
-        tg.group.classroom.semester === academicSetting.currentSemester &&
-        tg.group.classroom.isActive
+      (group) =>
+        group.classroom.academicYear === academicSetting.currentYear &&
+        group.classroom.semester === academicSetting.currentSemester &&
+        group.classroom.isActive
     );
 
     // Transform groups data
-    const groupsData = currentGroups.map((tg) => ({
-      id: tg.group.id,
-      name: tg.group.name,
-      className: tg.group.classroom.name,
-      studentCount: tg.group._count.students,
+    const groupsData = currentGroups.map((group) => ({
+      id: group.id,
+      name: group.name,
+      className: group.classroom.name,
+      studentCount: group._count.students,
     }));
 
     // Calculate totals
     const totalGroups = currentGroups.length;
-    const totalStudents = currentGroups.reduce((sum, tg) => sum + tg.group._count.students, 0);
+    const totalStudents = currentGroups.reduce((sum, group) => sum + group._count.students, 0);
 
     const teacherInfo: TeacherInfo = {
       id: teacher.id,

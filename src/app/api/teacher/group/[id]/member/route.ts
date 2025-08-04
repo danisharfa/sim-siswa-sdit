@@ -26,9 +26,9 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const isGroupBimbingan = await prisma.teacherGroup.findFirst({
+    const isGroupBimbingan = await prisma.group.findFirst({
       where: {
-        groupId: id,
+        id: id,
         teacherId: teacher.id,
       },
     });

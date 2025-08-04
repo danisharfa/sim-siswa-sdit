@@ -14,11 +14,7 @@ export async function getGroupId(groupId: string) {
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        teacherGroups: {
-          some: {
-            teacherId: teacher.id,
-          },
-        },
+        teacherId: teacher.id,
       },
       include: {
         classroom: true,
@@ -42,13 +38,13 @@ export async function fetchGroupMembers(groupId: string) {
     });
     if (!teacher) throw new Error('Guru tidak ditemukan');
 
-    const isGroupBimbingan = await prisma.teacherGroup.findFirst({
+    const group = await prisma.group.findFirst({
       where: {
-        groupId,
+        id: groupId,
         teacherId: teacher.id,
       },
     });
-    if (!isGroupBimbingan) throw new Error('Kelompok ini bukan bimbingan Anda');
+    if (!group) throw new Error('Kelompok ini bukan bimbingan Anda');
 
     const members = await prisma.studentProfile.findMany({
       where: { groupId },
@@ -65,7 +61,7 @@ export async function fetchGroupMembers(groupId: string) {
     return members.map((m) => ({
       id: m.id,
       nis: m.nis,
-      fullName: m.user.fullName
+      fullName: m.user.fullName,
     }));
   } catch (error) {
     console.error('[FETCH_GROUP_MEMBERS_ERROR]', error);
@@ -176,7 +172,7 @@ export async function fetchGroupHistoryMembers(groupId: string) {
       include: {
         group: {
           include: {
-            teacherGroups: true,
+            teacher: true,
           },
         },
         student: {
@@ -194,15 +190,15 @@ export async function fetchGroupHistoryMembers(groupId: string) {
     if (!groupHistories || groupHistories.length === 0)
       throw new Error('Group history tidak ditemukan');
 
-    const isGroupBimbingan = await prisma.teacherGroup.findFirst({
+    const group = await prisma.group.findFirst({
       where: {
-        groupId,
+        id: groupId,
         teacherId: teacher.id,
       },
     });
-    if (!isGroupBimbingan) throw new Error('Kelompok ini bukan bimbingan Anda');
+    if (!group) throw new Error('Kelompok ini bukan bimbingan Anda');
 
-   // Ambil student unik berdasarkan ID
+    // Ambil student unik berdasarkan ID
     const uniqueStudents = new Map<string, { id: string; nis: string; fullName: string }>();
     for (const history of groupHistories) {
       const student = history.student;

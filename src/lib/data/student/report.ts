@@ -76,12 +76,8 @@ export async function fetchReportData() {
                   semester: true,
                 },
               },
-              teacherGroups: {
-                include: {
-                  teacher: {
-                    include: { user: { select: { fullName: true } } },
-                  },
-                },
+              teacher: {
+                include: { user: { select: { fullName: true } } },
               },
             },
           },
@@ -100,12 +96,8 @@ export async function fetchReportData() {
                   semester: true,
                 },
               },
-              teacherGroups: {
-                include: {
-                  teacher: {
-                    include: { user: { select: { fullName: true } } },
-                  },
-                },
+              teacher: {
+                include: { user: { select: { fullName: true } } },
               },
             },
           },
@@ -125,12 +117,8 @@ export async function fetchReportData() {
                 semester: true,
               },
             },
-            teacherGroups: {
-              include: {
-                teacher: {
-                  include: { user: { select: { fullName: true } } },
-                },
-              },
+            teacher: {
+              include: { user: { select: { fullName: true } } },
             },
           },
         },
@@ -163,7 +151,7 @@ export async function fetchReportData() {
             semester: score.group.classroom.semester,
             className: score.group.classroom.name,
             groupName: score.group.name,
-            teacherName: score.group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
+            teacherName: score.group.teacher?.user.fullName ?? '-',
             groupId: score.groupId,
           });
         }
@@ -179,7 +167,7 @@ export async function fetchReportData() {
             semester: score.group.classroom.semester,
             className: score.group.classroom.name,
             groupName: score.group.name,
-            teacherName: score.group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
+            teacherName: score.group.teacher?.user.fullName ?? '-',
             groupId: score.groupId,
           });
         }
@@ -195,7 +183,7 @@ export async function fetchReportData() {
             semester: report.group.classroom.semester,
             className: report.group.classroom.name,
             groupName: report.group.name,
-            teacherName: report.group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
+            teacherName: report.group.teacher?.user.fullName ?? '-',
             groupId: report.groupId,
           });
         }

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         classroom: true,
         group: {
           include: {
-            teacherGroups: true,
+            teacher: true,
           },
         },
       },
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
       // Simpan histori kelompok (gunakan variabel lokal agar tidak hilang)
       const prevGroupId = student.groupId;
-      const prevTeacherId = student.group?.teacherGroups?.[0]?.teacherId || null;
+      const prevTeacherId = student.group?.teacher?.id || null;
 
       if (prevGroupId) {
         await prisma.groupHistory.create({

@@ -93,20 +93,16 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     });
 
     // Ambil siswa dari grup aktif (tanpa filter periode classroom)
-    const activeGroups = await prisma.teacherGroup.findMany({
+    const activeGroups = await prisma.group.findMany({
       where: {
         teacherId: teacher.id,
-        ...(groupId && { groupId }),
+        ...(groupId && { id: groupId }),
       },
       include: {
-        group: {
+        classroom: true,
+        students: {
           include: {
-            classroom: true,
-            students: {
-              include: {
-                user: true,
-              },
-            },
+            user: true,
           },
         },
       },
@@ -114,7 +110,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     // Kombinasikan siswa dari historical dan active
     const historicalStudents = groupHistories.map((gh) => gh.student);
-    const activeStudents = activeGroups.flatMap((tg) => tg.group.students);
+    const activeStudents = activeGroups.flatMap((group) => group.students);
 
     const allStudents = [...historicalStudents, ...activeStudents];
     const uniqueStudents = allStudents.reduce((acc, student) => {

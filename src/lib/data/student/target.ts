@@ -85,12 +85,8 @@ export async function fetchTargets(): Promise<StudentTargetData> {
             classroom: {
               select: { name: true, academicYear: true, semester: true },
             },
-            teacherGroups: {
-              include: {
-                teacher: {
-                  include: { user: { select: { fullName: true } } },
-                },
-              },
+            teacher: {
+              include: { user: { select: { fullName: true } } },
             },
           },
         },
@@ -110,7 +106,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
             semester: target.group.classroom.semester,
             groupName: target.group.name,
             className: target.group.classroom.name,
-            teacherName: target.group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
+            teacherName: target.group.teacher?.user.fullName ?? '-',
             groupId: target.groupId,
           });
         }
@@ -163,9 +159,9 @@ export async function fetchTargets(): Promise<StudentTargetData> {
 
         // Filter submissions by date, type, and ONLY LULUS status
         const relevantSubmissions = submissions.filter(
-          (s) => 
-            s.date >= startDate && 
-            s.date <= endDate && 
+          (s) =>
+            s.date >= startDate &&
+            s.date <= endDate &&
             s.submissionType === type &&
             s.submissionStatus === SubmissionStatus.LULUS // Hanya hitung yang LULUS
         );

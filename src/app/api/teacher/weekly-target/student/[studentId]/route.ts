@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     const student = await prisma.studentProfile.findUnique({
       where: { id: studentId },
-      select: { 
+      select: {
         groupId: true,
         group: {
           select: {
@@ -35,11 +35,11 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
             classroom: {
               select: {
                 academicYear: true,
-                semester: true
-              }
-            }
-          }
-        }
+                semester: true,
+              },
+            },
+          },
+        },
       },
     });
     if (!student) {
@@ -56,10 +56,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const isMembimbing = await prisma.teacherGroup.findFirst({
+    const isMembimbing = await prisma.group.findFirst({
       where: {
         teacherId: teacher.id,
-        groupId: student.groupId,
+        id: student.groupId,
       },
     });
 
@@ -85,15 +85,15 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     });
 
     if (targets.length === 0) {
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         data: [],
         meta: {
           groupId: student.groupId,
           academicYear: student.group?.classroom?.academicYear,
           semester: student.group?.classroom?.semester,
-          totalTargets: 0
-        }
+          totalTargets: 0,
+        },
       });
     }
 
@@ -183,15 +183,15 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       };
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       data: withProgress,
       meta: {
         groupId: student.groupId,
         academicYear: student.group?.classroom?.academicYear,
         semester: student.group?.classroom?.semester,
-        totalTargets: withProgress.length
-      }
+        totalTargets: withProgress.length,
+      },
     });
   } catch (error) {
     console.error('[GET_WEEKLY_TARGET_STUDENT]', error);

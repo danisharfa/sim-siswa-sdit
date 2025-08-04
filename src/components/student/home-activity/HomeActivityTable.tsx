@@ -49,13 +49,11 @@ export type HomeActivity = {
       academicYear: string;
       semester: Semester;
     };
-    teacherGroups: {
-      teacher: {
-        user: {
-          fullName: string;
-        };
+    teacher: {
+      user: {
+        fullName: string;
       };
-    }[];
+    } | null;
   };
   juz: { name: string };
   surah: { name: string };
@@ -148,8 +146,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     );
 
     if (foundData) {
-      const teacherName =
-        foundData.group.teacherGroups[0]?.teacher.user.fullName || 'Tidak tersedia';
+      const teacherName = foundData.group.teacher?.user.fullName || 'Tidak tersedia';
 
       return {
         period: {

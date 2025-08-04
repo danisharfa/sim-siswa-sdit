@@ -42,18 +42,18 @@ export async function POST(req: NextRequest) {
 
     const student = await prisma.studentProfile.findUnique({
       where: { id: studentId },
-     select: { 
+      select: {
         groupId: true,
         group: {
           select: {
             classroom: {
               select: {
                 academicYear: true,
-                semester: true
-              }
-            }
-          }
-        }
+                semester: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -64,10 +64,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isMembimbing = await prisma.teacherGroup.findFirst({
+    const isMembimbing = await prisma.group.findFirst({
       where: {
         teacherId: teacher.id,
-        groupId: student.groupId,
+        id: student.groupId,
       },
     });
 

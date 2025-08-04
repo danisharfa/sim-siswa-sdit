@@ -58,10 +58,10 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       );
     }
 
-    const isMembimbing = await prisma.teacherGroup.findFirst({
+    const isMembimbing = await prisma.group.findFirst({
       where: {
         teacherId: teacher.id,
-        groupId: student.groupId,
+        id: student.groupId,
       },
     });
 

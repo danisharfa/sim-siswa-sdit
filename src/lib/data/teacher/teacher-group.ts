@@ -18,9 +18,7 @@ export async function fetchTeacherGroups() {
 
     const groups = await prisma.group.findMany({
       where: {
-        teacherGroups: {
-          some: { teacherId: teacher.id },
-        },
+        teacherId: teacher.id,
         classroom: {
           isActive: true,
         },

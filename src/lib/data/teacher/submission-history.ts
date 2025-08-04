@@ -16,12 +16,12 @@ export async function fetchSubmissionHistory() {
       throw new Error('Profil guru tidak ditemukan');
     }
 
-    const kelompokBinaan = await prisma.teacherGroup.findMany({
+    const kelompokBinaan = await prisma.group.findMany({
       where: { teacherId: teacher.id },
-      select: { groupId: true },
+      select: { id: true },
     });
 
-    const groupIds = kelompokBinaan.map((item) => item.groupId);
+    const groupIds = kelompokBinaan.map((item) => item.id);
 
     const submissionList = await prisma.submission.findMany({
       where: {

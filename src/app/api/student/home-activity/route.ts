@@ -31,17 +31,12 @@ export async function GET() {
             classroom: {
               select: { name: true, academicYear: true, semester: true },
             },
-            teacherGroups: {
+            teacher: {
               select: {
-                teacher: {
-                  select: {
-                    user: {
-                      select: { fullName: true },
-                    },
-                  },
+                user: {
+                  select: { fullName: true },
                 },
               },
-              take: 1,
             },
           },
         },

@@ -11,10 +11,10 @@ export interface StudentReportData {
   academicYear: string;
   teacherName: string;
   coordinatorName: string;
-  schoolInfo:{
+  schoolInfo: {
     schoolName: string;
     currrentPrincipalName: string;
-  }
+  };
   tahsin: {
     topic: string;
     scoreNumeric: number;
@@ -49,12 +49,8 @@ export async function getStudentReportData(
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     include: {
-      teacherGroups: {
-        include: {
-          teacher: {
-            include: { user: true },
-          },
-        },
+      teacher: {
+        include: { user: true },
       },
       classroom: true,
     },
@@ -102,7 +98,7 @@ export async function getStudentReportData(
     className: group.classroom?.name ?? '-',
     semester: group.classroom.semester,
     academicYear: group.classroom.academicYear,
-    teacherName: group.teacherGroups?.[0]?.teacher?.user.fullName ?? '-',
+    teacherName: group.teacher?.user.fullName ?? '-',
     coordinatorName: coordinator?.user?.fullName ?? '-',
     schoolInfo: {
       schoolName: schoolInfo?.schoolName ?? '-',

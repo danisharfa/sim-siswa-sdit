@@ -49,12 +49,8 @@ export async function getStudentReportHistoryData(
       where: { id: groupId },
       include: {
         classroom: true,
-        teacherGroups: {
-          include: {
-            teacher: {
-              include: { user: true },
-            },
-          },
+        teacher: {
+          include: { user: true },
         },
       },
     }),
@@ -116,8 +112,8 @@ export async function getStudentReportHistoryData(
   let teacherName = '-';
   if (groupHistory?.teacher?.user?.fullName) {
     teacherName = groupHistory.teacher.user.fullName;
-  } else if (groupData.teacherGroups?.[0]?.teacher?.user?.fullName) {
-    teacherName = groupData.teacherGroups[0].teacher.user.fullName;
+  } else if (groupData.teacher?.user?.fullName) {
+    teacherName = groupData.teacher.user.fullName;
   }
 
   const coordinatorName = coordinator?.user?.fullName ?? '-';

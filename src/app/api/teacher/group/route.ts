@@ -19,11 +19,7 @@ export async function GET() {
 
     const groups = await prisma.group.findMany({
       where: {
-        teacherGroups: {
-          some: {
-            teacherId: teacher.id,
-          },
-        },
+        teacherId: teacher.id,
       },
       include: {
         classroom: {

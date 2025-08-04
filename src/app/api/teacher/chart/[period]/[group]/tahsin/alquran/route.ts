@@ -113,24 +113,23 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         activeGroupFilter.groupId = groupId;
       }
 
-      const activeGroups = await prisma.teacherGroup.findMany({
-        where: activeGroupFilter,
+      const activeGroups = await prisma.group.findMany({
+        where: {
+          teacherId: teacher.id,
+          ...activeGroupFilter,
+        },
         include: {
-          group: {
+          classroom: true,
+          students: {
             include: {
-              classroom: true,
-              students: {
-                include: {
-                  user: true,
-                },
-              },
+              user: true,
             },
           },
         },
       });
 
       const studentsFromHistory = groupHistories.map((gh) => gh.student);
-      const studentsFromActive = activeGroups.flatMap((ag) => ag.group.students);
+      const studentsFromActive = activeGroups.flatMap((group) => group.students);
 
       const allStudents = [...studentsFromHistory, ...studentsFromActive];
       const uniqueStudents = allStudents.reduce((acc, student) => {
@@ -149,25 +148,23 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       };
 
       if (groupId) {
-        teacherGroupFilter.groupId = groupId;
+        teacherGroupFilter.id = groupId;
       }
 
-      const teacherGroups = await prisma.teacherGroup.findMany({
-        where: teacherGroupFilter,
+      const groups = await prisma.group.findMany({
+        where: {
+          ...teacherGroupFilter,
+        },
         include: {
-          group: {
+          students: {
             include: {
-              students: {
-                include: {
-                  user: true,
-                },
-              },
+              user: true,
             },
           },
         },
       });
 
-      students = teacherGroups.flatMap((tg) => tg.group.students);
+      students = groups.flatMap((group) => group.students);
     }
 
     console.log('Students found:', students.length);
@@ -228,7 +225,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       let currentJuz: number | null = null;
       let lastJuz = 'Belum ada';
 
-     for (const juz of allJuz) {
+      for (const juz of allJuz) {
         const surahIdsInJuz = juz.surahJuz.map((sj) => sj.surahId);
         const juzSubmissions = studentSubmissions.filter(
           (s) => s.surahId && surahIdsInJuz.includes(s.surahId)
@@ -241,16 +238,16 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
         const completedAyah = juzSubmissions.reduce((total, submission) => {
           if (submission.surah && submission.startVerse && submission.endVerse) {
-            const surahJuzInfo = juz.surahJuz.find(sj => sj.surahId === submission.surahId);
+            const surahJuzInfo = juz.surahJuz.find((sj) => sj.surahId === submission.surahId);
             if (surahJuzInfo) {
               const juzStart = surahJuzInfo.startVerse;
               const juzEnd = surahJuzInfo.endVerse;
               const submissionStart = submission.startVerse;
               const submissionEnd = submission.endVerse;
-              
+
               const overlapStart = Math.max(juzStart, submissionStart);
               const overlapEnd = Math.min(juzEnd, submissionEnd);
-              
+
               if (overlapStart <= overlapEnd) {
                 const overlapAyat = overlapEnd - overlapStart + 1;
                 return total + overlapAyat;

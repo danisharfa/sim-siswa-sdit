@@ -18,13 +18,9 @@ export async function GET() {
         group: {
           include: {
             classroom: true,
-            teacherGroups: {
+            teacher: {
               include: {
-                teacher: {
-                  include: {
-                    user: true,
-                  },
-                },
+                user: true,
               },
             },
           },
@@ -56,11 +52,14 @@ export async function GET() {
     };
 
     // Get teachers from current group
-    const teachers =
-      student.group?.teacherGroups.map((tg) => ({
-        id: tg.teacher.id,
-        name: tg.teacher.user.fullName,
-      })) || [];
+    const teachers = student.group?.teacher
+      ? [
+          {
+            id: student.group.teacher.id,
+            name: student.group.teacher.user.fullName,
+          },
+        ]
+      : [];
 
     // Build student info
     const studentInfo = {

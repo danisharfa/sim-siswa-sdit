@@ -17,22 +17,16 @@ export async function fetchHomeActivityHistory() {
     }
 
     // Ambil semua siswa yang dibimbing guru
-    const teacherGroups = await prisma.teacherGroup.findMany({
+    const groups = await prisma.group.findMany({
       where: { teacherId: teacher.id },
       include: {
-        group: {
-          include: {
-            students: true,
-            classroom: true,
-          },
-        },
+        students: true,
+        classroom: true,
       },
     });
 
     // Kumpulkan ID siswa dari semua kelompok
-    const studentIds = teacherGroups.flatMap((tg) =>
-      tg.group.students.map((student) => student.id)
-    );
+    const studentIds = groups.flatMap((group) => group.students.map((student) => student.id));
 
     if (studentIds.length === 0) {
       return [];

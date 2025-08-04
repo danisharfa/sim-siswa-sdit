@@ -25,14 +25,10 @@ export async function GET() {
     });
 
     // 1. Ambil periods dari grup aktif
-    const teacherGroups = await prisma.teacherGroup.findMany({
+    const groups = await prisma.group.findMany({
       where: { teacherId: teacher.id },
       include: {
-        group: {
-          include: {
-            classroom: true,
-          },
-        },
+        classroom: true,
       },
     });
 
@@ -53,20 +49,20 @@ export async function GET() {
     const groupsMap = new Map();
 
     // Dari grup aktif
-    teacherGroups.forEach((tg) => {
-      const periodKey = `${tg.group.classroom.academicYear}|${tg.group.classroom.semester}`;
+    groups.forEach((group) => {
+      const periodKey = `${group.classroom.academicYear}|${group.classroom.semester}`;
       periodsSet.add(periodKey);
 
-      const groupKey = `${tg.group.id}-${periodKey}`;
+      const groupKey = `${group.id}-${periodKey}`;
       if (!groupsMap.has(groupKey)) {
         groupsMap.set(groupKey, {
-          id: tg.group.id,
-          name: tg.group.name,
-          classroomName: tg.group.classroom.name,
-          academicYear: tg.group.classroom.academicYear,
-          semester: tg.group.classroom.semester,
+          id: group.id,
+          name: group.name,
+          classroomName: group.classroom.name,
+          academicYear: group.classroom.academicYear,
+          semester: group.classroom.semester,
           period: periodKey,
-          label: `${tg.group.name} - ${tg.group.classroom.name}`,
+          label: `${group.name} - ${group.classroom.name}`,
         });
       }
     });
