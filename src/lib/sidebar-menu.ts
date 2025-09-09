@@ -60,6 +60,21 @@ export const menuData = {
       icon: Users2,
     },
     {
+      label: 'Setoran Siswa',
+      items: [
+        {
+          title: 'Riwayat Setoran',
+          url: '/dashboard/coordinator/submission',
+          icon: BookOpenIcon,
+        },
+        {
+          title: 'Riwayat Aktivitas Rumah',
+          url: '/dashboard/coordinator/home-activity',
+          icon: BookOpenIcon,
+        },
+      ],
+    },
+    {
       label: 'Tashih',
       items: [
         {
@@ -117,35 +132,30 @@ export const menuData = {
       icon: Users2,
     },
     {
-      label: 'Setoran',
+      label: 'Setoran Siswa',
       items: [
         {
-          title: 'Input Target',
+          title: 'Input Target Setoran',
           url: '/dashboard/teacher/submission/target/input',
           icon: Target,
         },
         {
-          title: 'Riwayat Target',
+          title: 'Riwayat Target Setoran',
           url: '/dashboard/teacher/submission/target/history',
           icon: BookOpenIcon,
         },
         {
-          title: 'Input',
+          title: 'Input Setoran',
           url: '/dashboard/teacher/submission/input',
           icon: BookPlus,
         },
         {
-          title: 'Riwayat',
+          title: 'Riwayat Setoran',
           url: '/dashboard/teacher/submission/history',
           icon: BookOpenIcon,
         },
-      ],
-    },
-    {
-      label: 'Aktivitas Rumah',
-      items: [
         {
-          title: 'Riwayat',
+          title: 'Riwayat Aktivitas Rumah',
           url: '/dashboard/teacher/home-activity',
           icon: BookOpenIcon,
         },
@@ -212,27 +222,22 @@ export const menuData = {
       label: 'Setoran',
       items: [
         {
-          title: 'Target',
+          title: 'Target Setoran',
           url: '/dashboard/student/submission/target',
           icon: Target,
         },
         {
-          title: 'Riwayat',
+          title: 'Riwayat Setoran',
           url: '/dashboard/student/submission',
           icon: BookOpenIcon,
         },
-      ],
-    },
-    {
-      label: 'Aktivitas Rumah',
-      items: [
         {
-          title: 'Input',
+          title: 'Input Aktivitas Rumah',
           url: '/dashboard/student/home-activity/input',
           icon: BookPlus,
         },
         {
-          title: 'Riwayat',
+          title: 'Riwayat Aktivitas Rumah',
           url: '/dashboard/student/home-activity/history',
           icon: BookOpenIcon,
         },

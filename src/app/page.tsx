@@ -7,13 +7,13 @@ export default function LoginPage() {
     <div className="grid min-h-svh lg:grid-cols-2">
       {/* Left Side - Login Form */}
       <div className="flex flex-col gap-6 p-6 md:p-10">
-        <div>    
+        <div>
           <Link href="/" className="flex items-center gap-3 font-medium">
             <div className="relative flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 p-1">
-              <Image 
-                src="/logo-sekolah.png" 
-                alt="Logo SDIT Ulul Albab" 
-                width={32} 
+              <Image
+                src="/logo-sekolah.png"
+                alt="Logo SDIT Ulul Albab"
+                width={32}
                 height={32}
                 className="rounded-md"
               />
@@ -57,26 +57,37 @@ export default function LoginPage() {
       <div className="relative hidden bg-gradient-to-br from-primary/20 via-primary/10 to-background lg:block">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        
+
         <div className="relative flex h-full flex-col items-center justify-center p-8 text-center">
           <div className="max-w-md space-y-6">
-            <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-primary/10 backdrop-blur-sm">
-              <Image 
-                src="/logo-sekolah.png" 
-                alt="Logo SDIT Ulul Albab" 
-                width={64} 
-                height={64}
-                className="rounded-full"
-              />
+            <div className="mx-auto flex items-center justify-center gap-3">
+              <div className="flex size-24 items-center justify-center rounded-full bg-primary/10 backdrop-blur-sm">
+                <Image
+                  src="/logo-sekolah.png"
+                  alt="Logo SDIT Ulul Albab"
+                  width={64}
+                  height={64}
+                  className="rounded-full"
+                />
+              </div>
+              <div className="flex size-24 items-center justify-center rounded-full bg-primary/10 backdrop-blur-sm">
+                <Image
+                  src="/logo-yayasan.png"
+                  alt="Logo Yayasan"
+                  width={64}
+                  height={64}
+                  className="rounded-full"
+                />
+              </div>
             </div>
-            
+
             <div className="space-y-4">
               <h2 className="text-2xl font-bold text-primary">
                 Sistem Informasi Monitoring Al-Qur&apos;an
               </h2>
               <p className="text-muted-foreground">
-                Platform digital terpadu untuk monitoring dan pengelolaan kegiatan 
-                tahfidz dan tahsin Al-Qur&apos;an di SDIT Ulul Albab Mataram.
+                Platform digital terpadu untuk monitoring dan pengelolaan kegiatan tahfidz dan
+                tahsin di SDIT Ulul Albab Mataram.
               </p>
             </div>
 
@@ -98,7 +109,7 @@ export default function LoginPage() {
                 <div className="flex size-6 items-center justify-center rounded-full bg-primary/20">
                   <div className="size-2 rounded-full bg-primary" />
                 </div>
-                <span>Laporan perkembangan komprehensif</span>
+                <span>Laporan perkembangan</span>
               </div>
             </div>
           </div>
