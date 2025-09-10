@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     }
 
     const student = await prisma.studentProfile.findUnique({
-      where: { id: studentId },
+      where: { userId: studentId },
       select: {
         groupId: true,
         group: {
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     const isMembimbing = await prisma.group.findFirst({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         id: student.groupId,
       },
     });
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     const targets = await prisma.weeklyTarget.findMany({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         studentId: studentId,
         groupId: student.groupId,
       },

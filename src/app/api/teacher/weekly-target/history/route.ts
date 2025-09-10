@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Build where clause
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: Record<string, any> = {
-      teacherId: teacher.id,
+      teacherId: teacher.userId,
     };
 
     if (groupId && groupId !== 'all') {

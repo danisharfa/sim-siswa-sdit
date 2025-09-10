@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     const schedules = await prisma.munaqasyahSchedule.findMany({
-      where: { examinerId: teacher.id },
+      where: { examinerId: teacher.userId },
       orderBy: { date: 'desc' },
       include: {
         scheduleRequests: {

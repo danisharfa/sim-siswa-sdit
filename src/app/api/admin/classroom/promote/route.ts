@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const students = await prisma.studentProfile.findMany({
       where: {
-        id: { in: studentIds },
+        userId: { in: studentIds },
         status: StudentStatus.AKTIF,
       },
       include: {
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       // Simpan histori kelas
       await prisma.classroomHistory.create({
         data: {
-          studentId: student.id,
+          studentId: student.userId,
           classroomId: currentClass.id,
           academicYear: currentClass.academicYear,
           semester: currentClass.semester,
@@ -51,12 +51,12 @@ export async function POST(req: NextRequest) {
 
       // Simpan histori kelompok (gunakan variabel lokal agar tidak hilang)
       const prevGroupId = student.groupId;
-      const prevTeacherId = student.group?.teacher?.id || null;
+      const prevTeacherId = student.group?.teacher?.userId || null;
 
       if (prevGroupId) {
         await prisma.groupHistory.create({
           data: {
-            studentId: student.id,
+            studentId: student.userId,
             groupId: prevGroupId,
             teacherId: prevTeacherId,
             academicYear: currentClass.academicYear,
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 
       // Update siswa
       await prisma.studentProfile.update({
-        where: { id: student.id },
+        where: { userId: student.userId },
         data: {
           classroomId: isGraduating ? null : nextClassroomId,
           groupId: null,

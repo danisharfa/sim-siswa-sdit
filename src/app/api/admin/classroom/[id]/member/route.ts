@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       where: { classroomId },
       orderBy: { nis: 'asc' },
       select: {
-        id: true,
+        userId: true,
         nis: true,
         user: {
           select: { fullName: true },
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     });
 
     const formattedSiswa = studentList.map((siswa) => ({
-      id: siswa.id,
+      id: siswa.userId,
       nis: siswa.nis,
       fullName: siswa.user.fullName,
     }));
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     }
 
     await prisma.studentProfile.update({
-      where: { id: siswa.id },
+      where: { userId: siswa.userId },
       data: { classroomId },
     });
 
@@ -176,7 +176,7 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
     }
 
     await prisma.studentProfile.update({
-      where: { id: student.id },
+      where: { userId: student.userId },
       data: { classroomId: null },
     });
 

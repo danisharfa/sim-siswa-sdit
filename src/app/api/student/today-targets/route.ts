@@ -30,7 +30,7 @@ export async function GET() {
     // Get targets that are active today (start date <= today <= end date)
     const activeTargets = await prisma.weeklyTarget.findMany({
       where: {
-        studentId: student.id,
+        studentId: student.userId,
         startDate: { lte: tomorrow },
         endDate: { gte: today },
       },

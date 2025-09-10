@@ -39,7 +39,7 @@ export async function getStudentReportData(
   groupId: string
 ): Promise<StudentReportData | null> {
   const student = await prisma.studentProfile.findUnique({
-    where: { id: studentId },
+    where: { userId: studentId },
     include: {
       user: true,
       classroom: true,
@@ -94,7 +94,7 @@ export async function getStudentReportData(
     fullName: student.user.fullName,
     nis: student.nis,
     nisn: student.nisn ?? '-',
-    address: student.address ?? '-',
+    address: student.user.address ?? '-',
     className: group.classroom?.name ?? '-',
     semester: group.classroom.semester,
     academicYear: group.classroom.academicYear,

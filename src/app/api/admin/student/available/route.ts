@@ -17,7 +17,7 @@ export async function GET() {
       },
       orderBy: { nis: 'asc' },
       select: {
-        id: true,
+        userId: true,
         nis: true,
         user: {
           select: {
@@ -28,7 +28,7 @@ export async function GET() {
     });
 
     const formatted = students.map((s) => ({
-      id: s.id,
+      id: s.userId,
       nis: s.nis,
       fullName: s.user.fullName,
     }));

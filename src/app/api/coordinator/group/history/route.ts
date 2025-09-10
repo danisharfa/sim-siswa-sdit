@@ -20,7 +20,7 @@ export async function GET() {
         },
         student: {
           select: {
-            id: true,
+            userId: true,
             nis: true,
             user: {
               select: { fullName: true },
@@ -58,7 +58,7 @@ export async function GET() {
         };
       }
       acc[key].students.push({
-        id: curr.student.id,
+        id: curr.student.userId,
         nis: curr.student.nis,
         fullName: curr.student.user.fullName,
       });

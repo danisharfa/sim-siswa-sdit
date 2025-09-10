@@ -67,7 +67,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const wafaRequests = await prisma.tashihRequest.findMany({
       where: {
-        studentId: student.id,
+        studentId: student.userId,
         tashihType: TashihType.WAFA,
         status: TashihRequestStatus.SELESAI,
         group: {
@@ -140,7 +140,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }
 
     const result: StudentTahsinWafaResponse = {
-      studentId: student.id,
+      studentId: student.userId,
       studentName: student.user.fullName,
       currentWafa,
       lastWafa,

@@ -417,7 +417,7 @@ export function MunaqasyahResultTable({ data }: Props) {
         </Card>
       )}
 
-      <DataTable title="Hasil Munaqasyah Saya" table={table} />
+      <DataTable title="Hasil Munaqasyah Saya" table={table} showColumnFilter={false} />
     </>
   );
 }

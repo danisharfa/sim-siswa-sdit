@@ -17,7 +17,7 @@ export async function fetchStudentSubmissionHistory() {
     }
 
     const submissionList = await prisma.submission.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.userId },
       orderBy: { date: 'desc' },
       include: {
         surah: { select: { id: true, name: true } },

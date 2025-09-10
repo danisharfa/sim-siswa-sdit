@@ -60,7 +60,7 @@ export async function GET() {
 
     // Get teacher's groups for current period with student count
     const teacherGroups = await prisma.group.findMany({
-      where: { teacherId: teacher.id },
+      where: { teacherId: teacher.userId },
       include: {
         classroom: true,
         _count: {
@@ -92,7 +92,7 @@ export async function GET() {
     const totalStudents = currentGroups.reduce((sum, group) => sum + group._count.students, 0);
 
     const teacherInfo: TeacherInfo = {
-      id: teacher.id,
+      id: teacher.userId,
       name: teacher.user.fullName,
       nip: teacher.nip,
       groups: groupsData,

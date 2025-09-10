@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     const activities = await prisma.homeActivity.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.userId },
       orderBy: { date: 'desc' },
       include: {
         group: {
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
     const HomeActivity = await prisma.homeActivity.create({
       data: {
-        studentId: student.id,
+        studentId: student.userId,
         groupId: student.groupId,
         date: new Date(date),
         activityType,

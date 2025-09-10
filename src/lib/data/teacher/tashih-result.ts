@@ -19,7 +19,7 @@ export async function fetchTashihResult() {
     const results = await prisma.tashihResult.findMany({
       where: {
         tashihRequest: {
-          teacherId: teacher.id,
+          teacherId: teacher.userId,
         },
       },
       orderBy: { createdAt: 'desc' },

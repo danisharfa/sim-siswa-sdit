@@ -32,18 +32,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    let role: 'student' | 'teacher' | 'coordinator' | null = null;
-    if (user.student) role = Role.student;
-    else if (user.teacher) role = Role.teacher;
-    else if (user.coordinator) role = Role.coordinator;
-
     return NextResponse.json({
       success: true,
       message: 'Detail user berhasil diambil',
-      data: {
-        ...user,
-        role,
-      },
+      data: user,
     });
   } catch (error) {
     console.error('[USER_DETAIL_GET]', error);
@@ -76,33 +68,23 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     await prisma.user.update({
       where: { id },
-      data: { fullName },
+      data: { fullName, birthDate, birthPlace, gender, bloodType, address, phoneNumber, email },
     });
-
-    const updateData = {
-      birthDate,
-      birthPlace,
-      gender,
-      bloodType,
-      address,
-      phoneNumber,
-      email,
-    };
 
     if (role === Role.coordinator) {
       await prisma.coordinatorProfile.update({
         where: { userId: id },
-        data: { ...updateData, nip },
+        data: { nip },
       });
     } else if (role === Role.teacher) {
       await prisma.teacherProfile.update({
         where: { userId: id },
-        data: { ...updateData, nip },
+        data: { nip },
       });
     } else if (role === Role.student) {
       await prisma.studentProfile.update({
         where: { userId: id },
-        data: { ...updateData, nis, nisn },
+        data: { nis, nisn },
       });
     }
 

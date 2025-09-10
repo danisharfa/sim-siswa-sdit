@@ -323,7 +323,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         </Card>
       )}
 
-      <DataTable title="Jadwal Tashih Saya" table={table} />
+      <DataTable title="Jadwal Tashih Saya" table={table} showColumnFilter={false} />
 
       {selectedPeriod && filteredData.length === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center mt-4">

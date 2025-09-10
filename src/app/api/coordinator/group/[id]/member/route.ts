@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         nis: 'asc',
       },
       select: {
-        id: true,
+        userId: true,
         nis: true,
         user: {
           select: {
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     });
 
     const formattedMembers = members.map((m) => ({
-      id: m.id,
+      id: m.userId,
       nis: m.nis,
       fullName: m.user?.fullName || 'Tidak diketahui',
     }));
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
 
     const updatePromises = students.map((student) =>
       prisma.studentProfile.update({
-        where: { id: student.id },
+        where: { userId: student.userId },
         data: { groupId: id },
       })
     );
@@ -154,7 +154,7 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
     }
 
     await prisma.studentProfile.update({
-      where: { id: student.id },
+      where: { userId: student.userId },
       data: { groupId: null },
     });
 

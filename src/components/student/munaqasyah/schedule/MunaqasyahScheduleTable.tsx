@@ -307,7 +307,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </Card>
       )}
 
-      <DataTable title="Jadwal Munaqasyah Saya" table={table} />
+      <DataTable title="Jadwal Munaqasyah Saya" table={table} showColumnFilter={false} />
     </>
   );
 }

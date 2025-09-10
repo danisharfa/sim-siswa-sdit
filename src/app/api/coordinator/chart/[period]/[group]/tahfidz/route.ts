@@ -7,7 +7,7 @@ import { Role, Semester, TashihRequestStatus, TashihType } from '@prisma/client'
 type Params = Promise<{ period: string; group: string }>;
 
 interface StudentData {
-  id: string;
+  userId: string;
   user: {
     fullName: string;
   };
@@ -119,7 +119,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const allStudents = [...historicalStudents, ...activeStudents];
     const uniqueStudents = allStudents.reduce((acc, student) => {
-      if (!acc.find((s) => s.id === student.id)) {
+      if (!acc.find((s) => s.userId === student.userId)) {
         acc.push(student);
       }
       return acc;
@@ -131,7 +131,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       totalStudents: students.length,
       fromHistory: groupHistories.length,
       fromActiveGroups: activeGroups.length,
-      studentIds: students.map((s) => s.id),
+      studentIds: students.map((s) => s.userId),
     });
 
     const allJuz = await prisma.juz.findMany({
@@ -149,7 +149,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const tashihRequests = await prisma.tashihRequest.findMany({
       where: {
-        studentId: { in: students.map((s) => s.id) },
+        studentId: { in: students.map((s) => s.userId) },
         tashihType: TashihType.ALQURAN,
         status: TashihRequestStatus.SELESAI,
         juzId: { in: allJuz.map((j) => j.id) },
@@ -198,7 +198,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const result: ChartResponseItem[] = [];
 
     for (const student of students) {
-      const studentRequests = tashihRequests.filter((req) => req.studentId === student.id);
+      const studentRequests = tashihRequests.filter((req) => req.studentId === student.userId);
       const progressList: TahfidzProgress[] = [];
       let currentJuz: number | null = null;
       let lastSurah = 'Belum ada';
@@ -246,7 +246,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       }
 
       result.push({
-        studentId: student.id,
+        studentId: student.userId,
         studentName: student.user.fullName,
         lastSurah,
         currentJuz,

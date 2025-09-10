@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           data: {
             passed,
             notes: notes ?? null,
-            evaluatedByCoordinatorId: coordinator.id,
+            evaluatedByCoordinatorId: coordinator.userId,
           },
         })
       : await prisma.tashihResult.create({
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
             requestId,
             passed,
             notes: notes ?? null,
-            evaluatedByCoordinatorId: coordinator.id,
+            evaluatedByCoordinatorId: coordinator.userId,
           },
         });
 

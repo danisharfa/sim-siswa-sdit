@@ -55,7 +55,7 @@ export async function GET() {
     const teachers = student.group?.teacher
       ? [
           {
-            id: student.group.teacher.id,
+            id: student.group.teacher.userId,
             name: student.group.teacher.user.fullName,
           },
         ]
@@ -63,7 +63,7 @@ export async function GET() {
 
     // Build student info
     const studentInfo = {
-      id: student.id,
+      id: student.userId,
       name: student.user.fullName,
       nis: student.nis,
       currentGroup: student.group

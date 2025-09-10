@@ -21,7 +21,7 @@ export async function getStudentGroupHistory(groupId: string, studentId: string)
       include: {
         student: {
           select: {
-            id: true,
+            userId: true,
             nis: true,
             user: {
               select: {
@@ -50,7 +50,7 @@ export async function getStudentGroupHistory(groupId: string, studentId: string)
     if (!groupHistory || !groupHistory.student) return null;
 
     return {
-      id: groupHistory.student.id,
+      id: groupHistory.student.userId,
       nis: groupHistory.student.nis,
       fullName: groupHistory.student.user.fullName,
       group: {
@@ -91,7 +91,7 @@ export async function fetchWeeklyTargetHistory(studentId: string, groupId: strin
       where: {
         studentId,
         groupId,
-        teacherId: teacher.id, // Pastikan guru ini yang mengajar pada periode tersebut
+        teacherId: teacher.userId, // Pastikan guru ini yang mengajar pada periode tersebut
       },
       include: {
         group: {
@@ -115,7 +115,7 @@ export async function fetchWeeklyTargetHistory(studentId: string, groupId: strin
     const targets = await prisma.weeklyTarget.findMany({
       where: {
         studentId: studentId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId: groupId, // Filter berdasarkan groupId history
       },
       orderBy: { startDate: 'desc' },

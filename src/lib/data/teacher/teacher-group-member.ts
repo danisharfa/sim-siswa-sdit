@@ -14,7 +14,7 @@ export async function getGroupId(groupId: string) {
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       },
       include: {
         classroom: true,
@@ -41,7 +41,7 @@ export async function fetchGroupMembers(groupId: string) {
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       },
     });
     if (!group) throw new Error('Kelompok ini bukan bimbingan Anda');
@@ -50,7 +50,7 @@ export async function fetchGroupMembers(groupId: string) {
       where: { groupId },
       orderBy: { nis: 'asc' },
       select: {
-        id: true,
+        userId: true,
         nis: true,
         user: {
           select: { fullName: true },
@@ -59,7 +59,7 @@ export async function fetchGroupMembers(groupId: string) {
     });
 
     return members.map((m) => ({
-      id: m.id,
+      id: m.userId,
       nis: m.nis,
       fullName: m.user.fullName,
     }));
@@ -81,11 +81,11 @@ export async function getStudent(groupId: string, studentId: string) {
 
     const student = await prisma.studentProfile.findFirst({
       where: {
-        id: studentId,
+        userId: studentId,
         groupId: groupId,
       },
       select: {
-        id: true,
+        userId: true,
         nis: true,
         user: {
           select: {
@@ -138,7 +138,7 @@ export async function getGroupHistoryId(groupId: string) {
         },
         student: {
           select: {
-            id: true,
+            userId: true,
             nis: true,
             user: {
               select: { fullName: true },
@@ -177,7 +177,7 @@ export async function fetchGroupHistoryMembers(groupId: string) {
         },
         student: {
           select: {
-            id: true,
+            userId: true,
             nis: true,
             user: {
               select: { fullName: true },
@@ -193,7 +193,7 @@ export async function fetchGroupHistoryMembers(groupId: string) {
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       },
     });
     if (!group) throw new Error('Kelompok ini bukan bimbingan Anda');
@@ -203,8 +203,8 @@ export async function fetchGroupHistoryMembers(groupId: string) {
     for (const history of groupHistories) {
       const student = history.student;
       if (student) {
-        uniqueStudents.set(student.id, {
-          id: student.id,
+        uniqueStudents.set(student.userId, {
+          id: student.userId,
           nis: student.nis,
           fullName: student.user.fullName,
         });

@@ -15,7 +15,7 @@ export async function GET() {
     });
 
     const examiners = teachers.map((t) => ({
-      id: t.id,
+      id: t.userId,
       name: t.user.fullName,
       role: 'teacher' as const,
     }));

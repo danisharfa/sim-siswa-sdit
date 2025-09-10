@@ -40,7 +40,7 @@ export async function getStudentReportHistoryData(
 ): Promise<StudentReportHistoryData | null> {
   const [student, groupData, coordinator, schoolInfo] = await Promise.all([
     prisma.studentProfile.findUnique({
-      where: { id: studentId },
+      where: { userId: studentId },
       include: {
         user: true,
       },
@@ -122,7 +122,7 @@ export async function getStudentReportHistoryData(
     fullName: student.user.fullName,
     nis: student.nis,
     nisn: student.nisn ?? '-',
-    address: student.address ?? '-',
+    address: student.user.address ?? '-',
     className: groupData.classroom?.name ?? '-',
     semester: groupData.classroom?.semester ?? 'GANJIL',
     academicYear: groupData.classroom?.academicYear ?? '-',

@@ -18,7 +18,7 @@ import { Calendar22 } from '@/components/calendar/calendar-22';
 import { Role, Gender, BloodType } from '@prisma/client';
 
 type StudentProfile = {
-  birthDate?: Date;
+  birthDate?: string;
   birthPlace?: string;
   gender?: Gender;
   bloodType?: BloodType;
@@ -46,26 +46,26 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
         const json = await res.json();
         if (!json.success) throw new Error(json.message);
 
-        const userData = json.data;
-        const profile = userData.student;
+        const user = json.data;
+        const profile = user.student;
 
         setIdentity({
-          fullName: userData.fullName,
+          fullName: user.fullName,
           nis: profile?.nis || '',
           nisn: profile?.nisn || '',
         });
 
         setUpdatedData({
-          birthPlace: profile?.birthPlace || '',
-          gender: profile?.gender || Gender.PILIH,
-          bloodType: profile?.bloodType || BloodType.PILIH,
-          address: profile?.address || '',
-          phoneNumber: profile?.phoneNumber || '',
-          email: profile?.email || '',
+          birthPlace: user.birthPlace || '',
+          gender: user.gender || Gender.PILIH,
+          bloodType: user.bloodType || BloodType.PILIH,
+          address: user.address || '',
+          phoneNumber: user.phoneNumber || '',
+          email: user.email || '',
         });
 
-        if (profile?.birthDate) {
-          setDate(new Date(profile.birthDate));
+        if (user.birthDate) {
+          setDate(new Date(user.birthDate));
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -135,7 +135,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
               onChange={(e) => handleChange('birthPlace', e.target.value)}
             />
 
-            <Calendar22 value={date} onChange={setDate} label='Tanggal Lahir'/>
+            <Calendar22 value={date} onChange={setDate} label="Tanggal Lahir" />
 
             <Label>Jenis Kelamin</Label>
             <Select

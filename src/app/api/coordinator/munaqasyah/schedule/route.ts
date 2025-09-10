@@ -20,7 +20,7 @@ export async function GET() {
         },
         scheduledByCoordinator: {
           select: {
-            id: true,
+            userId: true,
             user: { select: { fullName: true } },
           },
         },
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
           startTime,
           endTime,
           location,
-          scheduledByCoordinatorId: coordinator.id,
+          scheduledByCoordinatorId: coordinator.userId,
           ...(examinerId && { examinerId }), // ← tetap valid
           scheduleRequests: {
             create: requestIds.map((id: string) => ({

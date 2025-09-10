@@ -29,14 +29,14 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                 juz: { select: { id: true, name: true } },
                 student: {
                   select: {
-                    id: true,
+                    userId: true,
                     nis: true,
                     user: { select: { fullName: true } },
                   },
                 },
                 teacher: {
                   select: {
-                    id: true,
+                    userId: true,
                     user: { select: { fullName: true } },
                   },
                 },

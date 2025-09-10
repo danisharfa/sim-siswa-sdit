@@ -73,7 +73,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
 
     // Get all weekly targets for this student
     const allTargets = await prisma.weeklyTarget.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.userId },
       include: {
         surahStart: { select: { id: true, name: true, verseCount: true } },
         surahEnd: { select: { id: true, name: true, verseCount: true } },
@@ -116,7 +116,7 @@ export async function fetchTargets(): Promise<StudentTargetData> {
     // Get all submissions for progress calculation - INCLUDE submissionStatus
     const submissions = await prisma.submission.findMany({
       where: {
-        studentId: student.id,
+        studentId: student.userId,
         date: {
           gte: allTargets.length > 0 ? allTargets[allTargets.length - 1].startDate : new Date(),
           lte: allTargets.length > 0 ? allTargets[0].endDate : new Date(),

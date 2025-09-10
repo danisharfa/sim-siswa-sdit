@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const teachers = await prisma.teacherProfile.findMany({
       select: {
-        id: true,
+        userId: true,
         user: {
           select: {
             fullName: true,
@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: teachers.map((t) => ({
-        id: t.id,
+        id: t.userId,
         fullName: t.user.fullName,
       })),
     });

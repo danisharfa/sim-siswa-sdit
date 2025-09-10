@@ -7,7 +7,7 @@ import { TargetTable } from './TargetTable';
 
 interface TargetManagementProps {
   student: {
-    id: string;
+    userId: string;
     nis: string;
     user: { fullName: string };
     group: {
@@ -25,7 +25,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function TargetManagement({ student }: TargetManagementProps) {
   const { data, isLoading, mutate } = useSWR(
-    `/api/teacher/weekly-target/student/${student.id}`,
+    `/api/teacher/weekly-target/student/${student.userId}`,
     fetcher
   );
 
@@ -40,7 +40,7 @@ export function TargetManagement({ student }: TargetManagementProps) {
 
   return (
     <div className="space-y-6 mt-6">
-      <TargetForm studentId={student.id} onSubmit={mutate} />
+      <TargetForm studentId={student.userId} onSubmit={mutate} />
       <TargetTable data={data?.data || []} title="Daftar Target Setoran" onRefresh={mutate} />
     </div>
   );

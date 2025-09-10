@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { studentId, juzId, batch, stage } = body;
 
     const student = await prisma.studentProfile.findUnique({
-      where: { id: studentId },
+      where: { userId: studentId },
       include: {
         classroom: true,
         group: true,
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     const request = await prisma.munaqasyahRequest.create({
       data: {
         studentId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId: student.group.id,
         juzId,
         batch,

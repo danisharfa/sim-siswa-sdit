@@ -22,7 +22,7 @@ export async function fetchTashihSchedule() {
         schedules: {
           some: {
             tashihRequest: {
-              studentId: student.id,
+              studentId: student.userId,
             },
           },
         },
@@ -31,7 +31,7 @@ export async function fetchTashihSchedule() {
         schedules: {
           where: {
             tashihRequest: {
-              studentId: student.id,
+              studentId: student.userId,
             },
           },
           include: {

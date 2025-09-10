@@ -26,9 +26,9 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     // Cek apakah siswa ini ada dalam kelompok yang dibimbing oleh guru
     const group = await prisma.group.findFirst({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         students: {
-          some: { id: studentId },
+          some: { userId: studentId },
         },
       },
       include: {

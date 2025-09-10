@@ -80,7 +80,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const tashihRequests = await prisma.tashihRequest.findMany({
       where: {
-        studentId: student.id,
+        studentId: student.userId,
         tashihType: TashihType.ALQURAN,
         status: TashihRequestStatus.SELESAI,
         juzId: { in: allJuz.map((j) => j.id) },
@@ -173,7 +173,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }
 
     const result: StudentTahfidzResponse = {
-      studentId: student.id,
+      studentId: student.userId,
       studentName: student.user.fullName,
       lastSurah,
       currentJuz,

@@ -6,10 +6,6 @@ import { AuthError } from 'next-auth';
 import { hash } from 'bcryptjs';
 import { Role } from '@prisma/client';
 
-function generateCustomId(prefix: string) {
-  return `${prefix}-${crypto.randomUUID()}`;
-}
-
 export const addUserCredentials = async (prevState: unknown, formData: FormData) => {
   const validatedFields = AddUserSchema.safeParse(Object.fromEntries(formData.entries()));
 
@@ -33,11 +29,9 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
     });
 
     if (role === Role.coordinator) {
-      const coordinatorId = generateCustomId('COORDINATOR');
       try {
         await prisma.coordinatorProfile.create({
           data: {
-            id: coordinatorId,
             userId: newUser.id,
             nip: username,
           },
@@ -50,11 +44,9 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
     }
 
     if (role === Role.teacher) {
-      const teacherId = generateCustomId('GURU');
       try {
         await prisma.teacherProfile.create({
           data: {
-            id: teacherId,
             userId: newUser.id,
             nip: username,
           },
@@ -67,11 +59,9 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
     }
 
     if (role === Role.student) {
-      const studentId = generateCustomId('SISWA');
       try {
         await prisma.studentProfile.create({
           data: {
-            id: studentId,
             userId: newUser.id,
             nis: username,
           },

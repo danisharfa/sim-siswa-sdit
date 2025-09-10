@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        teacherId: teacher.id,
-        students: { some: { id: studentId } },
+        teacherId: teacher.userId,
+        students: { some: { userId: studentId } },
       },
       select: {
         id: true,

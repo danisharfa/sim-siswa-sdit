@@ -18,7 +18,7 @@ export async function fetchTeacherGroups() {
 
     const groups = await prisma.group.findMany({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         classroom: {
           isActive: true,
         },
@@ -28,7 +28,7 @@ export async function fetchTeacherGroups() {
           select: { name: true, academicYear: true, semester: true },
         },
         students: {
-          select: { id: true },
+          select: { userId: true },
         },
       },
     });
@@ -63,7 +63,7 @@ export async function fetchTeacherGroupHistory() {
 
     const histories = await prisma.groupHistory.findMany({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       },
       orderBy: [{ academicYear: 'desc' }, { semester: 'desc' }, { group: { name: 'asc' } }],
       include: {
@@ -74,7 +74,7 @@ export async function fetchTeacherGroupHistory() {
         },
         student: {
           select: {
-            id: true,
+            userId: true,
             nis: true,
             user: {
               select: {
@@ -114,7 +114,7 @@ export async function fetchTeacherGroupHistory() {
         };
       }
       acc[key].students.push({
-        id: curr.student.id,
+        id: curr.student.userId,
         nis: curr.student.nis,
         fullName: curr.student.user.fullName,
       });

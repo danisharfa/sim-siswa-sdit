@@ -20,7 +20,7 @@ import { GradeLetter, TahsinType } from '@prisma/client';
 interface ScoreFormProps {
   groupId: string;
   student: {
-    id: string;
+    userId: string;
     nis: string;
     user: { fullName: string };
     group: {
@@ -76,7 +76,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
   const [lastMaterial, setLastMaterial] = useState('');
 
   const { data: surahData } = useSWR<{ data: { id: number; name: string }[] }>(
-    `/api/teacher/score/tahfidz/eligible/${student.id}`,
+    `/api/teacher/score/tahfidz/eligible/${student.userId}`,
     fetcher
   );
   const surahList = surahData?.data || [];
@@ -85,7 +85,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
   const surahJuzList = surahJuzData?.data || [];
 
   const { data: existingScores, isLoading } = useSWR<ExistingScoreResponse>(
-    `/api/teacher/score/${student.id}`,
+    `/api/teacher/score/${student.userId}`,
     fetcher
   );
 
@@ -226,7 +226,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
     }
 
     const payload = {
-      studentId: student.id,
+      studentId: student.userId,
       groupId,
       tahsin: tahsinEntries,
       tahfidz: tahfidzEntries,

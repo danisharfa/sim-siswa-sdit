@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     // Ambil data siswa dengan relasi group dan classroom
     const student = await prisma.studentProfile.findUnique({
-      where: { id: studentId },
+      where: { userId: studentId },
       include: {
         group: {
           include: {
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     const newRequest = await prisma.tashihRequest.create({
       data: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         studentId,
         groupId: student.group.id,
         tashihType,

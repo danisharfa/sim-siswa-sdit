@@ -49,16 +49,16 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
           nis: role === Role.student ? profile?.nis ?? '' : undefined,
           nisn: role === Role.student ? profile?.nisn ?? '' : undefined,
           nip: role !== Role.student ? profile?.nip ?? '' : undefined,
-          birthPlace: profile?.birthPlace ?? '',
-          gender: profile?.gender ?? Gender.PILIH,
-          bloodType: profile?.bloodType ?? BloodType.PILIH,
-          address: profile?.address ?? '',
-          phoneNumber: profile?.phoneNumber ?? '',
-          email: profile?.email ?? '',
+          birthPlace: data.birthPlace ?? '',
+          gender: data.gender ?? Gender.PILIH,
+          bloodType: data.bloodType ?? BloodType.PILIH,
+          address: data.address ?? '',
+          phoneNumber: data.phoneNumber ?? '',
+          email: data.email ?? '',
         });
 
-        if (profile?.birthDate) {
-          setDate(new Date(profile.birthDate));
+        if (data.birthDate) {
+          setDate(new Date(data.birthDate));
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -95,6 +95,14 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
       toast.error('Gagal memperbarui detail user!');
     }
   };
+
+  const labelMap = (val: string) =>
+    val === 'PILIH'
+      ? '-- Pilih --'
+      : val
+          .replace('_', ' ')
+          .toLowerCase()
+          .replace(/^\w/, (c) => c.toUpperCase());
 
   if (loading) return <p>Loading...</p>;
 
@@ -134,7 +142,7 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
               onChange={(e) => handleChange('birthPlace', e.target.value)}
             />
 
-            <Calendar22 value={date} onChange={setDate} label='Tanggal Lahir'/>
+            <Calendar22 value={date} onChange={setDate} label="Tanggal Lahir" />
 
             <Label>Jenis Kelamin</Label>
             <Select
@@ -147,7 +155,7 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
               <SelectContent>
                 {Object.values(Gender).map((g) => (
                   <SelectItem key={g} value={g}>
-                    {g.replace('_', ' ')}
+                    {labelMap(g)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -164,7 +172,7 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
               <SelectContent>
                 {Object.values(BloodType).map((bt) => (
                   <SelectItem key={bt} value={bt}>
-                    {bt}
+                    {labelMap(bt)}
                   </SelectItem>
                 ))}
               </SelectContent>

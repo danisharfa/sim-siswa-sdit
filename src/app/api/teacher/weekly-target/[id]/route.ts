@@ -47,7 +47,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     }
 
     const student = await prisma.studentProfile.findUnique({
-      where: { id: studentId },
+      where: { userId: studentId },
       select: { groupId: true },
     });
 
@@ -60,7 +60,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
 
     const isMembimbing = await prisma.group.findFirst({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         id: student.groupId,
       },
     });
@@ -76,7 +76,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       where: { id },
       data: {
         studentId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId: student.groupId,
         type,
         description,
@@ -130,7 +130,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
       where: { userId: session.user.id },
     });
 
-    if (!teacher || target.teacherId !== teacher.id) {
+    if (!teacher || target.teacherId !== teacher.userId) {
       return NextResponse.json(
         { success: false, message: 'Tidak diizinkan menghapus target ini' },
         { status: 403 }

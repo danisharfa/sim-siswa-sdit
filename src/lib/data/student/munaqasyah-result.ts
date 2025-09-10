@@ -20,7 +20,7 @@ export async function fetchMunaqasyahResult() {
       orderBy: { createdAt: 'desc' },
       where: {
         request: {
-          studentId: student.id,
+          studentId: student.userId,
         },
       },
       include: {

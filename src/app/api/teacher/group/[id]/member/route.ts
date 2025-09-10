@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const isGroupBimbingan = await prisma.group.findFirst({
       where: {
         id: id,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       },
     });
 
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         nis: 'asc',
       },
       select: {
-        id: true,
+        userId: true,
         nis: true,
         user: {
           select: {
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     });
 
     const formattedMembers = members.map((m) => ({
-      id: m.id,
+      id: m.userId,
       nis: m.nis,
       fullName: m.user?.fullName || 'Tidak diketahui',
     }));

@@ -17,7 +17,7 @@ export async function fetchSubmissionHistory() {
     }
 
     const kelompokBinaan = await prisma.group.findMany({
-      where: { teacherId: teacher.id },
+      where: { teacherId: teacher.userId },
       select: { id: true },
     });
 
@@ -25,7 +25,7 @@ export async function fetchSubmissionHistory() {
 
     const submissionList = await prisma.submission.findMany({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId: {
           in: groupIds,
         },

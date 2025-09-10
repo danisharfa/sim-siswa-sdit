@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     const kelompokBinaan = await prisma.group.findMany({
-      where: { teacherId: teacher.id },
+      where: { teacherId: teacher.userId },
       select: { id: true },
     });
 
@@ -30,7 +30,7 @@ export async function GET() {
 
     const submissionList = await prisma.submission.findMany({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId: {
           in: groupIds,
         },
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
 
     const isGuruMembimbing = await prisma.group.findFirst({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         id: groupId,
       },
     });
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const student = await prisma.studentProfile.findFirst({
       where: {
-        id: studentId,
+        userId: studentId,
         groupId,
       },
       include: {
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
       data: {
         id: submissionId,
         studentId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId,
         date: date ? new Date(date) : new Date(),
         submissionType,

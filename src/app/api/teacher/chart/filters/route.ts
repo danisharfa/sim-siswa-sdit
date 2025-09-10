@@ -26,7 +26,7 @@ export async function GET() {
 
     // 1. Ambil periods dari grup aktif
     const groups = await prisma.group.findMany({
-      where: { teacherId: teacher.id },
+      where: { teacherId: teacher.userId },
       include: {
         classroom: true,
       },
@@ -34,7 +34,7 @@ export async function GET() {
 
     // 2. Ambil periods dari group history
     const groupHistories = await prisma.groupHistory.findMany({
-      where: { teacherId: teacher.id },
+      where: { teacherId: teacher.userId },
       include: {
         group: {
           include: {

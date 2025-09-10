@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const student = await prisma.studentProfile.findUnique({
-      where: { id: studentId },
+      where: { userId: studentId },
       select: {
         groupId: true,
         group: {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     const isMembimbing = await prisma.group.findFirst({
       where: {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         id: student.groupId,
       },
     });
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     const newTarget = await prisma.weeklyTarget.create({
       data: {
         studentId,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         groupId: student.groupId,
         type,
         description,

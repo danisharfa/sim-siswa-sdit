@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const schedule = await prisma.munaqasyahSchedule.findFirst({
       where: {
         id: scheduleId,
-        examinerId: teacher.id,
+        examinerId: teacher.userId,
       },
       include: {
         scheduleRequests: {
@@ -43,14 +43,14 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                 juz: { select: { id: true, name: true } },
                 student: {
                   select: {
-                    id: true,
+                    userId: true,
                     nis: true,
                     user: { select: { fullName: true } },
                   },
                 },
                 teacher: {
                   select: {
-                    id: true,
+                    userId: true,
                     user: { select: { fullName: true } },
                   },
                 },

@@ -28,7 +28,7 @@ export async function GET() {
         schedules: {
           some: {
             tashihRequest: {
-              teacherId: teacher.id,
+              teacherId: teacher.userId,
             },
           },
         },
@@ -37,7 +37,7 @@ export async function GET() {
         schedules: {
           where: {
             tashihRequest: {
-              teacherId: teacher.id,
+              teacherId: teacher.userId,
             },
           },
           include: {

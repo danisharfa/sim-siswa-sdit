@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
         id: kelompokId,
         name: groupName,
         classroomId: classroom.id,
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       },
     });
 

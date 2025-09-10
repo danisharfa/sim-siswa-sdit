@@ -55,15 +55,15 @@ export default function TeacherProfileDetail({ userId }: { userId: string }) {
         });
 
         setUpdatedData({
-          birthPlace: profile?.birthPlace || '',
-          gender: profile?.gender || Gender.PILIH,
-          bloodType: profile?.bloodType || BloodType.PILIH,
-          address: profile?.address || '',
-          phoneNumber: profile?.phoneNumber || '',
-          email: profile?.email || '',
+          birthPlace: user.birthPlace || '',
+          gender: user.gender || Gender.PILIH,
+          bloodType: user.bloodType || BloodType.PILIH,
+          address: user.address || '',
+          phoneNumber: user.phoneNumber || '',
+          email: user.email || '',
         });
 
-        if (profile?.birthDate) setDate(new Date(profile.birthDate));
+        if (user.birthDate) setDate(new Date(user.birthDate));
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {

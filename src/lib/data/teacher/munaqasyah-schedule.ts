@@ -21,13 +21,13 @@ export async function fetchMunaqasyahSchedule() {
       where: {
         OR: [
           // Jadwal sebagai examiner
-          { examinerId: teacher.id },
+          { examinerId: teacher.userId },
           // Jadwal untuk request yang ditangani guru
           {
             scheduleRequests: {
               some: {
                 request: {
-                  teacherId: teacher.id,
+                  teacherId: teacher.userId,
                 },
               },
             },
@@ -89,14 +89,14 @@ export async function fetchMunaqasyahSchedule() {
       date: schedule.date.toISOString(),
       examiner: schedule.examiner
         ? {
-            id: schedule.examiner.id,
+            id: schedule.examiner.userId,
             nip: schedule.examiner.nip,
             fullName: schedule.examiner.user.fullName,
           }
         : null,
       coordinator: schedule.scheduledByCoordinator
         ? {
-            id: schedule.scheduledByCoordinator.id,
+            id: schedule.scheduledByCoordinator.userId,
             nip: schedule.scheduledByCoordinator.nip,
             fullName: schedule.scheduledByCoordinator.user.fullName,
           }

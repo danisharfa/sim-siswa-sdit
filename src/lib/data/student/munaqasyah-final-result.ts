@@ -19,7 +19,7 @@ export async function fetchMunaqasyahFinalResult() {
     const finalResults = await prisma.munaqasyahFinalResult.findMany({
       orderBy: { createdAt: 'desc' },
       where: {
-        studentId: student.id,
+        studentId: student.userId,
       },
       include: {
         juz: { select: { name: true } },

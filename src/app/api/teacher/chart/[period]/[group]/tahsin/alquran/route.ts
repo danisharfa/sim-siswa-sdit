@@ -6,7 +6,7 @@ import { Role, SubmissionStatus, SubmissionType, Semester } from '@prisma/client
 type Params = Promise<{ period: string; group: string }>;
 
 interface StudentData {
-  id: string;
+  userId: string;
   user: {
     fullName: string;
   };
@@ -77,7 +77,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    console.log('Teacher found:', teacher.id);
+    console.log('Teacher found:', teacher.userId);
 
     let students: StudentData[] = [];
 
@@ -85,7 +85,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
 
       const groupHistoryFilter: Record<string, string> = {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         academicYear,
         semester,
       };
@@ -106,7 +106,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
 
       const activeGroupFilter: Record<string, string> = {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       };
 
       if (groupId) {
@@ -115,7 +115,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       const activeGroups = await prisma.group.findMany({
         where: {
-          teacherId: teacher.id,
+          teacherId: teacher.userId,
           ...activeGroupFilter,
         },
         include: {
@@ -133,7 +133,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       const allStudents = [...studentsFromHistory, ...studentsFromActive];
       const uniqueStudents = allStudents.reduce((acc, student) => {
-        if (!acc.find((s) => s.id === student.id)) {
+        if (!acc.find((s) => s.userId === student.userId)) {
           acc.push(student);
         }
         return acc;
@@ -144,7 +144,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       console.log('Fetching all tahsin alquran data');
 
       const teacherGroupFilter: Record<string, string> = {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       };
 
       if (groupId) {
@@ -171,7 +171,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
-        studentId: { in: students.map((s) => s.id) },
+        studentId: { in: students.map((s) => s.userId) },
         submissionType: SubmissionType.TAHSIN_ALQURAN,
         submissionStatus: SubmissionStatus.LULUS,
         group: {
@@ -219,7 +219,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const result: ChartResponseItem[] = [];
 
     for (const student of students) {
-      const studentSubmissions = alquranSubmissions.filter((s) => s.studentId === student.id);
+      const studentSubmissions = alquranSubmissions.filter((s) => s.studentId === student.userId);
 
       const progressList: AlquranProgress[] = [];
       let currentJuz: number | null = null;
@@ -283,7 +283,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       }
 
       result.push({
-        studentId: student.id,
+        studentId: student.userId,
         studentName: student.user.fullName,
         lastJuz,
         currentJuz,

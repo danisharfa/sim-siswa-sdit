@@ -43,7 +43,7 @@ export async function GET() {
 
     const groupHistories = await prisma.groupHistory.findMany({
       where: {
-        studentId: student.id,
+        studentId: student.userId,
       },
       distinct: ['academicYear', 'semester'],
       include: {
@@ -115,7 +115,7 @@ export async function GET() {
       : periods[0]?.value || '';
 
     console.log('Student filter data:', {
-      studentId: student.id,
+      studentId: student.userId,
       studentName: student.user.fullName,
       periods,
       defaultPeriod,
@@ -125,7 +125,7 @@ export async function GET() {
       periods,
       defaultPeriod,
       studentInfo: {
-        id: student.id,
+        id: student.userId,
         name: student.user.fullName,
         nis: student.nis,
         currentGroup: student.group

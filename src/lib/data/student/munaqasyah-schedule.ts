@@ -22,7 +22,7 @@ export async function fetchMunaqasyahSchedule() {
         scheduleRequests: {
           some: {
             request: {
-              studentId: student.id,
+              studentId: student.userId,
             },
           },
         },
@@ -36,7 +36,7 @@ export async function fetchMunaqasyahSchedule() {
         scheduleRequests: {
           where: {
             request: {
-              studentId: student.id,
+              studentId: student.userId,
             },
           },
           include: {

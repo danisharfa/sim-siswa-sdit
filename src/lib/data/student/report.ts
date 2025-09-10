@@ -55,6 +55,7 @@ export async function fetchReportData() {
         user: {
           select: {
             fullName: true,
+            address: true,
           },
         },
       },
@@ -65,7 +66,7 @@ export async function fetchReportData() {
 
     const [allTahsinScores, allTahfidzScores] = await Promise.all([
       prisma.tahsinScore.findMany({
-        where: { studentId: student.id },
+        where: { studentId: student.userId },
         include: {
           group: {
             include: {
@@ -84,7 +85,7 @@ export async function fetchReportData() {
         },
       }),
       prisma.tahfidzScore.findMany({
-        where: { studentId: student.id },
+        where: { studentId: student.userId },
         include: {
           surah: true,
           group: {
@@ -106,7 +107,7 @@ export async function fetchReportData() {
     ]);
 
     const allReports = await prisma.report.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.userId },
       include: {
         group: {
           include: {
@@ -240,7 +241,7 @@ export async function fetchReportData() {
       fullName: student.user.fullName,
       nis: student.nis,
       nisn: student.nisn ?? '-',
-      address: student.address ?? '-',
+      address: student.user.address ?? '-',
       coordinatorName: coordinator?.user?.fullName ?? '-',
       schoolInfo: {
         schoolName: schoolInfo?.schoolName ?? '-',

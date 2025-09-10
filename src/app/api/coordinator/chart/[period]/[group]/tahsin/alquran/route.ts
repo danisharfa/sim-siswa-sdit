@@ -6,7 +6,7 @@ import { Role, SubmissionStatus, SubmissionType, Semester } from '@prisma/client
 type Params = Promise<{ period: string; group: string }>;
 
 interface StudentData {
-  id: string;
+  userId: string;
   user: {
     fullName: string;
   };
@@ -77,7 +77,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, error: 'Koordinator tidak ditemukan' }, { status: 404 });
     }
 
-    console.log('Coordinator found:', coordinator.id);
+    console.log('Coordinator found:', coordinator.userId);
 
     let students: StudentData[] = [];
 
@@ -121,7 +121,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const allStudents = [...historicalStudents, ...activeStudents];
     const uniqueStudents = allStudents.reduce((acc, student) => {
-      if (!acc.find((s) => s.id === student.id)) {
+      if (!acc.find((s) => s.userId === student.userId)) {
         acc.push(student);
       }
       return acc;
@@ -133,7 +133,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
-        studentId: { in: students.map((s) => s.id) },
+        studentId: { in: students.map((s) => s.userId) },
         submissionType: SubmissionType.TAHSIN_ALQURAN,
         submissionStatus: SubmissionStatus.LULUS,
         group: {
@@ -181,7 +181,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const result: ChartResponseItem[] = [];
 
     for (const student of students) {
-      const studentSubmissions = alquranSubmissions.filter((s) => s.studentId === student.id);
+      const studentSubmissions = alquranSubmissions.filter((s) => s.studentId === student.userId);
 
       const progressList: AlquranProgress[] = [];
       let currentJuz: number | null = null;
@@ -245,7 +245,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       }
 
       result.push({
-        studentId: student.id,
+        studentId: student.userId,
         studentName: student.user.fullName,
         lastJuz,
         currentJuz,

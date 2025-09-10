@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
-    if (!student || activity.studentId !== student.id) {
+    if (!student || activity.studentId !== student.userId) {
       return NextResponse.json(
         { success: false, message: 'Aktivitas bukan milik Anda' },
         { status: 403 }
@@ -103,7 +103,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
       where: { userId: session.user.id },
     });
 
-    if (!student || activity.studentId !== student.id) {
+    if (!student || activity.studentId !== student.userId) {
       return NextResponse.json(
         { success: false, message: 'Aktivitas bukan milik Anda' },
         { status: 403 }

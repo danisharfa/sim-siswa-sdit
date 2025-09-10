@@ -67,7 +67,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
-        studentId: student.id,
+        studentId: student.userId,
         submissionType: SubmissionType.TAHSIN_ALQURAN,
         submissionStatus: SubmissionStatus.LULUS,
         group: {
@@ -167,7 +167,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }
 
     const result: StudentTahsinAlquranResponse = {
-      studentId: student.id,
+      studentId: student.userId,
       studentName: student.user.fullName,
       lastJuz,
       currentJuz,

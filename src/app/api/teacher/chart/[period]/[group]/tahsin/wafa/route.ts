@@ -6,7 +6,7 @@ import { Role, TashihRequestStatus, TashihType, Semester } from '@prisma/client'
 type Params = Promise<{ period: string; group: string }>;
 
 interface StudentData {
-  id: string;
+  userId: string;
   user: {
     fullName: string;
   };
@@ -71,7 +71,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    console.log('Teacher found:', teacher.id);
+    console.log('Teacher found:', teacher.userId);
 
     let students: StudentData[] = [];
 
@@ -81,7 +81,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       // 1. Ambil dari GroupHistory untuk periode historis
       const groupHistoryFilter: Record<string, string> = {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
         academicYear,
         semester,
       };
@@ -103,7 +103,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       // 2. Ambil dari data aktif (tanpa filter periode classroom)
       const activeGroupFilter: Record<string, string> = {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       };
 
       if (groupId) {
@@ -112,7 +112,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       const activeGroups = await prisma.group.findMany({
         where: {
-          teacherId: teacher.id,
+          teacherId: teacher.userId,
           ...activeGroupFilter,
         },
         include: {
@@ -132,7 +132,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       // Gabungkan dan deduplikasi berdasarkan ID
       const allStudents = [...studentsFromHistory, ...studentsFromActive];
       const uniqueStudents = allStudents.reduce((acc, student) => {
-        if (!acc.find((s) => s.id === student.id)) {
+        if (!acc.find((s) => s.userId === student.userId)) {
           acc.push(student);
         }
         return acc;
@@ -144,7 +144,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       console.log('Fetching all wafa data');
 
       const teacherGroupFilter: Record<string, string> = {
-        teacherId: teacher.id,
+        teacherId: teacher.userId,
       };
 
       if (groupId) {
@@ -172,7 +172,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     // Dapatkan semua request wafa yang sudah selesai (kumulatif sampai periode yang dipilih)
     const wafaRequests = await prisma.tashihRequest.findMany({
       where: {
-        studentId: { in: students.map((s) => s.id) },
+        studentId: { in: students.map((s) => s.userId) },
         tashihType: TashihType.WAFA,
         status: TashihRequestStatus.SELESAI,
         // ✅ Filter kumulatif: ambil semua data sampai periode yang dipilih
@@ -225,7 +225,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const result: ChartResponseItem[] = [];
 
     for (const student of students) {
-      const studentRequests = wafaRequests.filter((r) => r.studentId === student.id);
+      const studentRequests = wafaRequests.filter((r) => r.studentId === student.userId);
 
       // Hitung progress untuk setiap wafa
       const progressList: WafaProgress[] = [];
@@ -288,7 +288,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       }
 
       result.push({
-        studentId: student.id,
+        studentId: student.userId,
         studentName: student.user.fullName,
         currentWafa,
         lastWafa,

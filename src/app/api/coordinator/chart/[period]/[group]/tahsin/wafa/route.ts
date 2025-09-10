@@ -6,7 +6,7 @@ import { Role, TashihRequestStatus, TashihType, Semester } from '@prisma/client'
 type Params = Promise<{ period: string; group: string }>;
 
 interface StudentData {
-  id: string;
+  userId: string;
   user: {
     fullName: string;
   };
@@ -71,7 +71,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, error: 'Koordinator tidak ditemukan' }, { status: 404 });
     }
 
-    console.log('Coordinator found:', coordinator.id);
+    console.log('Coordinator found:', coordinator.userId);
 
     let students: StudentData[] = [];
 
@@ -118,7 +118,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const allStudents = [...historicalStudents, ...activeStudents];
     const uniqueStudents = allStudents.reduce((acc, student) => {
-      if (!acc.find((s) => s.id === student.id)) {
+      if (!acc.find((s) => s.userId === student.userId)) {
         acc.push(student);
       }
       return acc;
@@ -131,7 +131,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     // Dapatkan semua request wafa yang sudah selesai (kumulatif sampai periode yang dipilih)
     const wafaRequests = await prisma.tashihRequest.findMany({
       where: {
-        studentId: { in: students.map((s) => s.id) },
+        studentId: { in: students.map((s) => s.userId) },
         tashihType: TashihType.WAFA,
         status: TashihRequestStatus.SELESAI,
         group: {
@@ -181,7 +181,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const result: ChartResponseItem[] = [];
 
     for (const student of students) {
-      const studentRequests = wafaRequests.filter((r) => r.studentId === student.id);
+      const studentRequests = wafaRequests.filter((r) => r.studentId === student.userId);
 
       // Hitung progress untuk setiap wafa
       const progressList: WafaProgress[] = [];
@@ -243,7 +243,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       }
 
       result.push({
-        studentId: student.id,
+        studentId: student.userId,
         studentName: student.user.fullName,
         currentWafa,
         lastWafa,

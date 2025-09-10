@@ -15,6 +15,14 @@ model User {
   fullName String
   role     Role
 
+  email       String?
+  phoneNumber String?
+  birthDate   DateTime?
+  birthPlace  String?
+  gender      Gender?    @default(PILIH)
+  bloodType   BloodType? @default(PILIH)
+  address     String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -26,17 +34,8 @@ model User {
 }
 
 model CoordinatorProfile {
-  id     String @id @unique
-  userId String @unique
+  userId String @id
   nip    String @unique
-
-  birthDate   DateTime?
-  birthPlace  String?
-  gender      Gender?    @default(PILIH)
-  bloodType   BloodType? @default(PILIH)
-  address     String?
-  phoneNumber String?
-  email       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,17 +52,8 @@ model CoordinatorProfile {
 }
 
 model TeacherProfile {
-  id     String @id @unique
-  userId String @unique
+  userId String @id
   nip    String @unique
-
-  birthDate   DateTime?
-  birthPlace  String?
-  gender      Gender?    @default(PILIH)
-  bloodType   BloodType? @default(PILIH)
-  address     String?
-  phoneNumber String?
-  email       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,20 +72,11 @@ model TeacherProfile {
 }
 
 model StudentProfile {
-  id          String  @id @unique
-  userId      String  @unique
+  userId      String  @id
   nis         String  @unique
   nisn        String? @unique
   classroomId String?
   groupId     String?
-
-  birthDate   DateTime?
-  birthPlace  String?
-  gender      Gender?    @default(PILIH)
-  bloodType   BloodType? @default(PILIH)
-  address     String?
-  phoneNumber String?
-  email       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -169,7 +150,7 @@ model ClassroomHistory {
   updatedAt DateTime @updatedAt
 
   classroom Classroom      @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
 
   @@unique([studentId, academicYear, semester])
   @@map("classroom_histories")
@@ -186,7 +167,7 @@ model Group {
 
   groupHistories GroupHistory[]
   classroom      Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  teacher        TeacherProfile   @relation(fields: [teacherId], references: [id])
+  teacher        TeacherProfile   @relation(fields: [teacherId], references: [userId])
   students       StudentProfile[]
 
   submissions    Submission[]
@@ -219,8 +200,8 @@ model GroupHistory {
   updatedAt DateTime @updatedAt
 
   group   Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  teacher TeacherProfile? @relation(fields: [teacherId], references: [id])
-  student StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher TeacherProfile? @relation(fields: [teacherId], references: [userId])
+  student StudentProfile  @relation(fields: [studentId], references: [userId], onDelete: Cascade)
 
   @@unique([studentId, academicYear, semester])
   @@map("group_histories")
@@ -251,8 +232,8 @@ model Submission {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  teacher TeacherProfile @relation(fields: [teacherId], references: [id])
+  student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
+  teacher TeacherProfile @relation(fields: [teacherId], references: [userId])
   group   Group          @relation(fields: [groupId], references: [id])
   juz     Juz?           @relation(fields: [juzId], references: [id])
   surah   Surah?         @relation(fields: [surahId], references: [id])
@@ -279,7 +260,7 @@ model HomeActivity {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   juz     Juz            @relation(fields: [juzId], references: [id])
   surah   Surah          @relation(fields: [surahId], references: [id])
@@ -313,8 +294,8 @@ model WeeklyTarget {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student    StudentProfile @relation(fields: [studentId], references: [id])
-  teacher    TeacherProfile @relation(fields: [teacherId], references: [id])
+  student    StudentProfile @relation(fields: [studentId], references: [userId])
+  teacher    TeacherProfile @relation(fields: [teacherId], references: [userId])
   group      Group          @relation(fields: [groupId], references: [id])
   surahStart Surah?         @relation("StartSurah", fields: [surahStartId], references: [id])
   surahEnd   Surah?         @relation("EndSurah", fields: [surahEndId], references: [id])
@@ -398,10 +379,10 @@ model TashihRequest {
   updatedAt DateTime @updatedAt
 
   handledByCoordinatorId String?
-  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [id])
+  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [userId])
 
-  student   StudentProfile          @relation(fields: [studentId], references: [id])
-  teacher   TeacherProfile          @relation(fields: [teacherId], references: [id])
+  student   StudentProfile          @relation(fields: [studentId], references: [userId])
+  teacher   TeacherProfile          @relation(fields: [teacherId], references: [userId])
   group     Group                   @relation(fields: [groupId], references: [id])
   juz       Juz?                    @relation(fields: [juzId], references: [id])
   surah     Surah?                  @relation(fields: [surahId], references: [id])
@@ -435,7 +416,7 @@ model TashihSchedule {
   updatedAt DateTime @updatedAt
 
   scheduledByCoordinatorId String
-  scheduledByCoordinator   CoordinatorProfile @relation(fields: [scheduledByCoordinatorId], references: [id])
+  scheduledByCoordinator   CoordinatorProfile @relation(fields: [scheduledByCoordinatorId], references: [userId])
 
   schedules TashihScheduleRequest[]
   results   TashihResult[]
@@ -455,7 +436,7 @@ model TashihResult {
   updatedAt DateTime @updatedAt
 
   evaluatedByCoordinatorId String
-  evaluatedByCoordinator   CoordinatorProfile? @relation(fields: [evaluatedByCoordinatorId], references: [id])
+  evaluatedByCoordinator   CoordinatorProfile? @relation(fields: [evaluatedByCoordinatorId], references: [userId])
 
   tashihSchedule TashihSchedule @relation(fields: [scheduleId], references: [id])
   tashihRequest  TashihRequest  @relation(fields: [requestId], references: [id])
@@ -477,7 +458,7 @@ model TahfidzScore {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   surah   Surah          @relation(fields: [surahId], references: [id])
 
@@ -499,7 +480,7 @@ model TahsinScore {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, groupId, tahsinType, topic])
@@ -520,7 +501,7 @@ model Report {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, groupId, academicYear, semester])
@@ -543,10 +524,10 @@ model MunaqasyahRequest {
   updatedAt DateTime @updatedAt
 
   handledByCoordinatorId String?
-  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [id])
+  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [userId])
 
-  student          StudentProfile              @relation("MunaqasyahStudent", fields: [studentId], references: [id])
-  teacher          TeacherProfile              @relation("MunaqasyahTeacher", fields: [teacherId], references: [id])
+  student          StudentProfile              @relation("MunaqasyahStudent", fields: [studentId], references: [userId])
+  teacher          TeacherProfile              @relation("MunaqasyahTeacher", fields: [teacherId], references: [userId])
   group            Group                       @relation(fields: [groupId], references: [id])
   juz              Juz                         @relation(fields: [juzId], references: [id])
   scheduleRequests MunaqasyahScheduleRequest[]
@@ -579,9 +560,9 @@ model MunaqasyahSchedule {
   updatedAt DateTime @updatedAt
 
   scheduledByCoordinatorId String?
-  scheduledByCoordinator   CoordinatorProfile? @relation(fields: [scheduledByCoordinatorId], references: [id])
+  scheduledByCoordinator   CoordinatorProfile? @relation(fields: [scheduledByCoordinatorId], references: [userId])
 
-  examiner         TeacherProfile?             @relation("MunaqasyahExaminer", fields: [examinerId], references: [id])
+  examiner         TeacherProfile?             @relation("MunaqasyahExaminer", fields: [examinerId], references: [userId])
   scheduleRequests MunaqasyahScheduleRequest[]
   results          MunaqasyahResult[]
 
@@ -663,7 +644,7 @@ model MunaqasyahFinalResult {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student          StudentProfile   @relation(fields: [studentId], references: [id])
+  student          StudentProfile   @relation(fields: [studentId], references: [userId])
   group            Group            @relation(fields: [groupId], references: [id])
   juz              Juz              @relation(fields: [juzId], references: [id])
   tasmiResult      MunaqasyahResult @relation("TasmiResult", fields: [tasmiResultId], references: [id])

@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
       include: {
         student: {
           select: {
-            id: true,
+            userId: true,
             group: {
               select: {
                 id: true,
@@ -213,7 +213,7 @@ export async function POST(req: NextRequest) {
             },
           },
         },
-        teacher: { select: { id: true } },
+        teacher: { select: { userId: true } },
         juz: { select: { id: true } },
       },
     });

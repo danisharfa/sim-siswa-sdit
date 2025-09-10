@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       );
     }
 
-    if (existingSubmission.teacherId !== teacher.id) {
+    if (existingSubmission.teacherId !== teacher.userId) {
       return NextResponse.json(
         { success: false, message: 'Setoran bukan milik Anda' },
         { status: 403 }
@@ -192,7 +192,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
       );
     }
 
-    if (submission.teacherId !== teacher.id) {
+    if (submission.teacherId !== teacher.userId) {
       return NextResponse.json(
         { success: false, message: 'Setoran bukan milik Anda' },
         { status: 403 }

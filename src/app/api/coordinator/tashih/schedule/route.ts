@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     if (isNewSchedule) {
       schedule = await prisma.tashihSchedule.create({
         data: {
-          scheduledByCoordinatorId: coordinator.id,
+          scheduledByCoordinatorId: coordinator.userId,
           date: inputDate,
           sessionName,
           startTime,
