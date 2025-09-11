@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     const [result] = await prisma.$transaction([
       prisma.tashihResult.upsert({
-        where: { requestId }, // unik 1–1
+        where: { requestId },
         update: {
           passed,
           notes: notes ?? null,

@@ -3,16 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { Role } from '@prisma/client';
 
-type Params = { id: string };
+type Params = Promise<{ id: string }>;
 
 // Mengambil daftar siswa dalam suatu jadwal tashih dan hasilnya jika sudah dinilai.
-export async function GET(req: NextRequest, { params }: { params: Params }) {
+export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
+    const params = await segmentData.params;
     const scheduleId = params.id;
 
     if (!scheduleId) {
@@ -42,7 +43,6 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
                     user: { select: { fullName: true } },
                   },
                 },
-                // schema baru: 1 request = 1 result
                 result: {
                   select: {
                     id: true,
