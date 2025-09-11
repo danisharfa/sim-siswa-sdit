@@ -64,8 +64,8 @@ model TeacherProfile {
   submissions         Submission[]
   tashihRequests      TashihRequest[]
   weeklyTargets       WeeklyTarget[]
-  munaqasyahRequests  MunaqasyahRequest[]  @relation("MunaqasyahTeacher")
-  munaqasyahSchedules MunaqasyahSchedule[] @relation("MunaqasyahExaminer")
+  munaqasyahRequests  MunaqasyahRequest[]
+  munaqasyahSchedules MunaqasyahSchedule[]
 
   @@index([nip])
   @@map("teacher_profiles")
@@ -95,7 +95,7 @@ model StudentProfile {
   weeklyTargets  WeeklyTarget[]
 
   tashihRequests     TashihRequest[]
-  munaqasyahRequests MunaqasyahRequest[] @relation("MunaqasyahStudent")
+  munaqasyahRequests MunaqasyahRequest[]
 
   tahfidzScores         TahfidzScore[]
   tahsinScores          TahsinScore[]
@@ -361,10 +361,11 @@ model Wafa {
 
 // Tashih models
 model TashihRequest {
-  id        String @id @default(uuid())
-  studentId String
-  teacherId String
-  groupId   String
+  id            String  @id @default(uuid())
+  studentId     String
+  teacherId     String
+  groupId       String
+  coordinatorId String?
 
   tashihType TashihType
   juzId      Int?
@@ -378,17 +379,15 @@ model TashihRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  handledByCoordinatorId String?
-  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [userId])
-
-  student   StudentProfile          @relation(fields: [studentId], references: [userId])
-  teacher   TeacherProfile          @relation(fields: [teacherId], references: [userId])
-  group     Group                   @relation(fields: [groupId], references: [id])
-  juz       Juz?                    @relation(fields: [juzId], references: [id])
-  surah     Surah?                  @relation(fields: [surahId], references: [id])
-  wafa      Wafa?                   @relation(fields: [wafaId], references: [id])
-  schedules TashihScheduleRequest[]
-  results   TashihResult[]
+  student     StudentProfile          @relation(fields: [studentId], references: [userId])
+  teacher     TeacherProfile          @relation(fields: [teacherId], references: [userId])
+  group       Group                   @relation(fields: [groupId], references: [id])
+  coordinator CoordinatorProfile?     @relation(fields: [coordinatorId], references: [userId])
+  juz         Juz?                    @relation(fields: [juzId], references: [id])
+  surah       Surah?                  @relation(fields: [surahId], references: [id])
+  wafa        Wafa?                   @relation(fields: [wafaId], references: [id])
+  schedules   TashihScheduleRequest[]
+  result      TashihResult?
 
   @@map("tashih_requests")
 }
@@ -405,7 +404,9 @@ model TashihScheduleRequest {
 }
 
 model TashihSchedule {
-  id          String   @id @default(uuid())
+  id            String @id @default(uuid())
+  coordinatorId String
+
   date        DateTime
   sessionName String
   startTime   String
@@ -415,31 +416,29 @@ model TashihSchedule {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  scheduledByCoordinatorId String
-  scheduledByCoordinator   CoordinatorProfile @relation(fields: [scheduledByCoordinatorId], references: [userId])
-
-  schedules TashihScheduleRequest[]
-  results   TashihResult[]
+  coordinator CoordinatorProfile      @relation(fields: [coordinatorId], references: [userId])
+  schedules   TashihScheduleRequest[]
+  results     TashihResult[]
 
   @@unique([date, sessionName, startTime, endTime, location])
   @@map("tashih_schedules")
 }
 
 model TashihResult {
-  id         String  @id @default(uuid())
-  scheduleId String
-  requestId  String
-  passed     Boolean
-  notes      String?
+  id            String @id @default(uuid())
+  coordinatorId String
+  scheduleId    String
+  requestId     String @unique
+
+  passed Boolean
+  notes  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  evaluatedByCoordinatorId String
-  evaluatedByCoordinator   CoordinatorProfile? @relation(fields: [evaluatedByCoordinatorId], references: [userId])
-
-  tashihSchedule TashihSchedule @relation(fields: [scheduleId], references: [id])
-  tashihRequest  TashihRequest  @relation(fields: [requestId], references: [id])
+  coordinator    CoordinatorProfile @relation(fields: [coordinatorId], references: [userId])
+  tashihSchedule TashihSchedule     @relation(fields: [scheduleId], references: [id])
+  tashihRequest  TashihRequest      @relation(fields: [requestId], references: [id])
 
   @@unique([scheduleId, requestId])
   @@map("tashih_results")
@@ -526,8 +525,8 @@ model MunaqasyahRequest {
   handledByCoordinatorId String?
   handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [userId])
 
-  student          StudentProfile              @relation("MunaqasyahStudent", fields: [studentId], references: [userId])
-  teacher          TeacherProfile              @relation("MunaqasyahTeacher", fields: [teacherId], references: [userId])
+  student          StudentProfile              @relation(fields: [studentId], references: [userId])
+  teacher          TeacherProfile              @relation(fields: [teacherId], references: [userId])
   group            Group                       @relation(fields: [groupId], references: [id])
   juz              Juz                         @relation(fields: [juzId], references: [id])
   scheduleRequests MunaqasyahScheduleRequest[]
@@ -562,7 +561,7 @@ model MunaqasyahSchedule {
   scheduledByCoordinatorId String?
   scheduledByCoordinator   CoordinatorProfile? @relation(fields: [scheduledByCoordinatorId], references: [userId])
 
-  examiner         TeacherProfile?             @relation("MunaqasyahExaminer", fields: [examinerId], references: [userId])
+  examiner         TeacherProfile?             @relation(fields: [examinerId], references: [userId])
   scheduleRequests MunaqasyahScheduleRequest[]
   results          MunaqasyahResult[]
 

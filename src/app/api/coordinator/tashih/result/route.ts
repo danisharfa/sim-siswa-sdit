@@ -55,7 +55,7 @@ export async function GET() {
             location: true,
           },
         },
-        evaluatedByCoordinator: {
+        coordinator: {
           select: {
             user: { select: { fullName: true } },
           },
@@ -91,7 +91,6 @@ export async function POST(req: NextRequest) {
     const coordinator = await prisma.coordinatorProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!coordinator) {
       return NextResponse.json(
         { success: false, message: 'Koordinator tidak ditemukan' },
@@ -99,43 +98,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await prisma.tashihResult.findUnique({
-      where: {
-        scheduleId_requestId: {
+    const checkRow = await prisma.tashihRequest.findUnique({
+      where: { id: requestId },
+      select: { id: true },
+    });
+    if (!checkRow) {
+      return NextResponse.json(
+        { success: false, message: 'Request tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    const existing = await prisma.tashihResult.findUnique({ where: { requestId } });
+
+    if (existing && existing.scheduleId !== scheduleId) {
+      return NextResponse.json(
+        { success: false, message: 'Request ini sudah dinilai pada jadwal lain' },
+        { status: 409 }
+      );
+    }
+
+    const [result] = await prisma.$transaction([
+      prisma.tashihResult.upsert({
+        where: { requestId }, // unik 1–1
+        update: {
+          passed,
+          notes: notes ?? null,
+          coordinatorId: coordinator.userId,
+          // Jika ingin mengizinkan update jadwal, aktifkan baris berikut:
+          // scheduleId,
+        },
+        create: {
           scheduleId,
           requestId,
+          passed,
+          notes: notes ?? null,
+          coordinatorId: coordinator.userId,
         },
-      },
-    });
-
-    const result = existing
-      ? await prisma.tashihResult.update({
-          where: {
-            scheduleId_requestId: {
-              scheduleId,
-              requestId,
-            },
-          },
-          data: {
-            passed,
-            notes: notes ?? null,
-            evaluatedByCoordinatorId: coordinator.userId,
-          },
-        })
-      : await prisma.tashihResult.create({
-          data: {
-            scheduleId,
-            requestId,
-            passed,
-            notes: notes ?? null,
-            evaluatedByCoordinatorId: coordinator.userId,
-          },
-        });
-
-    await prisma.tashihRequest.update({
-      where: { id: requestId },
-      data: { status: 'SELESAI' },
-    });
+      }),
+      prisma.tashihRequest.update({
+        where: { id: requestId },
+        data: { status: 'SELESAI' },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

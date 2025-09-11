@@ -3,17 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { Role } from '@prisma/client';
 
-type Params = Promise<{ id: string }>;
+type Params = { id: string };
 
 // Mengambil daftar siswa dalam suatu jadwal tashih dan hasilnya jika sudah dinilai.
-export async function GET(req: NextRequest, segmentData: { params: Params }) {
+export async function GET(req: NextRequest, { params }: { params: Params }) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
-    const params = await segmentData.params;
     const scheduleId = params.id;
 
     if (!scheduleId) {
@@ -43,13 +42,13 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                     user: { select: { fullName: true } },
                   },
                 },
-                results: {
-                  where: { scheduleId },
+                // schema baru: 1 request = 1 result
+                result: {
                   select: {
                     id: true,
                     passed: true,
-                    notes: true,
-                    evaluatedByCoordinator: {
+                    scheduleId: true,
+                    coordinator: {
                       select: {
                         user: { select: { fullName: true } },
                       },
@@ -72,6 +71,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     const results = schedule.schedules.map((sr) => {
       const r = sr.tashihRequest;
+      const res = r.result && r.result.scheduleId === schedule.id ? r.result : null;
+
       return {
         scheduleId: schedule.id,
         requestId: r.id,
@@ -82,12 +83,11 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         wafa: r.wafa,
         startPage: r.startPage,
         endPage: r.endPage,
-        result: r.results[0]
+        result: res
           ? {
-              id: r.results[0].id,
-              passed: r.results[0].passed,
-              notes: r.results[0].notes,
-              evaluatedBy: r.results[0].evaluatedByCoordinator?.user.fullName ?? null,
+              id: res.id,
+              passed: res.passed,
+              evaluatedBy: res.coordinator?.user.fullName ?? null,
             }
           : null,
       };

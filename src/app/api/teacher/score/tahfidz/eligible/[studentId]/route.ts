@@ -9,14 +9,16 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
   const studentId = params.studentId;
 
   // Ambil semua surah yang sudah dinilai oleh guru (tanpa cek tahun/semester)
-  const scoredSurahIds = await prisma.tahfidzScore.findMany({
-    where: {
-      studentId,
-    },
-    select: {
-      surahId: true,
-    },
-  }).then((list) => list.map((s) => s.surahId));
+  const scoredSurahIds = await prisma.tahfidzScore
+    .findMany({
+      where: {
+        studentId,
+      },
+      select: {
+        surahId: true,
+      },
+    })
+    .then((list) => list.map((s) => s.surahId));
 
   // Ambil semua tashih selesai dan lulus yang belum dinilai
   const results = await prisma.tashihRequest.findMany({
@@ -24,8 +26,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       studentId,
       tashihType: 'ALQURAN',
       status: 'SELESAI',
-      results: {
-        some: {
+      result: {
+        is: {
           passed: true,
         },
       },

@@ -17,7 +17,7 @@ export async function GET() {
           include: {
             tashihRequest: {
               include: {
-                results: true,
+                result: true,
               },
             },
           },

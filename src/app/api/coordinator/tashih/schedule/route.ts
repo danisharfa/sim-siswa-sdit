@@ -48,7 +48,7 @@ export async function GET() {
             },
           },
         },
-        scheduledByCoordinator: {
+        coordinator: {
           select: { user: { select: { fullName: true } } },
         },
       },
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     if (isNewSchedule) {
       schedule = await prisma.tashihSchedule.create({
         data: {
-          scheduledByCoordinatorId: coordinator.userId,
+          coordinatorId: coordinator.userId,
           date: inputDate,
           sessionName,
           startTime,
