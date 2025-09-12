@@ -10,13 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreVertical } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
@@ -76,27 +70,20 @@ export function GroupTable({ data, title }: GroupTableProps) {
         header: 'Jumlah Siswa',
       },
       {
-        id: 'actions',
+        id: 'Detail',
         enableHiding: false,
-        header: 'Aksi',
+        header: 'Detail',
         cell: ({ row }) => {
           const kelompok = row.original;
           return (
             <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVertical />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}`)}
-                  >
-                    Detail
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                className="flex size-8"
+                onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}`)}
+              >
+                <Eye />
+              </Button>
             </>
           );
         },

@@ -19,6 +19,7 @@ export function StudentReportCard({ data }: { data: StudentReportData }) {
     tahsin,
     tahfidz,
     report,
+    period,
   } = data;
 
   // helper
@@ -30,6 +31,16 @@ export function StudentReportCard({ data }: { data: StudentReportData }) {
   const semesterToLabel = (s: typeof semester): string => {
     return s === 'GANJIL' ? 'I (Satu)' : 'II (Dua)';
   };
+
+  const periodToLabel = (p: typeof period): string => {
+    return p === 'MID_SEMESTER' ? 'Tengah Semester' : 'Akhir Semester';
+  };
+
+  // Get the appropriate scores based on period
+  const currentTahsinScore =
+    period === 'MID_SEMESTER' ? report.midTahsinScore : report.endTahsinScore;
+  const currentTahfidzScore =
+    period === 'MID_SEMESTER' ? report.midTahfidzScore : report.endTahfidzScore;
 
   // Format class label
   const [classNumberRaw, classNameRaw] = className.split(' ');
@@ -47,6 +58,8 @@ export function StudentReportCard({ data }: { data: StudentReportData }) {
           <br />
           <strong>Kelas / Semester:</strong> {classLabel} / {semesterLabel}
           <br />
+          <strong>Periode:</strong> {periodToLabel(period)}
+          <br />
           <strong>Tahun Ajaran:</strong> {academicYear}
           <br />
           <strong>Nama Sekolah:</strong> {schoolInfo.schoolName}
@@ -61,12 +74,12 @@ export function StudentReportCard({ data }: { data: StudentReportData }) {
           <ul className="list-disc pl-5">
             {tahsin.map((s, i) => (
               <li key={i}>
-                {s.topic} - {s.scoreNumeric} ({s.scoreLetter}): {s.description}
+                {s.topic} - {s.score} ({s.grade}): {s.description}
               </li>
             ))}
           </ul>
           <p>
-            <strong>Rata-rata:</strong> {report.tahsinScore?.toFixed(1) ?? '-'} <br />
+            <strong>Rata-rata:</strong> {currentTahsinScore?.toFixed(1) ?? '-'} <br />
             <strong>Bacaan Terakhir:</strong> {report.lastTahsinMaterial ?? '-'}
           </p>
         </div>
@@ -76,12 +89,12 @@ export function StudentReportCard({ data }: { data: StudentReportData }) {
           <ul className="list-disc pl-5">
             {tahfidz.map((s, i) => (
               <li key={i}>
-                {s.surahName} - {s.scoreNumeric} ({s.scoreLetter}): {s.description}
+                {s.surahName} - {s.score} ({s.grade}): {s.description}
               </li>
             ))}
           </ul>
           <p>
-            <strong>Rata-rata:</strong> {report.tahfidzScore?.toFixed(1) ?? '-'}
+            <strong>Rata-rata:</strong> {currentTahfidzScore?.toFixed(1) ?? '-'}
           </p>
         </div>
 

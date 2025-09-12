@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { Role, TahsinType, GradeLetter } from '@prisma/client';
+import { Role, TahsinType, GradeLetter, AssessmentPeriod } from '@prisma/client';
 
 interface TahsinInput {
   type: TahsinType;
   topic: string;
-  scoreNumeric: number;
-  scoreLetter: GradeLetter;
+  score: number;
+  grade: GradeLetter;
   description: string;
+  period: AssessmentPeriod;
 }
 
 interface TahfidzInput {
   surahId: number;
-  scoreNumeric: number;
-  scoreLetter: GradeLetter;
+  score: number;
+  grade: GradeLetter;
   description: string;
+  period: AssessmentPeriod;
 }
 
 interface ScoreRequestBody {
@@ -24,6 +26,7 @@ interface ScoreRequestBody {
   tahsin: TahsinInput[];
   tahfidz: TahfidzInput[];
   lastMaterial?: string;
+  assessmentPeriod: AssessmentPeriod;
 }
 
 export async function POST(req: NextRequest) {
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json()) as ScoreRequestBody;
-    const { studentId, groupId, tahsin, tahfidz, lastMaterial } = body;
+    const { studentId, groupId, tahsin, tahfidz, lastMaterial, assessmentPeriod } = body;
 
     const group = await prisma.group.findFirst({
       where: {
@@ -71,19 +74,20 @@ export async function POST(req: NextRequest) {
     }
 
     const tahsinAvg = tahsin.length
-      ? tahsin.reduce((sum, t) => sum + t.scoreNumeric, 0) / tahsin.length
+      ? tahsin.reduce((sum, t) => sum + t.score, 0) / tahsin.length
       : null;
 
     const tahfidzAvg = tahfidz.length
-      ? tahfidz.reduce((sum, t) => sum + t.scoreNumeric, 0) / tahfidz.length
+      ? tahfidz.reduce((sum, t) => sum + t.score, 0) / tahfidz.length
       : null;
 
     await prisma.$transaction(async (tx) => {
-      // Delete existing Tahsin Scores
+      // Delete existing Tahsin Scores for this period
       await tx.tahsinScore.deleteMany({
         where: {
           studentId,
           groupId,
+          period: assessmentPeriod,
         },
       });
 
@@ -95,18 +99,20 @@ export async function POST(req: NextRequest) {
             groupId,
             tahsinType: item.type,
             topic: item.topic,
-            scoreNumeric: item.scoreNumeric,
-            scoreLetter: item.scoreLetter,
+            score: item.score,
+            grade: item.grade,
             description: item.description,
+            period: assessmentPeriod,
           })),
         });
       }
 
-      // Delete existing Tahfidz Scores
+      // Delete existing Tahfidz Scores for this period
       await tx.tahfidzScore.deleteMany({
         where: {
           studentId,
           groupId,
+          period: assessmentPeriod,
         },
       });
 
@@ -117,11 +123,43 @@ export async function POST(req: NextRequest) {
             studentId,
             groupId,
             surahId: item.surahId,
-            scoreNumeric: item.scoreNumeric,
-            scoreLetter: item.scoreLetter,
+            score: item.score,
+            grade: item.grade,
             description: item.description,
+            period: assessmentPeriod,
           })),
         });
+      }
+
+      // Get existing report
+      const existingReport = await tx.report.findUnique({
+        where: {
+          studentId_groupId_academicYear_semester: {
+            studentId,
+            groupId,
+            academicYear: group.classroom.academicYear,
+            semester: group.classroom.semester,
+          },
+        },
+      });
+
+      // Prepare update data based on assessment period
+      const updateData: {
+        lastTahsinMaterial?: string | null;
+        midTahfidzScore?: number | null;
+        midTahsinScore?: number | null;
+        endTahfidzScore?: number | null;
+        endTahsinScore?: number | null;
+      } = {
+        lastTahsinMaterial: lastMaterial?.trim() || null,
+      };
+
+      if (assessmentPeriod === 'MID_SEMESTER') {
+        updateData.midTahfidzScore = tahfidzAvg;
+        updateData.midTahsinScore = tahsinAvg;
+      } else {
+        updateData.endTahfidzScore = tahfidzAvg;
+        updateData.endTahsinScore = tahsinAvg;
       }
 
       // Update or create Report
@@ -134,18 +172,19 @@ export async function POST(req: NextRequest) {
             semester: group.classroom.semester,
           },
         },
-        update: {
-          tahfidzScore: tahfidzAvg,
-          tahsinScore: tahsinAvg,
-          lastTahsinMaterial: lastMaterial?.trim() || null,
-        },
+        update: updateData,
         create: {
           studentId,
           groupId,
           academicYear: group.classroom.academicYear,
           semester: group.classroom.semester,
-          tahfidzScore: tahfidzAvg,
-          tahsinScore: tahsinAvg,
+          endTahfidzScore:
+            assessmentPeriod === 'FINAL' ? tahfidzAvg : existingReport?.endTahfidzScore,
+          endTahsinScore: assessmentPeriod === 'FINAL' ? tahsinAvg : existingReport?.endTahsinScore,
+          midTahfidzScore:
+            assessmentPeriod === 'MID_SEMESTER' ? tahfidzAvg : existingReport?.midTahfidzScore,
+          midTahsinScore:
+            assessmentPeriod === 'MID_SEMESTER' ? tahsinAvg : existingReport?.midTahsinScore,
           lastTahsinMaterial: lastMaterial?.trim() || null,
         },
       });

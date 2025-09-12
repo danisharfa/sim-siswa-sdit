@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { convertToLetter } from '@/lib/data/score-converter';
-import { GradeLetter, TahsinType } from '@prisma/client';
+import { GradeLetter, TahsinType, AssessmentPeriod } from '@prisma/client';
 
 interface ScoreFormProps {
   groupId: string;
@@ -38,18 +38,20 @@ interface TahsinEntry {
   id?: string;
   type: TahsinType;
   topic: string;
-  scoreNumeric: number;
-  scoreLetter: GradeLetter;
+  score: number;
+  grade: GradeLetter;
   description: string;
+  period: AssessmentPeriod;
 }
 
 interface TahfidzEntry {
   id?: string;
   surahId: number;
   topic: string;
-  scoreNumeric: number;
-  scoreLetter: GradeLetter;
+  score: number;
+  grade: GradeLetter;
   description: string;
+  period: AssessmentPeriod;
 }
 
 interface SurahJuz {
@@ -63,12 +65,19 @@ interface SurahJuz {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface ExistingScoreResponse {
-  tahsin: (Omit<TahsinEntry, 'type'> & { tahsinType: TahsinType })[];
-  tahfidz: (Omit<TahfidzEntry, 'topic'> & { surah: { name: string } })[];
+  tahsin: (Omit<TahsinEntry, 'type'> & { tahsinType: TahsinType; period: AssessmentPeriod })[];
+  tahfidz: (Omit<TahfidzEntry, 'topic'> & { surah: { name: string }; period: AssessmentPeriod })[];
   lastMaterial: string | null;
+  averageScores: {
+    tahsin: number | null;
+    tahfidz: number | null;
+    midTahsin: number | null;
+    midTahfidz: number | null;
+  };
 }
 
 export function ScoreForm({ groupId, student }: ScoreFormProps) {
+  const [currentPeriod, setCurrentPeriod] = useState<AssessmentPeriod>('FINAL');
   const [tahsinEntries, setTahsinEntries] = useState<TahsinEntry[]>([]);
   const [tahfidzEntries, setTahfidzEntries] = useState<TahfidzEntry[]>([]);
   const [selectedJuz, setSelectedJuz] = useState<Record<number, number>>({});
@@ -85,7 +94,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
   const surahJuzList = surahJuzData?.data || [];
 
   const { data: existingScores, isLoading } = useSWR<ExistingScoreResponse>(
-    `/api/teacher/score/${student.userId}`,
+    `/api/teacher/score/${student.userId}?period=${currentPeriod}`,
     fetcher
   );
 
@@ -97,10 +106,10 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
             id: t.id,
             type: t.tahsinType,
             topic: t.topic,
-            scoreNumeric: t.scoreNumeric,
-            scoreLetter: t.scoreLetter,
-
+            score: t.score,
+            grade: t.grade,
             description: t.description || '',
+            period: t.period,
           }))
         );
       }
@@ -111,9 +120,10 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
             id: score.id,
             surahId: score.surahId,
             topic: score.surah.name,
-            scoreNumeric: score.scoreNumeric,
-            scoreLetter: score.scoreLetter,
+            score: score.score,
+            grade: score.grade,
             description: score.description || '',
+            period: score.period,
           }))
         );
       }
@@ -122,22 +132,29 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
         setLastMaterial(existingScores.lastMaterial);
       }
     }
-  }, [existingScores, isLoading, lastMaterial]);
+  }, [existingScores, isLoading, lastMaterial, currentPeriod]);
 
   function handleAddTahsin(type: TahsinType) {
     setTahsinEntries([
       ...tahsinEntries,
-      { type, topic: '', scoreNumeric: 0, scoreLetter: 'D', description: '' },
+      {
+        type,
+        topic: '',
+        score: 0,
+        grade: 'D',
+        description: '',
+        period: currentPeriod,
+      },
     ]);
   }
 
   function handleTahsinChange(index: number, field: keyof TahsinEntry, value: string | number) {
     const updated = [...tahsinEntries];
 
-    if (field === 'scoreNumeric') {
+    if (field === 'score') {
       const numeric = parseInt(value as string) || 0;
-      updated[index].scoreNumeric = numeric;
-      updated[index].scoreLetter = convertToLetter(numeric);
+      updated[index].score = numeric;
+      updated[index].grade = convertToLetter(numeric);
     } else if (field === 'topic' || field === 'description') {
       updated[index][field] = value as string;
     } else if (field === 'type') {
@@ -179,17 +196,17 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
     }
     setTahfidzEntries([
       ...tahfidzEntries,
-      { surahId, topic, scoreNumeric: 0, scoreLetter: 'D', description: '' },
+      { surahId, topic, score: 0, grade: 'D', description: '', period: currentPeriod },
     ]);
   }
 
   function handleTahfidzChange(index: number, field: keyof TahfidzEntry, value: string | number) {
     const updated = [...tahfidzEntries];
 
-    if (field === 'scoreNumeric') {
+    if (field === 'score') {
       const numeric = parseInt(value as string) || 0;
-      updated[index].scoreNumeric = numeric;
-      updated[index].scoreLetter = convertToLetter(numeric);
+      updated[index].score = numeric;
+      updated[index].grade = convertToLetter(numeric);
     } else if (field === 'description') {
       updated[index].description = value as string;
     }
@@ -231,6 +248,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
       tahsin: tahsinEntries,
       tahfidz: tahfidzEntries,
       lastMaterial,
+      assessmentPeriod: currentPeriod,
     };
 
     try {
@@ -254,6 +272,30 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
 
   return (
     <div className="space-y-6 mt-4">
+      {/* Period Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Periode Penilaian</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={currentPeriod}
+            onValueChange={(value: AssessmentPeriod) => {
+              setCurrentPeriod(value);
+              setTahsinEntries([]);
+              setTahfidzEntries([]);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Pilih Periode Penilaian" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MID_SEMESTER">Tengah Semester</SelectItem>
+              <SelectItem value="FINAL">Akhir Semester</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
       {/* Card Tahsin */}
       <Card>
         <CardHeader>
@@ -319,11 +361,11 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
               <Input
                 type="text"
                 inputMode="numeric"
-                value={entry.scoreNumeric === 0 ? '' : entry.scoreNumeric.toString()}
-                onChange={(e) => handleTahsinChange(index, 'scoreNumeric', e.target.value)}
+                value={entry.score === 0 ? '' : entry.score.toString()}
+                onChange={(e) => handleTahsinChange(index, 'score', e.target.value)}
                 placeholder="Nilai (0–100)"
               />
-              <Input disabled value={entry.scoreLetter} />
+              <Input disabled value={entry.grade} />
               <Textarea
                 value={entry.description}
                 onChange={(e) => handleTahsinChange(index, 'description', e.target.value)}
@@ -380,11 +422,11 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
               <Input
                 type="text"
                 inputMode="numeric"
-                value={entry.scoreNumeric === 0 ? '' : entry.scoreNumeric.toString()}
-                onChange={(e) => handleTahfidzChange(index, 'scoreNumeric', e.target.value)}
+                value={entry.score === 0 ? '' : entry.score.toString()}
+                onChange={(e) => handleTahfidzChange(index, 'score', e.target.value)}
                 placeholder="Nilai (0–100)"
               />
-              <Input disabled value={entry.scoreLetter} />
+              <Input disabled value={entry.grade} />
               <Textarea
                 value={entry.description}
                 onChange={(e) => handleTahfidzChange(index, 'description', e.target.value)}

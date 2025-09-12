@@ -17,19 +17,19 @@ export interface StudentReportHistoryData {
   };
   tahsin: {
     topic: string;
-    scoreNumeric: number;
-    scoreLetter: string;
+    score: number;
+    grade: string;
     description: string;
   }[];
   tahfidz: {
     surahName: string;
-    scoreNumeric: number;
-    scoreLetter: string;
+    score: number;
+    grade: string;
     description: string;
   }[];
   report: {
-    tahfidzScore: number | null;
-    tahsinScore: number | null;
+    endTahfidzScore: number | null;
+    endTahsinScore: number | null;
     lastTahsinMaterial: string | null;
   };
 }
@@ -134,19 +134,19 @@ export async function getStudentReportHistoryData(
     },
     tahsin: tahsinScores.map((s) => ({
       topic: s.topic,
-      scoreNumeric: s.scoreNumeric,
-      scoreLetter: s.scoreLetter,
+      score: s.score,
+      grade: s.grade,
       description: s.description ?? '-',
     })),
     tahfidz: tahfidzScores.map((s) => ({
       surahName: s.surah.name,
-      scoreNumeric: s.scoreNumeric,
-      scoreLetter: s.scoreLetter,
+      score: s.score,
+      grade: s.grade,
       description: s.description ?? '-',
     })),
     report: {
-      tahfidzScore: report?.tahfidzScore ?? null,
-      tahsinScore: report?.tahsinScore ?? null,
+      endTahfidzScore: report?.endTahfidzScore ?? null,
+      endTahsinScore: report?.endTahsinScore ?? null,
       lastTahsinMaterial: report?.lastTahsinMaterial ?? null,
     },
   };

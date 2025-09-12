@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Semester } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
 import {
   Form,
   FormField,
@@ -24,7 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Loader2, Save } from 'lucide-react';
 
 const formSchema = z.object({
   currentYear: z.string().min(4, 'Tahun ajaran wajib diisi'),
@@ -76,9 +76,10 @@ export function AcademicPeriodForm({ data, onSave }: { data: FormValues; onSave:
       <CardHeader>
         <CardTitle>Pengaturan Tahun Ajaran & Semester</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full space-y-4">
+          <CardContent className="space-y-4">
             <FormField
               control={form.control}
               name="currentYear"
@@ -113,12 +114,25 @@ export function AcademicPeriodForm({ data, onSave }: { data: FormValues; onSave:
                 </FormItem>
               )}
             />
+          </CardContent>
+
+          <CardFooter className="mt-auto">
             <Button type="submit" disabled={loading || !isDirty} className="w-full">
-              {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Simpan Perubahan
+                </>
+              )}
             </Button>
-          </form>
-        </Form>
-      </CardContent>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }

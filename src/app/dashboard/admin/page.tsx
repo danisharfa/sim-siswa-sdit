@@ -34,9 +34,6 @@ export default async function AdminDashboardPage() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          Kelola sistem informasi siswa dan pantau statistik umum
-        </p>
       </div>
 
       <DashboardStats

@@ -125,8 +125,8 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
               <Text style={styles.cellNo}>{i + 1}</Text>
               <Text style={styles.cellTopic}>{s.topic}</Text>
               <View style={styles.cellScoreDouble}>
-                <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                <Text style={styles.scoreText}>{s.score}</Text>
+                <Text style={styles.scoreText}>{s.grade}</Text>
               </View>
               <Text style={styles.cellDesc}>{s.description}</Text>
             </View>
@@ -136,7 +136,7 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.tahsinScore?.toFixed(1) ?? '-'}
+                {report.endTahsinScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -172,8 +172,8 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
               <Text style={styles.cellNo}>{i + 1}</Text>
               <Text style={styles.cellTopic}>{s.surahName}</Text>
               <View style={styles.cellScoreDouble}>
-                <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                <Text style={styles.scoreText}>{s.score}</Text>
+                <Text style={styles.scoreText}>{s.grade}</Text>
               </View>
               <Text style={styles.cellDesc}>{s.description}</Text>
             </View>
@@ -183,7 +183,7 @@ export function StudentReportHistoryPdf({ data }: { data: StudentReportHistoryDa
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.tahfidzScore?.toFixed(1) ?? '-'}
+                {report.endTahfidzScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>

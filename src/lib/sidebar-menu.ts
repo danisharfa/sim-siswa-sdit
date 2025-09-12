@@ -6,11 +6,11 @@ import {
   ClipboardList,
   ClipboardCheck,
   CalendarCheck2,
-  FileCog,
   BookPlus,
   Users2,
   ScrollText,
   Target,
+  GraduationCap,
 } from 'lucide-react';
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import { ImProfile } from 'react-icons/im';
@@ -21,26 +21,22 @@ export const menuData = {
       title: 'Beranda',
       url: '/dashboard/admin',
       icon: LayoutDashboard,
+      exact: true,
     },
     {
-      label: 'Manajemen',
-      items: [
-        {
-          title: 'Pengguna',
-          url: '/dashboard/admin/users',
-          icon: UserCog,
-        },
-        {
-          title: 'Kelas',
-          url: '/dashboard/admin/classroom',
-          icon: FaChalkboardTeacher,
-        },
-        {
-          title: 'Data Global',
-          url: '/dashboard/admin/configuration',
-          icon: FileCog,
-        },
-      ],
+      title: 'Pengguna',
+      url: '/dashboard/admin/users',
+      icon: UserCog,
+    },
+    {
+      title: 'Kelas',
+      url: '/dashboard/admin/classroom',
+      icon: FaChalkboardTeacher,
+    },
+    {
+      title: 'Akademik',
+      url: '/dashboard/admin/configuration',
+      icon: GraduationCap,
     },
   ],
   coordinator: [
@@ -48,6 +44,7 @@ export const menuData = {
       title: 'Beranda',
       url: '/dashboard/coordinator',
       icon: LayoutDashboard,
+      exact: true,
     },
     {
       title: 'Koordinator',
@@ -120,6 +117,7 @@ export const menuData = {
       title: 'Beranda',
       url: '/dashboard/teacher',
       icon: LayoutDashboard,
+      exact: true,
     },
     {
       title: 'Guru',
@@ -207,6 +205,7 @@ export const menuData = {
       title: 'Beranda',
       url: '/dashboard/student',
       icon: LayoutDashboard,
+      exact: true,
     },
     {
       title: 'Siswa',
@@ -247,12 +246,12 @@ export const menuData = {
       label: 'Tashih',
       items: [
         {
-          title: 'Jadwal',
+          title: 'Jadwal Tashih',
           url: '/dashboard/student/tashih/schedule',
           icon: CalendarCheck2,
         },
         {
-          title: 'Hasil',
+          title: 'Hasil Tashih',
           url: '/dashboard/student/tashih/result',
           icon: ClipboardCheck,
         },
@@ -262,12 +261,12 @@ export const menuData = {
       label: 'Munaqasyah',
       items: [
         {
-          title: 'Jadwal',
+          title: 'Jadwal Munaqasyah',
           url: '/dashboard/student/munaqasyah/schedule',
           icon: CalendarCheck2,
         },
         {
-          title: 'Hasil',
+          title: 'Hasil Munaqasyah',
           url: '/dashboard/student/munaqasyah/result',
           icon: ClipboardCheck,
         },

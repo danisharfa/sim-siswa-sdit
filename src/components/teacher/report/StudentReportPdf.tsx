@@ -82,10 +82,15 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
     tahsin,
     tahfidz,
     report,
+    period,
   } = data;
 
   const leftLogo = '/logo-sekolah.png';
   const rightLogo = '/logo-wafa.png';
+
+  // Dynamic assessment period text
+  const assessmentPeriodText =
+    period === 'MID_SEMESTER' ? 'ASESMEN TENGAH SEMESTER' : 'ASESMEN AKHIR SEMESTER';
 
   const today = new Date().toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -102,7 +107,9 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
           <View style={[styles.centerHeader, { flex: 1 }]}>
             <Text>{schoolInfo.schoolName.toUpperCase()}</Text>
             <Text>LAPORAN PENILAIAN TAHSIN DAN TAHFIDZ AL-QUR&apos;AN</Text>
-            <Text>ASESMEN AKHIR SEMESTER {semester}</Text>
+            <Text>
+              {assessmentPeriodText} {semester}
+            </Text>
             <Text>TAHUN AJARAN {academicYear}</Text>
           </View>
           <Image src={rightLogo} style={styles.rightLogo} />
@@ -116,13 +123,15 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={styles.studentSeparator}>:</Text>
             <Text style={styles.studentValue}>{fullName}</Text>
           </View>
-          
+
           <View style={styles.studentDataRow}>
             <Text style={styles.studentLabel}>NISN / NIS</Text>
             <Text style={styles.studentSeparator}>:</Text>
-            <Text style={styles.studentValue}>{nisn} / {nis}</Text>
+            <Text style={styles.studentValue}>
+              {nisn} / {nis}
+            </Text>
           </View>
-          
+
           <View style={styles.studentDataRow}>
             <Text style={styles.studentLabel}>Kelas / Semester</Text>
             <Text style={styles.studentSeparator}>:</Text>
@@ -130,19 +139,19 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
               {className} / {semester === 'GANJIL' ? 'I (Satu)' : 'II (Dua)'}
             </Text>
           </View>
-          
+
           <View style={styles.studentDataRow}>
             <Text style={styles.studentLabel}>Tahun Ajaran</Text>
             <Text style={styles.studentSeparator}>:</Text>
             <Text style={styles.studentValue}>{academicYear}</Text>
           </View>
-          
+
           <View style={styles.studentDataRow}>
             <Text style={styles.studentLabel}>Nama Sekolah</Text>
             <Text style={styles.studentSeparator}>:</Text>
             <Text style={styles.studentValue}>{schoolInfo.schoolName}</Text>
           </View>
-          
+
           <View style={styles.studentDataRow}>
             <Text style={styles.studentLabel}>Alamat Siswa</Text>
             <Text style={styles.studentSeparator}>:</Text>
@@ -170,8 +179,8 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
               <Text style={styles.cellNo}>{i + 1}</Text>
               <Text style={styles.cellTopic}>{s.topic}</Text>
               <View style={styles.cellScoreDouble}>
-                <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                <Text style={styles.scoreText}>{s.score}</Text>
+                <Text style={styles.scoreText}>{s.grade}</Text>
               </View>
               <Text style={styles.cellDesc}>{s.description}</Text>
             </View>
@@ -181,7 +190,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.tahsinScore?.toFixed(1) ?? '-'}
+                {report.endTahsinScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -217,8 +226,8 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
               <Text style={styles.cellNo}>{i + 1}</Text>
               <Text style={styles.cellTopic}>{s.surahName}</Text>
               <View style={styles.cellScoreDouble}>
-                <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                <Text style={styles.scoreText}>{s.score}</Text>
+                <Text style={styles.scoreText}>{s.grade}</Text>
               </View>
               <Text style={styles.cellDesc}>{s.description}</Text>
             </View>
@@ -228,7 +237,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.tahfidzScore?.toFixed(1) ?? '-'}
+                {report.endTahfidzScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>

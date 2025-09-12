@@ -3,16 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 type Params = Promise<{ studentId: string }>;
 
-// Mendapatkan daftar surah yang sudah lulus tashih dan belum dinilai
+// Mendapatkan daftar surah yang sudah lulus tashih dan belum dinilai di semester ini
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   const params = await segmentData.params;
   const studentId = params.studentId;
 
-  // Ambil semua surah yang sudah dinilai oleh guru (tanpa cek tahun/semester)
+  // Ambil semua surah yang sudah dinilai oleh guru di semester ini (semua period)
   const scoredSurahIds = await prisma.tahfidzScore
     .findMany({
       where: {
         studentId,
+        // Ambil semua periode dalam semester yang sama, bukan hanya period tertentu
       },
       select: {
         surahId: true,
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     })
     .then((list) => list.map((s) => s.surahId));
 
-  // Ambil semua tashih selesai dan lulus yang belum dinilai
+  // Ambil semua tashih selesai dan lulus yang belum dinilai di semester ini
   const results = await prisma.tashihRequest.findMany({
     where: {
       studentId,

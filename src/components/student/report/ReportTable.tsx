@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { StudentReportData } from '@/lib/data/student/report';
+import { AssessmentPeriod } from '@prisma/client';
 import {
   Select,
   SelectContent,
@@ -30,19 +31,20 @@ import { Download } from 'lucide-react';
 export type ReportItem = {
   subject: 'Tahsin' | 'Tahfidz';
   topic: string;
-  scoreNumeric: number;
-  scoreLetter: string;
+  score: number;
+  grade: string;
   description: string;
 };
 
 interface Props {
   data: StudentReportData;
   title: string;
+  period: AssessmentPeriod;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function ReportTable({ data, title }: Props) {
+export function ReportTable({ data, title, period }: Props) {
   const {
     sorting,
     setSorting,
@@ -89,16 +91,16 @@ export function ReportTable({ data, title }: Props) {
     const tahsinItems: ReportItem[] = currentPeriodData.tahsin.map((item) => ({
       subject: 'Tahsin' as const,
       topic: item.topic,
-      scoreNumeric: item.scoreNumeric,
-      scoreLetter: item.scoreLetter,
+      score: item.score,
+      grade: item.grade,
       description: item.description,
     }));
 
     const tahfidzItems: ReportItem[] = currentPeriodData.tahfidz.map((item) => ({
       subject: 'Tahfidz' as const,
       topic: item.surahName,
-      scoreNumeric: item.scoreNumeric,
-      scoreLetter: item.scoreLetter,
+      score: item.score,
+      grade: item.grade,
       description: item.description,
     }));
 
@@ -123,16 +125,16 @@ export function ReportTable({ data, title }: Props) {
         header: 'Materi',
       },
       {
-        accessorKey: 'scoreNumeric',
+        accessorKey: 'score',
         id: 'Nilai',
         header: 'Nilai',
       },
       {
-        accessorKey: 'scoreLetter',
+        accessorKey: 'grade',
         id: 'Predikat',
         header: 'Predikat',
         cell: ({ row }) => {
-          const grade = row.original.scoreLetter;
+          const grade = row.original.grade;
           const variant =
             grade === 'A'
               ? 'default'
@@ -241,25 +243,61 @@ export function ReportTable({ data, title }: Props) {
           </div>
 
           {/* Summary Scores */}
-          {(currentPeriodData.report.tahfidzScore || currentPeriodData.report.tahsinScore) && (
+          {(currentPeriodData.report.endTahfidzScore ||
+            currentPeriodData.report.endTahsinScore ||
+            currentPeriodData.report.midTahfidzScore ||
+            currentPeriodData.report.midTahsinScore) && (
             <div className="mt-4 pt-4 border-t">
-              <h3 className="font-medium mb-2">Ringkasan Nilai</h3>
+              <h3 className="font-medium mb-2">
+                Ringkasan Nilai - {period === 'MID_SEMESTER' ? 'Tengah Semester' : 'Akhir Semester'}
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {currentPeriodData.report.tahfidzScore && (
-                  <div>
-                    <span className="text-muted-foreground">Rata-rata Tahfidz:</span>
-                    <p className="font-medium text-lg">
-                      {currentPeriodData.report.tahfidzScore.toFixed(1)}
-                    </p>
-                  </div>
-                )}
-                {currentPeriodData.report.tahsinScore && (
-                  <div>
-                    <span className="text-muted-foreground">Rata-rata Tahsin:</span>
-                    <p className="font-medium text-lg">
-                      {currentPeriodData.report.tahsinScore.toFixed(1)}
-                    </p>
-                  </div>
+                {period === 'MID_SEMESTER' ? (
+                  <>
+                    {currentPeriodData.report.midTahfidzScore && (
+                      <div>
+                        <span className="text-muted-foreground">
+                          Rata-rata Tahfidz (Tengah Semester):
+                        </span>
+                        <p className="font-medium text-lg">
+                          {currentPeriodData.report.midTahfidzScore.toFixed(1)}
+                        </p>
+                      </div>
+                    )}
+                    {currentPeriodData.report.midTahsinScore && (
+                      <div>
+                        <span className="text-muted-foreground">
+                          Rata-rata Tahsin (Tengah Semester):
+                        </span>
+                        <p className="font-medium text-lg">
+                          {currentPeriodData.report.midTahsinScore.toFixed(1)}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {currentPeriodData.report.endTahfidzScore && (
+                      <div>
+                        <span className="text-muted-foreground">
+                          Rata-rata Tahfidz (Akhir Semester):
+                        </span>
+                        <p className="font-medium text-lg">
+                          {currentPeriodData.report.endTahfidzScore.toFixed(1)}
+                        </p>
+                      </div>
+                    )}
+                    {currentPeriodData.report.endTahsinScore && (
+                      <div>
+                        <span className="text-muted-foreground">
+                          Rata-rata Tahsin (Akhir Semester):
+                        </span>
+                        <p className="font-medium text-lg">
+                          {currentPeriodData.report.endTahsinScore.toFixed(1)}
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
                 {currentPeriodData.report.lastTahsinMaterial && (
                   <div>
@@ -289,7 +327,10 @@ export function ReportTable({ data, title }: Props) {
               }
               fileName={`Rapor-${currentPeriodData.period.academicYear}-${
                 currentPeriodData.period.semester
-              }-${data.fullName.replace(/\s+/g, '_')}.pdf`}
+              }-${period === 'MID_SEMESTER' ? 'Tengah' : 'Akhir'}-${data.fullName.replace(
+                /\s+/g,
+                '_'
+              )}.pdf`}
             >
               {({ loading }) => (
                 <Button disabled={loading} variant="outline">

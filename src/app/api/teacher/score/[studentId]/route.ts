@@ -10,6 +10,9 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const studentId = params.studentId;
 
+    const url = new URL(req.url);
+    const period = url.searchParams.get('period') as 'MID_SEMESTER' | 'FINAL' | null;
+
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -48,19 +51,24 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    // Ambil data tahsin dan tahfidz berdasarkan studentId dan groupId
+    // Query filter for period
+    const periodFilter = period ? { period } : {};
+
+    // Ambil data tahsin dan tahfidz berdasarkan studentId, groupId, dan period
     const tahsin = await prisma.tahsinScore.findMany({
       where: {
         studentId,
         groupId: group.id,
+        ...periodFilter,
       },
       select: {
         id: true,
         tahsinType: true,
         topic: true,
-        scoreNumeric: true,
-        scoreLetter: true,
+        score: true,
+        grade: true,
         description: true,
+        period: true,
       },
     });
 
@@ -68,13 +76,15 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       where: {
         studentId,
         groupId: group.id,
+        ...periodFilter,
       },
       select: {
         id: true,
         surahId: true,
-        scoreNumeric: true,
-        scoreLetter: true,
+        score: true,
+        grade: true,
         description: true,
+        period: true,
         surah: {
           select: {
             name: true,
@@ -83,7 +93,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
     });
 
-    // Ambil data report untuk mendapatkan lastTahsinMaterial
+    // Ambil data report untuk mendapatkan lastTahsinMaterial dan averages
     const report = await prisma.report.findUnique({
       where: {
         studentId_groupId_academicYear_semester: {
@@ -95,8 +105,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
       select: {
         lastTahsinMaterial: true,
-        tahsinScore: true,
-        tahfidzScore: true,
+        endTahsinScore: true,
+        endTahfidzScore: true,
+        midTahsinScore: true,
+        midTahfidzScore: true,
       },
     });
 
@@ -105,8 +117,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       tahfidz,
       lastMaterial: report?.lastTahsinMaterial || null,
       averageScores: {
-        tahsin: report?.tahsinScore || null,
-        tahfidz: report?.tahfidzScore || null,
+        tahsin: report?.endTahsinScore || null,
+        tahfidz: report?.endTahfidzScore || null,
+        midTahsin: report?.midTahsinScore || null,
+        midTahfidz: report?.midTahfidzScore || null,
       },
     });
   } catch (error) {

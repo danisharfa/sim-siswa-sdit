@@ -86,7 +86,7 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
   }
 
   const {
-    period: { className, academicYear, semester, teacherName },
+    period: { className, academicYear, semester, teacherName, assessmentPeriod },
     tahsin,
     tahfidz,
     report,
@@ -94,6 +94,10 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
 
   const leftLogo = '/logo-sekolah.png';
   const rightLogo = '/logo-wafa.png';
+
+  // Dynamic assessment period text
+  const assessmentPeriodText =
+    assessmentPeriod === 'MID_SEMESTER' ? 'ASESMEN TENGAH SEMESTER' : 'ASESMEN AKHIR SEMESTER';
 
   const today = new Date().toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -111,7 +115,9 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
           <View style={[styles.centerHeader, { flex: 1 }]}>
             <Text>{schoolInfo.schoolName.toUpperCase()}</Text>
             <Text>LAPORAN PENILAIAN TAHSIN DAN TAHFIDZ AL-QUR&apos;AN</Text>
-            <Text>ASESMEN AKHIR SEMESTER {semester}</Text>
+            <Text>
+              {assessmentPeriodText} {semester}
+            </Text>
             <Text>TAHUN AJARAN {academicYear}</Text>
           </View>
           {/* eslint-disable-next-line jsx-a11y/alt-text */}
@@ -179,15 +185,15 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
           </View>
           {tahsin.map(
             (
-              s: { topic: string; scoreNumeric: number; scoreLetter: string; description: string },
+              s: { topic: string; score: number; grade: string; description: string },
               i: number
             ) => (
               <View style={styles.row} key={i}>
                 <Text style={styles.cellNo}>{i + 1}</Text>
                 <Text style={styles.cellTopic}>{s.topic}</Text>
                 <View style={styles.cellScoreDouble}>
-                  <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                  <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                  <Text style={styles.scoreText}>{s.score}</Text>
+                  <Text style={styles.scoreText}>{s.grade}</Text>
                 </View>
                 <Text style={styles.cellDesc}>{s.description}</Text>
               </View>
@@ -198,7 +204,7 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.tahsinScore?.toFixed(1) ?? '-'}
+                {report.endTahsinScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -233,8 +239,8 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
             (
               s: {
                 surahName: string;
-                scoreNumeric: number;
-                scoreLetter: string;
+                score: number;
+                grade: string;
                 description: string;
               },
               i: number
@@ -243,8 +249,8 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
                 <Text style={styles.cellNo}>{i + 1}</Text>
                 <Text style={styles.cellTopic}>{s.surahName}</Text>
                 <View style={styles.cellScoreDouble}>
-                  <Text style={styles.scoreText}>{s.scoreNumeric}</Text>
-                  <Text style={styles.scoreText}>{s.scoreLetter}</Text>
+                  <Text style={styles.scoreText}>{s.score}</Text>
+                  <Text style={styles.scoreText}>{s.grade}</Text>
                 </View>
                 <Text style={styles.cellDesc}>{s.description}</Text>
               </View>
@@ -255,7 +261,7 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.tahfidzScore?.toFixed(1) ?? '-'}
+                {report.endTahfidzScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>

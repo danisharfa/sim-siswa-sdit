@@ -33,19 +33,14 @@ export function DashboardStats({
   return (
     <div className="space-y-6">
       {/* Current Period Card */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-blue-800">
-            Periode Akademik Saat Ini
-          </CardTitle>
-          <FaCalendarAlt className="w-8 h-8 text-blue-600" />
+          <CardTitle className="text-lg font-semibold ">Periode Akademik Saat Ini</CardTitle>
+          <FaCalendarAlt className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-blue-900">
+          <p className="text-2xl font-bold ">
             {currentPeriod.academicYear} - {currentPeriod.semester}
-          </p>
-          <p className="text-sm text-blue-600 mt-1">
-            Tahun Ajaran dan Semester yang sedang berlangsung
           </p>
         </CardContent>
       </Card>

@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     const classrooms = await prisma.classroom.findMany({
-      where: { isActive: true },
+      // where: { isActive: true },
       orderBy: { name: 'asc' },
       include: {
         _count: {

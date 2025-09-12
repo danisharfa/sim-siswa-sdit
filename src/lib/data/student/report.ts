@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Role, Semester } from '@prisma/client';
+import { Role, Semester, AssessmentPeriod } from '@prisma/client';
 
 export interface AcademicPeriodInfo {
   academicYear: string;
@@ -8,6 +8,7 @@ export interface AcademicPeriodInfo {
   className: string;
   groupName: string;
   teacherName: string;
+  assessmentPeriod: AssessmentPeriod;
 }
 
 export interface StudentReportData {
@@ -24,25 +25,27 @@ export interface StudentReportData {
     period: AcademicPeriodInfo;
     tahsin: {
       topic: string;
-      scoreNumeric: number;
-      scoreLetter: string;
+      score: number;
+      grade: string;
       description: string;
     }[];
     tahfidz: {
       surahName: string;
-      scoreNumeric: number;
-      scoreLetter: string;
+      score: number;
+      grade: string;
       description: string;
     }[];
     report: {
-      tahfidzScore: number | null;
-      tahsinScore: number | null;
+      endTahfidzScore: number | null;
+      endTahsinScore: number | null;
+      midTahfidzScore: number | null;
+      midTahsinScore: number | null;
       lastTahsinMaterial: string | null;
     };
   }[];
 }
 
-export async function fetchReportData() {
+export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
@@ -66,7 +69,10 @@ export async function fetchReportData() {
 
     const [allTahsinScores, allTahfidzScores] = await Promise.all([
       prisma.tahsinScore.findMany({
-        where: { studentId: student.userId },
+        where: {
+          studentId: student.userId,
+          period: period,
+        },
         include: {
           group: {
             include: {
@@ -85,7 +91,10 @@ export async function fetchReportData() {
         },
       }),
       prisma.tahfidzScore.findMany({
-        where: { studentId: student.userId },
+        where: {
+          studentId: student.userId,
+          period: period,
+        },
         include: {
           surah: true,
           group: {
@@ -153,6 +162,7 @@ export async function fetchReportData() {
             className: score.group.classroom.name,
             groupName: score.group.name,
             teacherName: score.group.teacher?.user.fullName ?? '-',
+            assessmentPeriod: period,
             groupId: score.groupId,
           });
         }
@@ -169,6 +179,7 @@ export async function fetchReportData() {
             className: score.group.classroom.name,
             groupName: score.group.name,
             teacherName: score.group.teacher?.user.fullName ?? '-',
+            assessmentPeriod: period,
             groupId: score.groupId,
           });
         }
@@ -185,6 +196,7 @@ export async function fetchReportData() {
             className: report.group.classroom.name,
             groupName: report.group.name,
             teacherName: report.group.teacher?.user.fullName ?? '-',
+            assessmentPeriod: period,
             groupId: report.groupId,
           });
         }
@@ -209,22 +221,25 @@ export async function fetchReportData() {
           className: periodInfo.className,
           groupName: periodInfo.groupName,
           teacherName: periodInfo.teacherName,
+          assessmentPeriod: periodInfo.assessmentPeriod,
         },
         tahsin: tahsinForPeriod.map((s) => ({
           topic: s.topic,
-          scoreNumeric: s.scoreNumeric,
-          scoreLetter: s.scoreLetter,
+          score: s.score,
+          grade: s.grade,
           description: s.description ?? '-',
         })),
         tahfidz: tahfidzForPeriod.map((s) => ({
           surahName: s.surah.name,
-          scoreNumeric: s.scoreNumeric,
-          scoreLetter: s.scoreLetter,
+          score: s.score,
+          grade: s.grade,
           description: s.description ?? '-',
         })),
         report: {
-          tahfidzScore: reportForPeriod?.tahfidzScore ?? null,
-          tahsinScore: reportForPeriod?.tahsinScore ?? null,
+          endTahfidzScore: reportForPeriod?.endTahfidzScore ?? null,
+          endTahsinScore: reportForPeriod?.endTahsinScore ?? null,
+          midTahfidzScore: reportForPeriod?.midTahfidzScore ?? null,
+          midTahsinScore: reportForPeriod?.midTahsinScore ?? null,
           lastTahsinMaterial: reportForPeriod?.lastTahsinMaterial ?? null,
         },
       };

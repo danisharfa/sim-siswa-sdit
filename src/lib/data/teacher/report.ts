@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Role, Semester } from '@prisma/client';
+import { Role, Semester, AssessmentPeriod } from '@prisma/client';
 
 export interface StudentReportData {
   fullName: string;
@@ -17,26 +17,30 @@ export interface StudentReportData {
   };
   tahsin: {
     topic: string;
-    scoreNumeric: number;
-    scoreLetter: string;
+    score: number;
+    grade: string;
     description: string;
   }[];
   tahfidz: {
     surahName: string;
-    scoreNumeric: number;
-    scoreLetter: string;
+    score: number;
+    grade: string;
     description: string;
   }[];
   report: {
-    tahfidzScore: number | null;
-    tahsinScore: number | null;
+    endTahfidzScore: number | null;
+    endTahsinScore: number | null;
+    midTahfidzScore: number | null;
+    midTahsinScore: number | null;
     lastTahsinMaterial: string | null;
   };
+  period: AssessmentPeriod;
 }
 
 export async function getStudentReportData(
   studentId: string,
-  groupId: string
+  groupId: string,
+  period: AssessmentPeriod = 'FINAL'
 ): Promise<StudentReportData | null> {
   const student = await prisma.studentProfile.findUnique({
     where: { userId: studentId },
@@ -70,10 +74,10 @@ export async function getStudentReportData(
       },
     }),
     prisma.tahsinScore.findMany({
-      where: { studentId, groupId },
+      where: { studentId, groupId, period },
     }),
     prisma.tahfidzScore.findMany({
-      where: { studentId, groupId },
+      where: { studentId, groupId, period },
       include: { surah: true },
     }),
     prisma.report.findUnique({
@@ -106,20 +110,23 @@ export async function getStudentReportData(
     },
     tahsin: tahsinScores.map((s) => ({
       topic: s.topic,
-      scoreNumeric: s.scoreNumeric,
-      scoreLetter: s.scoreLetter,
+      score: s.score,
+      grade: s.grade,
       description: s.description ?? '-',
     })),
     tahfidz: tahfidzScores.map((s) => ({
       surahName: s.surah.name,
-      scoreNumeric: s.scoreNumeric,
-      scoreLetter: s.scoreLetter,
+      score: s.score,
+      grade: s.grade,
       description: s.description ?? '-',
     })),
     report: {
-      tahfidzScore: report?.tahfidzScore ?? null,
-      tahsinScore: report?.tahsinScore ?? null,
+      endTahfidzScore: report?.endTahfidzScore ?? null,
+      endTahsinScore: report?.endTahsinScore ?? null,
+      midTahfidzScore: report?.midTahfidzScore ?? null,
+      midTahsinScore: report?.midTahsinScore ?? null,
       lastTahsinMaterial: report?.lastTahsinMaterial ?? null,
     },
+    period,
   };
 }

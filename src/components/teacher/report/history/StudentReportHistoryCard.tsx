@@ -68,12 +68,12 @@ export function StudentReportHistoryCard({ data }: { data: StudentReportHistoryD
           <ul className="list-disc pl-5">
             {tahsin.map((s, i) => (
               <li key={i}>
-                {s.topic} - {s.scoreNumeric} ({s.scoreLetter}): {s.description}
+                {s.topic} - {s.score} ({s.grade}): {s.description}
               </li>
             ))}
           </ul>
           <p>
-            <strong>Rata-rata:</strong> {report.tahsinScore?.toFixed(1) ?? '-'} <br />
+            <strong>Rata-rata:</strong> {report.endTahsinScore?.toFixed(1) ?? '-'} <br />
             <strong>Bacaan Terakhir:</strong> {report.lastTahsinMaterial ?? '-'}
           </p>
         </div>
@@ -83,12 +83,12 @@ export function StudentReportHistoryCard({ data }: { data: StudentReportHistoryD
           <ul className="list-disc pl-5">
             {tahfidz.map((s, i) => (
               <li key={i}>
-                {s.surahName} - {s.scoreNumeric} ({s.scoreLetter}): {s.description}
+                {s.surahName} - {s.score} ({s.grade}): {s.description}
               </li>
             ))}
           </ul>
           <p>
-            <strong>Rata-rata:</strong> {report.tahfidzScore?.toFixed(1) ?? '-'}
+            <strong>Rata-rata:</strong> {report.endTahfidzScore?.toFixed(1) ?? '-'}
           </p>
         </div>
 

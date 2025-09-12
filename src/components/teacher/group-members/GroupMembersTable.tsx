@@ -13,13 +13,7 @@ import {
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
+import { FileText, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Student {
@@ -57,42 +51,36 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Lengkap" />,
       },
       {
-        id: 'actions',
+        id: 'Detail',
+        enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
           const siswa = row.original;
           return (
             <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVertical />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/score`)
-                    }
-                  >
-                    Nilai
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/report`)
-                    }
-                  >
-                    Rapor
-                  </DropdownMenuItem>
-                  {/* <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/target`)
-                    }
-                  >
-                    Target Setoran
-                  </DropdownMenuItem> */}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() =>
+                    router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/score`)
+                  }
+                >
+                  <Pencil className="w-4 h-4 mr-1" />
+                  Nilai
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() =>
+                    router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/report`)
+                  }
+                >
+                  <FileText className="w-4 h-4 mr-1" />
+                  Rapor
+                </Button>
+              </div>
             </>
           );
         },
