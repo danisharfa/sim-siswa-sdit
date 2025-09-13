@@ -7,12 +7,11 @@ import {
   ClipboardCheck,
   CalendarCheck2,
   BookPlus,
-  Users2,
   ScrollText,
   Target,
   GraduationCap,
 } from 'lucide-react';
-import { FaChalkboardTeacher } from 'react-icons/fa';
+import { FaChalkboard, FaUsers } from 'react-icons/fa';
 import { ImProfile } from 'react-icons/im';
 
 export const menuData = {
@@ -31,7 +30,7 @@ export const menuData = {
     {
       title: 'Kelas',
       url: '/dashboard/admin/classroom',
-      icon: FaChalkboardTeacher,
+      icon: FaChalkboard,
     },
     {
       title: 'Akademik',
@@ -54,7 +53,7 @@ export const menuData = {
     {
       title: 'Kelompok',
       url: '/dashboard/coordinator/group',
-      icon: Users2,
+      icon: FaUsers,
     },
     {
       label: 'Setoran Siswa',
@@ -75,17 +74,17 @@ export const menuData = {
       label: 'Tashih',
       items: [
         {
-          title: 'Permintaan',
+          title: 'Permintaan Tashih',
           url: '/dashboard/coordinator/tashih/requests',
           icon: ClipboardList,
         },
         {
-          title: 'Penjadwalan',
+          title: 'Penjadwalan Tashih',
           url: '/dashboard/coordinator/tashih/schedules',
           icon: CalendarCheck2,
         },
         {
-          title: 'Penilaian',
+          title: 'Penilaian Tashih',
           url: '/dashboard/coordinator/tashih/results',
           icon: ClipboardCheck,
         },
@@ -95,17 +94,17 @@ export const menuData = {
       label: 'Munaqasyah',
       items: [
         {
-          title: 'Permintaan',
+          title: 'Permintaan Munaqasyah',
           url: '/dashboard/coordinator/munaqasyah/requests',
           icon: ClipboardList,
         },
         {
-          title: 'Penjadwalan',
+          title: 'Penjadwalan Munaqasyah',
           url: '/dashboard/coordinator/munaqasyah/schedules',
           icon: CalendarCheck2,
         },
         {
-          title: 'Penilaian',
+          title: 'Penilaian Munaqasyah',
           url: '/dashboard/coordinator/munaqasyah/results',
           icon: ClipboardCheck,
         },
@@ -127,7 +126,7 @@ export const menuData = {
     {
       title: 'Kelompok',
       url: '/dashboard/teacher/group',
-      icon: Users2,
+      icon: FaUsers,
     },
     {
       label: 'Setoran Siswa',
@@ -163,17 +162,17 @@ export const menuData = {
       label: 'Tashih',
       items: [
         {
-          title: 'Pendaftaran',
+          title: 'Pendaftaran Tashih',
           url: '/dashboard/teacher/tashih/request',
           icon: ClipboardList,
         },
         {
-          title: 'Jadwal',
+          title: 'Jadwal Tashih',
           url: '/dashboard/teacher/tashih/schedule',
           icon: CalendarCheck2,
         },
         {
-          title: 'Hasil',
+          title: 'Hasil Tashih',
           url: '/dashboard/teacher/tashih/result',
           icon: ClipboardCheck,
         },
@@ -183,17 +182,17 @@ export const menuData = {
       label: 'Munaqasyah',
       items: [
         {
-          title: 'Pendaftaran',
+          title: 'Pendaftaran Munaqasyah',
           url: '/dashboard/teacher/munaqasyah/request',
           icon: ClipboardList,
         },
         {
-          title: 'Jadwal',
+          title: 'Jadwal Munaqasyah',
           url: '/dashboard/teacher/munaqasyah/schedule',
           icon: CalendarCheck2,
         },
         {
-          title: 'Penilaian',
+          title: 'Penilaian Munaqasyah',
           url: '/dashboard/teacher/munaqasyah/assessment',
           icon: ClipboardCheck,
         },

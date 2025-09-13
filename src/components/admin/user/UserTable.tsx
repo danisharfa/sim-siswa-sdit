@@ -113,47 +113,45 @@ export function UserTable({ data, title, onRefresh }: Props) {
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">User Option</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-50 z-50">
-                  <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/admin/users/${user.id}`)}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Detail
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleOpenEditDialog(user)}
-                    className="flex items-center gap-2"
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleOpenResetDialog(user)}
-                    className="flex items-center gap-2"
-                  >
-                    <KeyRound className="w-4 h-4" />
-                    Reset Password
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleOpenDeleteDialog(user)}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">User Option</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-50 z-50">
+                <DropdownMenuItem
+                  onClick={() => router.push(`/dashboard/admin/users/${user.id}`)}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Detail
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleOpenEditDialog(user)}
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleOpenResetDialog(user)}
+                  className="flex items-center gap-2"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Reset Password
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleOpenDeleteDialog(user)}
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },

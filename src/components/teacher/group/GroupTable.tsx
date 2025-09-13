@@ -70,21 +70,19 @@ export function GroupTable({ data, title }: GroupTableProps) {
         header: 'Jumlah Siswa',
       },
       {
-        id: 'Detail',
-        enableHiding: false,
+        id: 'detail',
         header: 'Detail',
         cell: ({ row }) => {
           const kelompok = row.original;
           return (
-            <>
-              <Button
-                variant="ghost"
-                className="flex size-8"
-                onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}`)}
-              >
-                <Eye />
-              </Button>
-            </>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}`)}
+            >
+              <Eye />
+            </Button>
           );
         },
       },
@@ -111,7 +109,12 @@ export function GroupTable({ data, title }: GroupTableProps) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="Nama Kelompok" />
+      <DataTable
+        title={title}
+        table={table}
+        filterColumn="Nama Kelompok"
+        showColumnFilter={false}
+      />
     </>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaUserGraduate, FaUsers, FaSchool } from 'react-icons/fa';
+import { FaUserGraduate, FaUsers, FaChalkboard } from 'react-icons/fa';
 import { ChartFilters } from './ChartFilters';
 import { TahfidzChart } from './TahfidzChart';
 import { WafaChart } from './WafaChart';
@@ -126,38 +126,32 @@ export function Management() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Siswa
-              </CardTitle>
-              <FaUserGraduate className="w-4 h-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-medium">Total Siswa</CardTitle>
+              <FaUserGraduate className="w-10 h-10 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{totalStudents}</div>
+              <p className="text-4xl font-bold text-primary">{totalStudents}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Kelompok
-              </CardTitle>
-              <FaUsers className="w-4 h-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-medium">Total Kelas</CardTitle>
+              <FaChalkboard className="w-10 h-10 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{totalGroups}</div>
+              <p className="text-4xl font-bold text-primary">{totalClasses}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Kelas
-              </CardTitle>
-              <FaSchool className="w-4 h-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-medium">Total Kelompok</CardTitle>
+              <FaUsers className="w-10 h-10 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{totalClasses}</div>
+              <p className="text-4xl font-bold text-primary">{totalGroups}</p>
             </CardContent>
           </Card>
         </div>

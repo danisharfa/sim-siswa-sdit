@@ -64,6 +64,37 @@ interface SurahJuz {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+// Helper functions to generate description based on grade and content
+function generateTahsinDescription(grade: GradeLetter, topic: string): string {
+  switch (grade) {
+    case 'A':
+      return `Sangat baik dalam memahami ${topic}`;
+    case 'B':
+      return `Baik dalam memahami ${topic}`;
+    case 'C':
+      return `Cukup dalam memahami ${topic}`;
+    case 'D':
+      return `Kurang dalam memahami ${topic}`;
+    default:
+      return `Perlu evaluasi lebih lanjut dalam memahami ${topic}`;
+  }
+}
+
+function generateTahfidzDescription(grade: GradeLetter, surahName: string): string {
+  switch (grade) {
+    case 'A':
+      return `Sangat baik dalam memahami ${surahName}`;
+    case 'B':
+      return `Baik dalam memahami ${surahName}`;
+    case 'C':
+      return `Cukup dalam memahami ${surahName}`;
+    case 'D':
+      return `Kurang dalam memahami ${surahName}`;
+    default:
+      return `Perlu evaluasi lebih lanjut dalam memahami ${surahName}`;
+  }
+}
+
 interface ExistingScoreResponse {
   tahsin: (Omit<TahsinEntry, 'type'> & { tahsinType: TahsinType; period: AssessmentPeriod })[];
   tahfidz: (Omit<TahfidzEntry, 'topic'> & { surah: { name: string }; period: AssessmentPeriod })[];
@@ -108,7 +139,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
             topic: t.topic,
             score: t.score,
             grade: t.grade,
-            description: t.description || '',
+            description: generateTahsinDescription(t.grade, t.topic),
             period: t.period,
           }))
         );
@@ -122,7 +153,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
             topic: score.surah.name,
             score: score.score,
             grade: score.grade,
-            description: score.description || '',
+            description: generateTahfidzDescription(score.grade, score.surah.name),
             period: score.period,
           }))
         );
@@ -155,11 +186,26 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
       const numeric = parseInt(value as string) || 0;
       updated[index].score = numeric;
       updated[index].grade = convertToLetter(numeric);
-    } else if (field === 'topic' || field === 'description') {
+      // Auto-generate description based on grade and topic
+      if (updated[index].topic) {
+        updated[index].description = generateTahsinDescription(
+          convertToLetter(numeric),
+          updated[index].topic
+        );
+      }
+    } else if (field === 'topic') {
       updated[index][field] = value as string;
+      // Auto-generate description when topic changes (if score is already set)
+      if (updated[index].score > 0) {
+        updated[index].description = generateTahsinDescription(
+          updated[index].grade,
+          value as string
+        );
+      }
     } else if (field === 'type') {
       updated[index].type = value as TahsinType;
     }
+    // Remove description field handling since it will be auto-generated
     setTahsinEntries(updated);
   }
 
@@ -207,9 +253,31 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
       const numeric = parseInt(value as string) || 0;
       updated[index].score = numeric;
       updated[index].grade = convertToLetter(numeric);
-    } else if (field === 'description') {
-      updated[index].description = value as string;
+      // Auto-generate description based on grade and surah
+      if (updated[index].surahId) {
+        const surah = surahList.find(
+          (s: { id: number; name: string }) => s.id === updated[index].surahId
+        );
+        if (surah) {
+          updated[index].description = generateTahfidzDescription(
+            convertToLetter(numeric),
+            surah.name
+          );
+        }
+      }
+    } else if (field === 'surahId') {
+      updated[index].surahId = value as number;
+      // Auto-generate description when surah changes (if score is already set)
+      if (updated[index].score > 0) {
+        const surah = surahList.find((s: { id: number; name: string }) => s.id === value);
+        if (surah) {
+          updated[index].description = generateTahfidzDescription(updated[index].grade, surah.name);
+        }
+      }
+    } else if (field === 'topic') {
+      updated[index].topic = value as string;
     }
+    // Remove description field handling since it will be auto-generated
 
     setTahfidzEntries(updated);
   }
@@ -367,9 +435,10 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
               />
               <Input disabled value={entry.grade} />
               <Textarea
+                disabled
                 value={entry.description}
-                onChange={(e) => handleTahsinChange(index, 'description', e.target.value)}
-                placeholder="Deskripsi"
+                placeholder="Deskripsi (otomatis berdasarkan nilai)"
+                className="bg-muted"
               />
               <Button onClick={() => handleRemoveTahsin(index)} variant="destructive" type="button">
                 Hapus
@@ -428,9 +497,10 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
               />
               <Input disabled value={entry.grade} />
               <Textarea
+                disabled
                 value={entry.description}
-                onChange={(e) => handleTahfidzChange(index, 'description', e.target.value)}
-                placeholder="Deskripsi"
+                placeholder="Deskripsi (otomatis berdasarkan nilai)"
+                className="bg-muted"
               />
               <Button
                 onClick={() => handleRemoveTahfidz(index)}

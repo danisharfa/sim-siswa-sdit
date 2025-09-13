@@ -29,6 +29,37 @@ interface ScoreRequestBody {
   assessmentPeriod: AssessmentPeriod;
 }
 
+// Helper function to generate description based on grade and content
+function generateTahsinDescription(grade: GradeLetter, topic: string): string {
+  switch (grade) {
+    case 'A':
+      return `Sangat baik dalam memahami ${topic}`;
+    case 'B':
+      return `Baik dalam memahami ${topic}`;
+    case 'C':
+      return `Cukup dalam memahami ${topic}`;
+    case 'D':
+      return `Kurang dalam memahami ${topic}`;
+    default:
+      return `Perlu evaluasi lebih lanjut dalam memahami ${topic}`;
+  }
+}
+
+function generateTahfidzDescription(grade: GradeLetter, surahName: string): string {
+  switch (grade) {
+    case 'A':
+      return `Sangat baik dalam memahami ${surahName}`;
+    case 'B':
+      return `Baik dalam memahami ${surahName}`;
+    case 'C':
+      return `Cukup dalam memahami ${surahName}`;
+    case 'D':
+      return `Kurang dalam memahami ${surahName}`;
+    default:
+      return `Perlu evaluasi lebih lanjut dalam memahami ${surahName}`;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -45,6 +76,14 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json()) as ScoreRequestBody;
     const { studentId, groupId, tahsin, tahfidz, lastMaterial, assessmentPeriod } = body;
+
+    // Get surah names for tahfidz descriptions
+    const surahIds = tahfidz.map((item) => item.surahId);
+    const surahs = await prisma.surah.findMany({
+      where: { id: { in: surahIds } },
+      select: { id: true, name: true },
+    });
+    const surahMap = new Map(surahs.map((s) => [s.id, s.name]));
 
     const group = await prisma.group.findFirst({
       where: {
@@ -101,7 +140,7 @@ export async function POST(req: NextRequest) {
             topic: item.topic,
             score: item.score,
             grade: item.grade,
-            description: item.description,
+            description: generateTahsinDescription(item.grade, item.topic),
             period: assessmentPeriod,
           })),
         });
@@ -125,7 +164,10 @@ export async function POST(req: NextRequest) {
             surahId: item.surahId,
             score: item.score,
             grade: item.grade,
-            description: item.description,
+            description: generateTahfidzDescription(
+              item.grade,
+              surahMap.get(item.surahId) || 'Surah'
+            ),
             period: assessmentPeriod,
           })),
         });

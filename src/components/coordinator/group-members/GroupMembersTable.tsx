@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -9,15 +10,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVerticalIcon, Trash2 } from 'lucide-react';
-import { MemberAlertDialog } from '@/components/coordinator/group-members/MemberAlertDialog'; // Ganti path sesuai struktur proyekmu
+import { ScrollText, Trash2 } from 'lucide-react';
+import { MemberAlertDialog } from '@/components/coordinator/group-members/MemberAlertDialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -36,6 +31,7 @@ interface Props {
 }
 
 export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
+  const router = useRouter();
   const {
     sorting,
     setSorting,
@@ -76,33 +72,35 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
         cell: ({ row }) => {
           const student = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVerticalIcon />
-                    <span className="sr-only">User Option</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenDeleteDialog(student);
-                    }}
-                    className="flex items-center gap-2"
-                    variant="destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Hapus
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="size-8"
+                onClick={() => {
+                  handleOpenDeleteDialog(student);
+                }}
+              >
+                <Trash2 />
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  router.push(
+                    `/dashboard/coordinator/group/${groupId}/student/${student.id}/report`
+                  )
+                }
+              >
+                <ScrollText />
+                Rapor
+              </Button>
+            </div>
           );
         },
       },
     ],
-    [handleOpenDeleteDialog]
+    [handleOpenDeleteDialog, router, groupId]
   );
 
   const table = useReactTable({
@@ -124,7 +122,7 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="NIS" />
+      <DataTable title={title} table={table} filterColumn="NIS" showColumnFilter={false}/>
 
       {dialogType === 'delete' && selectedMember && (
         <MemberAlertDialog

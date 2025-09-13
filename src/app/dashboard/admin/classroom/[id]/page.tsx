@@ -14,10 +14,12 @@ export default async function ClassroomPage(props: { params: Promise<{ id: strin
 
   return (
     <div className="p-4">
-      <BackButton href={`/dashboard/admin/classroom`} />
-      <h1 className="text-2xl font-bold mb-4">
-        Kelas {classroom.name} - {classroom.academicYear} {classroom.semester}
-      </h1>
+      <div className="flex items-center mb-4">
+        <BackButton href={`/dashboard/admin/classroom`} />
+        <h1 className="text-2xl font-bold ml-4">
+          Kelas {classroom.name} - {classroom.academicYear} {classroom.semester}
+        </h1>
+      </div>
 
       {/* Tombol & Dialog Naik Kelas */}
       <PromoteDialogWrapper

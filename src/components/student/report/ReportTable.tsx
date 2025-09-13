@@ -40,11 +40,12 @@ interface Props {
   data: StudentReportData;
   title: string;
   period: AssessmentPeriod;
+  onPeriodChange: (period: AssessmentPeriod) => void;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function ReportTable({ data, title, period }: Props) {
+export function ReportTable({ data, title, period, onPeriodChange }: Props) {
   const {
     sorting,
     setSorting,
@@ -197,10 +198,10 @@ export function ReportTable({ data, title, period }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => {
@@ -213,6 +214,19 @@ export function ReportTable({ data, title, period }: Props) {
                   </SelectItem>
                 );
               })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Filter Periode Penilaian</Label>
+          <Select value={period} onValueChange={onPeriodChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Periode Penilaian" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MID_SEMESTER">Tengah Semester</SelectItem>
+              <SelectItem value="FINAL">Akhir Semester</SelectItem>
             </SelectContent>
           </Select>
         </div>

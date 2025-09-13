@@ -2,15 +2,15 @@
 
 import { useState, useEffect, use } from 'react';
 import { notFound } from 'next/navigation';
-import { TeacherReportTable } from '@/components/teacher/report/TeacherReportTable';
+import { CoordinatorReportTable } from '@/components/coordinator/report/CoordinatorReportTable';
 import { BackButton } from '@/components/ui/back-button';
 import { AssessmentPeriod } from '@prisma/client';
 import type { StudentReportData } from '@/lib/data/teacher/report';
 
-type Params = Promise<{ groupId: string; studentId: string }>;
+type Params = Promise<{ id: string; studentId: string }>;
 
-export default function ReportPage({ params }: { params: Params }) {
-  const { groupId, studentId } = use(params);
+export default function HistoryReportPage({ params }: { params: Params }) {
+  const { id: groupId, studentId } = use(params);
   const [period, setPeriod] = useState<AssessmentPeriod>('FINAL');
   const [data, setData] = useState<StudentReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +20,7 @@ export default function ReportPage({ params }: { params: Params }) {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `/api/teacher/report/${studentId}?groupId=${groupId}&period=${period}`
+          `/api/coordinator/report/${studentId}?groupId=${groupId}&period=${period}`
         );
         if (!response.ok) {
           throw new Error('Data not found');
@@ -42,7 +42,7 @@ export default function ReportPage({ params }: { params: Params }) {
     return (
       <div className="p-4">
         <div className="flex items-center mb-4">
-          <BackButton href={`/dashboard/teacher/group/${groupId}`} />
+          <BackButton href={`/dashboard/coordinator/group/${groupId}/history`} />
           <h1 className="text-2xl font-bold ml-4">Rapor Al-Qur&apos;an</h1>
         </div>
         <div>Loading...</div>
@@ -55,11 +55,11 @@ export default function ReportPage({ params }: { params: Params }) {
   return (
     <div className="p-4">
       <div className="flex items-center mb-4">
-        <BackButton href={`/dashboard/teacher/group/${groupId}`} />
+        <BackButton href={`/dashboard/coordinator/group/${groupId}/history`} />
         <h1 className="text-2xl font-bold ml-4">Rapor Al-Qur&apos;an</h1>
       </div>
 
-      <TeacherReportTable
+      <CoordinatorReportTable
         data={data}
         title="Detail Nilai"
         period={period}

@@ -94,19 +94,17 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
       {
         accessorKey: 'classroomSemester',
         id: 'Semester',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
+        header: 'Semester',
       },
       {
         accessorKey: 'teacherName',
-        id: 'Nama Guru',
-        accessorFn: (row) => row.teacherName || '-',
-        header: 'Nama Guru',
+        id: 'Nama Guru Pembimbing',
+        header: 'Nama Guru Pembimbing',
       },
       {
         accessorKey: 'studentCount',
         id: 'Jumlah Siswa',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Jumlah Siswa" />,
-        cell: ({ row }) => row.original.studentCount ?? 0,
+        header: 'Jumlah Siswa',
       },
       {
         id: 'actions',
@@ -115,43 +113,41 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
         cell: ({ row }) => {
           const group = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVertical />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/coordinator/group/${group.groupId}`)}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Detail
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenEditDialog(group);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenDeleteDialog(group);
-                    }}
-                    className="flex items-center gap-2"
-                    variant="destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Hapus
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8">
+                  <MoreVertical />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32 z-50">
+                <DropdownMenuItem
+                  onClick={() => router.push(`/dashboard/coordinator/group/${group.groupId}`)}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Detail
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleOpenEditDialog(group);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleOpenDeleteDialog(group);
+                  }}
+                  className="flex items-center gap-2"
+                  variant="destructive"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
@@ -178,7 +174,12 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="Nama Kelompok" />
+      <DataTable
+        title={title}
+        table={table}
+        filterColumn="Nama Kelompok"
+        showColumnFilter={false}
+      />
 
       {dialogType === 'edit' && selectedGroup && (
         <GroupEditDialog

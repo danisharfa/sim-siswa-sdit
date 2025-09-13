@@ -112,8 +112,8 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="size-8 p-0">
-                  <MoreVertical className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="size-8">
+                  <MoreVertical />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36 z-50">

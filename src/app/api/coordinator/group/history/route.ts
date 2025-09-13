@@ -27,6 +27,16 @@ export async function GET() {
             },
           },
         },
+        teacher: {
+          select: {
+            nip: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -39,6 +49,7 @@ export async function GET() {
     type GroupedHistory = {
       groupId: string;
       groupName: string;
+      teacherName: string;
       classroomName: string;
       academicYear: string;
       semester: Semester;
@@ -51,6 +62,7 @@ export async function GET() {
         acc[key] = {
           groupId: curr.groupId,
           groupName: curr.group.name,
+          teacherName: curr.teacher?.user.fullName || '-',
           classroomName: curr.group.classroom.name,
           academicYear: curr.academicYear,
           semester: curr.semester as Semester,

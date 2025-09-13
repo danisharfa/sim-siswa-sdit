@@ -9,14 +9,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVerticalIcon, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { ClassroomMembersAlertDialog } from '@/components/admin/classroom-members/ClassroomMembersAlertDialog'; // Ganti path sesuai struktur proyekmu
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
@@ -70,34 +64,22 @@ export function ClassroomMembersTable({ data, title, classroomId, onRefresh }: P
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Siswa" />,
       },
       {
-        id: 'actions',
+        id: 'actions ',
         enableHiding: false,
         header: 'Aksi',
         cell: ({ row }) => {
           const student = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVerticalIcon />
-                    <span className="sr-only">User Option</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() => {
-                      handleOpenDeleteDialog(student);
-                    }}
-                    className="flex items-center gap-2"
-                    variant="destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Hapus
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="size-8"
+              onClick={() => {
+                handleOpenDeleteDialog(student);
+              }}
+            >
+              <Trash2 />
+            </Button>
           );
         },
       },

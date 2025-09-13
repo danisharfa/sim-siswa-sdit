@@ -13,7 +13,7 @@ import {
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import { FileText, Pencil } from 'lucide-react';
+import { Pencil, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Student {
@@ -43,7 +43,8 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
     () => [
       {
         accessorKey: 'nis',
-        header: 'NIS',
+        id: 'NIS',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
       },
       {
         accessorKey: 'fullName',
@@ -57,31 +58,29 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
         cell: ({ row }) => {
           const siswa = row.original;
           return (
-            <>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/score`)
-                  }
-                >
-                  <Pencil className="w-4 h-4 mr-1" />
-                  Nilai
-                </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/score`)
+                }
+              >
+                <Pencil />
+                Nilai
+              </Button>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/report`)
-                  }
-                >
-                  <FileText className="w-4 h-4 mr-1" />
-                  Rapor
-                </Button>
-              </div>
-            </>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/report`)
+                }
+              >
+                <ScrollText />
+                Rapor
+              </Button>
+            </div>
           );
         },
       },
@@ -108,7 +107,7 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="nis" />
+      <DataTable title={title} table={table} filterColumn="NIS" showColumnFilter={false} />
     </>
   );
 }

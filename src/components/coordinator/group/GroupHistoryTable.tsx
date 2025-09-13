@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -10,9 +11,10 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { Semester } from '@prisma/client';
+import { Eye } from 'lucide-react';
 
 interface StudentItem {
   id: string;
@@ -23,6 +25,7 @@ interface StudentItem {
 interface GroupHistoryItem {
   groupId: string;
   groupName: string;
+  teacherName: string;
   classroomName: string;
   academicYear: string;
   semester: Semester;
@@ -35,44 +38,60 @@ interface Props {
 }
 
 export function GroupHistoryTable({ data, title }: Props) {
+  const router = useRouter();
+
   const columns = useMemo<ColumnDef<GroupHistoryItem>[]>(
     () => [
       {
         accessorKey: 'groupName',
+        id: 'Nama Kelompok',
         header: 'Nama Kelompok',
       },
       {
         accessorKey: 'classroomName',
-        header: 'Nama Kelas',
+        id: 'Nama Kelas',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Kelas" />,
       },
       {
         accessorKey: 'academicYear',
+        id: 'Tahun Ajaran',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tahun Ajaran" />,
       },
       {
         accessorKey: 'semester',
+        id: 'Semester',
         header: 'Semester',
       },
       {
-        id: 'jumlahSiswa',
+        accessorKey: 'teacherName',
+        id: 'Nama Guru Pembimbing',
+        header: 'Nama Guru Pembimbing',
+      },
+      {
+        accessorKey: 'studentCount',
+        id: 'jumlah Siswa',
         header: 'Jumlah Siswa',
         cell: ({ row }) => row.original.students.length,
       },
       {
-        id: 'students',
-        header: 'Daftar Siswa',
-        cell: ({ row }) => (
-          <div className="space-y-1">
-            {row.original.students.map((siswa) => (
-              <div key={siswa.id} className="text-sm">
-                <Badge variant="outline">{siswa.nis}</Badge> {siswa.fullName}
-              </div>
-            ))}
-          </div>
-        ),
+        id: 'detail',
+        header: 'Detail',
+        cell: ({ row }) => {
+          const group = row.original;
+          return (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => router.push(`/dashboard/coordinator/group/${group.groupId}/history`)}
+            >
+              <Eye />
+            </Button>
+          );
+        },
       },
     ],
-    []
+    [router]
   );
 
   const table = useReactTable({
@@ -84,5 +103,7 @@ export function GroupHistoryTable({ data, title }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  return <DataTable table={table} title={title} filterColumn="groupName" />;
+  return (
+    <DataTable table={table} title={title} filterColumn="Nama Kelompok" showColumnFilter={false} />
+  );
 }

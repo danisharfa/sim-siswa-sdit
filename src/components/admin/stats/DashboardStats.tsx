@@ -35,11 +35,11 @@ export function DashboardStats({
       {/* Current Period Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-semibold ">Periode Akademik Saat Ini</CardTitle>
+          <CardTitle className="text-sm font-medium">Periode Akademik Saat Ini</CardTitle>
           <FaCalendarAlt className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold ">
+          <p className="text-4xl font-bold text-primary">
             {currentPeriod.academicYear} - {currentPeriod.semester}
           </p>
         </CardContent>

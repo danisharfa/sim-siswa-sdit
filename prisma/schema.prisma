@@ -725,6 +725,11 @@ enum TashihRequestStatus {
   SELESAI
 }
 
+enum AssessmentPeriod {
+  MID_SEMESTER
+  FINAL
+}
+
 enum GradeLetter {
   A // 92–100 (Sangat Baik)
   B // 83–91 (Baik)
@@ -768,7 +773,3 @@ enum MunaqasyahGrade {
   TIDAK_LULUS // <80
 }
 
-enum AssessmentPeriod {
-  MID_SEMESTER
-  FINAL
-}

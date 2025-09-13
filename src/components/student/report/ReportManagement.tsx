@@ -4,15 +4,6 @@ import { useState, useEffect } from 'react';
 import { ReportTable } from '@/components/student/report/ReportTable';
 import { StudentReportData } from '@/lib/data/student/report';
 import { AssessmentPeriod } from '@prisma/client';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 
 export function ReportManagement() {
   const [period, setPeriod] = useState<AssessmentPeriod>('FINAL');
@@ -64,28 +55,7 @@ export function ReportManagement() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Assessment Period Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Periode Penilaian</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Label htmlFor="period-select">Pilih Periode:</Label>
-            <Select value={period} onValueChange={(value: AssessmentPeriod) => setPeriod(value)}>
-              <SelectTrigger className="w-64" id="period-select">
-                <SelectValue placeholder="Pilih Periode Penilaian" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MID_SEMESTER">Tengah Semester</SelectItem>
-                <SelectItem value="FINAL">Akhir Semester</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      <ReportTable data={data} title="Detail Nilai" period={period} />
+      <ReportTable data={data} title="Detail Nilai" period={period} onPeriodChange={setPeriod} />
     </div>
   );
 }

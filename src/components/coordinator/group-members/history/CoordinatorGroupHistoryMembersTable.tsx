@@ -20,6 +20,15 @@ interface Student {
   id: string;
   nis: string;
   fullName: string;
+  group: {
+    id: string;
+    name: string;
+    classroom: {
+      academicYear: string;
+      semester: string;
+      name: string;
+    };
+  };
 }
 
 interface Props {
@@ -28,7 +37,7 @@ interface Props {
   groupId: string;
 }
 
-export function GroupMembersHistoryTable({ data, title, groupId }: Props) {
+export function CoordinatorGroupHistoryMembersTable({ data, title, groupId }: Props) {
   const {
     sorting,
     setSorting,
@@ -62,7 +71,7 @@ export function GroupMembersHistoryTable({ data, title, groupId }: Props) {
               size="sm"
               onClick={() =>
                 router.push(
-                  `/dashboard/teacher/group/${groupId}/history/student/${siswa.id}/report`
+                  `/dashboard/coordinator/group/${groupId}/history/student/${siswa.id}/report`
                 )
               }
             >

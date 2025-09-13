@@ -10,15 +10,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester } from '@prisma/client';
@@ -74,44 +67,20 @@ export function GroupHistoryTable({ data, title }: Props) {
         header: 'Jumlah Siswa',
         cell: ({ row }) => row.original.students.length,
       },
-      // {
-      //   id: 'students',
-      //   header: 'Daftar Siswa',
-      //   cell: ({ row }) => (
-      //     <div className="space-y-1">
-      //       {row.original.students.map((siswa) => (
-      //         <div key={siswa.id} className="text-sm">
-      //           <Badge variant="outline">{siswa.nis}</Badge> {siswa.fullName}
-      //         </div>
-      //       ))}
-      //     </div>
-      //   ),
-      // },
       {
-        id: 'actions',
-        enableHiding: false,
-        header: 'Aksi',
+        id: 'detail',
+        header: 'Detail',
         cell: ({ row }) => {
           const kelompok = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8">
-                    <MoreVertical />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32 z-50">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/dashboard/teacher/group/${kelompok.groupId}/history`)
-                    }
-                  >
-                    Detail
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}/history`)}
+            >
+              <Eye />
+            </Button>
           );
         },
       },
@@ -128,5 +97,7 @@ export function GroupHistoryTable({ data, title }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  return <DataTable table={table} title={title} filterColumn="Nama Kelompok" />;
+  return (
+    <DataTable table={table} title={title} filterColumn="Nama Kelompok" showColumnFilter={false} />
+  );
 }

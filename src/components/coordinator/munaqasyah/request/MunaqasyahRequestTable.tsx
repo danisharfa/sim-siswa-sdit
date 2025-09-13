@@ -11,13 +11,6 @@ import {
 } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
 import { RequestStatusAlertDialog } from './RequestStatusAlertDialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
@@ -29,7 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Semester, MunaqasyahRequestStatus, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
+import {
+  Semester,
+  MunaqasyahRequestStatus,
+  MunaqasyahStage,
+  MunaqasyahBatch,
+} from '@prisma/client';
 
 interface MunaqasyahRequest {
   id: string;
@@ -207,24 +205,21 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }) => {
-          const req = row.original;
-          if (req.status !== 'MENUNGGU') return null;
+          const request = row.original;
+          if (request.status !== 'MENUNGGU') return null;
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex size-8 p-0">
-                  <MoreVertical />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32 z-50">
-                <DropdownMenuItem onClick={() => handleOpenAcceptDialog(req)}>
-                  Terima
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleOpenRejectDialog(req)}>
-                  Tolak
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-2">
+              <Button variant="default" size="sm" onClick={() => handleOpenAcceptDialog(request)}>
+                Terima
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleOpenRejectDialog(request)}
+              >
+                Tolak
+              </Button>
+            </div>
           );
         },
       },
