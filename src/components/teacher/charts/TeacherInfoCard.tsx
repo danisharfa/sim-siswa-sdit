@@ -1,8 +1,9 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { User, Users, School, UserCheck } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
+// import { User, Users, School, UserCheck } from 'lucide-react';
+import { User, School } from 'lucide-react';
 import useSWR from 'swr';
 
 interface TeacherInfo {
@@ -97,7 +98,8 @@ export function TeacherInfoCard() {
     );
   }
 
-  const { teacherInfo, currentPeriod, totalStudents, totalGroups } = response.data;
+  // const { teacherInfo, currentPeriod, totalStudents, totalGroups } = response.data;
+  const { teacherInfo, currentPeriod } = response.data;
 
   return (
     <Card>

@@ -101,20 +101,20 @@ export async function fetchMunaqasyahSchedule() {
             fullName: schedule.coordinator.user.fullName,
           }
         : null,
-      // scheduleRequests: schedule.scheduleRequests.map((sr) => ({
-      //   id: sr.id,
-      //   request: {
-      //     ...sr.request,
-      //     student: {
-      //       nis: sr.request.student.nis,
-      //       fullName: sr.request.student.user.fullName,
-      //     },
-      //     teacher: {
-      //       nip: sr.request.teacher.nip,
-      //       fullName: sr.request.teacher.user.fullName,
-      //     },
-      //   },
-      // })),
+      scheduleRequests: schedule.scheduleRequests.map((sr) => ({
+        id: sr.requestId, // Menggunakan requestId sebagai id
+        request: {
+          ...sr.request,
+          student: {
+            nis: sr.request.student.nis,
+            fullName: sr.request.student.user.fullName,
+          },
+          teacher: {
+            nip: sr.request.teacher.nip,
+            fullName: sr.request.teacher.user.fullName,
+          },
+        },
+      })),
     }));
   } catch (error) {
     console.error('[FETCH_MUNAQASYAH_SCHEDULE]', error);

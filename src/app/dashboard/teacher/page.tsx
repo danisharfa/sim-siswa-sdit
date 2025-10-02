@@ -1,8 +1,8 @@
-import { requireTeacherRole } from '@/lib/auth/require-role';
+// import { requireTeacherRole } from '@/lib/auth/require-role';
 import { Management } from '@/components/teacher/charts/Management';
 
 export default async function TeacherDashboardPage() {
-  const user = await requireTeacherRole();
+  // const user = await requireTeacherRole();
 
   return (
     <div className="p-4">

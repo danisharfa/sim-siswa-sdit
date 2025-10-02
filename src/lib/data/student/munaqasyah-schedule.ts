@@ -76,9 +76,13 @@ export async function fetchMunaqasyahSchedule() {
       },
     });
 
-    return schedules.map((s) => ({
-      ...s,
-      date: s.date.toISOString(),
+    return schedules.map((schedule) => ({
+      ...schedule,
+      date: schedule.date.toISOString(),
+      scheduleRequests: schedule.scheduleRequests.map((sr) => ({
+        id: sr.requestId, // Menggunakan requestId sebagai id
+        request: sr.request,
+      })),
     }));
   } catch (error) {
     console.error('[FETCH_MUNAQASYAH_SCHEDULE]', error);
