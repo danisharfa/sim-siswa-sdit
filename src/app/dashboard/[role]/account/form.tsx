@@ -48,6 +48,10 @@ export function ChangePasswordForm() {
     },
   });
 
+  // Watch form values untuk menentukan apakah tombol harus disabled
+  const watchedValues = form.watch();
+  const isFormEmpty = !watchedValues.oldPassword?.trim() || !watchedValues.newPassword?.trim();
+
   const handleSubmit = async (values: ChangePasswordInput) => {
     setLoading(true);
 
@@ -85,9 +89,9 @@ export function ChangePasswordForm() {
   return (
     <Card className="shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl">Ganti Kata Sandi</CardTitle>
+        <CardTitle className="text-2xl">Ganti Password</CardTitle>
         <CardDescription>
-          Masukkan kata sandi lama Anda untuk mengganti kata sandi. Jika lupa, hubungi admin.
+          Masukkan password lama Anda untuk mengganti password. Jika lupa, hubungi admin.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -98,12 +102,12 @@ export function ChangePasswordForm() {
               name="oldPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kata Sandi Lama</FormLabel>
+                  <FormLabel>Password Lama</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showOld ? 'text' : 'password'}
-                        placeholder="Masukkan kata sandi lama"
+                        placeholder="Masukkan password lama"
                         {...field}
                       />
                       <Button
@@ -127,12 +131,12 @@ export function ChangePasswordForm() {
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kata Sandi Baru</FormLabel>
+                  <FormLabel>Password Baru</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showNew ? 'text' : 'password'}
-                        placeholder="Masukkan kata sandi baru"
+                        placeholder="Masukkan password baru"
                         {...field}
                       />
                       <Button
@@ -156,7 +160,7 @@ export function ChangePasswordForm() {
             <Button
               type="submit"
               className="w-full flex items-center justify-center"
-              disabled={loading}
+              disabled={loading || isFormEmpty}
             >
               {loading ? (
                 <>

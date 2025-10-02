@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth/get-session';
 import { ChangePasswordForm } from '@/app/dashboard/[role]/account/form';
 
-export default async function AccountPage({ params }: { params: Promise<{ role: string }> }) {
+type Params = Promise<{role: string}>;
+
+export default async function AccountPage({ params }: { params: Params }) {
   const { role } = await params;
   const session = await getSession();
 

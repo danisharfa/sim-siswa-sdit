@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, getSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +19,7 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim() || !password.trim()) {
       toast.error('Username dan password harus diisi');
       return;
@@ -35,26 +35,17 @@ export function LoginForm() {
         callbackUrl: '/dashboard',
       });
 
-      console.log('🎯 Login result:', result);
-
-      if (result?.error || !result?.url) {
+      if (result?.error) {
         toast.error('Username atau password salah');
         setLoading(false);
         return;
       }
 
-      toast.success('Berhasil login! Mengarahkan ke dashboard...');
-      
-      const session = await getSession();
-      const role = session?.user?.role;
-
-      if (!role) {
-        toast.error('Gagal mendapatkan informasi role pengguna');
-        setLoading(false);
-        return;
+      if (result?.ok) {
+        toast.success('Berhasil login! Mengarahkan ke dashboard...');
+        // Redirect ke dashboard utama, biar page.tsx yang handle role redirect
+        router.replace('/dashboard');
       }
-
-      router.replace(`/dashboard/${role}`);
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Terjadi kesalahan sistem. Silakan coba lagi.');
@@ -66,9 +57,7 @@ export function LoginForm() {
     <Card className="border-0 shadow-lg">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">Masuk</CardTitle>
-        <CardDescription>
-          Gunakan username dan password yang telah diberikan
-        </CardDescription>
+        <CardDescription>Gunakan username dan password yang telah diberikan</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

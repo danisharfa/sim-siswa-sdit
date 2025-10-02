@@ -40,7 +40,7 @@ export async function fetchMunaqasyahSchedule() {
             user: { select: { fullName: true } },
           },
         },
-        scheduledByCoordinator: {
+        coordinator: {
           include: {
             user: { select: { fullName: true } },
           },
@@ -94,27 +94,27 @@ export async function fetchMunaqasyahSchedule() {
             fullName: schedule.examiner.user.fullName,
           }
         : null,
-      coordinator: schedule.scheduledByCoordinator
+      coordinator: schedule.coordinator
         ? {
-            id: schedule.scheduledByCoordinator.userId,
-            nip: schedule.scheduledByCoordinator.nip,
-            fullName: schedule.scheduledByCoordinator.user.fullName,
+            id: schedule.coordinator.userId,
+            nip: schedule.coordinator.nip,
+            fullName: schedule.coordinator.user.fullName,
           }
         : null,
-      scheduleRequests: schedule.scheduleRequests.map((sr) => ({
-        id: sr.id,
-        request: {
-          ...sr.request,
-          student: {
-            nis: sr.request.student.nis,
-            fullName: sr.request.student.user.fullName,
-          },
-          teacher: {
-            nip: sr.request.teacher.nip,
-            fullName: sr.request.teacher.user.fullName,
-          },
-        },
-      })),
+      // scheduleRequests: schedule.scheduleRequests.map((sr) => ({
+      //   id: sr.id,
+      //   request: {
+      //     ...sr.request,
+      //     student: {
+      //       nis: sr.request.student.nis,
+      //       fullName: sr.request.student.user.fullName,
+      //     },
+      //     teacher: {
+      //       nip: sr.request.teacher.nip,
+      //       fullName: sr.request.teacher.user.fullName,
+      //     },
+      //   },
+      // })),
     }));
   } catch (error) {
     console.error('[FETCH_MUNAQASYAH_SCHEDULE]', error);

@@ -12,18 +12,20 @@ export async function GET() {
 
     const users = await prisma.user.findMany({
       orderBy: { username: 'asc' },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },  
     });
-
-    const mapData = users.map((user) => ({
-      ...user,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
-    }));
 
     return NextResponse.json({
       success: true,
       message: 'Berhasil mengambil daftar pengguna',
-      data: mapData,
+      data: users,
     });
   } catch (error) {
     console.error('Gagal mengambil daftar pengguna:', error);

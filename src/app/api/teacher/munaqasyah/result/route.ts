@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Role, MunaqasyahGrade, MunaqasyahRequestStatus, MunaqasyahStage } from '@prisma/client';
+import { Role, MunaqasyahRequestStatus, MunaqasyahStage } from '@prisma/client';
+import {
+  calculateTasmiTotalScore,
+  calculateMunaqasyahTotalScore,
+  scoreToGrade,
+  validateTasmiDetails,
+  validateMunaqasyahDetails,
+  TasmiDetailInput,
+  MunaqasyahDetailInput,
+  calculateFinalScore,
+} from '@/lib/utils/munaqasyah-scoring';
 
 export async function GET() {
   try {
@@ -10,85 +20,61 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!teacher) {
+      return NextResponse.json(
+        { success: false, message: 'Guru tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    const whereClause = {
+      OR: [
+        { request: { teacherId: teacher.userId } },
+        { schedule: { examinerId: teacher.userId } },
+      ],
+    };
+
     const results = await prisma.munaqasyahResult.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
         request: {
           select: {
-            batch: true,
             stage: true,
             studentId: true,
             juz: { select: { id: true, name: true } },
-            student: {
-              select: {
-                nis: true,
-                user: { select: { fullName: true } },
-              },
-            },
+            student: { select: { nis: true, user: { select: { fullName: true } } } },
             group: {
               select: {
                 name: true,
-                classroom: {
-                  select: {
-                    name: true,
-                    academicYear: true,
-                    semester: true,
-                  },
-                },
+                classroom: { select: { name: true, academicYear: true, semester: true } },
               },
             },
+            batch: true,
           },
         },
         schedule: {
-          select: {
-            date: true,
-            sessionName: true,
-            startTime: true,
-            endTime: true,
-            location: true,
-          },
+          select: { date: true, sessionName: true, startTime: true, endTime: true, location: true },
         },
-        tasmiScore: {
-          select: {
-            tajwid: true,
-            kelancaran: true,
-            adab: true,
-            note: true,
-            totalScore: true,
-          },
-        },
-        munaqasyahScore: {
-          select: {
-            tajwid: true,
-            kelancaran: true,
-            adab: true,
-            note: true,
-            totalScore: true,
-          },
-        },
+        // ⬇️ tambahkan initialScore untuk hitung persentase
+        tasmiScores: { select: { initialScore: true, totalScore: true } },
+        // ⬇️ di detail munaqasyah totalScore = raw basis 50; initialScore fix 50 untuk persentase
+        munaqasyahScores: { select: { totalScore: true } },
       },
     });
 
-    // Get final results for students who have completed both stages
+    // Ambil final results untuk penautan
     const finalResults = await prisma.munaqasyahFinalResult.findMany({
       include: {
         juz: { select: { id: true, name: true } },
-        student: {
-          select: {
-            nis: true,
-            user: { select: { fullName: true } },
-          },
-        },
+        student: { select: { userId: true, nis: true, user: { select: { fullName: true } } } },
         group: {
           select: {
             name: true,
-            classroom: {
-              select: {
-                name: true,
-                academicYear: true,
-                semester: true,
-              },
-            },
+            classroom: { select: { name: true, academicYear: true, semester: true } },
           },
         },
         tasmiResult: {
@@ -119,30 +105,44 @@ export async function GET() {
         },
       },
     });
-
-    // Create a map of final results by student+juz+batch
-    const finalResultMap = new Map<string, (typeof finalResults)[0]>();
-    finalResults.forEach((fr) => {
-      const key = `${fr.studentId}_${fr.juzId}_${fr.batch}`;
-      finalResultMap.set(key, fr);
-    });
+    const finalMap = new Map(
+      finalResults.map((fr) => [`${fr.studentId}_${fr.juzId}_${fr.batch}`, fr])
+    );
 
     const formatted = results.map((r) => {
-      // Get score based on stage
-      let score = 0;
-      if (r.request.stage === 'TASMI' && r.tasmiScore) {
-        score = r.tasmiScore.totalScore;
-      } else if (r.request.stage === 'MUNAQASYAH' && r.munaqasyahScore) {
-        score = r.munaqasyahScore.totalScore;
+      // Skor utama sudah dinormalisasi 0–100
+      const score = r.totalScore;
+
+      // Rata-rata Tasmi (raw & %)
+      let tasmiRawAvg = 0;
+      let tasmiPercentAvg = 0;
+      if (r.tasmiScores.length > 0) {
+        tasmiRawAvg =
+          r.tasmiScores.reduce((acc, d) => acc + d.totalScore, 0) / r.tasmiScores.length;
+        tasmiPercentAvg =
+          r.tasmiScores.reduce((acc, d) => {
+            const init = Math.max(1, d.initialScore ?? 0);
+            return acc + (init > 0 ? (d.totalScore / init) * 100 : 0);
+          }, 0) / r.tasmiScores.length;
       }
 
-      // Check if there's a final result for this student+juz+batch
-      const finalResultKey = `${r.request.studentId}_${r.request.juz.id}_${r.request.batch}`;
-      const finalResult = finalResultMap.get(finalResultKey);
+      // Rata-rata Munaqasyah (raw basis 50 & %)
+      let munaRawAvg = 0;
+      let munaPercentAvg = 0;
+      if (r.munaqasyahScores.length > 0) {
+        munaRawAvg =
+          r.munaqasyahScores.reduce((acc, d) => acc + d.totalScore, 0) / r.munaqasyahScores.length;
+        munaPercentAvg =
+          r.munaqasyahScores.reduce((acc, d) => acc + (d.totalScore / 50) * 100, 0) /
+          r.munaqasyahScores.length;
+      }
+
+      const finalKey = `${r.request.studentId}_${r.request.juz.id}_${r.request.batch}`;
+      const fr = finalMap.get(finalKey);
 
       return {
         id: r.id,
-        score,
+        score, // 0–100
         grade: r.grade,
         passed: r.passed,
         schedule: r.schedule,
@@ -155,16 +155,26 @@ export async function GET() {
         juz: r.request.juz,
         student: r.request.student,
         scoreDetails: {
-          tasmi: r.tasmiScore,
-          munaqasyah: r.munaqasyahScore,
+          tasmi: r.tasmiScores.length
+            ? {
+                rawAverage: tasmiRawAvg, // contoh: 72 (jika 44 & 100)
+                percentAverage: tasmiPercentAvg, // contoh: 93.3
+              }
+            : null,
+          munaqasyah: r.munaqasyahScores.length
+            ? {
+                rawAverage: munaRawAvg, // basis 50
+                percentAverage: munaPercentAvg, // 0–100
+              }
+            : null,
         },
-        finalResult: finalResult
+        finalResult: fr
           ? {
-              id: finalResult.id,
-              finalScore: finalResult.finalScore,
-              finalGrade: finalResult.finalGrade,
-              passed: finalResult.passed,
-              createdAt: finalResult.createdAt.toISOString(),
+              id: fr.id,
+              finalScore: fr.finalScore,
+              finalGrade: fr.finalGrade,
+              passed: fr.passed,
+              createdAt: fr.createdAt.toISOString(),
             }
           : null,
       };
@@ -174,10 +184,7 @@ export async function GET() {
   } catch (error) {
     console.error('[GET_MUNAQASYAH_RESULT]', error);
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Gagal mengambil data hasil munaqasyah',
-      },
+      { success: false, message: 'Gagal mengambil data hasil munaqasyah' },
       { status: 500 }
     );
   }
@@ -191,7 +198,30 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { scheduleId, requestId, stage, tasmi, munaqasyah } = body;
+    const { scheduleId, requestId, stage, tasmiDetails, munaqasyahDetails } = body as {
+      scheduleId: string;
+      requestId: string;
+      stage: MunaqasyahStage;
+      tasmiDetails?: Array<{
+        surahId: number;
+        initialScore: number;
+        khofiAwalAyat: number;
+        khofiMakhroj: number;
+        khofiTajwidMad: number;
+        jaliBaris: number;
+        jaliLebihSatuKalimat: number;
+        note?: string;
+      }>;
+      munaqasyahDetails?: Array<{
+        questionNo: number;
+        khofiAwalAyat: number;
+        khofiMakhroj: number;
+        khofiTajwidMad: number;
+        jaliBaris: number;
+        jaliLebihSatuKalimat: number;
+        note?: string;
+      }>;
+    };
 
     if (!scheduleId || !requestId || !stage) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
@@ -204,15 +234,7 @@ export async function POST(req: NextRequest) {
           select: {
             userId: true,
             group: {
-              select: {
-                id: true,
-                classroom: {
-                  select: {
-                    academicYear: true,
-                    semester: true,
-                  },
-                },
-              },
+              select: { id: true, classroom: { select: { academicYear: true, semester: true } } },
             },
           },
         },
@@ -228,76 +250,67 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if result already exists
-    const existingResult = await prisma.munaqasyahResult.findFirst({
-      where: {
-        requestId,
-        scheduleId,
-      },
+    // pastikan belum ada result utk request ini (1 request = 1 result)
+    const existing = await prisma.munaqasyahResult.findFirst({
+      where: { requestId },
     });
-
-    if (existingResult) {
+    if (existing) {
       return NextResponse.json(
-        { success: false, message: 'Hasil munaqasyah sudah ada untuk permintaan ini' },
+        { success: false, message: 'Hasil untuk request ini sudah ada' },
         { status: 400 }
       );
     }
 
-    let score = 0;
-    let grade: MunaqasyahGrade = MunaqasyahGrade.TIDAK_LULUS;
+    // helper: clamp 0..100
+    // const clamp100 = (n: number) => Math.max(0, Math.min(100, n));
 
-    // Create score and result based on stage
-    if (stage === MunaqasyahStage.TASMI && tasmi) {
-      // Validate tasmi scores
-      if (
-        tasmi.tajwid < 0 ||
-        tasmi.tajwid > 100 ||
-        tasmi.kelancaran < 0 ||
-        tasmi.kelancaran > 100 ||
-        tasmi.adab < 0 ||
-        tasmi.adab > 100
-      ) {
-        return NextResponse.json(
-          { success: false, message: 'Nilai harus antara 0-100' },
-          { status: 400 }
-        );
+    // let totalScore = 0;
+
+    if (stage === MunaqasyahStage.TASMI) {
+      // Validate input
+      const validation = validateTasmiDetails(tasmiDetails || []);
+      if (!validation.isValid) {
+        return NextResponse.json({ success: false, message: validation.error }, { status: 400 });
       }
 
-      const total = tasmi.tajwid + tasmi.kelancaran + tasmi.adab;
-      score = total / 3;
+      // TASMI
+      const { totalScore: calculatedScore, detailsToSave } = calculateTasmiTotalScore(
+        tasmiDetails as TasmiDetailInput[]
+      );
 
-      // Determine grade based on TASMI score
-      if (score >= 91) grade = MunaqasyahGrade.MUMTAZ;
-      else if (score >= 85) grade = MunaqasyahGrade.JAYYID_JIDDAN;
-      else if (score >= 80) grade = MunaqasyahGrade.JAYYID;
+      const totalScore = calculatedScore; // ⬅️ sudah 1 desimal dari util
+      const grade = scoreToGrade(totalScore);
+      const passed = totalScore >= 80;
 
-      const passed = score >= 80;
-
-      // Create result first
       const result = await prisma.munaqasyahResult.create({
         data: {
           requestId,
           scheduleId,
+          totalScore, // ⬅️ 1 desimal
           grade,
           passed,
         },
       });
 
-      // Create tasmi score with reference to result
-      await prisma.tasmiScore.create({
-        data: {
-          tajwid: tasmi.tajwid,
-          kelancaran: tasmi.kelancaran,
-          adab: tasmi.adab,
-          note: tasmi.note || null,
-          totalScore: score,
+      // simpan detail: detailsToSave.totalScore = persen 1 desimal
+      await prisma.tasmiDetail.createMany({
+        data: detailsToSave.map((detail) => ({
           resultId: result.id,
-        },
+          surahId: detail.surahId,
+          initialScore: detail.initialScore,
+          khofiAwalAyat: detail.khofiAwalAyat,
+          khofiMakhroj: detail.khofiMakhroj,
+          khofiTajwidMad: detail.khofiTajwidMad,
+          jaliBaris: detail.jaliBaris,
+          jaliLebihSatuKalimat: detail.jaliLebihSatuKalimat,
+          totalScore: detail.totalScore, // ⬅️ persen 1 desimal (88.0, 98.5, ...)
+          note: detail.note ?? null,
+        })),
       });
 
-      // Create next stage request if passed
+      // Opsional: auto-create next request (MUNAQASYAH) bila lulus
       if (passed) {
-        const existingNextRequest = await prisma.munaqasyahRequest.findFirst({
+        const existNext = await prisma.munaqasyahRequest.findFirst({
           where: {
             studentId: request.studentId,
             juzId: request.juzId,
@@ -305,8 +318,7 @@ export async function POST(req: NextRequest) {
             stage: MunaqasyahStage.MUNAQASYAH,
           },
         });
-
-        if (!existingNextRequest) {
+        if (!existNext) {
           await prisma.munaqasyahRequest.create({
             data: {
               studentId: request.studentId,
@@ -323,59 +335,54 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'Hasil Tasmi berhasil disimpan',
-        data: result,
+        message: 'Hasil Tasmi disimpan',
+        data: { id: result.id },
       });
-    } else if (stage === MunaqasyahStage.MUNAQASYAH && munaqasyah) {
-      // Validate munaqasyah scores
-      if (
-        munaqasyah.tajwid < 0 ||
-        munaqasyah.tajwid > 100 ||
-        munaqasyah.kelancaran < 0 ||
-        munaqasyah.kelancaran > 100 ||
-        munaqasyah.adab < 0 ||
-        munaqasyah.adab > 100
-      ) {
-        return NextResponse.json(
-          { success: false, message: 'Nilai harus antara 0-100' },
-          { status: 400 }
-        );
+    }
+
+    if (stage === MunaqasyahStage.MUNAQASYAH) {
+      // Validate input
+      const validation = validateMunaqasyahDetails(munaqasyahDetails || []);
+      if (!validation.isValid) {
+        return NextResponse.json({ success: false, message: validation.error }, { status: 400 });
       }
 
-      const total = munaqasyah.tajwid + munaqasyah.kelancaran + munaqasyah.adab;
-      score = total / 3;
+      // MUNAQASYAH
+      const { totalScore: calculatedScore, detailsToSave } = calculateMunaqasyahTotalScore(
+        munaqasyahDetails as MunaqasyahDetailInput[]
+      );
 
-      // Determine grade based on MUNAQASYAH score
-      if (score >= 91) grade = MunaqasyahGrade.MUMTAZ;
-      else if (score >= 85) grade = MunaqasyahGrade.JAYYID_JIDDAN;
-      else if (score >= 80) grade = MunaqasyahGrade.JAYYID;
+      const totalScore = calculatedScore; // ⬅️ 1 desimal dari util
+      const grade = scoreToGrade(totalScore);
+      const passed = totalScore >= 80;
 
-      const passed = score >= 80;
-
-      // Create result first
       const result = await prisma.munaqasyahResult.create({
         data: {
           requestId,
           scheduleId,
+          totalScore, // ⬅️ 1 desimal
           grade,
           passed,
         },
       });
 
-      // Create munaqasyah score with reference to result
-      await prisma.munaqasyahScore.create({
-        data: {
-          tajwid: munaqasyah.tajwid,
-          kelancaran: munaqasyah.kelancaran,
-          adab: munaqasyah.adab,
-          note: munaqasyah.note || null,
-          totalScore: score,
+      await prisma.munaqasyahDetail.createMany({
+        data: detailsToSave.map((c) => ({
           resultId: result.id,
-        },
+          questionNo: c.questionNo,
+          initialScore: 50,
+          khofiAwalAyat: c.khofiAwalAyat ?? 0,
+          khofiMakhroj: c.khofiMakhroj ?? 0,
+          khofiTajwidMad: c.khofiTajwidMad ?? 0,
+          jaliBaris: c.jaliBaris ?? 0,
+          jaliLebihSatuKalimat: c.jaliLebihSatuKalimat ?? 0,
+          totalScore: c.totalScore, // tetap raw basis 50
+          note: c.note ?? null,
+        })),
       });
 
-      // Check if there's a TASMI result for final calculation
-      const tasmiResult = await prisma.munaqasyahResult.findFirst({
+      // Buat FINAL jika TASMI sudah ada
+      const tasmi = await prisma.munaqasyahResult.findFirst({
         where: {
           request: {
             studentId: request.studentId,
@@ -384,27 +391,34 @@ export async function POST(req: NextRequest) {
             stage: MunaqasyahStage.TASMI,
           },
         },
-        include: {
-          tasmiScore: true,
-        },
       });
 
-      // Create final result if both stages are completed
-      if (tasmiResult && tasmiResult.tasmiScore) {
-        const finalScore = tasmiResult.tasmiScore.totalScore * 0.6 + score * 0.4;
-        let finalGrade: MunaqasyahGrade = MunaqasyahGrade.TIDAK_LULUS;
-
-        if (finalScore >= 91) finalGrade = MunaqasyahGrade.MUMTAZ;
-        else if (finalScore >= 85) finalGrade = MunaqasyahGrade.JAYYID_JIDDAN;
-        else if (finalScore >= 80) finalGrade = MunaqasyahGrade.JAYYID;
-
-        await prisma.munaqasyahFinalResult.create({
-          data: {
+      // Final result (pakai util yg sudah round1)
+      if (tasmi) {
+        const finalScore = calculateFinalScore(tasmi.totalScore, totalScore); // ⬅️ 1 desimal
+        const finalGrade = scoreToGrade(finalScore);
+        await prisma.munaqasyahFinalResult.upsert({
+          where: {
+            // kombinasi unik siswa+juz+batch
+            studentId_juzId_batch: {
+              studentId: request.studentId,
+              juzId: request.juzId,
+              batch: request.batch,
+            },
+          },
+          update: {
+            tasmiResultId: tasmi.id,
+            munaqasyahResultId: result.id,
+            finalScore, // ⬅️ 1 desimal
+            finalGrade,
+            passed: finalScore >= 80,
+          },
+          create: {
             studentId: request.studentId,
             groupId: request.groupId,
             juzId: request.juzId,
             batch: request.batch,
-            tasmiResultId: tasmiResult.id,
+            tasmiResultId: tasmi.id,
             munaqasyahResultId: result.id,
             finalScore,
             finalGrade,
@@ -415,23 +429,14 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'Hasil Munaqasyah berhasil disimpan',
-        data: result,
+        message: 'Hasil Munaqasyah disimpan',
+        data: { id: result.id },
       });
-    } else {
-      return NextResponse.json(
-        { success: false, message: 'Data nilai tidak valid untuk stage yang dipilih' },
-        { status: 400 }
-      );
     }
+
+    return NextResponse.json({ success: false, message: 'Stage tidak valid' }, { status: 400 });
   } catch (error) {
     console.error('[POST_TEACHER_MUNAQASYAH_RESULT]', error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Gagal menyimpan hasil',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Gagal menyimpan hasil' }, { status: 500 });
   }
 }

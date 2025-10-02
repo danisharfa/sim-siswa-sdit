@@ -5,14 +5,12 @@ import { BackButton } from '@/components/ui/back-button';
 import { getGroupHistoryId } from '@/lib/data/coordinator/coordinator-group-member';
 import { GroupHistoryManagement } from '@/components/coordinator/group-members/history/GroupHistoryManagement';
 
-export default async function CoordinatorGroupHistoryDetailPage(props: {
-  params: Promise<{ id: string }>;
-}) {
-  const params = await props.params;
-  const groupId = params.id;
+type Params = Promise<{ id: string }>;
 
-  const groupHistory = await getGroupHistoryId(groupId);
+export default async function CoordinatorGroupHistoryDetailPage({ params }: { params: Params }) {
+  const { id } = await params;
 
+  const groupHistory = await getGroupHistoryId(id);
   if (!groupHistory) return notFound();
 
   return (
@@ -39,7 +37,7 @@ export default async function CoordinatorGroupHistoryDetailPage(props: {
           </div>
         }
       >
-        <GroupHistoryManagement groupId={groupId} />
+        <GroupHistoryManagement groupId={id} />
       </Suspense>
     </div>
   );

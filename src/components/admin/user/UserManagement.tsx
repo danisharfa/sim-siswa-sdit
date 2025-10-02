@@ -30,9 +30,9 @@ export function UserManagement() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-70 w-full" />
-        <Skeleton className="h-70 w-full" />
-        <Skeleton className="h-70 w-full" />
-        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-80 w-full" />
+        <Skeleton className="h-80 w-full" />
+        <Skeleton className="h-80 w-full" />
       </div>
     );
   }

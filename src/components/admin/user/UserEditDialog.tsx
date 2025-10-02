@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 interface UserEditDialogProps {
-  user: { id: string; username: string; fullName: string };
+  user: { id: string; username: string };
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSave: () => void;
@@ -16,11 +16,10 @@ interface UserEditDialogProps {
 
 export function UserEditDialog({ user, open, onOpenChange, onSave }: UserEditDialogProps) {
   const [username, setUsername] = useState(user.username);
-  const [fullName, setFullName] = useState(user.fullName);
   const [loading, setLoading] = useState(false);
 
-  const isUnchanged = username === user.username && fullName === user.fullName;
-  const isEmpty = !username.trim() || !fullName.trim();
+  const isUnchanged = username === user.username;
+  const isEmpty = !username.trim();
 
   async function handleEdit() {
     if (isEmpty || isUnchanged) return;
@@ -30,7 +29,7 @@ export function UserEditDialog({ user, open, onOpenChange, onSave }: UserEditDia
       const res = await fetch(`/api/admin/user/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, fullName }),
+        body: JSON.stringify({ username }),
       });
 
       const json = await res.json();
@@ -59,10 +58,6 @@ export function UserEditDialog({ user, open, onOpenChange, onSave }: UserEditDia
           <div>
             <Label htmlFor="username">Username</Label>
             <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="fullName">Nama</Label>
-            <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
           </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

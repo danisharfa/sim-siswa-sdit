@@ -53,8 +53,8 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
           gender: data.gender ?? Gender.PILIH,
           bloodType: data.bloodType ?? BloodType.PILIH,
           address: data.address ?? '',
-          phoneNumber: data.phoneNumber ?? '',
           email: data.email ?? '',
+          phoneNumber: data.phoneNumber ?? '',
         });
 
         if (data.birthDate) {
@@ -88,11 +88,13 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
       if (!res.ok) throw new Error();
 
-      toast.success('Detail user berhasil diperbarui!');
+      toast.success(data.message);
     } catch {
-      toast.error('Gagal memperbarui detail user!');
+      toast.error('Gagal memperbarui detail user');
     }
   };
 

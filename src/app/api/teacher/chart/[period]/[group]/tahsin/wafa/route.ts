@@ -107,7 +107,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       };
 
       if (groupId) {
-        activeGroupFilter.groupId = groupId;
+        activeGroupFilter.id = groupId;
       }
 
       const activeGroups = await prisma.group.findMany({

@@ -20,7 +20,7 @@ interface Props {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function PromoteDialogWrapper({ classroomId, currentAcademicYear, currentSemester }: Props) {
+export function PromoteSemesterButton({ classroomId, currentAcademicYear, currentSemester }: Props) {
   const [open, setOpen] = useState(false);
 
   const {

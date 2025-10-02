@@ -82,7 +82,7 @@ export function HomeActivityForm() {
 
       if (!data.success) throw new Error(data.message);
 
-      toast.success('Aktivitas berhasil disimpan!');
+      toast.success('Aktivitas berhasil disimpan');
       resetForm();
     } catch (error) {
       console.error('Error saving activity:', error);

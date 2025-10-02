@@ -73,22 +73,16 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         },
         results: {
           include: {
-            tasmiScore: {
+            tasmiScores: {
               select: {
-                tajwid: true,
-                kelancaran: true,
-                adab: true,
-                note: true,
                 totalScore: true,
+                note: true,
               },
             },
-            munaqasyahScore: {
+            munaqasyahScores: {
               select: {
-                tajwid: true,
-                kelancaran: true,
-                adab: true,
-                note: true,
                 totalScore: true,
+                note: true,
               },
             },
           },
@@ -113,14 +107,14 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       // Determine if this stage has been completed
       let hasResult = false;
       if (studentResult) {
-        if (r.stage === 'TASMI' && studentResult.tasmiScore) {
+        if (r.stage === 'TASMI' && studentResult.tasmiScores) {
           hasResult = true;
-        } else if (r.stage === 'MUNAQASYAH' && studentResult.munaqasyahScore) {
+        } else if (r.stage === 'MUNAQASYAH' && studentResult.munaqasyahScores) {
           hasResult = true;
         }
         // Also hide students who have completed MUNAQASYAH stage completely
         // (they shouldn't appear in any further assessment forms)
-        if (studentResult.munaqasyahScore) {
+        if (studentResult.munaqasyahScores) {
           hasResult = true;
         }
       }
@@ -143,8 +137,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
                 id: studentResult.id,
                 passed: studentResult.passed,
                 grade: studentResult.grade,
-                tasmiScore: studentResult.tasmiScore,
-                munaqasyahScore: studentResult.munaqasyahScore,
+                tasmiScore: studentResult.tasmiScores,
+                munaqasyahScore: studentResult.munaqasyahScores,
               }
             : null,
       };

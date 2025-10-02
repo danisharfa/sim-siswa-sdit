@@ -18,6 +18,15 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
   const { username, fullName, role } = validatedFields.data;
   const hashedPassword = await hash(username, 10);
 
+  const existingUser = await prisma.user.findUnique({
+    where: { username },
+  });
+
+  if (existingUser) {
+    console.log(`Username '${username}' sudah ada dalam sistem`);
+    return { success: false, message: 'Username sudah digunakan' };
+  }
+
   try {
     const newUser = await prisma.user.create({
       data: {
@@ -73,7 +82,7 @@ export const addUserCredentials = async (prevState: unknown, formData: FormData)
       }
     }
 
-    return { success: true, message: 'User berhasil ditambah!' };
+    return { success: true, message: 'Pengguna berhasil ditambah' };
   } catch (error) {
     if (error instanceof AuthError) {
       return { success: false, message: error.message };

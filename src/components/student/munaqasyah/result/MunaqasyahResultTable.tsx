@@ -65,18 +65,32 @@ interface MunaqasyahResult {
   };
   scoreDetails?: {
     tasmi?: {
-      tajwid: number;
-      kelancaran: number;
-      adab: number;
-      note?: string | null;
       totalScore: number;
+      details: Array<{
+        surahId: number;
+        initialScore: number;
+        khofiAwalAyat: number;
+        khofiMakhroj: number;
+        khofiTajwidMad: number;
+        jaliBaris: number;
+        jaliLebihSatuKalimat: number;
+        totalScore: number;
+        note?: string | null;
+      }>;
     } | null;
     munaqasyah?: {
-      tajwid: number;
-      kelancaran: number;
-      adab: number;
-      note?: string | null;
       totalScore: number;
+      details: Array<{
+        questionNo: number;
+        initialScore: number;
+        khofiAwalAyat: number;
+        khofiMakhroj: number;
+        khofiTajwidMad: number;
+        jaliBaris: number;
+        jaliLebihSatuKalimat: number;
+        totalScore: number;
+        note?: string | null;
+      }>;
     } | null;
   };
   finalResult?: {
@@ -277,7 +291,7 @@ export function MunaqasyahResultTable({ data }: Props) {
 
           return (
             <div className="text-sm">
-              <div className="font-bold text-base">{finalResult.finalScore.toFixed(1)}</div>
+              <div className="font-bold text-base">{(finalResult.finalScore ?? 0).toFixed(1)}</div>
               <div className="font-medium text-primary text-xs">
                 {gradeLabels[finalResult.finalGrade] || finalResult.finalGrade}
               </div>
@@ -303,24 +317,24 @@ export function MunaqasyahResultTable({ data }: Props) {
               {scoreDetails.tasmi && (
                 <div className="space-y-0.5">
                   <div className="font-medium">Tasmi:</div>
-                  <div>Tajwid: {scoreDetails.tasmi.tajwid || 0}</div>
-                  <div>Kelancaran: {scoreDetails.tasmi.kelancaran || 0}</div>
-                  <div>Adab: {scoreDetails.tasmi.adab || 0}</div>
-                  {scoreDetails.tasmi.note && (
-                    <div className="text-muted-foreground">Catatan: {scoreDetails.tasmi.note}</div>
+                  <div>Total Score: {scoreDetails.tasmi.totalScore.toFixed(1)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {scoreDetails.tasmi.details.length} surah dinilai
+                  </div>
+                  {scoreDetails.tasmi.details.some((d) => d.note) && (
+                    <div className="text-muted-foreground">Catatan tersedia</div>
                   )}
                 </div>
               )}
               {scoreDetails.munaqasyah && (
                 <div className="space-y-0.5">
                   <div className="font-medium">Munaqasyah:</div>
-                  <div>Tajwid: {scoreDetails.munaqasyah.tajwid || 0}</div>
-                  <div>Kelancaran: {scoreDetails.munaqasyah.kelancaran || 0}</div>
-                  <div>Adab: {scoreDetails.munaqasyah.adab || 0}</div>
-                  {scoreDetails.munaqasyah.note && (
-                    <div className="text-muted-foreground">
-                      Catatan: {scoreDetails.munaqasyah.note}
-                    </div>
+                  <div>Total Score: {scoreDetails.munaqasyah.totalScore.toFixed(1)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {scoreDetails.munaqasyah.details.length} soal dijawab
+                  </div>
+                  {scoreDetails.munaqasyah.details.some((d) => d.note) && (
+                    <div className="text-muted-foreground">Catatan tersedia</div>
                   )}
                 </div>
               )}

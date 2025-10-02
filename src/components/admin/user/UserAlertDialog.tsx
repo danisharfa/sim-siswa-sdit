@@ -52,10 +52,7 @@ export function UserAlertDialog({
         throw new Error(data.message || 'Terjadi kesalahan');
       }
 
-      toast.success(
-        data.message ||
-          (type === 'reset' ? 'Password user berhasil direset!' : 'User berhasil dihapus!')
-      );
+      toast.success(data.message);
 
       onConfirm();
       onOpenChange(false);

@@ -5,9 +5,8 @@ import { ScoreForm } from '@/components/teacher/report/score/ScoreForm';
 
 type Params = Promise<{ groupId: string; studentId: string }>;
 
-export default async function ScorePage(props: { params: Params }) {
-  const params = await props.params;
-  const { groupId, studentId } = params;
+export default async function ScorePage({params}: { params: Params }) {
+  const { groupId, studentId } = await params;
 
   const student = await getStudent(groupId, studentId);
   if (!student) return notFound();

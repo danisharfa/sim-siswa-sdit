@@ -93,10 +93,10 @@ export default function CoordinatorProfileDetail({ userId }: { userId: string })
 
       if (!res.ok) throw new Error();
 
-      toast.success('Detail user berhasil diperbarui!');
+      toast.success('Detail user berhasil diperbarui');
     } catch (error) {
       console.error('Error updating user:', error);
-      toast.error('Gagal memperbarui detail user!');
+      toast.error('Gagal memperbarui detail user');
     }
   };
 

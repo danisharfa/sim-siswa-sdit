@@ -32,14 +32,16 @@ export default async function UserPage({ params }: { params: Params }) {
 
   return (
     <div className="p-4">
-      <BackButton href={`/dashboard/admin/users`} />
-      <h1 className="text-2xl font-bold mb-4">
-        {role === Role.student
-          ? `Siswa - ${user.fullName}`
-          : role === Role.teacher
-          ? `Guru - ${user.fullName}`
-          : `Koordinator - ${user.fullName}`}
-      </h1>
+      <div className="flex items-center mb-4">
+        <BackButton href={`/dashboard/admin/users`} />
+        <h1 className="text-2xl font-bold ml-4">
+          {role === Role.student
+            ? `Siswa - ${user.fullName}`
+            : role === Role.teacher
+            ? `Guru - ${user.fullName}`
+            : `Koordinator - ${user.fullName}`}
+        </h1>
+      </div>
 
       <UserDetail userId={id} role={role} />
     </div>

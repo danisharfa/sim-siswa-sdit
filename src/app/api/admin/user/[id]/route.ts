@@ -16,7 +16,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { username, fullName, resetPassword } = await req.json();
+    const { username, resetPassword } = await req.json();
 
     const existingUser = await prisma.user.findUnique({ where: { id } });
     if (!existingUser) {
@@ -25,17 +25,32 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const updateData: {
       username?: string;
-      fullName?: string;
       password?: string;
     } = {};
 
-    if (username) updateData.username = username;
-    if (fullName) updateData.fullName = fullName;
+    if (username) {
+      // Check if username already exists (excluding current user)
+      const existingUsername = await prisma.user.findFirst({
+        where: {
+          username,
+          id: { not: id },
+        },
+      });
+
+      if (existingUsername) {
+        return NextResponse.json(
+          { success: false, message: 'Username sudah digunakan' },
+          { status: 400 }
+        );
+      }
+
+      updateData.username = username;
+    }
 
     if (resetPassword) {
       if (!existingUser.username) {
         return NextResponse.json(
-          { success: false, message: 'Invalid username for password reset' },
+          { success: false, message: 'Nama pengguna tidak valid untuk reset password' },
           { status: 400 }
         );
       }
@@ -51,7 +66,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({
       success: true,
-      message: resetPassword ? 'Password berhasil direset' : 'User berhasil diupdate',
+      message: resetPassword ? 'Password berhasil direset' : 'Username berhasil diperbarui',
     });
   } catch (error) {
     console.error('Update user error:', error);
@@ -79,9 +94,12 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
 
     await prisma.user.delete({ where: { id } });
 
-    return NextResponse.json({ success: true, message: 'User deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Pengguna berhasil dihapus' });
   } catch (error) {
     console.error('Delete user error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to delete user' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Pengguna gagal dihapus' },
+      { status: 500 }
+    );
   }
 }

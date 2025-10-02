@@ -32,7 +32,7 @@ export function AddUserForm({ onUserAdded }: Props) {
     if (!state) return;
 
     if (state.success) {
-      toast.success(state.message || 'User berhasil ditambah!');
+      toast.success(state.message);
       onUserAdded();
       setRole(initialRole);
 

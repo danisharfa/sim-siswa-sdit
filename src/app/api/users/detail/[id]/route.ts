@@ -34,13 +34,13 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({
       success: true,
-      message: 'Detail user berhasil diambil',
+      message: 'Detail pengguna berhasil diambil',
       data: user,
     });
   } catch (error) {
     console.error('[USER_DETAIL_GET]', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data user' },
+      { success: false, message: 'Gagal mengambil data pengguna' },
       { status: 500 }
     );
   }
@@ -99,13 +99,13 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({
       success: true,
-      message: 'User berhasil diperbarui',
+      message: 'Detail pengguna berhasil diperbarui',
       data: updatedUser,
     });
   } catch (error) {
     console.error('[USER_DETAIL_PUT]', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal memperbarui user' },
+      { success: false, message: 'Gagal memperbarui detail pengguna' },
       { status: 500 }
     );
   }

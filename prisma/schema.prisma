@@ -8,6 +8,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model AcademicSetting {
+  id                   String   @id
+  currentYear          String
+  currentSemester      Semester
+  currentPrincipalName String
+  schoolName           String
+  schoolAddress        String
+  updatedAt            DateTime @updatedAt
+  createdAt            DateTime @default(now())
+
+  @@map("academic_settings")
+}
+
 model User {
   id       String @id @default(uuid())
   username String @unique
@@ -104,19 +117,6 @@ model StudentProfile {
 
   @@index([nis])
   @@map("student_profiles")
-}
-
-model AcademicSetting {
-  id                   String   @id
-  currentYear          String
-  currentSemester      Semester
-  currentPrincipalName String
-  schoolName           String
-  schoolAddress        String
-  updatedAt            DateTime @updatedAt
-  createdAt            DateTime @default(now())
-
-  @@map("academic_settings")
 }
 
 model Classroom {
@@ -316,6 +316,7 @@ model Surah {
   tahfidzScores      TahfidzScore[]
   weeklyTargetsStart WeeklyTarget[]  @relation("StartSurah")
   weeklyTargetsEnd   WeeklyTarget[]  @relation("EndSurah")
+  TasmiDetail        TasmiDetail[]
 
   @@map("surah")
 }
@@ -511,10 +512,11 @@ model Report {
 
 // Munaqasyah models
 model MunaqasyahRequest {
-  id        String @id @default(uuid())
-  studentId String
-  teacherId String
-  groupId   String
+  id            String  @id @default(uuid())
+  coordinatorId String?
+  teacherId     String
+  studentId     String
+  groupId       String
 
   batch  MunaqasyahBatch
   stage  MunaqasyahStage
@@ -524,32 +526,32 @@ model MunaqasyahRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  handledByCoordinatorId String?
-  handledByCoordinator   CoordinatorProfile? @relation(fields: [handledByCoordinatorId], references: [userId])
-
-  student          StudentProfile              @relation(fields: [studentId], references: [userId])
+  coordinator      CoordinatorProfile?         @relation(fields: [coordinatorId], references: [userId])
   teacher          TeacherProfile              @relation(fields: [teacherId], references: [userId])
+  student          StudentProfile              @relation(fields: [studentId], references: [userId])
   group            Group                       @relation(fields: [groupId], references: [id])
   juz              Juz                         @relation(fields: [juzId], references: [id])
   scheduleRequests MunaqasyahScheduleRequest[]
-  results          MunaqasyahResult[]
+  results          MunaqasyahResult?
 
   @@map("munaqasyah_requests")
 }
 
 model MunaqasyahScheduleRequest {
-  id         String @id @default(uuid())
   scheduleId String
   requestId  String
 
   schedule MunaqasyahSchedule @relation(fields: [scheduleId], references: [id])
   request  MunaqasyahRequest  @relation(fields: [requestId], references: [id])
 
+  @@id([scheduleId, requestId])
   @@map("munaqasyah_schedule_requests")
 }
 
 model MunaqasyahSchedule {
-  id          String   @id @default(uuid())
+  id            String @id @default(uuid())
+  coordinatorId String
+
   date        DateTime
   sessionName String
   startTime   String
@@ -560,9 +562,7 @@ model MunaqasyahSchedule {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  scheduledByCoordinatorId String?
-  scheduledByCoordinator   CoordinatorProfile? @relation(fields: [scheduledByCoordinatorId], references: [userId])
-
+  coordinator      CoordinatorProfile          @relation(fields: [coordinatorId], references: [userId])
   examiner         TeacherProfile?             @relation(fields: [examinerId], references: [userId])
   scheduleRequests MunaqasyahScheduleRequest[]
   results          MunaqasyahResult[]
@@ -571,20 +571,21 @@ model MunaqasyahSchedule {
 }
 
 model MunaqasyahResult {
-  id         String          @id @default(uuid())
-  requestId  String
+  id         String @id @default(uuid())
+  requestId  String @unique
   scheduleId String
+
+  totalScore Float
   grade      MunaqasyahGrade
   passed     Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  request         MunaqasyahRequest  @relation(fields: [requestId], references: [id])
-  schedule        MunaqasyahSchedule @relation(fields: [scheduleId], references: [id])
-  tasmiScore      TasmiScore?
-  munaqasyahScore MunaqasyahScore?
-
+  request            MunaqasyahRequest      @relation(fields: [requestId], references: [id])
+  schedule           MunaqasyahSchedule     @relation(fields: [scheduleId], references: [id])
+  tasmiScores        TasmiDetail[]
+  munaqasyahScores   MunaqasyahDetail[]
   tasmiForFinal      MunaqasyahFinalResult? @relation("TasmiResult")
   munaqasyahForFinal MunaqasyahFinalResult? @relation("MunaqasyahResult")
 
@@ -592,38 +593,51 @@ model MunaqasyahResult {
   @@map("munaqasyah_results")
 }
 
-model TasmiScore {
-  id         String  @id @default(uuid())
-  tajwid     Int
-  kelancaran Int
-  adab       Int
-  note       String?
-  totalScore Float
+model TasmiDetail {
+  id       String @id @default(uuid())
+  resultId String
+
+  surahId              Int
+  initialScore         Int
+  khofiAwalAyat        Int
+  khofiMakhroj         Int
+  khofiTajwidMad       Int
+  jaliBaris            Int
+  jaliLebihSatuKalimat Int
+  totalScore           Float
+  note                 String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  result   MunaqasyahResult @relation(fields: [resultId], references: [id])
-  resultId String           @unique
+  result MunaqasyahResult @relation(fields: [resultId], references: [id])
+  surah  Surah            @relation(fields: [surahId], references: [id])
 
-  @@map("tasmi_scores")
+  @@unique([resultId, surahId])
+  @@map("tasmi_details")
 }
 
-model MunaqasyahScore {
-  id         String  @id @default(uuid())
-  tajwid     Int
-  kelancaran Int
-  adab       Int
-  note       String?
-  totalScore Float
+model MunaqasyahDetail {
+  id       String @id @default(uuid())
+  resultId String
+
+  questionNo           Int
+  initialScore         Int     @default(50)
+  khofiAwalAyat        Int
+  khofiMakhroj         Int
+  khofiTajwidMad       Int
+  jaliBaris            Int
+  jaliLebihSatuKalimat Int
+  totalScore           Float
+  note                 String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  result   MunaqasyahResult @relation(fields: [resultId], references: [id])
-  resultId String           @unique
+  result MunaqasyahResult @relation(fields: [resultId], references: [id])
 
-  @@map("munaqasyah_scores")
+  @@unique([resultId, questionNo])
+  @@map("munaqasyah_details")
 }
 
 model MunaqasyahFinalResult {
@@ -637,7 +651,7 @@ model MunaqasyahFinalResult {
   tasmiResultId      String @unique
   munaqasyahResultId String @unique
 
-  // Hasil akhir (weighted average: 60% TASMI + 40% MUNAQASYAH)
+  // Hasil akhir (weighted average: 70% TASMI + 30% MUNAQASYAH)
   finalScore Float
   finalGrade MunaqasyahGrade
   passed     Boolean
@@ -772,4 +786,3 @@ enum MunaqasyahGrade {
   JAYYID // 80–84
   TIDAK_LULUS // <80
 }
-

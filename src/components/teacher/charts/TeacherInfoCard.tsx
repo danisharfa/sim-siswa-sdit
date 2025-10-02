@@ -132,7 +132,7 @@ export function TeacherInfoCard() {
         </div>
 
         {/* Statistics */}
-        <div className="border-t pt-3 space-y-2">
+        {/* <div className="border-t pt-3 space-y-2">
           <div className="flex items-center gap-2 mb-2">
             <UserCheck className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">Statistik Bimbingan</span>
@@ -151,10 +151,10 @@ export function TeacherInfoCard() {
               </Badge>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Groups and Classes */}
-        {teacherInfo.groups.length > 0 && (
+        {/* {teacherInfo.groups.length > 0 && (
           <div className="border-t pt-3 space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -183,17 +183,17 @@ export function TeacherInfoCard() {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* No groups info */}
-        {teacherInfo.groups.length === 0 && (
+        {/* {teacherInfo.groups.length === 0 && (
           <div className="border-t pt-3">
             <div className="flex items-center gap-2 mb-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium text-muted-foreground">Belum ada kelompok aktif</span>
             </div>
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );

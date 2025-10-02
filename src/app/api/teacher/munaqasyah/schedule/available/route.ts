@@ -33,7 +33,7 @@ export async function GET() {
           },
         },
         results: {
-          select: { requestId: true }, // ✅ perbaikan
+          select: { requestId: true },
         },
       },
     });
@@ -41,7 +41,7 @@ export async function GET() {
     const filtered = schedules.filter((s) => {
       const resultRequestIds = new Set(s.results.map((r) => r.requestId));
       const unscoredExists = s.scheduleRequests.some(
-        (sr) => !resultRequestIds.has(sr.request.id) // ✅ perbaikan
+        (sr) => !resultRequestIds.has(sr.request.id)
       );
       return unscoredExists;
     });

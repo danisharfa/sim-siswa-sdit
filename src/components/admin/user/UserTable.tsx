@@ -148,7 +148,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
                   className="flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -178,7 +178,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="Nama Lengkap" />
+      <DataTable title={title} table={table} filterColumn="Nama Lengkap" showColumnFilter={false} />
 
       {dialogType === 'edit' && selectedUser && (
         <UserEditDialog

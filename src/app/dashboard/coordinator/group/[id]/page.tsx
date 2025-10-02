@@ -3,12 +3,12 @@ import { notFound } from 'next/navigation';
 import { GroupMembersManagement } from '@/components/coordinator/group-members/GroupMembersManagement';
 import { BackButton } from '@/components/ui/back-button';
 
-export default async function GroupDetailPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const id = params.id;
+type Params = Promise<{ id: string }>;
+
+export default async function GroupDetailPage({ params }: { params: Params }) {
+  const { id } = await params;
 
   const group = await getGroupById(id);
-
   if (!group) return notFound();
 
   return (

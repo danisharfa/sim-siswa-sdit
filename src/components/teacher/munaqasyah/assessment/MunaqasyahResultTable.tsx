@@ -47,17 +47,9 @@ interface MunaqasyahResult {
   };
   scoreDetails?: {
     tasmi?: {
-      tajwid: number;
-      kelancaran: number;
-      adab: number;
-      note?: string;
       totalScore: number;
     } | null;
     munaqasyah?: {
-      tajwid: number;
-      kelancaran: number;
-      adab: number;
-      note?: string;
       totalScore: number;
     } | null;
   };
@@ -179,17 +171,17 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         cell: ({ row }) => (
           <div className="text-sm">
             <div className="font-medium">
-              {row.original.score.toFixed(1)} (
+              {(row.original.score ?? 0).toFixed(1)} (
               {gradeLabels[row.original.grade] || row.original.grade})
             </div>
             {row.original.scoreDetails && (
               <div className="text-xs text-muted-foreground space-y-1">
                 {row.original.scoreDetails.tasmi && (
-                  <div>Tasmi: {row.original.scoreDetails.tasmi.totalScore.toFixed(1)}</div>
+                  <div>Tasmi: {(row.original.scoreDetails.tasmi.totalScore ?? 0).toFixed(1)}</div>
                 )}
                 {row.original.scoreDetails.munaqasyah && (
                   <div>
-                    Munaqasyah: {row.original.scoreDetails.munaqasyah.totalScore.toFixed(1)}
+                    Munaqasyah: {(row.original.scoreDetails.munaqasyah.totalScore ?? 0).toFixed(1)}
                   </div>
                 )}
               </div>
@@ -224,7 +216,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
 
           return (
             <div className="text-sm">
-              <div className="font-bold text-base">{finalResult.finalScore.toFixed(1)}</div>
+              <div className="font-bold text-base">{(finalResult.finalScore ?? 0).toFixed(1)}</div>
               <div className="font-medium text-primary text-xs">
                 {gradeLabels[finalResult.finalGrade] || finalResult.finalGrade}
               </div>
@@ -250,25 +242,13 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
               {scoreDetails.tasmi && (
                 <div className="space-y-0.5">
                   <div className="font-medium">Tasmi:</div>
-                  <div>Tajwid: {scoreDetails.tasmi.tajwid}</div>
-                  <div>Kelancaran: {scoreDetails.tasmi.kelancaran}</div>
-                  <div>Adab: {scoreDetails.tasmi.adab}</div>
-                  {scoreDetails.tasmi.note && (
-                    <div className="text-muted-foreground">Catatan: {scoreDetails.tasmi.note}</div>
-                  )}
+                  <div>Total Score: {(scoreDetails.tasmi.totalScore ?? 0).toFixed(1)}</div>
                 </div>
               )}
               {scoreDetails.munaqasyah && (
                 <div className="space-y-0.5">
                   <div className="font-medium">Munaqasyah:</div>
-                  <div>Tajwid: {scoreDetails.munaqasyah.tajwid}</div>
-                  <div>Kelancaran: {scoreDetails.munaqasyah.kelancaran}</div>
-                  <div>Adab: {scoreDetails.munaqasyah.adab}</div>
-                  {scoreDetails.munaqasyah.note && (
-                    <div className="text-muted-foreground">
-                      Catatan: {scoreDetails.munaqasyah.note}
-                    </div>
-                  )}
+                  <div>Total Score: {(scoreDetails.munaqasyah.totalScore ?? 0).toFixed(1)}</div>
                 </div>
               )}
             </div>

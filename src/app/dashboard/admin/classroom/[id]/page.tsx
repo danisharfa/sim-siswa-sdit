@@ -1,15 +1,15 @@
 import { notFound } from 'next/navigation';
 import { getClassroomById } from '@/lib/data/classroom';
 import { ClassroomMembersManagement } from '@/components/admin/classroom-members/ClassroomMembersManagement';
-import { PromoteDialogWrapper } from '@/components/admin/classroom-members/PromoteDialogWrapper';
+import { PromoteSemesterButton } from '@/components/admin/classroom-members/PromoteSemesterButton';
 import { BackButton } from '@/components/ui/back-button';
 
-export default async function ClassroomPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const id = params.id;
+type Params = Promise<{ id: string }>;
+
+export default async function ClassroomPage({ params }: { params: Params }) {
+  const { id } = await params;
 
   const classroom = await getClassroomById(id);
-
   if (!classroom) return notFound();
 
   return (
@@ -22,7 +22,7 @@ export default async function ClassroomPage(props: { params: Promise<{ id: strin
       </div>
 
       {/* Tombol & Dialog Naik Kelas */}
-      <PromoteDialogWrapper
+      <PromoteSemesterButton
         classroomId={id}
         currentAcademicYear={classroom.academicYear}
         currentSemester={classroom.semester}

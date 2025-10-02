@@ -70,22 +70,30 @@ export async function fetchMunaqasyahResult() {
             },
           },
         },
-        tasmiScore: {
+        tasmiScores: {
           select: {
-            tajwid: true,
-            kelancaran: true,
-            adab: true,
-            note: true,
+            surahId: true,
+            initialScore: true,
+            khofiAwalAyat: true,
+            khofiMakhroj: true,
+            khofiTajwidMad: true,
+            jaliBaris: true,
+            jaliLebihSatuKalimat: true,
             totalScore: true,
+            note: true,
           },
         },
-        munaqasyahScore: {
+        munaqasyahScores: {
           select: {
-            tajwid: true,
-            kelancaran: true,
-            adab: true,
-            note: true,
+            questionNo: true,
+            initialScore: true,
+            khofiAwalAyat: true,
+            khofiMakhroj: true,
+            khofiTajwidMad: true,
+            jaliBaris: true,
+            jaliLebihSatuKalimat: true,
             totalScore: true,
+            note: true,
           },
         },
         // Include final result if this result is used in final calculation
@@ -107,23 +115,39 @@ export async function fetchMunaqasyahResult() {
     });
 
     return results.map((result) => {
-      // Calculate score based on stage
-      let score = 0;
-      if (result.request.stage === 'TASMI' && result.tasmiScore) {
-        score = result.tasmiScore.totalScore;
-      } else if (result.request.stage === 'MUNAQASYAH' && result.munaqasyahScore) {
-        score = result.munaqasyahScore.totalScore;
-      }
+      // Use the totalScore directly from the result
+      const score = result.totalScore;
 
       // Get final result (if any)
       const finalResult = result.tasmiForFinal || result.munaqasyahForFinal;
+
+      // Aggregate scores for display
+      const tasmiScoreDetails =
+        result.tasmiScores.length > 0
+          ? {
+              totalScore:
+                result.tasmiScores.reduce((sum, detail) => sum + detail.totalScore, 0) /
+                result.tasmiScores.length,
+              details: result.tasmiScores,
+            }
+          : null;
+
+      const munaqasyahScoreDetails =
+        result.munaqasyahScores.length > 0
+          ? {
+              totalScore:
+                result.munaqasyahScores.reduce((sum, detail) => sum + detail.totalScore, 0) /
+                result.munaqasyahScores.length,
+              details: result.munaqasyahScores,
+            }
+          : null;
 
       return {
         ...result,
         score,
         scoreDetails: {
-          tasmi: result.tasmiScore,
-          munaqasyah: result.munaqasyahScore,
+          tasmi: tasmiScoreDetails,
+          munaqasyah: munaqasyahScoreDetails,
         },
         finalResult: finalResult
           ? {

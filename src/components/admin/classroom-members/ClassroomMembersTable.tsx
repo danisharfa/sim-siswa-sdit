@@ -73,12 +73,12 @@ export function ClassroomMembersTable({ data, title, classroomId, onRefresh }: P
             <Button
               variant="destructive"
               size="sm"
-              className="size-8"
               onClick={() => {
                 handleOpenDeleteDialog(student);
               }}
             >
               <Trash2 />
+              Hapus
             </Button>
           );
         },

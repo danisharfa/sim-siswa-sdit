@@ -81,7 +81,7 @@ export function PromoteSemesterDialog({
         throw new Error(result.message || 'Gagal mempromosikan siswa.');
       }
 
-      toast.success(result.message || 'Siswa berhasil dipromosikan!');
+      toast.success(result.message || 'Siswa berhasil dipromosikan');
       onConfirm();
       onOpenChange(false);
     } catch (error) {

@@ -251,7 +251,7 @@ export function SubmissionForm() {
       const resData = await res.json();
 
       if (!resData.success) throw new Error(resData.message);
-      toast.success('Setoran berhasil ditambahkan!');
+      toast.success('Setoran berhasil ditambahkan');
       resetForm();
     } catch (error) {
       console.error('Error submitting form:', error);

@@ -10,9 +10,10 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
-    const requests = await prisma.munaqasyahRequest.findMany({
+    const munaqasyah = await prisma.munaqasyahRequest.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
+        scheduleRequests: true,
         student: {
           select: {
             nis: true,
@@ -42,15 +43,15 @@ export async function GET() {
             name: true,
           },
         },
-        scheduleRequests: {
-          select: {
-            id: true,
-          },
-        },
+        // scheduleRequests: {
+        //   select: {
+        //     id: true,
+        //   },
+        // },
       },
     });
 
-    return NextResponse.json({ success: true, data: requests });
+    return NextResponse.json({ success: true, data: munaqasyah });
   } catch (error) {
     console.error('[MUNAQASYAH_REQUEST_GET]', error);
     return NextResponse.json({ success: false, message: 'Gagal mengambil data' }, { status: 500 });

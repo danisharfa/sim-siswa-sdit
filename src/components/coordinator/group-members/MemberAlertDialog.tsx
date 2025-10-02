@@ -49,7 +49,7 @@ export function MemberAlertDialog({
         throw new Error(data?.error || 'Terjadi kesalahan saat menghapus anggota.');
       }
 
-      toast.success('Anggota berhasil dihapus dari kelas!');
+      toast.success('Anggota berhasil dihapus dari kelas');
       onConfirm();
       onOpenChange(false);
     } catch (error) {

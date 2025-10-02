@@ -93,8 +93,11 @@ export function Management() {
   const period = `${encodeURIComponent(chartProps.academicYear)}-${chartProps.semester}`;
   const group = selectedGroup || 'all';
 
+  // Only make request if we have valid academicYear
+  const shouldFetchData = chartProps.academicYear && chartProps.semester;
+  
   const { data: tahfidzData } = useSWR<ChartData>(
-    `/api/teacher/chart/${period}/${group}/tahfidz`,
+    shouldFetchData ? `/api/teacher/chart/${period}/${group}/tahfidz` : null,
     fetcher
   );
 

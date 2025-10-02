@@ -5,12 +5,12 @@ import { BackButton } from '@/components/ui/back-button';
 import { getGroupId } from '@/lib/data/teacher/teacher-group-member';
 import { GroupMembersManagement } from '@/components/teacher/group-members/GroupMembersManagement';
 
-export default async function GroupDetailPage(props: { params: Promise<{ groupId: string }> }) {
-  const params = await props.params;
-  const groupId = params.groupId;
+type Params = Promise<{ groupId: string }>;
+
+export default async function GroupDetailPage({ params }: { params: Params }) {
+  const { groupId } = await params;
 
   const group = await getGroupId(groupId);
-
   if (!group) return notFound();
 
   return (
