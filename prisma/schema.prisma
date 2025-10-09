@@ -144,8 +144,6 @@ model ClassroomHistory {
   academicYear String
   semester     Semester
 
-  movedAt DateTime @default(now())
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -193,8 +191,6 @@ model GroupHistory {
   groupId      String
   academicYear String
   semester     Semester
-
-  joinedAt DateTime @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
