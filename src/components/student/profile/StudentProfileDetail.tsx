@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -13,8 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { Calendar22 } from '@/components/calendar/calendar-22';
+import { toast } from 'sonner';
 import { Role, Gender, BloodType } from '@prisma/client';
 
 type StudentProfile = {
@@ -38,6 +40,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
   const [identity, setIdentity] = useState<StudentIdentity | null>(null);
   const [updatedData, setUpdatedData] = useState<StudentProfile>({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -64,9 +67,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
           email: user.email || '',
         });
 
-        if (user.birthDate) {
-          setDate(new Date(user.birthDate));
-        }
+        if (user.birthDate) setDate(new Date(user.birthDate));
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {
@@ -81,6 +82,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
   };
 
   const handleSubmit = async () => {
+    setSaving(true);
     try {
       const payload = {
         ...updatedData,
@@ -90,9 +92,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
 
       const res = await fetch(`/api/users/detail/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
@@ -102,6 +102,8 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error('Gagal memperbarui detail user');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -113,88 +115,123 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
           .toLowerCase()
           .replace(/^\w/, (c) => c.toUpperCase());
 
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-[170px] w-full" />
+      </div>
+    );
 
   return (
     <Card>
-      <CardContent className="pt-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <Label>Nama Lengkap</Label>
-            <Input value={identity?.fullName ?? ''} readOnly />
+      <CardContent>
+        <FieldSet>
+          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <Field>
+                <FieldLabel>Nama Lengkap</FieldLabel>
+                <Input value={identity?.fullName ?? ''} readOnly />
+              </Field>
 
-            <Label>NIS</Label>
-            <Input value={identity?.nis ?? ''} readOnly />
+              <Field>
+                <FieldLabel>NIS</FieldLabel>
+                <Input value={identity?.nis ?? ''} readOnly />
+              </Field>
 
-            <Label>NISN</Label>
-            <Input value={identity?.nisn ?? ''} readOnly />
+              <Field>
+                <FieldLabel>NISN</FieldLabel>
+                <Input value={identity?.nisn ?? ''} readOnly />
+              </Field>
 
-            <Label>Tempat Lahir</Label>
-            <Textarea
-              value={updatedData.birthPlace ?? ''}
-              onChange={(e) => handleChange('birthPlace', e.target.value)}
-            />
+              <Field>
+                <FieldLabel>Tempat Lahir</FieldLabel>
+                <Textarea
+                  value={updatedData.birthPlace ?? ''}
+                  onChange={(e) => handleChange('birthPlace', e.target.value)}
+                />
+              </Field>
 
-            <Calendar22 value={date} onChange={setDate} label="Tanggal Lahir" />
+              <Calendar22 value={date} onChange={setDate} label="Tanggal Lahir" />
 
-            <Label>Jenis Kelamin</Label>
-            <Select
-              value={updatedData.gender ?? Gender.PILIH}
-              onValueChange={(val) => handleChange('gender', val as Gender)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Jenis Kelamin" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(Gender).map((g) => (
-                  <SelectItem key={g} value={g}>
-                    {labelMap(g)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Field>
+                <FieldLabel>Jenis Kelamin</FieldLabel>
+                <Select
+                  value={updatedData.gender ?? Gender.PILIH}
+                  onValueChange={(val) => handleChange('gender', val as Gender)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Jenis Kelamin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(Gender).map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {labelMap(g)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
 
-            <Label>Golongan Darah</Label>
-            <Select
-              value={updatedData.bloodType || BloodType.PILIH}
-              onValueChange={(val) => handleChange('bloodType', val)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Golongan Darah" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(BloodType).map((b) => (
-                  <SelectItem key={b} value={b}>
-                    {labelMap(b)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <Field>
+                <FieldLabel>Golongan Darah</FieldLabel>
+                <Select
+                  value={updatedData.bloodType ?? BloodType.PILIH}
+                  onValueChange={(val) => handleChange('bloodType', val as BloodType)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Golongan Darah" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(BloodType).map((b) => (
+                      <SelectItem key={b} value={b}>
+                        {labelMap(b)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
 
-          <div className="space-y-4">
-            <Label>Alamat</Label>
-            <Textarea
-              value={updatedData.address ?? ''}
-              onChange={(e) => handleChange('address', e.target.value)}
-            />
+            <div className="space-y-4">
+              <Field>
+                <FieldLabel>Alamat</FieldLabel>
+                <Textarea
+                  value={updatedData.address ?? ''}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                />
+              </Field>
 
-            <Label>Email</Label>
-            <Input
-              value={updatedData.email ?? ''}
-              onChange={(e) => handleChange('email', e.target.value)}
-            />
+              <Field>
+                <FieldLabel>Email</FieldLabel>
+                <Input
+                  value={updatedData.email ?? ''}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                />
+              </Field>
 
-            <Label>No. HP</Label>
-            <Input
-              value={updatedData.phoneNumber ?? ''}
-              onChange={(e) => handleChange('phoneNumber', e.target.value)}
-            />
-          </div>
-        </div>
+              <Field>
+                <FieldLabel>No. HP</FieldLabel>
+                <Input
+                  value={updatedData.phoneNumber ?? ''}
+                  onChange={(e) => handleChange('phoneNumber', e.target.value)}
+                />
+              </Field>
+            </div>
+          </FieldGroup>
+        </FieldSet>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <Button onClick={handleSubmit}>Simpan Perubahan</Button>
+
+      <CardFooter className="flex items-center justify-center">
+        <Button onClick={handleSubmit} disabled={saving} className="w-48">
+          {saving ? (
+            <>
+              <Spinner />
+              Menyimpan...
+            </>
+          ) : (
+            'Simpan Perubahan'
+          )}
+        </Button>
       </CardFooter>
     </Card>
   );

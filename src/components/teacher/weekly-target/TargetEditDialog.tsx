@@ -14,7 +14,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { DateRange } from 'react-day-picker';
+import { type DateRange } from 'react-day-picker';
 import { Calendar23 } from '@/components/calendar/calendar-23';
 import { SubmissionType } from '@prisma/client';
 

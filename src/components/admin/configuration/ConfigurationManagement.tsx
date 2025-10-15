@@ -13,8 +13,8 @@ export function ConfigurationManagement() {
   if (isLoading || !data) {
     return (
       <div className="space-y-4">
-        <Skeleton className="w-full h-[180px]" />
-        <Skeleton className="w-full h-[180px]" />
+        <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
       </div>
     );
   }

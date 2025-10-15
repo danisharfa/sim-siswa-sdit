@@ -216,7 +216,7 @@ export function TashihResultTable({ data }: Props) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(val) => {

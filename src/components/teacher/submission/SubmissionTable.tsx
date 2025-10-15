@@ -32,8 +32,10 @@ import {
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { type DateRange } from 'react-day-picker';
 import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 import { ExportToPDFButton } from './ExportToPDFButton';
+import { Calendar23 } from '@/components/calendar/calendar-23';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,8 +101,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState('all');
-  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
-  const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>();
 
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
@@ -170,11 +171,6 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     );
   }, [selectedGroupId, filteredData]);
 
-  function getWeekOfMonth(date: Date): number {
-    const adjustedDate = date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil(adjustedDate / 7);
-  }
-
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
@@ -182,11 +178,20 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
-          const date = new Date(row.getValue(columnId));
-          const matchMonth = selectedMonth === 'all' || date.getMonth() === selectedMonth;
-          const matchWeek = selectedWeek === 'all' || getWeekOfMonth(date) === selectedWeek;
+          if (!selectedDateRange) return true;
 
-          return matchMonth && matchWeek;
+          const date = new Date(row.getValue(columnId));
+          const { from, to } = selectedDateRange;
+
+          if (from && to) {
+            return date >= from && date <= to;
+          } else if (from) {
+            return date >= from;
+          } else if (to) {
+            return date <= to;
+          }
+
+          return true;
         },
         cell: ({ row }) => (
           <span>
@@ -327,7 +332,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
                     onClick={() => handleOpenEditDialog(user)}
                     className="flex items-center gap-2"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -335,7 +340,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
                     variant="destructive"
                     className="flex items-center gap-2"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -345,7 +350,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         },
       },
     ],
-    [selectedMonth, selectedWeek, handleOpenEditDialog, handleOpenDeleteDialog]
+    [selectedDateRange, handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -369,7 +374,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     <>
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedPeriod}
             onValueChange={(val) => {
@@ -379,7 +384,7 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
             }}
           >
             <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((p) => (
@@ -469,49 +474,16 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Bulan</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedMonth(val);
+          <Calendar23
+            value={selectedDateRange}
+            onChange={(range) => {
+              setSelectedDateRange(range);
               table.getColumn('Tanggal')?.setFilterValue('custom');
             }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[200px]">
-              <SelectValue placeholder="Pilih Bulan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bulan</SelectItem>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SelectItem key={i} value={i.toString()}>
-                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Filter Minggu</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedWeek(val);
-              table.getColumn('Tanggal')?.setFilterValue('custom');
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[200px]">
-              <SelectValue placeholder="Pilih Minggu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Minggu</SelectItem>
-              {[1, 2, 3, 4, 5].map((w) => (
-                <SelectItem key={w} value={w.toString()}>
-                  Minggu ke-{w}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            label="Filter Tanggal"
+            placeholder="Pilih Rentang Tanggal"
+            className="min-w-0 w-full sm:min-w-[250px]"
+          />
         </div>
 
         <div>

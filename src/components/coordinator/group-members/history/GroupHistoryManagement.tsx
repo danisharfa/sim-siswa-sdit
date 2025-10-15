@@ -25,7 +25,7 @@ export function GroupHistoryManagement({ groupId }: GroupHistoryManagementProps)
     <div className="space-y-6">
       <CoordinatorGroupHistoryMembersTable
         data={data.data || []}
-        title="Daftar Anggota Kelompok"
+        title="Daftar Siswa"
         groupId={groupId}
       />
     </div>

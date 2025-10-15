@@ -1,19 +1,14 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Semester } from '@prisma/client';
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
+import { Save } from 'lucide-react';
+import { AcademicPeriodSchema, AcademicPeriodInput } from '@/lib/validations/academicConfig';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -22,117 +17,131 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, Save } from 'lucide-react';
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
 
-const formSchema = z.object({
-  currentYear: z.string().min(4, 'Tahun ajaran wajib diisi'),
-  currentSemester: z.enum([Semester.GANJIL, Semester.GENAP]),
-});
+interface Props {
+  data: AcademicPeriodInput;
+  onSave: () => void;
+}
 
-type FormValues = z.infer<typeof formSchema>;
-
-export function AcademicPeriodForm({ data, onSave }: { data: FormValues; onSave: () => void }) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+export function AcademicPeriodForm({ data, onSave }: Props) {
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { isDirty, isSubmitting },
+  } = useForm<AcademicPeriodInput>({
+    resolver: zodResolver(AcademicPeriodSchema),
     defaultValues: data,
   });
 
   const [loading, setLoading] = useState(false);
-  const isDirty = form.formState.isDirty;
 
   useEffect(() => {
-    form.reset(data);
-  }, [data, form]);
+    reset(data);
+  }, [data, reset]);
 
-  const onSubmit = async (values: FormValues) => {
-    if (!isDirty) return toast.info('Tidak ada perubahan.');
+  async function onSubmit(values: AcademicPeriodInput) {
+    if (!isDirty) {
+      toast.info('Tidak ada perubahan.');
+      return;
+    }
+
     setLoading(true);
-
     try {
       const res = await fetch('/api/admin/configuration', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
+
       const result = await res.json();
       if (!res.ok || !result.success) {
-        return toast.error(result.message || 'Gagal menyimpan');
+        toast.error(result.message || 'Gagal menyimpan');
+        return;
       }
+
       toast.success('Tahun ajaran & semester berhasil diperbarui');
       onSave();
-      form.reset(values);
-    } catch (err) {
-      console.error(err);
-      toast.error('Terjadi kesalahan');
+      reset(values);
+    } catch (error) {
+      console.error(error);
+      toast.error('Terjadi kesalahan saat menyimpan data');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <Card className="max-w-md">
+    <Card className="max-w-md h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Pengaturan Tahun Ajaran & Semester</CardTitle>
+        <CardTitle>Pengaturan Tahun Akademik</CardTitle>
       </CardHeader>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full space-y-4">
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="currentYear"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tahun Ajaran</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="currentSemester"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Semester</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={Semester.GANJIL}>Ganjil</SelectItem>
-                      <SelectItem value={Semester.GENAP}>Genap</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 space-y-4" noValidate>
+        <CardContent className="flex-1 space-y-4">
+          <FieldSet>
+            <FieldGroup>
+              <Controller
+                name="currentYear"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="currentYear">Tahun Ajaran</FieldLabel>
+                    <Input
+                      id="currentYear"
+                      placeholder="Contoh: 2024/2025"
+                      aria-invalid={fieldState.invalid}
+                      {...field}
+                    />
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
 
-          <CardFooter className="mt-auto">
-            <Button type="submit" disabled={loading || !isDirty} className="w-full">
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Simpan Perubahan
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
+              <Controller
+                name="currentSemester"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="currentSemester">Semester</FieldLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(val) => field.onChange(val as Semester)}
+                    >
+                      <SelectTrigger id="currentSemester" aria-invalid={fieldState.invalid}>
+                        <SelectValue placeholder="Pilih semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={Semester.GANJIL}>Ganjil</SelectItem>
+                        <SelectItem value={Semester.GENAP}>Genap</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </FieldSet>
+        </CardContent>
+
+        <CardFooter className="mt-auto pt-4">
+          <Button type="submit" disabled={loading || !isDirty || isSubmitting} className="w-full">
+            {loading || isSubmitting ? (
+              <>
+                <Spinner />
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                <Save />
+                Simpan Perubahan
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 }

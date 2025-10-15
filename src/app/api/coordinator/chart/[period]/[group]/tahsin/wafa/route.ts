@@ -252,26 +252,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }
 
     console.log('Final wafa result count:', result.length);
-    console.log('Sample wafa progress calculation:', {
-      period: `${academicYear}-${semester}`,
-      note: 'Pages calculated based on startPage-endPage range',
-      sampleStudent: result[0]
-        ? {
-            name: result[0].studentName,
-            lastWafa: result[0].lastWafa,
-            currentWafa: result[0].currentWafa,
-            sampleProgress: result[0].progress.find((p) => p.completedPages > 0)
-              ? {
-                  wafaName: result[0].progress.find((p) => p.completedPages > 0)?.wafaName,
-                  completedPages: result[0].progress.find((p) => p.completedPages > 0)
-                    ?.completedPages,
-                  totalPages: result[0].progress.find((p) => p.completedPages > 0)?.totalPages,
-                  percent: result[0].progress.find((p) => p.completedPages > 0)?.percent,
-                }
-              : 'No progress found',
-          }
-        : 'No students',
-    });
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching wafa chart data:', error);

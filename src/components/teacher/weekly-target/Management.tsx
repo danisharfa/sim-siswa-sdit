@@ -20,7 +20,7 @@ export function TargetManagement() {
 
   return (
     <div className="p-4 space-y-4">
-      <TargetHistoryTable data={data?.data || []} title="Riwayat Target Setoran Siswa" onRefresh={mutate} />
+      <TargetHistoryTable data={data?.data || []} title="Daftar Target Setoran Siswa" onRefresh={mutate} />
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { Semester } from '@prisma/client';
-import { Eye } from 'lucide-react';
+import { SquareArrowOutUpRight } from 'lucide-react';
 
 interface StudentItem {
   id: string;
@@ -85,7 +85,7 @@ export function GroupHistoryTable({ data, title }: Props) {
               className="size-8"
               onClick={() => router.push(`/dashboard/coordinator/group/${group.groupId}/history`)}
             >
-              <Eye />
+              <SquareArrowOutUpRight />
             </Button>
           );
         },

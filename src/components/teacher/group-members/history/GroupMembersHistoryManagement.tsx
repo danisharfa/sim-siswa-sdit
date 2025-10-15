@@ -7,7 +7,7 @@ export function GroupMembersHistoryManagement({ groupId }: { groupId: string }) 
 
   return (
     <div className="space-y-6">
-      <GroupMembersHistoryTable data={members} title="Daftar Anggota Kelompok" groupId={groupId} />
+      <GroupMembersHistoryTable data={members} title="Daftar Siswa" groupId={groupId} />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ClassroomEditDialog } from '@/components/admin/classroom/ClassroomEditDialog';
 import { ClassroomAlertDialog } from '@/components/admin/classroom/ClassroomAlertDialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
@@ -30,7 +29,6 @@ interface Classroom {
   academicYear: string;
   semester: Semester;
   studentCount: number;
-  isActive: boolean;
 }
 
 interface Props {
@@ -89,19 +87,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
       {
         accessorKey: 'studentCount',
         id: 'Jumlah Siswa',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Jumlah Siswa" />,
-        cell: ({ row }) => row.original.studentCount ?? 0,
-      },
-      {
-        accessorKey: 'isActive',
-        id: 'Status Kelas',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status Kelas" />,
-        cell: ({ row }) =>
-          row.original.isActive ? (
-            <Badge variant="default">Aktif</Badge>
-          ) : (
-            <Badge variant="destructive">Tidak Aktif</Badge>
-          ),
+        header: 'Jumlah Siswa',
       },
       {
         id: 'actions',
@@ -122,7 +108,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
                     href={`/dashboard/admin/classroom/${classroom.id}`}
                     className="flex items-center gap-2"
                   >
-                    <Eye className="w-4 h-4" />
+                    <SquareArrowOutUpRight />
                     Detail
                   </Link>
                 </DropdownMenuItem>
@@ -130,7 +116,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
                   onClick={() => handleOpenEditDialog(classroom)}
                   className="flex items-center gap-2"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -138,7 +124,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
                   className="flex items-center gap-2"
                   variant="destructive"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 />
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -169,7 +155,7 @@ export function ClassroomTable({ data, title, onRefresh }: Props) {
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="Nama Kelas" />
+      <DataTable title={title} table={table} filterColumn="Nama Kelas" showColumnFilter={false} />
 
       {dialogType === 'edit' && selectedClassroom && (
         <ClassroomEditDialog

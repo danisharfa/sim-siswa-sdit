@@ -30,7 +30,7 @@ export function GroupMembersManagement({
       <AddGroupMembersForm groupId={groupId} classroomId={classroomId} onMemberAdded={mutate} />
       <GroupMembersTable
         data={data.data}
-        title="Daftar Anggota Kelompok"
+        title="Daftar Siswa"
         groupId={groupId}
         onRefresh={mutate}
       />

@@ -248,7 +248,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {

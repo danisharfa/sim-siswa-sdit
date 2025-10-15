@@ -22,7 +22,7 @@ export default async function AccountPage({ params }: { params: Params }) {
         <h1 className="text-2xl font-bold">Pengaturan</h1>
         <span className="text-muted-foreground">Akun</span>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <ChangePasswordForm />
       </div>
     </div>

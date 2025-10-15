@@ -11,7 +11,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { SquareArrowOutUpRight } from 'lucide-react';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester } from '@prisma/client';
@@ -49,7 +49,7 @@ export function GroupHistoryTable({ data, title }: Props) {
       {
         accessorKey: 'classroomName',
         id: 'Nama Kelas',
-        header: 'Nama Kelas',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Kelas" />,
       },
       {
         accessorKey: 'academicYear',
@@ -59,7 +59,7 @@ export function GroupHistoryTable({ data, title }: Props) {
       {
         accessorKey: 'semester',
         id: 'Semester',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
+        header: 'Semester',
       },
       {
         accessorKey: 'students',
@@ -79,7 +79,7 @@ export function GroupHistoryTable({ data, title }: Props) {
               className="size-8"
               onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}/history`)}
             >
-              <Eye />
+              <SquareArrowOutUpRight />
             </Button>
           );
         },

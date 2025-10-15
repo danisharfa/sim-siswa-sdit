@@ -13,6 +13,7 @@ interface User {
   role: string;
   createdAt: string;
   updatedAt: string;
+  graduatedAt?: string | null;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());

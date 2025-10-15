@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useActionState, useRef } from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
 import {
   Select,
   SelectTrigger,
@@ -12,87 +12,133 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, UserPlus2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { addUserCredentials } from '@/lib/actions';
-import { Role } from '@prisma/client';
+import { Spinner } from '@/components/ui/spinner';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AddUserSchema, AddUserInput } from '@/lib/validations/user';
 
 interface Props {
   onUserAdded: () => void;
 }
 
-const initialRole = Role.student;
-
 export function AddUserForm({ onUserAdded }: Props) {
-  const [role, setRole] = useState<Role>(initialRole);
-  const [state, formAction, isPending] = useActionState(addUserCredentials, null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<AddUserInput>({
+    resolver: zodResolver(AddUserSchema),
+    defaultValues: {
+      username: '',
+      fullName: '',
+      role: 'student',
+    },
+  });
 
-  useEffect(() => {
-    if (!state) return;
+  async function onSubmit(values: AddUserInput) {
+    try {
+      const res = await fetch('/api/admin/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
 
-    if (state.success) {
-      toast.success(state.message);
-      onUserAdded();
-      setRole(initialRole);
-
-      // Reset form
-      if (formRef.current) {
-        formRef.current.reset();
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        toast.error(data?.message || 'Gagal menambah pengguna');
+        return;
       }
-    } else if (state.error) {
-      const first = Object.values(state.error)[0]?.[0];
-      toast.error(first || 'Validasi gagal');
-    } else if (state.message && !state.success) {
-      toast.error(state.message);
+
+      toast.success(data.message || 'Pengguna berhasil ditambah');
+      reset({ username: '', fullName: '', role: 'student' });
+      onUserAdded();
+    } catch {
+      toast.error('Terjadi kesalahan saat mengirim data.');
     }
-  }, [state, onUserAdded]);
+  }
 
   return (
-    <Card className="shadow-xl">
+    <Card>
       <CardHeader>
         <CardTitle className="text-2xl">Tambah Pengguna</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form ref={formRef} action={formAction} className="space-y-4">
-          <Input name="username" placeholder="Username" required />
-          <Input name="fullName" placeholder="Nama Lengkap" required />
 
-          {/* Hidden input untuk role */}
-          <input type="hidden" name="role" value={role} />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <CardContent>
+          <FieldSet>
+            <FieldGroup>
+              <Controller
+                name="username"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="username">Username</FieldLabel>
+                    <Input
+                      id="username"
+                      placeholder="Contoh: 2025001"
+                      aria-invalid={fieldState.invalid}
+                      {...field}
+                    />
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+              <Controller
+                name="fullName"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="fullName">Nama Lengkap</FieldLabel>
+                    <Input id="fullName" aria-invalid={fieldState.invalid} {...field} />
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+              <Controller
+                name="role"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="role-select">Role</FieldLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger
+                        id="role-select"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="coordinator">Koordinator</SelectItem>
+                          <SelectItem value="teacher">Guru</SelectItem>
+                          <SelectItem value="student">Siswa</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </FieldSet>
+        </CardContent>
 
-          <Select value={role} onValueChange={(val) => setRole(val as Role)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Pilih role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="coordinator">Koordinator</SelectItem>
-                <SelectItem value="teacher">Guru</SelectItem>
-                <SelectItem value="student">Siswa</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-
-          <Button
-            type="submit"
-            className="w-full flex items-center justify-center"
-            disabled={isPending}
-          >
-            {isPending ? (
+        <CardFooter>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <Spinner />
                 Menambahkan...
               </>
             ) : (
-              <>
-                <UserPlus2 />
-                Tambah Pengguna
-              </>
+              <>Tambah Pengguna</>
             )}
           </Button>
-        </form>
-      </CardContent>
+        </CardFooter>
+      </form>
     </Card>
   );
 }

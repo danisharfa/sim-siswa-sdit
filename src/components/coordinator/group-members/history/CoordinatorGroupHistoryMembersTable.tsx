@@ -53,7 +53,7 @@ export function CoordinatorGroupHistoryMembersTable({ data, title, groupId }: Pr
       {
         accessorKey: 'nis',
         id: 'NIS',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="NIS" />,
+        header: 'NIS',
       },
       {
         accessorKey: 'fullName',

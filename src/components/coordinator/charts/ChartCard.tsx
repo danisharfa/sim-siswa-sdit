@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,6 +26,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export type ChartDataItem = {
   [key: string]: string | number | unknown[] | unknown;
@@ -73,7 +80,15 @@ export function ChartCard({
   const [selectedItem, setSelectedItem] = useState<ChartDataItem | null>(null);
   const [dataFilter, setDataFilter] = useState<'all' | 'active'>('all');
 
-  if (isLoading) return <p className="text-muted-foreground">Memuat data chart...</p>;
+  if (isLoading)
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
   if (error) return <p className="text-destructive">Gagal memuat chart.</p>;
 
   const filteredData =

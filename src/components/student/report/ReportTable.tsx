@@ -198,10 +198,10 @@ export function ReportTable({ data, title, period, onPeriodChange }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
+              <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => {

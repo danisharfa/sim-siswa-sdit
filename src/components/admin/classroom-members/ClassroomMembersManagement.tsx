@@ -20,7 +20,7 @@ export function ClassroomMembersManagement({ classroomId }: { classroomId: strin
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <AddClassroomMembersForm classroomId={classroomId} onMemberAdded={mutate} />
       <ClassroomMembersTable
         data={data.data}

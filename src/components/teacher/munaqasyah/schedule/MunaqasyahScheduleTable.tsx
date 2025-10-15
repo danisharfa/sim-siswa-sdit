@@ -289,9 +289,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
           return (
             <div className="text-sm">
               {examiner ? (
-                <Badge variant="secondary">
-                  {examiner.fullName}
-                </Badge>
+                <Badge variant="secondary">{examiner.fullName}</Badge>
               ) : (
                 <span className="text-muted-foreground text-xs">Koordinator Al-Qur&apos;an</span>
               )}
@@ -324,7 +322,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {

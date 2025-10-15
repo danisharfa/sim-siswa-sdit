@@ -222,33 +222,24 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
     ];
 
     cols.push({
-  id: 'actions',
-  header: 'Aksi',
-  cell: ({ row }) => {
-    const request = row.original;
-    if (request.status !== 'MENUNGGU') return null;
+      id: 'actions',
+      header: 'Aksi',
+      cell: ({ row }) => {
+        const request = row.original;
+        if (request.status !== 'MENUNGGU') return null;
 
-    return (
-      <div className="flex gap-2">
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => handleOpenAcceptDialog(request)}
-        >
-          Terima
-        </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => handleOpenRejectDialog(request)}
-        >
-          Tolak
-        </Button>
-      </div>
-    );
-  },
-});
-
+        return (
+          <div className="flex gap-2">
+            <Button variant="default" size="sm" onClick={() => handleOpenAcceptDialog(request)}>
+              Terima
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => handleOpenRejectDialog(request)}>
+              Tolak
+            </Button>
+          </div>
+        );
+      },
+    });
 
     return cols;
   }, [handleOpenAcceptDialog, handleOpenRejectDialog]);
@@ -274,7 +265,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {

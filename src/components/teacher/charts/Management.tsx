@@ -9,6 +9,7 @@ import { TahfidzChart } from './TahfidzChart';
 import { WafaChart } from './WafaChart';
 import { TahsinAlquranChart } from './TahsinAlquranChart';
 import { TeacherInfoCard } from './TeacherInfoCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Period = {
   value: string;
@@ -57,12 +58,10 @@ export function Management() {
     }
   }, [filterData?.defaultPeriod, selectedPeriod]);
 
-  // Calculate total groups for teacher
   useEffect(() => {
     if (filterData?.groups && selectedPeriod) {
       const [academicYear, semester] = selectedPeriod.split('|');
 
-      // Filter groups for selected period (teacher only sees their own groups)
       const groupsForPeriod = filterData.groups.filter(
         (group) => group.academicYear === academicYear && group.semester === semester
       );
@@ -93,9 +92,8 @@ export function Management() {
   const period = `${encodeURIComponent(chartProps.academicYear)}-${chartProps.semester}`;
   const group = selectedGroup || 'all';
 
-  // Only make request if we have valid academicYear
   const shouldFetchData = chartProps.academicYear && chartProps.semester;
-  
+
   const { data: tahfidzData } = useSWR<ChartData>(
     shouldFetchData ? `/api/teacher/chart/${period}/${group}/tahfidz` : null,
     fetcher
@@ -115,7 +113,14 @@ export function Management() {
   }
 
   if (!filterData) {
-    return <div className="text-muted-foreground">Loading filters...</div>;
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
   }
 
   return (
@@ -170,7 +175,7 @@ export function Management() {
             semester={chartProps.semester}
             groupId={selectedGroup}
           />
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col xl:flex-row gap-6">
             <div className="flex-1">
               <WafaChart
                 key={`wafa-${selectedPeriod}-${selectedGroup}`}

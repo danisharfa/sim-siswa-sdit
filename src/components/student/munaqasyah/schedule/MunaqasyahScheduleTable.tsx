@@ -111,7 +111,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     return Array.from(set);
   }, [data]);
 
-  // Filter data berdasarkan periode dan stage yang dipilih
+  // Filter data berdasarkan Tahun Akademik dan stage yang dipilih
   const filteredData = useMemo(() => {
     return data.filter((schedule) => {
       // Filter by period
@@ -243,13 +243,13 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Periode</SelectItem>
+              <SelectItem value="ALL">Semua Tahun Akademik</SelectItem>
               {academicPeriods.map((val) => {
                 const [year, sem] = val.split('__');
                 return (
@@ -285,7 +285,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Tahun Akademik</h4>
                 <p className="font-semibold">
                   {currentPeriodInfo.academicYear} {currentPeriodInfo.semester}
                 </p>

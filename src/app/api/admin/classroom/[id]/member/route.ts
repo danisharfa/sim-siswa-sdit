@@ -64,7 +64,7 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
     const classroomId = params.id;
 
     const body = await req.json();
-    const { nis, nisList } = body;
+    const { nisList } = body;
 
     if (!classroomId) {
       return NextResponse.json(
@@ -73,62 +73,24 @@ export async function POST(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    if (Array.isArray(nisList)) {
-      // 🔁 Tambah banyak siswa sekaligus
-      const updated = await prisma.studentProfile.updateMany({
-        where: {
-          nis: { in: nisList },
-          classroomId: null,
-          status: StudentStatus.AKTIF,
-        },
-        data: { classroomId },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: `${updated.count} siswa berhasil ditambahkan ke kelas`,
-      });
-    }
-
-    if (!nis) {
-      return NextResponse.json(
-        { success: false, message: 'NIS wajib diisi jika bukan bulk' },
-        { status: 400 }
-      );
-    }
-
-    // ➕ Tambah satu siswa
-    const siswa = await prisma.studentProfile.findUnique({
-      where: { nis },
-    });
-
-    if (!siswa) {
-      return NextResponse.json(
-        { success: false, message: 'Siswa tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    if (siswa.classroomId) {
-      return NextResponse.json(
-        { success: false, message: 'Siswa sudah dalam kelas lain' },
-        { status: 409 }
-      );
-    }
-
-    await prisma.studentProfile.update({
-      where: { userId: siswa.userId },
+    // Tambah banyak siswa sekaligus
+    const updated = await prisma.studentProfile.updateMany({
+      where: {
+        nis: { in: nisList },
+        classroomId: null,
+        status: StudentStatus.AKTIF,
+      },
       data: { classroomId },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Siswa berhasil ditambahkan ke kelas',
+      message: `${updated.count} siswa berhasil ditambahkan ke kelas`,
     });
   } catch (error) {
-    console.error('POST /member error:', error);
+    console.error('Gagal menambahkan siswa:', error);
     return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan server' },
+      { success: false, message: 'Gagal menambahkan siswa' },
       { status: 500 }
     );
   }

@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     });
 
     const results: string[] = [];
+    const processedClassrooms = new Set<string>(); // Track kelas yang sudah diproses
 
     for (const student of students) {
       const currentClass = student.classroom;
@@ -129,12 +130,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Nonaktifkan kelas lama
-      await prisma.classroom.update({
-        where: { id: currentClass.id },
-        data: { isActive: false },
-      });
-
       // Aktifkan kelas baru jika ada
       if (nextClassroomId) {
         await prisma.classroom.update({
@@ -144,6 +139,28 @@ export async function POST(req: NextRequest) {
       }
 
       results.push(`${student.nis} → ${isGraduating ? StudentStatus.LULUS : nextClassroomId}`);
+      
+      // Tambahkan kelas lama ke set untuk dicek nanti
+      processedClassrooms.add(currentClass.id);
+    }
+
+    // Cek dan nonaktifkan kelas lama jika sudah kosong
+    for (const classroomId of processedClassrooms) {
+      // Hitung jumlah siswa aktif yang masih ada di kelas ini
+      const remainingActiveStudents = await prisma.studentProfile.count({
+        where: {
+          classroomId: classroomId,
+          status: StudentStatus.AKTIF,
+        },
+      });
+
+      // Jika tidak ada siswa aktif yang tersisa, nonaktifkan kelas
+      if (remainingActiveStudents === 0) {
+        await prisma.classroom.update({
+          where: { id: classroomId },
+          data: { isActive: false },
+        });
+      }
     }
 
     return NextResponse.json({

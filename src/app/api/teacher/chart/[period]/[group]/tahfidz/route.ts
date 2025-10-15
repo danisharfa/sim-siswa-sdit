@@ -249,18 +249,6 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }
 
     console.log('Final result count:', result.length);
-    console.log('Sample result data (cumulative progress):', {
-      period: `${academicYear}-${semester}`,
-      note: 'Progress shows cumulative data up to selected period',
-      sampleStudent: result[0]
-        ? {
-            name: result[0].studentName,
-            lastSurah: result[0].lastSurah,
-            currentJuz: result[0].currentJuz,
-            totalProgress: result[0].progress.filter((p) => p.status !== 'BELUM_DIMULAI').length,
-          }
-        : 'No students',
-    });
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching chart data:', error);

@@ -10,7 +10,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
 } from '@tanstack/react-table';
-import { Eye, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { KeyRound, MoreVertical, Pencil, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,7 @@ interface User {
   role: string;
   createdAt: string;
   updatedAt: string;
+  graduatedAt?: string | null;
 }
 
 interface Props {
@@ -106,6 +107,24 @@ export function UserTable({ data, title, onRefresh }: Props) {
           <span>{new Date(row.getValue('Updated At')).toLocaleDateString('id-ID')}</span>
         ),
       },
+      ...(title === 'Daftar Siswa'
+        ? [
+            {
+              accessorKey: 'graduatedAt',
+              id: 'Graduated At',
+              header: 'Tanggal Lulus',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              cell: ({ row }: { row: any }) => {
+                const graduatedAt = row.getValue('Graduated At');
+                return (
+                  <span>
+                    {graduatedAt ? new Date(graduatedAt).toLocaleDateString('id-ID') : '-'}
+                  </span>
+                );
+              },
+            },
+          ]
+        : []),
       {
         id: 'actions',
         enableHiding: false,
@@ -125,21 +144,21 @@ export function UserTable({ data, title, onRefresh }: Props) {
                   onClick={() => router.push(`/dashboard/admin/users/${user.id}`)}
                   className="flex items-center gap-2"
                 >
-                  <Eye className="w-4 h-4" />
+                  <SquareArrowOutUpRight />
                   Detail
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleOpenEditDialog(user)}
                   className="flex items-center gap-2"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleOpenResetDialog(user)}
                   className="flex items-center gap-2"
                 >
-                  <KeyRound className="w-4 h-4" />
+                  <KeyRound />
                   Reset Password
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -147,7 +166,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
                   variant="destructive"
                   className="flex items-center gap-2"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 />
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -156,7 +175,7 @@ export function UserTable({ data, title, onRefresh }: Props) {
         },
       },
     ],
-    [router, handleOpenEditDialog, handleOpenResetDialog, handleOpenDeleteDialog]
+    [router, handleOpenEditDialog, handleOpenResetDialog, handleOpenDeleteDialog, title]
   );
 
   const table = useReactTable({

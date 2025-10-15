@@ -287,7 +287,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
   return (
     <>
       <div className="mb-4">
-        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+        <Label className="mb-2 block">Filter Tahun Akademik</Label>
         <Select
           value={selectedYearSemester}
           onValueChange={(value) => {

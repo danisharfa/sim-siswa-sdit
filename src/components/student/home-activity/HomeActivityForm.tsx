@@ -2,10 +2,16 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -14,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Calendar01 } from '@/components/calendar/calendar-01';
 import { HomeActivityType } from '@prisma/client';
+import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Surah {
   id: number;
@@ -105,12 +113,15 @@ export function HomeActivityForm() {
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <Calendar01 value={date} onChange={setDate} label="Tanggal Setoran" />
 
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 min-w-0">
-            <Label className="mb-2 block">Jenis Aktivitas</Label>
+      <CardContent className="space-y-6">
+        <FieldSet>
+          <Field>
+            <Calendar01 value={date} onChange={setDate} label="Tanggal Aktivitas" />
+          </Field>
+
+          <Field>
+            <FieldLabel>Jenis Aktivitas</FieldLabel>
             <Select
               value={activityType}
               onValueChange={(val) => setActivityType(val as HomeActivityType)}
@@ -124,85 +135,90 @@ export function HomeActivityForm() {
                 <SelectItem value="TARJAMAH">Tarjamah</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <div className="flex-1 min-w-0">
-            <Label className="mb-2 block">Juz</Label>
-            <Select value={juzId} onValueChange={setJuzId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Juz" />
-              </SelectTrigger>
-              <SelectContent>
-                {juzList?.data?.map((j: Juz) => (
-                  <SelectItem key={j.id} value={j.id.toString()}>
-                    {j.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FieldGroup className="flex flex-col md:flex-row gap-4">
+            <Field className="flex-1 min-w-0">
+              <FieldLabel>Juz</FieldLabel>
+              <Select value={juzId} onValueChange={setJuzId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Juz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {juzList?.data?.map((j: Juz) => (
+                    <SelectItem key={j.id} value={j.id.toString()}>
+                      {j.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
-          <div className="flex-1 min-w-0">
-            <Label className="mb-2 block">Surah</Label>
-            <Select value={surahId} onValueChange={setSurahId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Surah" />
-              </SelectTrigger>
-              <SelectContent>
-                {surahList?.data?.map((s: Surah) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <Field className="flex-1 min-w-0">
+              <FieldLabel>Surah</FieldLabel>
+              <Select value={surahId} onValueChange={setSurahId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Surah" />
+                </SelectTrigger>
+                <SelectContent>
+                  {surahList?.data?.map((s: Surah) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </FieldGroup>
 
-          <div className="flex-1 min-w-0">
-            <Label className="mb-2 block">Ayat Mulai</Label>
-            <Input
-              type="number"
-              value={startVerse}
-              onChange={(e) => setStartVerse(e.target.value)}
-              placeholder="1"
+          <FieldGroup className="flex flex-col md:flex-row gap-4">
+            <Field className="flex-1 min-w-0">
+              <FieldLabel>Ayat Mulai</FieldLabel>
+              <Input
+                type="number"
+                value={startVerse}
+                onChange={(e) => setStartVerse(e.target.value)}
+                placeholder="1"
+              />
+            </Field>
+
+            <Field className="flex-1 min-w-0">
+              <FieldLabel>Ayat Selesai</FieldLabel>
+              <Input
+                type="number"
+                value={endVerse}
+                onChange={(e) => setEndVerse(e.target.value)}
+                placeholder="7"
+              />
+            </Field>
+          </FieldGroup>
+
+          <Field>
+            <FieldLabel>Catatan</FieldLabel>
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Contoh: Dilakukan setelah Subuh"
+              className="min-h-24"
             />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <Label className="mb-2 block">Ayat Selesai</Label>
-            <Input
-              type="number"
-              value={endVerse}
-              onChange={(e) => setEndVerse(e.target.value)}
-              placeholder="7"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Catatan</Label>
-          <Textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Contoh: Dilakukan setelah Subuh"
-            className="min-h-24"
-          />
-        </div>
-
-        <Button onClick={handleSubmit} disabled={loading} className="w-full mt-6">
+          </Field>
+        </FieldSet>
+      </CardContent>
+      <CardFooter className="flex items-center justify-center">
+        <Button onClick={handleSubmit} disabled={loading} className="w-48">
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <Spinner />
               Menyimpan...
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 mr-2" />
+              <Save />
               Simpan Aktivitas
             </>
           )}
         </Button>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

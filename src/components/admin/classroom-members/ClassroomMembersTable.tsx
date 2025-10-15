@@ -106,7 +106,7 @@ export function ClassroomMembersTable({ data, title, classroomId, onRefresh }: P
 
   return (
     <>
-      <DataTable title={title} table={table} filterColumn="NIS" />
+      <DataTable title={title} table={table} filterColumn="NIS" showColumnFilter={false} />
 
       {dialogType === 'delete' && selectedMember && (
         <ClassroomMembersAlertDialog

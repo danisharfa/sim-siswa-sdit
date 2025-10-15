@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { signOut } from 'next-auth/react';
 import {
   Card,
@@ -13,17 +13,19 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from '@/components/ui/field';
+import { InputGroup, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/spinner';
 import { getErrorMessage } from '@/lib/utils';
 import { ChangePasswordInput, ChangePasswordSchema } from '@/lib/validations/auth';
 
@@ -48,13 +50,14 @@ export function ChangePasswordForm() {
     },
   });
 
-  // Watch form values untuk menentukan apakah tombol harus disabled
-  const watchedValues = form.watch();
+  const { handleSubmit, register, formState, reset, clearErrors, watch } = form;
+  const { errors } = formState;
+
+  const watchedValues = watch();
   const isFormEmpty = !watchedValues.oldPassword?.trim() || !watchedValues.newPassword?.trim();
 
-  const handleSubmit = async (values: ChangePasswordInput) => {
+  const onSubmit = async (values: ChangePasswordInput) => {
     setLoading(true);
-
     abortRef.current = new AbortController();
 
     try {
@@ -66,16 +69,15 @@ export function ChangePasswordForm() {
       });
 
       const json = await res.json();
-
       if (json.success) {
-        toast.success(json.message || 'Password berhasil diubah');
-        form.reset();
-        form.clearErrors();
+        toast.success(json.message || 'Password berhasil diperbarui');
+        reset();
+        clearErrors();
         setTimeout(() => {
           signOut({ callbackUrl: '/' });
         }, 1000);
       } else {
-        toast.error(json.message || 'Gagal mengubah password');
+        toast.error(json.message || 'Gagal memperbarui password');
       }
     } catch (error) {
       const message = getErrorMessage(error);
@@ -87,93 +89,87 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <Card className="shadow-xl">
+    <Card>
       <CardHeader>
         <CardTitle className="text-2xl">Ganti Password</CardTitle>
         <CardDescription>
           Masukkan password lama Anda untuk mengganti password. Jika lupa, hubungi admin.
         </CardDescription>
       </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="oldPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password Lama</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showOld ? 'text' : 'password'}
-                        placeholder="Masukkan password lama"
-                        {...field}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2"
-                        onClick={() => setShowOld((prev) => !prev)}
-                        tabIndex={-1}
-                      >
-                        {showOld ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="newPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password Baru</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showNew ? 'text' : 'password'}
-                        placeholder="Masukkan password baru"
-                        {...field}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2"
-                        onClick={() => setShowNew((prev) => !prev)}
-                        tabIndex={-1}
-                      >
-                        {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            <Button
-              type="submit"
-              className="w-full flex items-center justify-center"
-              disabled={loading || isFormEmpty}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Menyimpan...
-                </>
-              ) : (
-                <span>Simpan</span>
-              )}
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <CardContent>
+          <FieldSet>
+            <FieldGroup>
+              <Field data-invalid={!!errors.oldPassword}>
+                <FieldLabel htmlFor="oldPassword">Password Lama</FieldLabel>
+
+                <InputGroup>
+                  <InputGroupInput
+                    id="oldPassword"
+                    type={showOld ? 'text' : 'password'}
+                    placeholder="Masukkan password lama"
+                    aria-invalid={!!errors.oldPassword}
+                    {...register('oldPassword')}
+                  />
+                  <InputGroupButton
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setShowOld((p) => !p)}
+                    tabIndex={-1}
+                    aria-label={showOld ? 'Sembunyikan password lama' : 'Tampilkan password lama'}
+                  >
+                    {showOld ? <EyeOff /> : <Eye />}
+                  </InputGroupButton>
+                </InputGroup>
+
+                <FieldError>{errors.oldPassword?.message}</FieldError>
+              </Field>
+
+              <Field data-invalid={!!errors.newPassword}>
+                <FieldContent>
+                  <FieldLabel htmlFor="newPassword">Password Baru</FieldLabel>
+                  <FieldDescription>Password baru minimal 8 karakter</FieldDescription>
+                </FieldContent>
+
+                <InputGroup>
+                  <InputGroupInput
+                    id="newPassword"
+                    type={showNew ? 'text' : 'password'}
+                    placeholder="Masukkan password baru"
+                    aria-invalid={!!errors.newPassword}
+                    {...register('newPassword')}
+                  />
+                  <InputGroupButton
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setShowNew((p) => !p)}
+                    tabIndex={-1}
+                    aria-label={showNew ? 'Sembunyikan password baru' : 'Tampilkan password baru'}
+                  >
+                    {showNew ? <EyeOff /> : <Eye />}
+                  </InputGroupButton>
+                </InputGroup>
+
+                <FieldError>{errors.newPassword?.message}</FieldError>
+              </Field>
+            </FieldGroup>
+          </FieldSet>
+        </CardContent>
+
+        <CardFooter>
+          <Button type="submit" className="w-full" disabled={loading || isFormEmpty}>
+            {loading ? (
+              <>
+                <Spinner />
+                Menyimpan...
+              </>
+            ) : (
+              <span>Simpan</span>
+            )}
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 }

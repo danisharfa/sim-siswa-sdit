@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import {
   Select,
@@ -19,7 +20,6 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Semester } from '@prisma/client';
 
 interface ClassroomEditDialogProps {
@@ -28,7 +28,6 @@ interface ClassroomEditDialogProps {
     name: string;
     academicYear: string;
     semester: Semester;
-    isActive: boolean;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,14 +43,12 @@ export function ClassroomEditDialog({
   const [name, setName] = useState(classroom.name);
   const [academicYear, setAcademicYear] = useState(classroom.academicYear);
   const [semester, setSemester] = useState<Semester>(classroom.semester);
-  const [isActive, setIsActive] = useState(classroom.isActive);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setName(classroom.name);
     setAcademicYear(classroom.academicYear);
     setSemester(classroom.semester);
-    setIsActive(classroom.isActive);
   }, [classroom]);
 
   async function handleSave() {
@@ -61,7 +58,7 @@ export function ClassroomEditDialog({
       const res = await fetch(`/api/admin/classroom/${classroom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, academicYear, semester, isActive }),
+        body: JSON.stringify({ name, academicYear, semester }),
       });
 
       const data = await res.json().catch(() => null);
@@ -94,7 +91,7 @@ export function ClassroomEditDialog({
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="academicYear">Tahun Ajaran</Label>
+            <Label htmlFor="academicYear">Tahun Akademik</Label>
             <Input
               id="academicYear"
               value={academicYear}
@@ -113,17 +110,19 @@ export function ClassroomEditDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center justify-between pt-2">
-            <Label htmlFor="isActive">Kelas Aktif</Label>
-            <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
-          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Batal
           </Button>
           <Button onClick={handleSave} disabled={loading}>
-            {loading ? 'Menyimpan...' : 'Simpan'}
+            {loading ? (
+              <>
+                <Spinner /> Menyimpan...
+              </>
+            ) : (
+              'Simpan'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

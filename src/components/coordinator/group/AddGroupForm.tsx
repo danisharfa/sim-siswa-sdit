@@ -1,14 +1,10 @@
 'use client';
 
 import useSWR from 'swr';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectTrigger,
@@ -16,14 +12,12 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { AddGroupSchema, AddGroupInput } from '@/lib/validations/group';
 import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/spinner';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Semester } from '@prisma/client';
+import { AddGroupSchema, AddGroupInput } from '@/lib/validations/group';
 
 interface ActiveClassroom {
   id: string;
@@ -39,21 +33,25 @@ interface Props {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function AddGroupForm({ onGroupAdded }: Props) {
-  const form = useForm<AddGroupInput>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<AddGroupInput>({
     resolver: zodResolver(AddGroupSchema),
     defaultValues: {
       groupName: '',
-      classroomName: '',
-      classroomAcademicYear: '',
-      classroomSemester: 'GANJIL',
-      nip: '',
+      classroomId: '',
+      teacherId: '',
     },
   });
 
-  const { data } = useSWR('/api/coordinator/classroom/active', fetcher);
-  const classroomOptions: ActiveClassroom[] = data?.data || [];
+  const { data: classroomData } = useSWR('/api/coordinator/classroom/active', fetcher);
+  const { data: teacherData } = useSWR('/api/coordinator/teacher', fetcher);
 
-  const isSubmitting = form.formState.isSubmitting;
+  const classroomOptions: ActiveClassroom[] = classroomData?.data || [];
+  const teacherOptions: { id: string; nip: string; fullName: string }[] = teacherData?.data || [];
 
   async function onSubmit(values: AddGroupInput) {
     try {
@@ -70,7 +68,7 @@ export function AddGroupForm({ onGroupAdded }: Props) {
       }
 
       toast.success(result.message || 'Kelompok berhasil ditambahkan');
-      form.reset();
+      reset();
       onGroupAdded();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan data');
@@ -80,81 +78,92 @@ export function AddGroupForm({ onGroupAdded }: Props) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Tambah Kelompok Baru</h2>
+        <CardTitle className="text-2xl">Tambah Kelompok Baru</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="groupName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Kelompok</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Contoh: Kelompok 1" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="classroomName"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Kelas Aktif</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      const selected = classroomOptions.find(
-                        (c: ActiveClassroom) => c.id === value
-                      );
-                      if (selected) {
-                        form.setValue('classroomName', selected.name);
-                        form.setValue('classroomAcademicYear', selected.academicYear);
-                        form.setValue('classroomSemester', selected.semester);
-                      }
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <CardContent>
+          <FieldSet>
+            <FieldGroup>
+              <Controller
+                name="groupName"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="groupName">Nama Kelompok</FieldLabel>
+                    <Input
+                      id="groupName"
+                      placeholder="Contoh: Kelompok 1"
+                      aria-invalid={fieldState.invalid}
+                      {...field}
+                    />
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="classroomId"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="classroom">Kelas Aktif</FieldLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="classroom" aria-invalid={fieldState.invalid}>
                         <SelectValue placeholder="Pilih kelas aktif" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {classroomOptions.map((kelas) => (
-                        <SelectItem key={kelas.id} value={kelas.id}>
-                          {kelas.name} - {kelas.academicYear} {kelas.semester}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <SelectContent>
+                        {classroomOptions.map((kelas) => (
+                          <SelectItem key={kelas.id} value={kelas.id}>
+                            {kelas.name} - {kelas.academicYear} {kelas.semester}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="nip"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>NIP Wali Kelompok</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Contoh: 1234567890" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <Controller
+                name="teacherId"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="teacher">Guru Pembimbing</FieldLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="teacher" aria-invalid={fieldState.invalid}>
+                        <SelectValue placeholder="Pilih guru pembimbing" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teacherOptions.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.fullName} - {t.nip}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </FieldSet>
+        </CardContent>
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Menambahkan...' : 'Tambah Kelompok'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
+        <CardFooter>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Spinner />
+                <span>Menambahkan...</span>
+              </>
+            ) : (
+              <span>Tambah Kelompok</span>
+            )}
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 }

@@ -76,12 +76,12 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
               <Button
                 variant="destructive"
                 size="sm"
-                className="size-8"
                 onClick={() => {
                   handleOpenDeleteDialog(student);
                 }}
               >
                 <Trash2 />
+                Hapus
               </Button>
               <Button
                 variant="secondary"

@@ -30,10 +30,10 @@ type ChartFiltersProps = {
 export function ChartFilters({ periods, selectedPeriod, onPeriodChange }: ChartFiltersProps) {
   return (
     <>
-      <Label className="mb-2 block">Filter Periode</Label>
+      <Label className="mb-2 block">Filter Tahun Akademik</Label>
       <Select value={selectedPeriod} onValueChange={onPeriodChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Pilih periode" />
+          <SelectValue placeholder="Pilih Tahun Ajaran" />
         </SelectTrigger>
         <SelectContent>
           {periods.map((period) => (

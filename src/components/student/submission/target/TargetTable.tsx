@@ -262,10 +262,10 @@ export function TargetTable({ data, title }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => {

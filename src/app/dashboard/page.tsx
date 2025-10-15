@@ -1,26 +1,25 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { Role } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardRedirect() {
   const session = await auth();
-
   if (!session) return redirect('/');
 
-  const { role } = session.user;
+  const role = session.user.role?.toLowerCase();
 
   switch (role) {
-    case Role.admin:
+    case 'admin':
       return redirect('/dashboard/admin');
-    case Role.coordinator:
+    case 'coordinator':
       return redirect('/dashboard/coordinator');
-    case Role.teacher:
+    case 'teacher':
       return redirect('/dashboard/teacher');
-    case Role.student:
+    case 'student':
       return redirect('/dashboard/student');
     default:
-      return redirect('/dashboard');
+      return redirect('/');
   }
 }
+

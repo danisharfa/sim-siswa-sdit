@@ -59,10 +59,12 @@ export function ExportToPDFButton({ table }: Props) {
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text('SDIT ULUL ALBAB MATARAM', doc.internal.pageSize.width / 2, 20, { align: 'center' });
-    
+
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    doc.text('LAPORAN RIWAYAT SETORAN HAFALAN SISWA', doc.internal.pageSize.width / 2, 28, { align: 'center' });
+    doc.text('LAPORAN RIWAYAT SETORAN HAFALAN SISWA', doc.internal.pageSize.width / 2, 28, {
+      align: 'center',
+    });
 
     // Informasi tanggal cetak
     doc.setFontSize(10);
@@ -129,8 +131,10 @@ export function ExportToPDFButton({ table }: Props) {
       didDrawPage: (data) => {
         // Footer dengan nomor halaman
         const pageNumber = data.pageNumber;
-        const totalPages = (doc as unknown as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
-        
+        const totalPages = (
+          doc as unknown as { internal: { getNumberOfPages: () => number } }
+        ).internal.getNumberOfPages();
+
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.text(
@@ -142,20 +146,25 @@ export function ExportToPDFButton({ table }: Props) {
 
         // Garis footer
         doc.setLineWidth(0.3);
-        doc.line(14, doc.internal.pageSize.height - 15, doc.internal.pageSize.width - 14, doc.internal.pageSize.height - 15);
+        doc.line(
+          14,
+          doc.internal.pageSize.height - 15,
+          doc.internal.pageSize.width - 14,
+          doc.internal.pageSize.height - 15
+        );
       },
     });
 
     // Generate filename dengan timestamp
     const timestamp = new Date().toISOString().slice(0, 10);
     const filename = `laporan-setoran-${timestamp}.pdf`;
-    
+
     doc.save(filename);
   };
 
   return (
-    <Button variant="outline" onClick={handleExport} className="ml-auto flex gap-2">
-      <Download className="w-4 h-4" />
+    <Button variant="outline" onClick={handleExport} className="">
+      <Download />
       Export PDF
     </Button>
   );

@@ -2,10 +2,11 @@
 
 import useSWR from 'swr';
 import { useState } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Props {
   classroomId: string;
@@ -66,7 +67,7 @@ export function AddClassroomMembersForm({ classroomId, onMemberAdded }: Props) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Tambah Beberapa Siswa ke Kelas</h2>
+        <CardTitle className="text-xl">Tambah Siswa ke Kelas</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -94,7 +95,14 @@ export function AddClassroomMembersForm({ classroomId, onMemberAdded }: Props) {
               disabled={loading || selectedNis.length === 0}
               className="w-full"
             >
-              {loading ? 'Menambahkan...' : 'Tambah Siswa Terpilih'}
+              {loading ? (
+                <>
+                  <Spinner />
+                  <span>Menambahkan...</span>
+                </>
+              ) : (
+                <span>Tambah Siswa Terpilih</span>
+              )}
             </Button>
           </div>
         )}

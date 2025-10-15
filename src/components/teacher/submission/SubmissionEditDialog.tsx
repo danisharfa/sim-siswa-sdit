@@ -319,14 +319,14 @@ export function SubmissionEditDialog({ submission, open, onOpenChange, onSave }:
             <Textarea value={form.note} onChange={(e) => handleChange('note', e.target.value)} />
           </div>
         </div>
-      <DialogFooter>
-        <DialogClose>
-          <Button variant="outline">Batal</Button>
-        </DialogClose>
-        <Button onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Menyimpan...' : 'Simpan'}
-        </Button>
-      </DialogFooter>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Batal</Button>
+          </DialogClose>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Menyimpan...' : 'Simpan'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

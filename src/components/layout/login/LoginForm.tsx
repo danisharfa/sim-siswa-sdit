@@ -3,12 +3,25 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff, User, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/spinner';
 
 export function LoginForm() {
   const router = useRouter();
@@ -24,7 +37,6 @@ export function LoginForm() {
       toast.error('Username dan password harus diisi');
       return;
     }
-
     setLoading(true);
 
     try {
@@ -43,7 +55,6 @@ export function LoginForm() {
 
       if (result?.ok) {
         toast.success('Berhasil login! Mengarahkan ke dashboard...');
-        // Redirect ke dashboard utama, biar page.tsx yang handle role redirect
         router.replace('/dashboard');
       }
     } catch (error) {
@@ -54,91 +65,75 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="border-0 shadow-lg">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Masuk</CardTitle>
+    <Card>
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Masuk</CardTitle>
         <CardDescription>Gunakan username dan password yang telah diberikan</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Username Field */}
+
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-sm font-medium">
-              Username
-            </Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+            <Label htmlFor="username">Username</Label>
+            <InputGroup>
+              <InputGroupAddon>
+                <User />
+              </InputGroupAddon>
+              <InputGroupInput
                 id="username"
-                name="username"
-                type="text"
                 placeholder="Masukkan username Anda"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
                 disabled={loading}
-                required
               />
-            </div>
+            </InputGroup>
           </div>
 
-          {/* Password Field */}
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium">
-              Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+            <Label htmlFor="password">Password</Label>
+            <InputGroup>
+              <InputGroupAddon>
+                <Lock />
+              </InputGroupAddon>
+              <InputGroupInput
                 id="password"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Masukkan password Anda"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-10 transition-all focus:ring-2 focus:ring-primary/20"
                 disabled={loading}
-                required
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-                tabIndex={-1}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
-            </div>
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowPassword((s) => !s)}
+                  disabled={loading}
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
           </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full gap-2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-200"
-            disabled={loading || !username.trim() || !password.trim()}
-            size="lg"
-          >
+        </CardContent>
+        
+        <CardFooter>
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner />
                 Memproses...
               </>
             ) : (
               <>
-                <LogIn className="h-4 w-4" />
+                <LogIn />
                 Masuk
               </>
             )}
           </Button>
-        </form>
-      </CardContent>
+        </CardFooter>
+      </form>
     </Card>
   );
 }

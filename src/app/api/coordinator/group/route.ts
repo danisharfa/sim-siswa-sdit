@@ -16,6 +16,7 @@ export async function GET() {
           isActive: true,
         },
       },
+      orderBy: [ { classroom: { name: 'asc' } }, { name: 'asc' } ],
       select: {
         id: true,
         name: true,
@@ -85,9 +86,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { groupName, classroomName, classroomAcademicYear, classroomSemester, nip } = body;
+    // const { groupName, classroomName, classroomAcademicYear, classroomSemester, teacherId } = body;
+    const { groupName, classroomId, teacherId } = body;
 
-    if (!groupName || !classroomName || !classroomAcademicYear || !classroomSemester || !nip) {
+    if (!groupName || !classroomId || !teacherId) {
       return NextResponse.json(
         { success: false, message: 'Semua field wajib diisi' },
         { status: 400 }
@@ -95,13 +97,14 @@ export async function POST(req: NextRequest) {
     }
 
     const classroom = await prisma.classroom.findUnique({
-      where: {
-        name_academicYear_semester: {
-          name: classroomName,
-          academicYear: classroomAcademicYear,
-          semester: classroomSemester,
-        },
-      },
+      // where: {
+      //   name_academicYear_semester: {
+      //     name: classroomName,
+      //     academicYear: classroomAcademicYear,
+      //     semester: classroomSemester,
+      //   },
+      // },
+      where: { id: classroomId },
     });
 
     if (!classroom) {
@@ -126,7 +129,7 @@ export async function POST(req: NextRequest) {
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
-      where: { nip },
+      where: { userId: teacherId },
       include: {
         user: {
           select: {
@@ -140,7 +143,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Guru dengan NIP tersebut tidak ditemukan',
+          message: 'Guru tidak ditemukan',
         },
         { status: 404 }
       );
@@ -153,7 +156,7 @@ export async function POST(req: NextRequest) {
         id: kelompokId,
         name: groupName,
         classroomId: classroom.id,
-        teacherId: teacher.userId,
+        teacherId: teacherId,
       },
     });
 

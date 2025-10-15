@@ -252,7 +252,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedPeriod}
             onValueChange={(val) => {
@@ -260,7 +260,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
             }}
           >
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => (
@@ -301,7 +301,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Tahun Akademik</h4>
                 <p className="font-semibold">
                   {currentPeriodInfo.period.academicYear} {currentPeriodInfo.period.semester}
                 </p>
@@ -328,7 +328,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
       {selectedPeriod && filteredData.length === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center mt-4">
           <p className="text-muted-foreground">
-            Tidak ada jadwal tashih untuk periode {selectedPeriod.replace('-', ' ')}.
+            Tidak ada jadwal tashih untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
           </p>
         </div>
       )}

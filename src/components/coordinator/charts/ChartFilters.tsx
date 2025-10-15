@@ -48,7 +48,7 @@ export function ChartFilters({
   return (
     <div className="flex flex-wrap gap-4">
       <div>
-        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+        <Label className="mb-2 block">Filter Tahun Akademik</Label>
         <Select value={selectedPeriod} onValueChange={onPeriodChange}>
           <SelectTrigger>
             <SelectValue placeholder="Pilih periode" />

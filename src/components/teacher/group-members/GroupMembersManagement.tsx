@@ -7,7 +7,7 @@ export function GroupMembersManagement({ groupId }: { groupId: string }) {
 
   return (
     <div className="space-y-6">
-      <GroupMembersTable data={members} title="Daftar Anggota Kelompok" groupId={groupId} />
+      <GroupMembersTable data={members} title="Daftar Siswa" groupId={groupId} />
     </div>
   );
 }

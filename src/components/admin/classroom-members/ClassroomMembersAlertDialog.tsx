@@ -46,10 +46,10 @@ export function ClassroomMembersAlertDialog({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || 'Terjadi kesalahan saat menghapus anggota.');
+        throw new Error(data?.error || 'Terjadi kesalahan saat menghapus siswa.');
       }
 
-      toast.success('Anggota berhasil dihapus dari kelas');
+      toast.success(data.message || 'Siswa berhasil dihapus dari kelas');
       onConfirm();
       onOpenChange(false);
     } catch (error) {
@@ -65,9 +65,9 @@ export function ClassroomMembersAlertDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Hapus Anggota Kelas</AlertDialogTitle>
+          <AlertDialogTitle>Hapus Siswa Kelas</AlertDialogTitle>
           <AlertDialogDescription>
-            Apakah Anda yakin ingin menghapus anggota ini dari kelas? Tindakan ini tidak dapat
+            Apakah Anda yakin ingin menghapus siswa ini dari kelas? Tindakan ini tidak dapat
             dibatalkan.
           </AlertDialogDescription>
         </AlertDialogHeader>

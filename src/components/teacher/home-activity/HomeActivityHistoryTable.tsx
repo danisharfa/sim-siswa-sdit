@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Calendar23 } from '@/components/calendar/calendar-23';
+import { type DateRange } from 'react-day-picker';
 import { HomeActivityType, Semester } from '@prisma/client';
 import { Label } from '@/components/ui/label';
 
@@ -65,6 +67,7 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
   const [selectedActivityType, setSelectedActivityType] = useState<HomeActivityType | 'ALL'>('ALL');
   const [selectedGroup, setSelectedGroup] = useState<string | 'ALL'>('ALL');
   const [selectedStudent, setSelectedStudent] = useState<string | 'ALL'>('ALL');
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>();
 
   const yearSemesterOptions = useMemo(() => {
     const set = new Set<string>();
@@ -110,6 +113,22 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
         accessorKey: 'date',
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
+        filterFn: (row, columnId) => {
+          if (!selectedDateRange) return true;
+
+          const date = new Date(row.getValue(columnId));
+          const { from, to } = selectedDateRange;
+
+          if (from && to) {
+            return date >= from && date <= to;
+          } else if (from) {
+            return date >= from;
+          } else if (to) {
+            return date <= to;
+          }
+
+          return true;
+        },
         cell: ({ row }) => (
           <span>
             {new Date(row.original.date).toLocaleDateString('id-ID', {
@@ -174,7 +193,7 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
         },
       },
     ],
-    []
+    [selectedDateRange]
   );
 
   const table = useReactTable({
@@ -198,7 +217,7 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
     <>
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {
@@ -256,6 +275,30 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
         </div>
 
         <div>
+          <Label className="mb-2 block">Filter Siswa</Label>
+          <Select
+            value={selectedStudent}
+            disabled={selectedGroup === 'ALL'}
+            onValueChange={(value) => {
+              setSelectedStudent(value);
+              table.getColumn('Siswa')?.setFilterValue(value === 'ALL' ? undefined : value);
+            }}
+          >
+            <SelectTrigger className="min-w-[250px]">
+              <SelectValue placeholder="Pilih Siswa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Siswa</SelectItem>
+              {filteredStudents.map((student) => (
+                <SelectItem key={student} value={student}>
+                  {student}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
           <Label className="mb-2 block">Filter Jenis Aktivitas</Label>
           <Select
             value={selectedActivityType}
@@ -281,27 +324,16 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Siswa</Label>
-          <Select
-            value={selectedStudent}
-            disabled={selectedGroup === 'ALL'}
-            onValueChange={(value) => {
-              setSelectedStudent(value);
-              table.getColumn('Siswa')?.setFilterValue(value === 'ALL' ? undefined : value);
+          <Calendar23
+            value={selectedDateRange}
+            onChange={(range) => {
+              setSelectedDateRange(range);
+              table.getColumn('Tanggal')?.setFilterValue('custom');
             }}
-          >
-            <SelectTrigger className="min-w-[250px]">
-              <SelectValue placeholder="Pilih Siswa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Semua Siswa</SelectItem>
-              {filteredStudents.map((student) => (
-                <SelectItem key={student} value={student}>
-                  {student}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            label="Filter Tanggal"
+            placeholder="Pilih Rentang Tanggal"
+            className="min-w-0 w-full sm:min-w-[250px]"
+          />
         </div>
       </div>
 

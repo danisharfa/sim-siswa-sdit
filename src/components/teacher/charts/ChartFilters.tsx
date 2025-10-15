@@ -48,10 +48,10 @@ export function ChartFilters({
   return (
     <div className="flex flex-wrap gap-4">
       <div>
-        <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+        <Label className="mb-2 block">Filter Tahun Akademik</Label>
         <Select value={selectedPeriod} onValueChange={onPeriodChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Pilih periode" />
+            <SelectValue placeholder="Pilih Tahun Akademik" />
           </SelectTrigger>
           <SelectContent>
             {periods.map((period) => (
@@ -67,7 +67,7 @@ export function ChartFilters({
         <Label className="mb-2 block">Filter Kelompok</Label>
         <Select value={selectedGroup} onValueChange={onGroupChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Pilih kelompok" />
+            <SelectValue placeholder="Pilih Kelompok" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Kelompok</SelectItem>

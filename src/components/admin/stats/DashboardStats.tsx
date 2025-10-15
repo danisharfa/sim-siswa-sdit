@@ -31,11 +31,11 @@ export function DashboardStats({
   currentPeriod,
 }: Props) {
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Current Period Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium">Periode Akademik Saat Ini</CardTitle>
+          <CardTitle className="text-sm">Tahun Akademik Saat Ini</CardTitle>
           <FaCalendarAlt className="w-10 h-10 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -49,7 +49,7 @@ export function DashboardStats({
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Koordinator</CardTitle>
+            <CardTitle className="text-sm">Total Koordinator</CardTitle>
             <FaUserTie className="w-10 h-10 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -59,7 +59,7 @@ export function DashboardStats({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Guru</CardTitle>
+            <CardTitle className="text-sm">Total Guru</CardTitle>
             <FaChalkboardTeacher className="w-10 h-10 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -69,7 +69,7 @@ export function DashboardStats({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Siswa</CardTitle>
+            <CardTitle className="text-sm">Total Siswa</CardTitle>
             <FaUserGraduate className="w-10 h-10 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -79,7 +79,7 @@ export function DashboardStats({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Kelas</CardTitle>
+            <CardTitle className="text-sm">Total Kelas</CardTitle>
             <FaChalkboard className="w-10 h-10 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -89,7 +89,7 @@ export function DashboardStats({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Kelompok</CardTitle>
+            <CardTitle className="text-sm">Total Kelompok</CardTitle>
             <FaUsers className="w-10 h-10 text-muted-foreground" />
           </CardHeader>
           <CardContent>

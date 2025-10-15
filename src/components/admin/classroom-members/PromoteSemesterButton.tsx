@@ -33,7 +33,7 @@ export function PromoteSemesterButton({ classroomId, currentAcademicYear, curren
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div>
         <Button onClick={() => setOpen(true)} variant="default" disabled={loadingStudents}>
           Naik Semester
         </Button>

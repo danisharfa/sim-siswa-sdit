@@ -1,4 +1,3 @@
-// app/api/auth/change-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { compare, hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
@@ -8,9 +7,18 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     const userId = session?.user?.id;
-
+    
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'User tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
     const { oldPassword, newPassword } = await req.json();
@@ -36,17 +44,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    const isPasswordValid = await compare(oldPassword, user.password);
-
+    const isPasswordValid = await compare(oldPassword, user.password)
     if (!isPasswordValid) {
       return NextResponse.json({ success: false, message: 'Password lama salah' }, { status: 401 });
     }
@@ -61,7 +59,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, message: 'Password berhasil diubah' });
+    return NextResponse.json({ success: true, message: 'Password berhasil diperbarui' });
   } catch (error) {
     console.error('Change password error:', error);
     return NextResponse.json(

@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 const TABLET_BREAKPOINT_MIN = 768;
-const TABLET_BREAKPOINT_MAX = 1024;
+const TABLET_BREAKPOINT_MAX = 1025;
 
 export function useIsTablet() {
   const [isTablet, setIsTablet] = React.useState(false);

@@ -16,6 +16,25 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
+    // Ambil data target yang sudah ada
+    const existingTarget = await prisma.weeklyTarget.findUnique({
+      where: { id },
+      select: {
+        studentId: true,
+        type: true,
+        startDate: true,
+        endDate: true,
+        teacherId: true,
+      },
+    });
+
+    if (!existingTarget) {
+      return NextResponse.json(
+        { success: false, message: 'Target tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
     const {
       studentId,
       type,
@@ -31,7 +50,13 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       endPage,
     } = await req.json();
 
-    if (!studentId || !type || !startDate || !endDate) {
+    // Gunakan data existing sebagai fallback
+    const finalStudentId = studentId || existingTarget.studentId;
+    const finalType = type || existingTarget.type;
+    const finalStartDate = startDate ? new Date(startDate) : existingTarget.startDate;
+    const finalEndDate = endDate ? new Date(endDate) : existingTarget.endDate;
+
+    if (!finalStudentId || !finalType || !finalStartDate || !finalEndDate) {
       return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
     }
 
@@ -46,8 +71,15 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       );
     }
 
+    if (existingTarget.teacherId !== teacher.userId) {
+      return NextResponse.json(
+        { success: false, message: 'Tidak diizinkan mengedit target ini' },
+        { status: 403 }
+      );
+    }
+
     const student = await prisma.studentProfile.findUnique({
-      where: { userId: studentId },
+      where: { userId: finalStudentId },
       select: { groupId: true },
     });
 
@@ -75,13 +107,13 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     const updated = await prisma.weeklyTarget.update({
       where: { id },
       data: {
-        studentId,
+        studentId: finalStudentId,
         teacherId: teacher.userId,
         groupId: student.groupId,
-        type,
+        type: finalType,
         description,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        startDate: finalStartDate,
+        endDate: finalEndDate,
         surahStartId,
         surahEndId,
         startAyat,

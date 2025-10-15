@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Eye } from 'lucide-react';
+import { SquareArrowOutUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
@@ -52,7 +52,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
       {
         accessorKey: 'classroomName',
         id: 'Nama Kelas',
-        header: 'Nama Kelas',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Kelas" />,
       },
       {
         accessorKey: 'classroomAcademicYear',
@@ -62,7 +62,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
       {
         accessorKey: 'classroomSemester',
         id: 'Semester',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Semester" />,
+        header: 'Semester',
       },
       {
         accessorKey: 'totalMember',
@@ -81,7 +81,7 @@ export function GroupTable({ data, title }: GroupTableProps) {
               className="size-8"
               onClick={() => router.push(`/dashboard/teacher/group/${kelompok.groupId}`)}
             >
-              <Eye />
+              <SquareArrowOutUpRight />
             </Button>
           );
         },

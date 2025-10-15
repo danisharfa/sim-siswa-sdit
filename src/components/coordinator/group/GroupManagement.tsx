@@ -25,6 +25,7 @@ export function GroupManagement() {
       <div className="space-y-6">
         <Skeleton className="h-70 w-full" />
         <Skeleton className="h-70 w-full" />
+        <Skeleton className="h-70 w-full" />
       </div>
     );
   }

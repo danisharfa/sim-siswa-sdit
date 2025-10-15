@@ -303,7 +303,7 @@ export function SubmissionTable({ data, title }: Props) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedPeriod}
             onValueChange={(val) => {
@@ -311,7 +311,7 @@ export function SubmissionTable({ data, title }: Props) {
             }}
           >
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => (

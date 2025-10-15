@@ -198,7 +198,7 @@ export function HomeActivityHistoryTable({ data, title }: Props) {
     <>
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Tahun Ajaran</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedYearSemester}
             onValueChange={(value) => {

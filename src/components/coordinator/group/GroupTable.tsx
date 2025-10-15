@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,7 +124,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                   onClick={() => router.push(`/dashboard/coordinator/group/${group.groupId}`)}
                   className="flex items-center gap-2"
                 >
-                  <Eye className="w-4 h-4" />
+                  <SquareArrowOutUpRight />
                   Detail
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -133,7 +133,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                   }}
                   className="flex items-center gap-2"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -143,7 +143,7 @@ export function GroupTable({ data, title, onRefresh }: GroupTableProps) {
                   className="flex items-center gap-2"
                   variant="destructive"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 />
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>

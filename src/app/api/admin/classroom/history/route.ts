@@ -1,5 +1,3 @@
-// File: src/app/api/admin/classroom/history/route.ts
-
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
@@ -12,64 +10,31 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
 
-    const history = await prisma.classroomHistory.findMany({
-      orderBy: [{ academicYear: 'desc' }, { semester: 'desc' }, { classroom: { name: 'asc' } }],
-      include: {
-        classroom: true,
-        student: {
-          select: {
-            userId: true,
-            nis: true,
-            user: {
-              select: { fullName: true },
-            },
-          },
-        },
-      },
+    const groupedCounts = await prisma.classroomHistory.groupBy({
+      by: ['classroomId', 'academicYear', 'semester'],
+      _count: { studentId: true },
     });
 
-    type StudentItem = {
-      id: string;
-      nis: string;
-      fullName: string;
-    };
+    const classrooms = await prisma.classroom.findMany({
+      where: { id: { in: groupedCounts.map((g) => g.classroomId) } },
+      select: { id: true, name: true },
+    });
 
-    type GroupedClassroom = {
-      id: string;
-      name: string;
-      academicYear: string;
-      semester: string;
-      students: StudentItem[];
-    };
-
-    // acc: accumulator; curr: currentValue
-    const initialValue = {} as Record<string, GroupedClassroom>;
-    const grouped = history.reduce((acc, curr) => {
-      const key = `${curr.classroom.name}-${curr.academicYear}-${curr.semester}`;
-      if (!acc[key]) {
-        acc[key] = {
-          id: curr.classroomId,
-          name: curr.classroom.name,
-          academicYear: curr.academicYear,
-          semester: curr.semester,
-          students: [],
-        };
-      }
-      acc[key].students.push({
-        id: curr.student.userId,
-        nis: curr.student.nis,
-        fullName: curr.student.user.fullName,
-      });
-      return acc;
-    }, initialValue);
+    const classroomHistoryData = groupedCounts.map((g) => ({
+      id: g.classroomId,
+      name: classrooms.find((c) => c.id === g.classroomId)?.name || '',
+      academicYear: g.academicYear,
+      semester: g.semester,
+      studentCount: g._count.studentId,
+    }));
 
     return NextResponse.json({
       success: true,
       message: 'Riwayat kelas berhasil diambil',
-      data: Object.values(grouped),
+      data: classroomHistoryData,
     });
   } catch (error) {
-    console.error('[GET /classroom/history]', error);
+    console.error('Gagal mengambil riwayat kelas', error);
     return NextResponse.json(
       { success: false, message: 'Gagal mengambil riwayat kelas' },
       { status: 500 }

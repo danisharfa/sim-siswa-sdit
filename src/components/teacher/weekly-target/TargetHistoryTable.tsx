@@ -34,17 +34,19 @@ import {
   TrendingDown,
   Clock,
   MoreVertical,
-  Edit,
   Trash2,
+  Pencil,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { type DateRange } from 'react-day-picker';
 import { SubmissionType, TargetStatus, Semester } from '@prisma/client';
 import { TargetEditDialog } from './TargetEditDialog';
 import { TargetAlertDialog } from './TargetAlertDialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
+import { Calendar23 } from '@/components/calendar/calendar-23';
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -131,8 +133,7 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState('all');
-  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
-  const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>();
 
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
@@ -202,11 +203,6 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
     );
   }, [selectedGroupId, filteredData]);
 
-  function getWeekOfMonth(date: Date): number {
-    const adjustedDate = date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil(adjustedDate / 7);
-  }
-
   const getTargetDetail = useCallback((target: WeeklyTarget) => {
     if (target.type === SubmissionType.TAHSIN_WAFA) {
       return `${target.wafa?.name || ''} Hal. ${target.startPage}-${target.endPage}`;
@@ -234,11 +230,20 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
-          const date = new Date(row.getValue(columnId));
-          const matchMonth = selectedMonth === 'all' || date.getMonth() === selectedMonth;
-          const matchWeek = selectedWeek === 'all' || getWeekOfMonth(date) === selectedWeek;
+          if (!selectedDateRange) return true;
 
-          return matchMonth && matchWeek;
+          const date = new Date(row.getValue(columnId));
+          const { from, to } = selectedDateRange;
+
+          if (from && to) {
+            return date >= from && date <= to;
+          } else if (from) {
+            return date >= from;
+          } else if (to) {
+            return date <= to;
+          }
+
+          return true;
         },
         cell: ({ row }) => (
           <span>{format(new Date(row.getValue('Tanggal')), 'dd MMM yyyy', { locale: id })}</span>
@@ -350,15 +355,16 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
                   onClick={() => handleOpenEditDialog(target)}
                   className="flex items-center gap-2"
                 >
-                  <Edit className="w-4 h-4" />
-                  Edit Target
+                  <Pencil />
+                  Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleOpenDeleteDialog(target)}
-                  className="flex items-center gap-2 text-red-600"
+                  className="flex items-center gap-2"
+                  variant="destructive"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Hapus Target
+                  <Trash2 />
+                  Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -367,8 +373,7 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
       },
     ],
     [
-      selectedMonth,
-      selectedWeek,
+      selectedDateRange,
       handleOpenEditDialog,
       handleOpenDeleteDialog,
       getTargetDetail,
@@ -397,7 +402,7 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
     <>
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedPeriod}
             onValueChange={(val) => {
@@ -407,7 +412,7 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
             }}
           >
             <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((p) => (
@@ -518,49 +523,16 @@ export function TargetHistoryTable({ data, title, onRefresh }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Bulan</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedMonth(val);
+          <Calendar23
+            value={selectedDateRange}
+            onChange={(range) => {
+              setSelectedDateRange(range);
               table.getColumn('Tanggal')?.setFilterValue('custom');
             }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[200px]">
-              <SelectValue placeholder="Pilih Bulan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bulan</SelectItem>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SelectItem key={i} value={i.toString()}>
-                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Filter Minggu</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedWeek(val);
-              table.getColumn('Tanggal')?.setFilterValue('custom');
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[200px]">
-              <SelectValue placeholder="Pilih Minggu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Minggu</SelectItem>
-              {[1, 2, 3, 4, 5].map((w) => (
-                <SelectItem key={w} value={w.toString()}>
-                  Minggu ke-{w}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            label="Filter Tanggal"
+            placeholder="Pilih Rentang Tanggal"
+            className="min-w-0 w-full sm:min-w-[250px]"
+          />
         </div>
       </div>
 

@@ -32,7 +32,7 @@ export default function LoginPage() {
             <div className="space-y-2 text-center">
               <h1 className="text-3xl font-bold tracking-tight">Selamat Datang</h1>
               <p className="text-muted-foreground">
-                Masuk ke akun Anda untuk mengakses SIM-Qur&apos;an
+                Masuk untuk mengakses SIM-Qur&apos;an
               </p>
             </div>
 
@@ -40,7 +40,7 @@ export default function LoginPage() {
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Butuh bantuan? Hubungi administrator sekolah
+                Butuh bantuan? Hubungi admin sekolah
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function LoginPage() {
                 <div className="flex size-6 items-center justify-center rounded-full bg-primary/20">
                   <div className="size-2 rounded-full bg-primary" />
                 </div>
-                <span>Laporan perkembangan</span>
+                <span>Rekap laporan</span>
               </div>
             </div>
           </div>

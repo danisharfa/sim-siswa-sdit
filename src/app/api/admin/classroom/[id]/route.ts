@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
     const params = await segmentData.params;
     const id = params.id;
 
-    const { name, academicYear, semester, isActive } = await req.json();
+    const { name, academicYear, semester } = await req.json();
 
     if (!name || !academicYear || !semester) {
       return NextResponse.json(
@@ -41,7 +41,6 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
         name,
         academicYear,
         semester,
-        isActive: !!isActive,
       },
     });
 

@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     const classrooms = await prisma.classroom.findMany({
-      // where: { isActive: true },
+      where: { isActive: true },
       orderBy: { name: 'asc' },
       include: {
         _count: {
@@ -80,11 +80,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil membuat kelas',
+      message: 'Kelas berhasil ditambahkan',
       data: classroom,
     });
   } catch (error) {
-    console.error('Gagal membuat kelas:', error);
-    return NextResponse.json({ success: false, message: 'Gagal membuat kelas' }, { status: 500 });
+    console.error('Gagal menambah kelas:', error);
+    return NextResponse.json({ success: false, message: 'Gagal menambah kelas' }, { status: 500 });
   }
 }

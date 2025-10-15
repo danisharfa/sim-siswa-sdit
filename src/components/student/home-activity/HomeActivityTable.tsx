@@ -246,7 +246,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
                     onClick={() => handleOpenEditDialog(user)}
                     className="flex items-center gap-2"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -254,7 +254,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
                     variant="destructive"
                     className="flex items-center gap-2"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -288,7 +288,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Periode</Label>
+          <Label className="mb-2 block">Filter Tahun Akademik</Label>
           <Select
             value={selectedPeriod}
             onValueChange={(val) => {
@@ -296,7 +296,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
             }}
           >
             <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode" />
+              <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
             <SelectContent>
               {academicPeriods.map((period) => (

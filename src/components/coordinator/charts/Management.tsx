@@ -8,6 +8,8 @@ import { ChartFilters } from './ChartFilters';
 import { TahfidzChart } from './TahfidzChart';
 import { WafaChart } from './WafaChart';
 import { TahsinAlquranChart } from './TahsinAlquranChart';
+import { CoordinatorInfoCard } from './CoordinatorInfoCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Period = {
   value: string;
@@ -57,19 +59,16 @@ export function Management() {
     }
   }, [filterData?.defaultPeriod, selectedPeriod]);
 
-  // Calculate total groups and classes from filter data
   useEffect(() => {
     if (filterData?.groups && selectedPeriod) {
       const [academicYear, semester] = selectedPeriod.split('|');
 
-      // Filter groups for selected period
       const groupsForPeriod = filterData.groups.filter(
         (group) => group.academicYear === academicYear && group.semester === semester
       );
 
       setTotalGroups(groupsForPeriod.length);
 
-      // Count unique classes for selected period
       const uniqueClasses = new Set(groupsForPeriod.map((group) => group.classroomName));
       setTotalClasses(uniqueClasses.size);
     } else {
@@ -98,7 +97,6 @@ export function Management() {
   const period = `${encodeURIComponent(chartProps.academicYear)}-${chartProps.semester}`;
   const group = selectedGroup || 'all';
 
-  // Only make request if we have valid academicYear
   const shouldFetchData = chartProps.academicYear && chartProps.semester;
 
   const { data: tahfidzData } = useSWR<ChartData>(
@@ -120,57 +118,71 @@ export function Management() {
   }
 
   if (!filterData) {
-    return <div className="text-muted-foreground">Loading filters...</div>;
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium">Total Siswa</CardTitle>
-              <FaUserGraduate className="w-10 h-10 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold text-primary">{totalStudents}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium">Total Kelas</CardTitle>
-              <FaChalkboard className="w-10 h-10 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold text-primary">{totalClasses}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium">Total Kelompok</CardTitle>
-              <FaUsers className="w-10 h-10 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold text-primary">{totalGroups}</p>
-            </CardContent>
-          </Card>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1">
+          <CoordinatorInfoCard />
         </div>
+        <div className="flex-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Siswa
+                </CardTitle>
+                <FaUserGraduate className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{totalStudents}</div>
+              </CardContent>
+            </Card>
 
-        {/* Filters */}
-        <div className="flex justify-end">
-          <ChartFilters
-            periods={filterData.periods}
-            groups={filterData.groups}
-            selectedPeriod={selectedPeriod}
-            selectedGroup={selectedGroup}
-            onPeriodChange={handlePeriodChange}
-            onGroupChange={setSelectedGroup}
-          />
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Kelas
+                </CardTitle>
+                <FaChalkboard className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{totalClasses}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Kelompok
+                </CardTitle>
+                <FaUsers className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{totalGroups}</div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      <ChartFilters
+        periods={filterData.periods}
+        groups={filterData.groups}
+        selectedPeriod={selectedPeriod}
+        selectedGroup={selectedGroup}
+        onPeriodChange={handlePeriodChange}
+        onGroupChange={setSelectedGroup}
+      />
 
       {selectedPeriod && (
         <div className="grid grid-cols-1 gap-6">
@@ -180,7 +192,7 @@ export function Management() {
             semester={chartProps.semester}
             groupId={selectedGroup}
           />
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col xl:flex-row gap-6">
             <div className="flex-1">
               <WafaChart
                 key={`wafa-${selectedPeriod}-${selectedGroup}`}

@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { CalendarIcon, ChevronDownIcon } from 'lucide-react';
 import { type DateRange } from 'react-day-picker';
-
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
@@ -21,14 +20,12 @@ export function Calendar23({
   value,
   onChange,
   label = 'Tanggal Target',
-  placeholder = 'Pilih rentang tanggal',
+  placeholder = 'Pilih Rentang Tanggal',
   className,
 }: Props) {
-  // Gunakan value dari props sebagai state internal
   const currentRange = value;
 
   const handleSelect = (selectedRange: DateRange | undefined) => {
-    // Panggil onChange untuk update state parent
     onChange?.(selectedRange);
   };
 

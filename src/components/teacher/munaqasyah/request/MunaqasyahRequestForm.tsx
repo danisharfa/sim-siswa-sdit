@@ -206,7 +206,7 @@ export function MunaqasyahRequestForm() {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-center">
+      <CardFooter className="flex items-center justify-center">
         <Button onClick={handleSubmit} disabled={loading}>
           {loading ? (
             <>
