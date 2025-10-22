@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -17,7 +17,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    const groups = await prisma.group.findMany({
+    const data = await prisma.group.findMany({
       where: {
         teacherId: teacher.userId,
       },
@@ -35,7 +35,7 @@ export async function GET() {
       },
     });
 
-    const formattedGroups = groups.map((group) => ({
+    const formattedData = data.map((group) => ({
       groupId: group.id,
       groupName: group.name,
       classroomName: group.classroom.name,
@@ -46,13 +46,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Data kelompok guru berhasil diambil',
-      data: formattedGroups,
+      message: 'Daftar Kelompok berhasil diambil',
+      data: formattedData,
     });
   } catch (error) {
-    console.error('Gagal mengambil kelompok guru:', error);
+    console.error('Gagal mengambil daftar Kelompok:', error);
     return NextResponse.json(
-      { success: false, error: 'Gagal mengambil kelompok guru' },
+      { success: false, error: 'Gagal mengambil daftar Kelompok' },
       { status: 500 }
     );
   }

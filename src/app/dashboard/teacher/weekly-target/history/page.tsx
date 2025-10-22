@@ -1,4 +1,4 @@
-import { TargetManagement } from '@/components/teacher/weekly-target/Management';
+import { TargetManagement } from '@/components/teacher/weekly-target/TargetManagement';
 
 export default function TargetHistoryPage() {
   return (

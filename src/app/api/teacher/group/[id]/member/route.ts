@@ -9,11 +9,10 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
@@ -40,7 +39,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const members = await prisma.studentProfile.findMany({
+    const data = await prisma.studentProfile.findMany({
       where: {
         groupId: id,
       },
@@ -58,7 +57,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
     });
 
-    const formattedMembers = members.map((m) => ({
+    const formattedData = data.map((m) => ({
       id: m.userId,
       nis: m.nis,
       fullName: m.user?.fullName || 'Tidak diketahui',
@@ -66,13 +65,13 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({
       success: true,
-      message: 'Data anggota kelompok berhasil diambil',
-      data: formattedMembers,
+      message: 'Daftar Siswa berhasil diambil',
+      data: formattedData,
     });
   } catch (error) {
-    console.error('[GET Teacher Group Members]', error);
+    console.error('Gagal mengambil daftar Siswa:', error);
     return NextResponse.json(
-      { success: false, error: 'Gagal mengambil data siswa' },
+      { success: false, error: 'Gagal mengambil daftar Siswa' },
       { status: 500 }
     );
   }

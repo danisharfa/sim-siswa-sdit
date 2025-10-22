@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -23,8 +23,8 @@ import {
 import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
-import { Calendar01 } from '@/components/calendar/calendar-01';
-import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
+import { Calendar01 } from '@/components/layout/calendar/calendar-01';
+import { SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
 
 interface Group {
@@ -32,8 +32,7 @@ interface Group {
   groupName: string;
   classroomName: string;
   classroomAcademicYear: string;
-  classroomSemester: Semester;
-  totalMember: number;
+  classroomSemester: string;
 }
 
 interface Student {
@@ -42,17 +41,20 @@ interface Student {
   fullName: string;
 }
 
-interface SurahJuz {
-  id: number;
-  surahId: number;
-  juzId: number;
-  surah: { id: number; name: string };
-  juz: { id: number; name: string };
-}
-
 interface Juz {
   id: number;
   name: string;
+}
+
+interface Surah {
+  id: number;
+  name: string;
+  verseCount: number;
+}
+
+interface SurahJuz {
+  surah: Surah;
+  juz: Juz;
 }
 
 interface Wafa {
@@ -63,16 +65,13 @@ interface Wafa {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function SubmissionForm() {
-  const [groupList, setGroupList] = useState<Group[]>([]);
-  const [studentList, setStudentList] = useState<Student[]>([]);
-  const [juzList, setJuzList] = useState<Juz[]>([]);
-  const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
-  const [wafaList, setWafaList] = useState<Wafa[]>([]);
-
   const [groupId, setGroupId] = useState('');
   const [studentId, setStudentId] = useState('');
   const [submissionDate, setSubmissionDate] = useState<Date>();
   const [submissionType, setSubmissionType] = useState<SubmissionType>(SubmissionType.TAHFIDZ);
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>(
+    SubmissionStatus.LULUS
+  );
   const [selectedJuz, setSelectedJuz] = useState('');
   const [selectedSurahId, setSelectedSurahId] = useState('');
   const [startVerse, setStartVerse] = useState('');
@@ -80,22 +79,77 @@ export function SubmissionForm() {
   const [selectedWafaId, setSelectedWafaId] = useState('');
   const [startPage, setStartPage] = useState('');
   const [endPage, setEndPage] = useState('');
-  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>(
-    SubmissionStatus.LULUS
-  );
   const [adab, setAdab] = useState<Adab>(Adab.BAIK);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { data: academic } = useSWR('/api/academicSetting', fetcher);
+  const { data: groupResponse } = useSWR('/api/teacher/group', fetcher);
+  const { data: studentResponse } = useSWR(
+    groupId ? `/api/teacher/group/${groupId}/member` : null,
+    fetcher
+  );
+  const { data: juzResponse } = useSWR('/api/juz', fetcher);
+  const { data: surahJuzResponse } = useSWR('/api/surahJuz', fetcher);
+  const { data: wafaResponse } = useSWR('/api/wafa', fetcher);
+
+  const groupList = useMemo(() => {
+    return groupResponse?.success ? groupResponse.data : [];
+  }, [groupResponse]);
+
+  const studentList = useMemo(() => {
+    return studentResponse?.success ? studentResponse.data : [];
+  }, [studentResponse]);
+
+  const juzList = useMemo(() => {
+    return juzResponse?.success ? juzResponse.data : [];
+  }, [juzResponse]);
+
+  const surahJuzList = useMemo(() => {
+    return surahJuzResponse?.success ? surahJuzResponse.data : [];
+  }, [surahJuzResponse]);
+
+  const wafaList = useMemo(() => {
+    return wafaResponse?.success ? wafaResponse.data : [];
+  }, [wafaResponse]);
 
   const filteredGroupList = useMemo(() => {
     if (!academic?.success || !academic?.data || groupList.length === 0) return [];
     const { currentYear, currentSemester } = academic.data;
     return groupList.filter(
-      (g) => g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
+      (g: Group) =>
+        g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
     );
   }, [groupList, academic]);
+
+  const filteredSurahJuz = useMemo(() => {
+    return surahJuzList
+      .filter((s: SurahJuz) => s.juz.id.toString() === selectedJuz)
+      .sort((a: SurahJuz, b: SurahJuz) => a.surah.id - b.surah.id);
+  }, [surahJuzList, selectedJuz]);
+
+  // ===== EVENT HANDLERS =====
+  const handleGroupChange = (newGroupId: string) => {
+    setGroupId(newGroupId);
+    setStudentId(''); // Reset student selection when group changes
+  };
+
+  const handleSubmissionTypeChange = (newType: SubmissionType) => {
+    setSubmissionType(newType);
+    // Reset all related fields when submission type changes
+    setSelectedJuz('');
+    setSelectedSurahId('');
+    setStartVerse('');
+    setEndVerse('');
+    setSelectedWafaId('');
+    setStartPage('');
+    setEndPage('');
+  };
+
+  const handleJuzChange = (newJuz: string) => {
+    setSelectedJuz(newJuz);
+    setSelectedSurahId(''); // Reset surah when juz changes
+  };
 
   const resetForm = () => {
     setSubmissionDate(new Date());
@@ -110,68 +164,49 @@ export function SubmissionForm() {
     setNote('');
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [surahJuzRes, juzRes, wafaRes] = await Promise.all([
-          fetch('/api/surahJuz'),
-          fetch('/api/juz'),
-          fetch('/api/wafa'),
-        ]);
-        const [surahJuzData, juzData, wafaData] = await Promise.all([
-          surahJuzRes.json(),
-          juzRes.json(),
-          wafaRes.json(),
-        ]);
-        if (surahJuzData.success) setSurahJuzList(surahJuzData.data);
-        if (juzData.success) setJuzList(juzData.data);
-        if (wafaData.success) setWafaList(wafaData.data);
-      } catch {
-        toast.error('Gagal mengambil data');
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const res = await fetch('/api/teacher/group');
-        const json = await res.json();
-        setGroupList(json.success && Array.isArray(json.data) ? json.data : []);
-      } catch {
-        toast.error('Gagal memuat data kelompok');
-        setGroupList([]);
-      }
-    };
-    fetchGroups();
-  }, []);
-
-  useEffect(() => {
-    if (!groupId) {
-      setStudentList([]);
-      return;
-    }
-    const fetchMembers = async () => {
-      try {
-        const res = await fetch(`/api/teacher/group/${groupId}/member`);
-        const json = await res.json();
-        setStudentList(json.success && Array.isArray(json.data) ? json.data : []);
-      } catch {
-        toast.error('Gagal mengambil siswa');
-        setStudentList([]);
-      }
-    };
-    fetchMembers();
-  }, [groupId]);
-
-  const filteredSurahJuz = surahJuzList
-    .filter((s) => s.juz.id.toString() === selectedJuz)
-    .sort((a, b) => a.surah.id - b.surah.id);
-
   const handleSubmit = async () => {
-    if (!groupId || !studentId || !submissionType)
-      return toast.error('Lengkapi semua data terlebih dahulu');
+    if (!submissionDate) return toast.error('Tanggal setoran harus diisi');
+    if (!groupId) return toast.error('Kelompok harus dipilih');
+    if (!studentId) return toast.error('Siswa harus dipilih');
+    if (!submissionType) return toast.error('Jenis setoran harus dipilih');
+    if (!submissionStatus) return toast.error('Status setoran harus dipilih');
+    if (!adab) return toast.error('Adab harus dipilih');
+    if (
+      submissionType === SubmissionType.TAHFIDZ ||
+      submissionType === SubmissionType.TAHSIN_ALQURAN
+    ) {
+      if (!selectedJuz) return toast.error("Juz harus dipilih untuk Tahfidz/Tahsin Al-Qur'an");
+      if (!selectedSurahId)
+        return toast.error("Surah harus dipilih untuk Tahfidz/Tahsin Al-Qur'an");
+      if (!startVerse) return toast.error("Ayat mulai harus diisi untuk Tahfidz/Tahsin Al-Qur'an");
+      if (!endVerse) return toast.error("Ayat selesai harus diisi untuk Tahfidz/Tahsin Al-Qur'an");
+
+      // Validasi range ayat
+      const startVerseNum = parseInt(startVerse);
+      const endVerseNum = parseInt(endVerse);
+      if (startVerseNum > endVerseNum) {
+        return toast.error('Ayat mulai tidak boleh lebih besar dari ayat selesai');
+      }
+      if (startVerseNum < 1) {
+        return toast.error('Ayat mulai harus minimal 1');
+      }
+    }
+
+    if (submissionType === SubmissionType.TAHSIN_WAFA) {
+      if (!selectedWafaId) return toast.error('Materi Wafa harus dipilih untuk Tahsin Wafa');
+      if (!startPage) return toast.error('Halaman mulai harus diisi untuk Tahsin Wafa');
+      if (!endPage) return toast.error('Halaman selesai harus diisi untuk Tahsin Wafa');
+
+      // Validasi range halaman
+      const startPageNum = parseInt(startPage);
+      const endPageNum = parseInt(endPage);
+      if (startPageNum > endPageNum) {
+        return toast.error('Halaman mulai tidak boleh lebih besar dari halaman selesai');
+      }
+      if (startPageNum < 1) {
+        return toast.error('Halaman mulai harus minimal 1');
+      }
+    }
 
     const payload = {
       date: submissionDate || new Date(),
@@ -203,12 +238,16 @@ export function SubmissionForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message);
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        toast.error(result.message || 'Gagal menyimpan setoran');
+        return;
+      }
+
       toast.success('Setoran berhasil disimpan');
       resetForm();
     } catch {
-      toast.error('Gagal menyimpan setoran');
+      toast.error('Terjadi kesalahan saat menyimpan data');
     } finally {
       setLoading(false);
     }
@@ -221,32 +260,34 @@ export function SubmissionForm() {
         <CardDescription>
           {academic?.success && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <b>{academic.data.currentYear}</b> — Semester:{' '}
-              <b>{academic.data.currentSemester}</b>
+              Tahun Ajaran: <strong>{academic.data.currentYear}</strong> – Semester:{' '}
+              <strong>{academic.data.currentSemester}</strong>
             </span>
           )}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         <FieldSet>
+          <Field>
+            <Calendar01
+              value={submissionDate}
+              onChange={setSubmissionDate}
+              label="Tanggal Setoran"
+            />
+          </Field>
+
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
               <FieldLabel>Kelompok</FieldLabel>
-              <Select
-                value={groupId}
-                onValueChange={(val) => {
-                  setGroupId(val);
-                  setStudentId('');
-                }}
-              >
+              <Select value={groupId} onValueChange={handleGroupChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Kelompok" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredGroupList.map((group) => (
+                  {filteredGroupList.map((group: Group) => (
                     <SelectItem key={group.groupId} value={group.groupId}>
-                      {group.groupName} — {group.classroomName}
+                      {group.groupName} - {group.classroomName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -260,7 +301,7 @@ export function SubmissionForm() {
                   <SelectValue placeholder="Pilih Siswa" />
                 </SelectTrigger>
                 <SelectContent>
-                  {studentList.map((s) => (
+                  {studentList.map((s: Student) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.fullName} ({s.nis})
                     </SelectItem>
@@ -271,28 +312,8 @@ export function SubmissionForm() {
           </FieldGroup>
 
           <Field>
-            <Calendar01
-              value={submissionDate}
-              onChange={setSubmissionDate}
-              label="Tanggal Setoran"
-            />
-          </Field>
-
-          <Field>
             <FieldLabel>Jenis Setoran</FieldLabel>
-            <Select
-              value={submissionType}
-              onValueChange={(val) => {
-                setSubmissionType(val as SubmissionType);
-                setSelectedJuz('');
-                setSelectedSurahId('');
-                setStartVerse('');
-                setEndVerse('');
-                setSelectedWafaId('');
-                setStartPage('');
-                setEndPage('');
-              }}
-            >
+            <Select value={submissionType} onValueChange={handleSubmissionTypeChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Jenis Setoran" />
               </SelectTrigger>
@@ -310,18 +331,12 @@ export function SubmissionForm() {
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
                   <FieldLabel>Juz</FieldLabel>
-                  <Select
-                    value={selectedJuz}
-                    onValueChange={(val) => {
-                      setSelectedJuz(val);
-                      setSelectedSurahId('');
-                    }}
-                  >
+                  <Select value={selectedJuz} onValueChange={handleJuzChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Juz" />
                     </SelectTrigger>
                     <SelectContent>
-                      {juzList.map((j) => (
+                      {juzList.map((j: Juz) => (
                         <SelectItem key={j.id} value={j.id.toString()}>
                           {j.name}
                         </SelectItem>
@@ -341,7 +356,7 @@ export function SubmissionForm() {
                       <SelectValue placeholder="Pilih Surah" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredSurahJuz.map((sj) => (
+                      {filteredSurahJuz.map((sj: SurahJuz) => (
                         <SelectItem key={sj.surah.id} value={sj.surah.id.toString()}>
                           {sj.surah.name}
                         </SelectItem>
@@ -384,7 +399,7 @@ export function SubmissionForm() {
                     <SelectValue placeholder="Pilih Wafa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {wafaList.map((w) => (
+                    {wafaList.map((w: Wafa) => (
                       <SelectItem key={w.id} value={w.id.toString()}>
                         {w.name}
                       </SelectItem>
@@ -454,8 +469,7 @@ export function SubmissionForm() {
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Masukkan catatan..."
-              className="min-h-24"
+              placeholder="Tambahkan catatan untuk setoran ini..."
             />
           </Field>
         </FieldSet>

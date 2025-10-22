@@ -17,16 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -233,33 +227,17 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Target Option</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-50 z-50">
-                  <DropdownMenuItem
-                    onClick={() => handleOpenEditDialog(user)}
-                    className="flex items-center gap-2"
-                  >
-                    <Pencil />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleOpenDeleteDialog(user)}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(user)}>
+                <Pencil />
+                Edit
+              </Button>
+
+              <Button variant="destructive" size="sm" onClick={() => handleOpenDeleteDialog(user)}>
+                <Trash2 />
+                Delete
+              </Button>
+            </div>
           );
         },
       },
@@ -422,10 +400,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
 
       {dialogType === 'edit' && selectedHomeActivity && (
         <HomeActivityEditDialog
-          activity={{
-            ...selectedHomeActivity,
-            note: selectedHomeActivity.note ?? undefined,
-          }}
+          activity={selectedHomeActivity}
           open={true}
           onOpenChange={(open) => {
             if (!open) {

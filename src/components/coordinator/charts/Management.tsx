@@ -78,7 +78,7 @@ export function Management() {
   }, [filterData?.groups, selectedPeriod]);
 
   const handlePeriodChange = (newPeriod: string) => {
-    console.log('Period changed from', selectedPeriod, 'to', newPeriod);
+    // console.log('Period changed from', selectedPeriod, 'to', newPeriod);
     setSelectedPeriod(newPeriod);
     setSelectedGroup('all');
   };
@@ -88,7 +88,7 @@ export function Management() {
       return { academicYear: '', semester: '' };
     }
     const [academicYear, semester] = selectedPeriod.split('|');
-    console.log('Chart props:', { academicYear, semester, selectedGroup });
+    // console.log('Chart props:', { academicYear, semester, selectedGroup });
     return { academicYear, semester };
   };
 
@@ -119,7 +119,7 @@ export function Management() {
 
   if (!filterData) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-1/3" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-40 w-full" />
@@ -185,14 +185,14 @@ export function Management() {
       />
 
       {selectedPeriod && (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-4">
           <TahfidzChart
             key={`tahfidz-${selectedPeriod}-${selectedGroup}`}
             academicYear={chartProps.academicYear}
             semester={chartProps.semester}
             groupId={selectedGroup}
           />
-          <div className="flex flex-col xl:flex-row gap-6">
+          <div className="flex flex-col xl:flex-row gap-4">
             <div className="flex-1">
               <WafaChart
                 key={`wafa-${selectedPeriod}-${selectedGroup}`}

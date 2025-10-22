@@ -43,7 +43,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== Role.student) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const student = await prisma.studentProfile.findUnique({

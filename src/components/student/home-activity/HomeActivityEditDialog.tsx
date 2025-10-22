@@ -16,20 +16,12 @@ import {
 import useSWR from 'swr';
 import { toast } from 'sonner';
 import { HomeActivityType } from '@prisma/client';
+import { HomeActivity } from '@/components/student/home-activity/HomeActivityTable';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface Props {
-  activity: {
-    id: string;
-    date: string;
-    activityType: HomeActivityType;
-    juz: { name: string } | null;
-    surah: { name: string } | null;
-    startVerse: number;
-    endVerse: number;
-    note?: string;
-  };
+  activity: HomeActivity;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;

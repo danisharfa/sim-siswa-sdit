@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.admin) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const users = await prisma.user.findMany({
@@ -24,16 +24,15 @@ export async function GET() {
       },
     });
 
-    const usersData = users.map(user => ({
-      ...user,
-      graduatedAt: user.student?.graduatedAt || null,
-      student: undefined,
+    const data = users.map(({ student, ...rest }) => ({
+      ...rest,
+      graduatedAt: student?.graduatedAt ?? null,
     }));
 
     return NextResponse.json({
       success: true,
       message: 'Berhasil mengambil daftar pengguna',
-      data: usersData,
+      data,
     });
   } catch (error) {
     console.error('Gagal mengambil daftar pengguna:', error);
@@ -48,7 +47,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.admin) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => null);

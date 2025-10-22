@@ -57,16 +57,16 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const groupId = group === 'all' ? null : group;
 
-    console.log('Tahsin Alquran API Dynamic Params:', {
-      period,
-      group,
-      parsed: { academicYear, semester, groupId },
-    });
+    // console.log('Tahsin Alquran API Dynamic Params:', {
+    //   period,
+    //   group,
+    //   parsed: { academicYear, semester, groupId },
+    // });
 
     const session = await auth();
 
     if (!session?.user || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -77,12 +77,12 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    console.log('Teacher found:', teacher.userId);
+    // console.log('Teacher found:', teacher.userId);
 
     let students: StudentData[] = [];
 
     if (academicYear && semester) {
-      console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
+      // console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
 
       const groupHistoryFilter: Record<string, string> = {
         teacherId: teacher.userId,
@@ -141,7 +141,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
       students = uniqueStudents;
     } else {
-      console.log('Fetching all tahsin alquran data');
+      // console.log('Fetching all tahsin alquran data');
 
       const teacherGroupFilter: Record<string, string> = {
         teacherId: teacher.userId,
@@ -167,7 +167,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       students = groups.flatMap((group) => group.students);
     }
 
-    console.log('Students found:', students.length);
+    // console.log('Students found:', students.length);
 
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
@@ -198,12 +198,12 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    console.log('Alquran submissions found for cumulative period:', {
-      academicYear,
-      semester,
-      submissionCount: alquranSubmissions.length,
-      uniqueStudents: new Set(alquranSubmissions.map((s) => s.studentId)).size,
-    });
+    // console.log('Alquran submissions found for cumulative period:', {
+    //   academicYear,
+    //   semester,
+    //   submissionCount: alquranSubmissions.length,
+    //   uniqueStudents: new Set(alquranSubmissions.map((s) => s.studentId)).size,
+    // });
 
     const allJuz = await prisma.juz.findMany({
       include: {
@@ -291,7 +291,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    console.log('Final tahsin alquran result count:', result.length);
+    // console.log('Final tahsin alquran result count:', result.length);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching tahsin alquran chart data:', error);

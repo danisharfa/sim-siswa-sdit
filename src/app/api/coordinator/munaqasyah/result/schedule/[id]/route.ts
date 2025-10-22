@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       !session ||
       (session.user.role !== Role.teacher && session.user.role !== Role.coordinator)
     ) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     if (!scheduleId) {

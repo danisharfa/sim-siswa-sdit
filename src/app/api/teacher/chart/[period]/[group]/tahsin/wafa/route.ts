@@ -60,7 +60,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     const session = await auth();
 
     if (!session?.user || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -71,13 +71,13 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       return NextResponse.json({ success: false, error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
-    console.log('Teacher found:', teacher.userId);
+    // console.log('Teacher found:', teacher.userId);
 
     let students: StudentData[] = [];
 
     if (academicYear && semester) {
       // Jika periode spesifik dipilih, ambil dari kombinasi GroupHistory dan data aktif
-      console.log('Fetching wafa data for specific period:', { academicYear, semester });
+      // console.log('Fetching wafa data for specific period:', { academicYear, semester });
 
       // 1. Ambil dari GroupHistory untuk periode historis
       const groupHistoryFilter: Record<string, string> = {
@@ -141,7 +141,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       students = uniqueStudents;
     } else {
       // Jika "all" dipilih, ambil semua siswa dari Group yang aktif
-      console.log('Fetching all wafa data');
+      // console.log('Fetching all wafa data');
 
       const teacherGroupFilter: Record<string, string> = {
         teacherId: teacher.userId,
@@ -167,7 +167,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       students = groups.flatMap((group) => group.students);
     }
 
-    console.log('Students found:', students.length);
+    // console.log('Students found:', students.length);
 
     // Dapatkan semua request wafa yang sudah selesai (kumulatif sampai periode yang dipilih)
     const wafaRequests = await prisma.tashihRequest.findMany({
@@ -202,20 +202,20 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    console.log('Wafa requests found for cumulative period:', {
-      academicYear,
-      semester,
-      requestCount: wafaRequests.length,
-      uniqueStudents: new Set(wafaRequests.map((r) => r.studentId)).size,
-      sampleRequests: wafaRequests.slice(0, 3).map((r) => ({
-        studentId: r.studentId,
-        wafaId: r.wafaId,
-        wafaName: r.wafa?.name,
-        startPage: r.startPage,
-        endPage: r.endPage,
-        pagesInRange: r.startPage && r.endPage ? r.endPage - r.startPage + 1 : 0,
-      })),
-    });
+    // console.log('Wafa requests found for cumulative period:', {
+    //   academicYear,
+    //   semester,
+    //   requestCount: wafaRequests.length,
+    //   uniqueStudents: new Set(wafaRequests.map((r) => r.studentId)).size,
+    //   sampleRequests: wafaRequests.slice(0, 3).map((r) => ({
+    //     studentId: r.studentId,
+    //     wafaId: r.wafaId,
+    //     wafaName: r.wafa?.name,
+    //     startPage: r.startPage,
+    //     endPage: r.endPage,
+    //     pagesInRange: r.startPage && r.endPage ? r.endPage - r.startPage + 1 : 0,
+    //   })),
+    // });
 
     // Ambil semua buku wafa untuk referensi
     const wafaBooks = await prisma.wafa.findMany({
@@ -233,18 +233,18 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       let lastWafa = 'Belum ada';
 
       // Debug log untuk siswa pertama saja
-      if (studentRequests.length > 0 && result.length === 0) {
-        console.log(
-          `Sample student ${student.user.fullName} wafa requests:`,
-          studentRequests.map((r) => ({
-            wafaId: r.wafaId,
-            wafaName: r.wafa?.name,
-            startPage: r.startPage,
-            endPage: r.endPage,
-            pagesInRange: r.startPage && r.endPage ? r.endPage - r.startPage + 1 : 0,
-          }))
-        );
-      }
+      // if (studentRequests.length > 0 && result.length === 0) {
+      //   console.log(
+      //     `Sample student ${student.user.fullName} wafa requests:`,
+      //     studentRequests.map((r) => ({
+      //       wafaId: r.wafaId,
+      //       wafaName: r.wafa?.name,
+      //       startPage: r.startPage,
+      //       endPage: r.endPage,
+      //       pagesInRange: r.startPage && r.endPage ? r.endPage - r.startPage + 1 : 0,
+      //     }))
+      //   );
+      // }
 
       for (const wafaBook of wafaBooks) {
         const wafaBookRequests = studentRequests.filter((r) => r.wafaId === wafaBook.id);
@@ -296,7 +296,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    console.log('Final wafa result count:', result.length);
+    // console.log('Final wafa result count:', result.length);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching wafa chart data:', error);

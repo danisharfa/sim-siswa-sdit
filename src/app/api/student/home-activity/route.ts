@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const student = await prisma.studentProfile.findUnique({
@@ -59,7 +59,37 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { date, activityType, surahId, juzId, startVerse, endVerse, note } = await req.json();
+
+    // ===== BASIC VALIDATION =====
+    if (!date || !activityType || !surahId || !juzId || !startVerse || !endVerse) {
+      return NextResponse.json(
+        { success: false, message: 'Data dasar tidak lengkap' },
+        { status: 400 }
+      );
+    }
+
+    // ===== NUMERIC VALIDATION =====
+    if (typeof startVerse !== 'number' || startVerse < 1) {
+      return NextResponse.json(
+        { success: false, message: 'Ayat mulai harus berupa angka positif' },
+        { status: 400 }
+      );
+    }
+    if (typeof endVerse !== 'number' || endVerse < 1) {
+      return NextResponse.json(
+        { success: false, message: 'Ayat selesai harus berupa angka positif' },
+        { status: 400 }
+      );
+    }
+    if (startVerse > endVerse) {
+      return NextResponse.json(
+        { success: false, message: 'Ayat mulai tidak boleh lebih besar dari ayat selesai' },
+        { status: 400 }
+      );
     }
 
     const student = await prisma.studentProfile.findUnique({
@@ -69,7 +99,10 @@ export async function POST(req: Request) {
       },
     });
     if (!student) {
-      return NextResponse.json({ success: false, error: 'Siswa tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: 'Siswa tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
     if (!student.classroom) {
@@ -86,17 +119,32 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
-    const { date, activityType, surahId, juzId, startVerse, endVerse, note } = body;
+    // ===== REFERENCE VALIDATION =====
+    const juz = await prisma.juz.findUnique({ where: { id: juzId } });
+    if (!juz) {
+      return NextResponse.json({ success: false, message: 'Juz tidak ditemukan' }, { status: 400 });
+    }
 
-    if (!date || !activityType || !surahId || !juzId || !startVerse || !endVerse) {
+    const surah = await prisma.surah.findUnique({ where: { id: surahId } });
+    if (!surah) {
       return NextResponse.json(
-        { success: false, message: 'Semua field wajib diisi' },
+        { success: false, message: 'Surah tidak ditemukan' },
         { status: 400 }
       );
     }
 
-    const HomeActivity = await prisma.homeActivity.create({
+    // ===== VERSE COUNT VALIDATION =====
+    if (endVerse > surah.verseCount) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Ayat selesai melebihi jumlah ayat surah (${surah.verseCount})`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const homeActivity = await prisma.homeActivity.create({
       data: {
         studentId: student.userId,
         groupId: student.groupId,
@@ -111,7 +159,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(
-      { success: true, message: 'Aktivitas berhasil disimpan', data: HomeActivity },
+      { success: true, message: 'Aktivitas berhasil disimpan', data: homeActivity },
       { status: 201 }
     );
   } catch (error) {

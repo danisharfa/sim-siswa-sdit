@@ -18,7 +18,7 @@ export function GroupMembersManagement({
 
   if (isLoading || !data) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-70 w-full" />
         <Skeleton className="h-70 w-full" />
       </div>
@@ -26,7 +26,7 @@ export function GroupMembersManagement({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
       <AddGroupMembersForm groupId={groupId} classroomId={classroomId} onMemberAdded={mutate} />
       <GroupMembersTable
         data={data.data}

@@ -6,8 +6,7 @@ type Params = Promise<{ id: string }>;
 
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     if (!id) {
       return NextResponse.json(
@@ -48,8 +47,7 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     const {
       fullName,

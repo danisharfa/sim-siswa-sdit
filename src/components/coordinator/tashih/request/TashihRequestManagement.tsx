@@ -21,7 +21,7 @@ export function TashihRequestManagement() {
   if (error) return <p>Gagal memuat data permintaan tashih</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <TashihRequestTable data={data.data} title="Daftar Permintaan Ujian" onRefresh={mutate} />
     </div>
   );

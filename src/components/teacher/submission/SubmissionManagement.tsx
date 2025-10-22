@@ -1,25 +1,30 @@
 'use client';
 
 import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SubmissionTable } from '@/components/teacher/submission/SubmissionTable';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function SubmissionManagement() {
-  const { data, isLoading, mutate } = useSWR('/api/teacher/submission', fetcher);
+  const { data, error, isLoading, mutate } = useSWR('/api/teacher/submission', fetcher);
+
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-4">
-        <Skeleton className="h-[100px] w-full" />
-        <Skeleton className="h-[400px] w-full" />
+      <div className="space-y-4">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-70 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4">
       <SubmissionTable data={data.data} title="Daftar Setoran Siswa" onRefresh={mutate} />
     </div>
   );

@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Role, Semester, AssessmentPeriod } from '@prisma/client';
+import { Role, Semester } from '@prisma/client';
 
 export interface AcademicPeriodInfo {
   academicYear: string;
@@ -8,7 +8,6 @@ export interface AcademicPeriodInfo {
   className: string;
   groupName: string;
   teacherName: string;
-  assessmentPeriod: AssessmentPeriod;
 }
 
 export interface StudentReportData {
@@ -36,16 +35,14 @@ export interface StudentReportData {
       description: string;
     }[];
     report: {
-      endTahfidzScore: number | null;
-      endTahsinScore: number | null;
-      midTahfidzScore: number | null;
-      midTahsinScore: number | null;
+      tahfidzScore: number | null;
+      tahsinScore: number | null;
       lastTahsinMaterial: string | null;
     };
   }[];
 }
 
-export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
+export async function fetchReportData() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
@@ -71,7 +68,6 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
       prisma.tahsinScore.findMany({
         where: {
           studentId: student.userId,
-          period: period,
         },
         include: {
           group: {
@@ -93,7 +89,6 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
       prisma.tahfidzScore.findMany({
         where: {
           studentId: student.userId,
-          period: period,
         },
         include: {
           surah: true,
@@ -162,7 +157,6 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
             className: score.group.classroom.name,
             groupName: score.group.name,
             teacherName: score.group.teacher?.user.fullName ?? '-',
-            assessmentPeriod: period,
             groupId: score.groupId,
           });
         }
@@ -179,7 +173,6 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
             className: score.group.classroom.name,
             groupName: score.group.name,
             teacherName: score.group.teacher?.user.fullName ?? '-',
-            assessmentPeriod: period,
             groupId: score.groupId,
           });
         }
@@ -196,7 +189,6 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
             className: report.group.classroom.name,
             groupName: report.group.name,
             teacherName: report.group.teacher?.user.fullName ?? '-',
-            assessmentPeriod: period,
             groupId: report.groupId,
           });
         }
@@ -221,7 +213,6 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
           className: periodInfo.className,
           groupName: periodInfo.groupName,
           teacherName: periodInfo.teacherName,
-          assessmentPeriod: periodInfo.assessmentPeriod,
         },
         tahsin: tahsinForPeriod.map((s) => ({
           topic: s.topic,
@@ -236,10 +227,8 @@ export async function fetchReportData(period: AssessmentPeriod = 'FINAL') {
           description: s.description ?? '-',
         })),
         report: {
-          endTahfidzScore: reportForPeriod?.endTahfidzScore ?? null,
-          endTahsinScore: reportForPeriod?.endTahsinScore ?? null,
-          midTahfidzScore: reportForPeriod?.midTahfidzScore ?? null,
-          midTahsinScore: reportForPeriod?.midTahsinScore ?? null,
+          tahfidzScore: reportForPeriod?.tahfidzScore ?? null,
+          tahsinScore: reportForPeriod?.tahsinScore ?? null,
           lastTahsinMaterial: reportForPeriod?.lastTahsinMaterial ?? null,
         },
       };

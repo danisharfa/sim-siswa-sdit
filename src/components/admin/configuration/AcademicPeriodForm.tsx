@@ -74,7 +74,7 @@ export function AcademicPeriodForm({ data, onSave }: Props) {
   }
 
   return (
-    <Card className="max-w-md h-full flex flex-col">
+    <Card className="">
       <CardHeader>
         <CardTitle>Pengaturan Tahun Akademik</CardTitle>
       </CardHeader>

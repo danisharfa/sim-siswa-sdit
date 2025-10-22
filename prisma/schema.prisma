@@ -446,7 +446,7 @@ model TahfidzScore {
   id          String           @id @default(uuid())
   studentId   String
   groupId     String
-  period      AssessmentPeriod @default(FINAL)
+  // period      AssessmentPeriod @default(FINAL)
   surahId     Int
   score       Int
   grade       GradeLetter
@@ -459,7 +459,8 @@ model TahfidzScore {
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   surah   Surah          @relation(fields: [surahId], references: [id])
 
-  @@unique([studentId, groupId, surahId, period])
+  // @@unique([studentId, groupId, surahId, period])
+  @@unique([studentId, groupId, surahId])
   @@map("tahfidz_scores")
 }
 
@@ -467,7 +468,7 @@ model TahsinScore {
   id          String           @id @default(uuid())
   studentId   String
   groupId     String
-  period      AssessmentPeriod @default(FINAL)
+  // period      AssessmentPeriod @default(FINAL)
   tahsinType  TahsinType
   topic       String
   score       Int
@@ -480,7 +481,8 @@ model TahsinScore {
   student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, groupId, tahsinType, topic, period])
+  // @@unique([studentId, groupId, tahsinType, topic, period])
+  @@unique([studentId, groupId, tahsinType, topic])
   @@map("tahsin_scores")
 }
 
@@ -490,10 +492,12 @@ model Report {
   groupId            String
   academicYear       String
   semester           Semester
-  midTahfidzScore    Float?
-  midTahsinScore     Float?
-  endTahfidzScore    Float?
-  endTahsinScore     Float?
+  // midTahfidzScore    Float?
+  // midTahsinScore     Float?
+  // endTahfidzScore    Float?
+  // endTahsinScore     Float?
+  tahfidzScore    Float?
+  tahsinScore     Float?
   lastTahsinMaterial String?
 
   createdAt DateTime @default(now())
@@ -735,10 +739,10 @@ enum TashihRequestStatus {
   SELESAI
 }
 
-enum AssessmentPeriod {
-  MID_SEMESTER
-  FINAL
-}
+// enum AssessmentPeriod {
+//   MID_SEMESTER
+//   FINAL
+// }
 
 enum GradeLetter {
   A // 92–100 (Sangat Baik)

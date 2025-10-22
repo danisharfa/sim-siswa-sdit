@@ -82,15 +82,13 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
     tahsin,
     tahfidz,
     report,
-    period,
   } = data;
 
   const leftLogo = '/logo-sekolah.png';
   const rightLogo = '/logo-wafa.png';
 
-  // Dynamic assessment period text
-  const assessmentPeriodText =
-    period === 'MID_SEMESTER' ? 'ASESMEN TENGAH SEMESTER' : 'ASESMEN AKHIR SEMESTER';
+  // Assessment period text for end of semester
+  const assessmentPeriodText = 'ASESMEN AKHIR SEMESTER';
 
   const today = new Date().toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -190,7 +188,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.endTahsinScore?.toFixed(1) ?? '-'}
+                {report.tahsinScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -237,7 +235,7 @@ export function StudentReportPdf({ data }: { data: StudentReportData }) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.endTahfidzScore?.toFixed(1) ?? '-'}
+                {report.tahfidzScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>

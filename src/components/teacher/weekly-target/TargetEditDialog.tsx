@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { type DateRange } from 'react-day-picker';
-import { Calendar23 } from '@/components/calendar/calendar-23';
+import { Calendar23 } from '@/components/layout/calendar/calendar-23';
 import { SubmissionType } from '@prisma/client';
 
 interface SurahJuz {
@@ -180,7 +180,7 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
           <DialogTitle>Edit Target Setoran</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Calendar23
             value={dateRange}
             onChange={(range) => {
@@ -188,6 +188,7 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
                 setDateRange(range);
               }
             }}
+            label="Rentang Tanggal Target"
           />
 
           <div>

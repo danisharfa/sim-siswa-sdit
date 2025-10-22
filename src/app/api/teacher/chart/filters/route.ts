@@ -8,7 +8,7 @@ export async function GET() {
     const session = await auth();
 
     if (!session?.user || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -113,7 +113,7 @@ export async function GET() {
       ? `${academicSetting.currentYear}|${academicSetting.currentSemester}`
       : periods[0]?.value || '';
 
-    console.log('Filter data:', { periods, groups: allGroups, defaultPeriod }); // Debug log
+    // console.log('Filter data:', { periods, groups: allGroups, defaultPeriod }); // Debug log
 
     return NextResponse.json({
       periods,

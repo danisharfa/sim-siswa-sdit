@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -21,27 +21,30 @@ export async function GET() {
       );
     }
 
-    const kelompokBinaan = await prisma.group.findMany({
+    const teacherGroups = await prisma.group.findMany({
       where: { teacherId: teacher.userId },
       select: { id: true },
     });
 
-    const groupIds = kelompokBinaan.map((item) => item.id);
+    const groupIds = teacherGroups.map((item) => item.id);
 
-    const submissionList = await prisma.submission.findMany({
+    if (groupIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'Belum ada kelompok bimbingan Anda',
+        data: [],
+      });
+    }
+
+    const data = await prisma.submission.findMany({
       where: {
         teacherId: teacher.userId,
         groupId: {
           in: groupIds,
         },
       },
-      orderBy: {
-        date: 'desc',
-      },
+      orderBy: { date: 'desc' },
       include: {
-        surah: { select: { id: true, name: true } },
-        juz: { select: { id: true, name: true } },
-        wafa: { select: { id: true, name: true } },
         student: {
           select: {
             nis: true,
@@ -53,25 +56,29 @@ export async function GET() {
             id: true,
             name: true,
             classroom: {
-              select: { name: true, academicYear: true, semester: true },
+              select: {
+                name: true,
+                academicYear: true,
+                semester: true,
+              },
             },
           },
         },
+        surah: { select: { id: true, name: true } },
+        juz: { select: { id: true, name: true } },
+        wafa: { select: { id: true, name: true } },
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Data setoran berhasil diambil',
-      data: submissionList,
+      message: 'Daftar Setoran berhasil diambil',
+      data,
     });
   } catch (error) {
-    console.error('[SUBMISSION_GET]', error);
+    console.error('Gagal mengambil daftar Setoran:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Terjadi kesalahan saat mengambil data setoran',
-      },
+      { success: false, error: 'Gagal mengambil daftar Setoran' },
       { status: 500 }
     );
   }
@@ -81,7 +88,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const {
@@ -101,8 +108,64 @@ export async function POST(req: NextRequest) {
       endPage,
     } = await req.json();
 
-    if (!groupId || !studentId || !submissionType) {
-      return NextResponse.json({ success: false, message: 'Data tidak lengkap' }, { status: 400 });
+    // ===== BASIC VALIDATION =====
+    if (!date || !groupId || !studentId || !submissionType || !submissionStatus || !adab) {
+      return NextResponse.json(
+        { success: false, message: 'Data dasar tidak lengkap' },
+        { status: 400 }
+      );
+    }
+
+    // ===== CONDITIONAL VALIDATION BASED ON SUBMISSION TYPE =====
+    if (submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN') {
+      if (!juzId) {
+        return NextResponse.json(
+          { success: false, message: "Juz harus diisi untuk Tahfidz/Tahsin Al-Qur'an" },
+          { status: 400 }
+        );
+      }
+      if (!surahId) {
+        return NextResponse.json(
+          { success: false, message: "Surah harus diisi untuk Tahfidz/Tahsin Al-Qur'an" },
+          { status: 400 }
+        );
+      }
+      if (!startVerse || !endVerse) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Ayat mulai dan selesai harus diisi untuk Tahfidz/Tahsin Al-Qur'an",
+          },
+          { status: 400 }
+        );
+      }
+      if (startVerse > endVerse) {
+        return NextResponse.json(
+          { success: false, message: 'Ayat mulai tidak boleh lebih besar dari ayat selesai' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (submissionType === 'TAHSIN_WAFA') {
+      if (!wafaId) {
+        return NextResponse.json(
+          { success: false, message: 'Materi Wafa harus diisi untuk Tahsin Wafa' },
+          { status: 400 }
+        );
+      }
+      if (!startPage || !endPage) {
+        return NextResponse.json(
+          { success: false, message: 'Halaman mulai dan selesai harus diisi untuk Tahsin Wafa' },
+          { status: 400 }
+        );
+      }
+      if (startPage > endPage) {
+        return NextResponse.json(
+          { success: false, message: 'Halaman mulai tidak boleh lebih besar dari halaman selesai' },
+          { status: 400 }
+        );
+      }
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -210,7 +273,7 @@ export async function POST(req: NextRequest) {
 
     const submissionId = `SETORAN-${crypto.randomUUID()}`;
 
-    const submission = await prisma.submission.create({
+    const data = await prisma.submission.create({
       data: {
         id: submissionId,
         studentId,
@@ -231,14 +294,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await evaluateTargetAchievement(studentId, submission.date, submission.date);
+    await evaluateTargetAchievement(studentId, data.date, data.date);
 
-    return NextResponse.json({ success: true, data: submission });
+    return NextResponse.json({
+      success: true,
+      message: 'Setoran berhasil disimpan',
+      data,
+    });
   } catch (error) {
-    console.error('[SUBMISSION_POST]', error);
-    return NextResponse.json(
-      { success: false, error: 'Terjadi kesalahan saat menyimpan setoran' },
-      { status: 500 }
-    );
+    console.error('Gagal menyimpan Setoran:', error);
+    return NextResponse.json({ success: false, error: 'Gagal menyimpan Setoran' }, { status: 500 });
   }
 }

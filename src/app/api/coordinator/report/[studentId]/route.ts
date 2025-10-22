@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStudentReportData } from '@/lib/data/teacher/report';
 import { auth } from '@/auth';
-import { Role, AssessmentPeriod } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 type Params = Promise<{ studentId: string }>;
 
@@ -17,13 +17,12 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
 
     const url = new URL(req.url);
     const groupId = url.searchParams.get('groupId');
-    const period = (url.searchParams.get('period') as AssessmentPeriod) || 'FINAL';
 
     if (!groupId) {
       return NextResponse.json({ error: 'Group ID is required' }, { status: 400 });
     }
 
-    const data = await getStudentReportData(studentId, groupId, period);
+    const data = await getStudentReportData(studentId, groupId);
 
     if (!data) {
       return NextResponse.json({ error: 'Report data not found' }, { status: 404 });

@@ -25,7 +25,7 @@ export function MunaqasyahScheduleManagement() {
   if (error) return <p>Gagal memuat data jadwal munaqasyah</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <AddMunaqasyahScheduleForm onScheduleAdded={mutate} />
       <MunaqasyahScheduleTable data={data.data} title="Jadwal Munaqasyah Siswa" />
     </div>

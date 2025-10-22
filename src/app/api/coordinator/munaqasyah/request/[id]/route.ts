@@ -7,12 +7,11 @@ type Params = Promise<{ id: string }>;
 
 export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({

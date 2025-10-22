@@ -7,11 +7,7 @@ type Params = Promise<{ studentId: string }>;
 
 export async function GET(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const studentId = params.studentId;
-
-    const url = new URL(req.url);
-    const period = url.searchParams.get('period') as 'MID_SEMESTER' | 'FINAL' | null;
+    const { studentId } = await segmentData.params;
 
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
@@ -52,14 +48,12 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
     }
 
     // Query filter for period
-    const periodFilter = period ? { period } : {};
 
     // Ambil data tahsin dan tahfidz berdasarkan studentId, groupId, dan period
     const tahsin = await prisma.tahsinScore.findMany({
       where: {
         studentId,
         groupId: group.id,
-        ...periodFilter,
       },
       select: {
         id: true,
@@ -68,7 +62,6 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         score: true,
         grade: true,
         description: true,
-        period: true,
       },
     });
 
@@ -76,7 +69,6 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       where: {
         studentId,
         groupId: group.id,
-        ...periodFilter,
       },
       select: {
         id: true,
@@ -84,7 +76,6 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
         score: true,
         grade: true,
         description: true,
-        period: true,
         surah: {
           select: {
             name: true,
@@ -105,10 +96,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       },
       select: {
         lastTahsinMaterial: true,
-        endTahsinScore: true,
-        endTahfidzScore: true,
-        midTahsinScore: true,
-        midTahfidzScore: true,
+        tahfidzScore: true,
+        tahsinScore: true,
       },
     });
 
@@ -117,10 +106,8 @@ export async function GET(req: NextRequest, segmentData: { params: Params }) {
       tahfidz,
       lastMaterial: report?.lastTahsinMaterial || null,
       averageScores: {
-        tahsin: report?.endTahsinScore || null,
-        tahfidz: report?.endTahfidzScore || null,
-        midTahsin: report?.midTahsinScore || null,
-        midTahfidz: report?.midTahfidzScore || null,
+        tahsin: report?.tahsinScore || null,
+        tahfidz: report?.tahfidzScore || null,
       },
     });
   } catch (error) {

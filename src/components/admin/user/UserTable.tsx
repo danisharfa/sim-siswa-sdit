@@ -10,7 +10,6 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
 } from '@tanstack/react-table';
-import { KeyRound, MoreVertical, Pencil, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,21 +17,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { UserEditDialog } from '@/components/admin/user/UserEditDialog';
-import { UserAlertDialog } from '@/components/admin/user/UserAlertDialog';
+import { KeyRound, MoreVertical, Pencil, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
+import { User } from '@/components/admin/user/UserManagement';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-
-interface User {
-  id: string;
-  username: string;
-  fullName: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-  graduatedAt?: string | null;
-}
+import { UserEditDialog } from '@/components/admin/user/UserEditDialog';
+import { UserAlertDialog } from '@/components/admin/user/UserAlertDialog';
 
 interface Props {
   data: User[];
@@ -188,11 +179,11 @@ export function UserTable({ data, title, onRefresh }: Props) {
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (

@@ -61,7 +61,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -73,7 +73,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     let students: StudentData[] = [];
 
-    console.log('Fetching data for specific period:', { academicYear, semester });
+    // console.log('Fetching data for specific period:', { academicYear, semester });
 
     // Ambil siswa dari GroupHistory untuk periode spesifik
     const groupHistories = await prisma.groupHistory.findMany({
@@ -121,12 +121,12 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }, [] as StudentData[]);
 
     students = uniqueStudents;
-    console.log('Students found for period:', {
-      totalStudents: students.length,
-      fromHistory: groupHistories.length,
-      fromActive: activeGroups.length,
-      studentIds: students.map((s) => s.userId),
-    });
+    // console.log('Students found for period:', {
+    //   totalStudents: students.length,
+    //   fromHistory: groupHistories.length,
+    //   fromActive: activeGroups.length,
+    //   studentIds: students.map((s) => s.userId),
+    // });
 
     const allJuz = await prisma.juz.findMany({
       include: {
@@ -176,18 +176,18 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    console.log('Tahfidz requests found for cumulative period:', {
-      academicYear,
-      semester,
-      requestCount: tashihRequests.length,
-      uniqueStudents: new Set(tashihRequests.map((r) => r.studentId)).size,
-      requestDetails: tashihRequests.slice(0, 5).map((r) => ({
-        studentId: r.studentId,
-        surahName: r.surah?.name,
-        juzId: r.juzId,
-        classroomPeriod: `${r.group.classroom.academicYear}-${r.group.classroom.semester}`,
-      })),
-    });
+    // console.log('Tahfidz requests found for cumulative period:', {
+    //   academicYear,
+    //   semester,
+    //   requestCount: tashihRequests.length,
+    //   uniqueStudents: new Set(tashihRequests.map((r) => r.studentId)).size,
+    //   requestDetails: tashihRequests.slice(0, 5).map((r) => ({
+    //     studentId: r.studentId,
+    //     surahName: r.surah?.name,
+    //     juzId: r.juzId,
+    //     classroomPeriod: `${r.group.classroom.academicYear}-${r.group.classroom.semester}`,
+    //   })),
+    // });
 
     const result: ChartResponseItem[] = [];
 
@@ -248,7 +248,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    console.log('Final result count:', result.length);
+    // console.log('Final result count:', result.length);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching chart data:', error);

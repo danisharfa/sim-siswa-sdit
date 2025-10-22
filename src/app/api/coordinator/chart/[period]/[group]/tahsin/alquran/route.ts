@@ -57,16 +57,16 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     const groupId = group === 'all' ? null : group;
 
-    console.log('Tahsin Alquran API Dynamic Params:', {
-      period,
-      group,
-      parsed: { academicYear, semester, groupId },
-    });
+    // console.log('Tahsin Alquran API Dynamic Params:', {
+    //   period,
+    //   group,
+    //   parsed: { academicYear, semester, groupId },
+    // });
 
     const session = await auth();
 
     if (!session?.user || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({
@@ -74,14 +74,17 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     });
 
     if (!coordinator) {
-      return NextResponse.json({ success: false, error: 'Koordinator tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'Koordinator tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    console.log('Coordinator found:', coordinator.userId);
+    // console.log('Coordinator found:', coordinator.userId);
 
     let students: StudentData[] = [];
 
-    console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
+    // console.log('Fetching tahsin alquran data for specific period:', { academicYear, semester });
 
     const groupHistories = await prisma.groupHistory.findMany({
       where: {
@@ -129,7 +132,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
     students = uniqueStudents;
 
-    console.log('Students found:', students.length);
+    // console.log('Students found:', students.length);
 
     const alquranSubmissions = await prisma.submission.findMany({
       where: {
@@ -160,12 +163,12 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    console.log('Alquran submissions found for cumulative period:', {
-      academicYear,
-      semester,
-      submissionCount: alquranSubmissions.length,
-      uniqueStudents: new Set(alquranSubmissions.map((s) => s.studentId)).size,
-    });
+    // console.log('Alquran submissions found for cumulative period:', {
+    //   academicYear,
+    //   semester,
+    //   submissionCount: alquranSubmissions.length,
+    //   uniqueStudents: new Set(alquranSubmissions.map((s) => s.studentId)).size,
+    // });
 
     const allJuz = await prisma.juz.findMany({
       include: {
@@ -200,16 +203,16 @@ export async function GET(req: Request, segmentData: { params: Params }) {
 
         const completedAyah = juzSubmissions.reduce((total, submission) => {
           if (submission.surah && submission.startVerse && submission.endVerse) {
-            const surahJuzInfo = juz.surahJuz.find(sj => sj.surahId === submission.surahId);
+            const surahJuzInfo = juz.surahJuz.find((sj) => sj.surahId === submission.surahId);
             if (surahJuzInfo) {
               const juzStart = surahJuzInfo.startVerse;
               const juzEnd = surahJuzInfo.endVerse;
               const submissionStart = submission.startVerse;
               const submissionEnd = submission.endVerse;
-              
+
               const overlapStart = Math.max(juzStart, submissionStart);
               const overlapEnd = Math.min(juzEnd, submissionEnd);
-              
+
               if (overlapStart <= overlapEnd) {
                 const overlapAyat = overlapEnd - overlapStart + 1;
                 return total + overlapAyat;
@@ -253,7 +256,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    console.log('Final tahsin alquran result count:', result.length);
+    // console.log('Final tahsin alquran result count:', result.length);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching tahsin alquran chart data:', error);

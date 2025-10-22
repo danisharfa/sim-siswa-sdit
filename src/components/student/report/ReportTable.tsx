@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { StudentReportData } from '@/lib/data/student/report';
-import { AssessmentPeriod } from '@prisma/client';
 import {
   Select,
   SelectContent,
@@ -39,13 +38,11 @@ export type ReportItem = {
 interface Props {
   data: StudentReportData;
   title: string;
-  period: AssessmentPeriod;
-  onPeriodChange: (period: AssessmentPeriod) => void;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function ReportTable({ data, title, period, onPeriodChange }: Props) {
+export function ReportTable({ data, title }: Props) {
   const {
     sorting,
     setSorting,
@@ -217,19 +214,6 @@ export function ReportTable({ data, title, period, onPeriodChange }: Props) {
             </SelectContent>
           </Select>
         </div>
-
-        <div>
-          <Label className="mb-2 block">Filter Periode Penilaian</Label>
-          <Select value={period} onValueChange={onPeriodChange}>
-            <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode Penilaian" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MID_SEMESTER">Tengah Semester</SelectItem>
-              <SelectItem value="FINAL">Akhir Semester</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* Student Info Header */}
@@ -257,61 +241,25 @@ export function ReportTable({ data, title, period, onPeriodChange }: Props) {
           </div>
 
           {/* Summary Scores */}
-          {(currentPeriodData.report.endTahfidzScore ||
-            currentPeriodData.report.endTahsinScore ||
-            currentPeriodData.report.midTahfidzScore ||
-            currentPeriodData.report.midTahsinScore) && (
+          {(currentPeriodData.report.tahfidzScore || currentPeriodData.report.tahsinScore) && (
             <div className="mt-4 pt-4 border-t">
-              <h3 className="font-medium mb-2">
-                Ringkasan Nilai - {period === 'MID_SEMESTER' ? 'Tengah Semester' : 'Akhir Semester'}
-              </h3>
+              <h3 className="font-medium mb-2">Ringkasan Nilai - Akhir Semester</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {period === 'MID_SEMESTER' ? (
-                  <>
-                    {currentPeriodData.report.midTahfidzScore && (
-                      <div>
-                        <span className="text-muted-foreground">
-                          Rata-rata Tahfidz (Tengah Semester):
-                        </span>
-                        <p className="font-medium text-lg">
-                          {currentPeriodData.report.midTahfidzScore.toFixed(1)}
-                        </p>
-                      </div>
-                    )}
-                    {currentPeriodData.report.midTahsinScore && (
-                      <div>
-                        <span className="text-muted-foreground">
-                          Rata-rata Tahsin (Tengah Semester):
-                        </span>
-                        <p className="font-medium text-lg">
-                          {currentPeriodData.report.midTahsinScore.toFixed(1)}
-                        </p>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {currentPeriodData.report.endTahfidzScore && (
-                      <div>
-                        <span className="text-muted-foreground">
-                          Rata-rata Tahfidz (Akhir Semester):
-                        </span>
-                        <p className="font-medium text-lg">
-                          {currentPeriodData.report.endTahfidzScore.toFixed(1)}
-                        </p>
-                      </div>
-                    )}
-                    {currentPeriodData.report.endTahsinScore && (
-                      <div>
-                        <span className="text-muted-foreground">
-                          Rata-rata Tahsin (Akhir Semester):
-                        </span>
-                        <p className="font-medium text-lg">
-                          {currentPeriodData.report.endTahsinScore.toFixed(1)}
-                        </p>
-                      </div>
-                    )}
-                  </>
+                {currentPeriodData.report.tahfidzScore && (
+                  <div>
+                    <span className="text-muted-foreground">Rata-rata Tahfidz:</span>
+                    <p className="font-medium text-lg">
+                      {currentPeriodData.report.tahfidzScore.toFixed(1)}
+                    </p>
+                  </div>
+                )}
+                {currentPeriodData.report.tahsinScore && (
+                  <div>
+                    <span className="text-muted-foreground">Rata-rata Tahsin:</span>
+                    <p className="font-medium text-lg">
+                      {currentPeriodData.report.tahsinScore.toFixed(1)}
+                    </p>
+                  </div>
                 )}
                 {currentPeriodData.report.lastTahsinMaterial && (
                   <div>
@@ -341,10 +289,7 @@ export function ReportTable({ data, title, period, onPeriodChange }: Props) {
               }
               fileName={`Rapor-${currentPeriodData.period.academicYear}-${
                 currentPeriodData.period.semester
-              }-${period === 'MID_SEMESTER' ? 'Tengah' : 'Akhir'}-${data.fullName.replace(
-                /\s+/g,
-                '_'
-              )}.pdf`}
+              }-Akhir-${data.fullName.replace(/\s+/g, '_')}.pdf`}
             >
               {({ loading }) => (
                 <Button disabled={loading} variant="outline">

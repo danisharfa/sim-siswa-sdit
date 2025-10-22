@@ -2,53 +2,64 @@
 
 import * as React from 'react';
 import { CalendarIcon, ChevronDownIcon } from 'lucide-react';
+import { type DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Props {
-  value?: Date;
-  onChange?: (date: Date | undefined) => void;
+  value?: DateRange;
+  onChange?: (range: DateRange | undefined) => void;
   label?: string;
   placeholder?: string;
   className?: string;
 }
 
-export function Calendar01({
+export function Calendar23({
   value,
   onChange,
-  label = 'Tanggal',
-  placeholder = 'Pilih tanggal',
+  label = '',
+  placeholder = 'Pilih Rentang Tanggal',
   className,
 }: Props) {
-  const [open, setOpen] = React.useState(false);
+  const currentRange = value;
+
+  const handleSelect = (selectedRange: DateRange | undefined) => {
+    onChange?.(selectedRange);
+  };
 
   return (
     <div className={`flex flex-col gap-3 ${className || ''}`}>
       <Label htmlFor="date" className="px-1">
         {label}
       </Label>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" id="date" className="w-100 justify-between font-normal">
+          <Button
+            variant="outline"
+            id="dates"
+            className="max-w-[250px] justify-between font-normal"
+          >
             <div className="flex items-center gap-2">
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {value ? value.toLocaleDateString('id-ID') : placeholder}
+              {currentRange?.from && currentRange?.to
+                ? `${currentRange.from.toLocaleDateString(
+                    'id-ID'
+                  )} - ${currentRange.to.toLocaleDateString('id-ID')}`
+                : placeholder}
             </div>
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
           <Calendar
-            mode="single"
-            defaultMonth={value}
-            selected={value}
-            onSelect={(selectedDate) => {
-              onChange?.(selectedDate);
-              setOpen(false);
-            }}
-            className="rounded-lg border shadow-sm"
+            mode="range"
+            selected={currentRange}
+            captionLayout="dropdown"
+            onSelect={handleSelect}
+            startMonth={new Date(1900, 0)}
+            endMonth={new Date(2030, 11)}
           />
         </PopoverContent>
       </Popover>

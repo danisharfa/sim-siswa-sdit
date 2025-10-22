@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import {
   Card,
@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { Calendar01 } from '@/components/calendar/calendar-01';
+import { Calendar01 } from '@/components/layout/calendar/calendar-01';
 import { HomeActivityType } from '@prisma/client';
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
@@ -50,12 +50,23 @@ export function HomeActivityForm() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { data: juzList } = useSWR('/api/juz', fetcher);
-  const { data: surahList } = useSWR('/api/surah', fetcher);
+  // ===== SWR DATA FETCHING =====
+  const { data: juzResponse } = useSWR('/api/juz', fetcher);
+  const { data: surahResponse } = useSWR('/api/surah', fetcher);
   const { data: academic } = useSWR('/api/academicSetting', fetcher);
+
+  // ===== COMPUTED VALUES =====
+  const juzList = useMemo(() => {
+    return juzResponse?.success ? juzResponse.data : [];
+  }, [juzResponse]);
+
+  const surahList = useMemo(() => {
+    return surahResponse?.success ? surahResponse.data : [];
+  }, [surahResponse]);
 
   const resetForm = () => {
     setDate(new Date());
+    setActivityType(HomeActivityType.MURAJAAH);
     setJuzId('');
     setSurahId('');
     setStartVerse('');
@@ -64,19 +75,42 @@ export function HomeActivityForm() {
   };
 
   const handleSubmit = async () => {
-    if (!activityType || !date || !juzId || !surahId || !startVerse || !endVerse) {
-      toast.error('Mohon lengkapi semua field yang wajib');
-      return;
+    // Basic validations
+    if (!date) return toast.error('Tanggal aktivitas harus dipilih');
+    if (!activityType) return toast.error('Jenis aktivitas harus dipilih');
+    if (!juzId) return toast.error('Juz harus dipilih');
+    if (!surahId) return toast.error('Surah harus dipilih');
+    if (!startVerse) return toast.error('Ayat mulai harus diisi');
+    if (!endVerse) return toast.error('Ayat selesai harus diisi');
+
+    // Numeric validations
+    const startVerseNum = parseInt(startVerse);
+    const endVerseNum = parseInt(endVerse);
+
+    if (isNaN(startVerseNum) || startVerseNum < 1) {
+      return toast.error('Ayat mulai harus berupa angka positif');
+    }
+    if (isNaN(endVerseNum) || endVerseNum < 1) {
+      return toast.error('Ayat selesai harus berupa angka positif');
+    }
+    if (startVerseNum > endVerseNum) {
+      return toast.error('Ayat mulai tidak boleh lebih besar dari ayat selesai');
+    }
+
+    // Find selected surah to validate verse count
+    const selectedSurah = surahList.find((s: Surah) => s.id.toString() === surahId);
+    if (selectedSurah && endVerseNum > selectedSurah.verseCount) {
+      return toast.error(`Ayat selesai melebihi jumlah ayat surah (${selectedSurah.verseCount})`);
     }
 
     const payload = {
       date,
       activityType,
-      juzId: juzId ? parseInt(juzId) : undefined,
-      surahId: surahId ? parseInt(surahId) : undefined,
-      startVerse: startVerse ? parseInt(startVerse) : undefined,
-      endVerse: endVerse ? parseInt(endVerse) : undefined,
-      note,
+      juzId: parseInt(juzId),
+      surahId: parseInt(surahId),
+      startVerse: startVerseNum,
+      endVerse: endVerseNum,
+      note: note.trim() || null,
     };
 
     setLoading(true);
@@ -86,15 +120,18 @@ export function HomeActivityForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const result = await res.json();
 
-      if (!data.success) throw new Error(data.message);
+      if (!res.ok || !result.success) {
+        toast.error(result.message || 'Gagal menyimpan aktivitas');
+        return;
+      }
 
       toast.success('Aktivitas berhasil disimpan');
       resetForm();
     } catch (error) {
       console.error('Error saving activity:', error);
-      toast.error('Gagal menyimpan aktivitas');
+      toast.error('Terjadi kesalahan saat menyimpan data');
     } finally {
       setLoading(false);
     }
@@ -106,25 +143,34 @@ export function HomeActivityForm() {
         <CardTitle>Form Aktivitas Rumah</CardTitle>
         <CardDescription>
           {academic?.success && (
-            <span className="block text-sm text-muted-foreground mt-1">
-              Tahun Ajaran: <b>{academic.data.currentYear}</b> - Semester:{' '}
-              <b>{academic.data.currentSemester}</b>
+            <span className="text-sm text-muted-foreground">
+              Tahun Ajaran: <strong>{academic.data.currentYear}</strong> – Semester:{' '}
+              <strong>{academic.data.currentSemester}</strong>
             </span>
           )}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         <FieldSet>
           <Field>
             <Calendar01 value={date} onChange={setDate} label="Tanggal Aktivitas" />
           </Field>
 
           <Field>
-            <FieldLabel>Jenis Aktivitas</FieldLabel>
+            <FieldLabel>
+              Jenis Aktivitas
+            </FieldLabel>
             <Select
               value={activityType}
-              onValueChange={(val) => setActivityType(val as HomeActivityType)}
+              onValueChange={(newType) => {
+                setActivityType(newType as HomeActivityType);
+                // Reset related fields when activity type changes
+                setJuzId('');
+                setSurahId('');
+                setStartVerse('');
+                setEndVerse('');
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Jenis Aktivitas" />
@@ -139,13 +185,15 @@ export function HomeActivityForm() {
 
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
-              <FieldLabel>Juz</FieldLabel>
+              <FieldLabel>
+                Juz
+              </FieldLabel>
               <Select value={juzId} onValueChange={setJuzId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Juz" />
                 </SelectTrigger>
                 <SelectContent>
-                  {juzList?.data?.map((j: Juz) => (
+                  {juzList.map((j: Juz) => (
                     <SelectItem key={j.id} value={j.id.toString()}>
                       {j.name}
                     </SelectItem>
@@ -155,13 +203,15 @@ export function HomeActivityForm() {
             </Field>
 
             <Field className="flex-1 min-w-0">
-              <FieldLabel>Surah</FieldLabel>
+              <FieldLabel>
+                Surah
+              </FieldLabel>
               <Select value={surahId} onValueChange={setSurahId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Surah" />
                 </SelectTrigger>
                 <SelectContent>
-                  {surahList?.data?.map((s: Surah) => (
+                  {surahList.map((s: Surah) => (
                     <SelectItem key={s.id} value={s.id.toString()}>
                       {s.name}
                     </SelectItem>
@@ -173,22 +223,28 @@ export function HomeActivityForm() {
 
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
-              <FieldLabel>Ayat Mulai</FieldLabel>
+              <FieldLabel>
+                Ayat Mulai
+              </FieldLabel>
               <Input
                 type="number"
                 value={startVerse}
                 onChange={(e) => setStartVerse(e.target.value)}
                 placeholder="1"
+                min="1"
               />
             </Field>
 
             <Field className="flex-1 min-w-0">
-              <FieldLabel>Ayat Selesai</FieldLabel>
+              <FieldLabel>
+                Ayat Selesai
+              </FieldLabel>
               <Input
                 type="number"
                 value={endVerse}
                 onChange={(e) => setEndVerse(e.target.value)}
                 placeholder="7"
+                min="1"
               />
             </Field>
           </FieldGroup>
@@ -198,7 +254,7 @@ export function HomeActivityForm() {
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Contoh: Dilakukan setelah Subuh"
+              placeholder="Tambahkan catatan untuk aktivitas ini..."
               className="min-h-24"
             />
           </Field>

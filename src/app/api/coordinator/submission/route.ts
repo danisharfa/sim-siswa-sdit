@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({
@@ -20,8 +20,7 @@ export async function GET() {
       );
     }
 
-    // Coordinator melihat semua submission, tidak dibatasi kelompok bimbingan
-    const submissionList = await prisma.submission.findMany({
+    const data = await prisma.submission.findMany({
       orderBy: {
         date: 'desc',
       },
@@ -49,16 +48,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Data setoran berhasil diambil',
-      data: submissionList,
+      message: 'Daftar Setoran berhasil diambil',
+      data,
     });
   } catch (error) {
-    console.error('[COORDINATOR_SUBMISSION_GET]', error);
+    console.error('Gagal mengambil daftar Setoran:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Terjadi kesalahan saat mengambil data setoran',
-      },
+      { success: false, message: 'Gagal mengambil daftar Setoran' },
       { status: 500 }
     );
   }

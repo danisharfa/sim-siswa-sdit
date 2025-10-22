@@ -15,15 +15,6 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { StudentReportData } from '@/lib/data/teacher/report';
-import { AssessmentPeriod } from '@prisma/client';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { StudentReportPdf } from '@/components/teacher/report/StudentReportPdf';
 import { Download } from 'lucide-react';
 
@@ -38,11 +29,9 @@ export type ReportItem = {
 interface Props {
   data: StudentReportData;
   title: string;
-  period: AssessmentPeriod;
-  onPeriodChange: (period: AssessmentPeriod) => void;
 }
 
-export function CoordinatorReportTable({ data, title, period, onPeriodChange }: Props) {
+export function CoordinatorReportTable({ data, title }: Props) {
   const {
     sorting,
     setSorting,
@@ -142,11 +131,9 @@ export function CoordinatorReportTable({ data, title, period, onPeriodChange }: 
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // Get the appropriate scores based on period
-  const currentTahsinScore =
-    period === 'MID_SEMESTER' ? data.report.midTahsinScore : data.report.endTahsinScore;
-  const currentTahfidzScore =
-    period === 'MID_SEMESTER' ? data.report.midTahfidzScore : data.report.endTahfidzScore;
+  // Get the scores from the simplified structure
+  const currentTahsinScore = data.report.tahsinScore;
+  const currentTahfidzScore = data.report.tahfidzScore;
 
   // helper functions
   const numberToRoman = (num: number): string => {
@@ -174,21 +161,6 @@ export function CoordinatorReportTable({ data, title, period, onPeriodChange }: 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-4 items-end">
-        <div>
-          <Label className="mb-2 block">Filter Periode Penilaian</Label>
-          <Select value={period} onValueChange={onPeriodChange}>
-            <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Periode Penilaian" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MID_SEMESTER">Tengah Semester</SelectItem>
-              <SelectItem value="FINAL">Akhir Semester</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       {/* Student Info Header */}
       <div className="rounded-lg border bg-card p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
@@ -216,9 +188,7 @@ export function CoordinatorReportTable({ data, title, period, onPeriodChange }: 
           </div>
           <div>
             <span className="font-medium text-muted-foreground">Periode:</span>
-            <p className="font-medium">
-              {period === 'MID_SEMESTER' ? 'Tengah Semester' : 'Akhir Semester'}
-            </p>
+            <p className="font-medium">Akhir Semester</p>
           </div>
           <div>
             <span className="font-medium text-muted-foreground">Guru Pembimbing:</span>
@@ -233,9 +203,7 @@ export function CoordinatorReportTable({ data, title, period, onPeriodChange }: 
         {/* Summary Scores */}
         {(currentTahfidzScore || currentTahsinScore || data.report.lastTahsinMaterial) && (
           <div className="mt-4 pt-4 border-t">
-            <h3 className="font-medium mb-2">
-              Ringkasan Nilai - {period === 'MID_SEMESTER' ? 'Tengah Semester' : 'Akhir Semester'}
-            </h3>
+            <h3 className="font-medium mb-2">Ringkasan Nilai - Akhir Semester</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               {currentTahfidzScore && (
                 <div>
@@ -264,9 +232,10 @@ export function CoordinatorReportTable({ data, title, period, onPeriodChange }: 
         <div>
           <PDFDownloadLink
             document={<StudentReportPdf data={data} />}
-            fileName={`Rapor-${data.academicYear}-${data.semester}-${
-              period === 'MID_SEMESTER' ? 'Tengah' : 'Akhir'
-            }-${data.fullName.replace(/\s+/g, '_')}.pdf`}
+            fileName={`Rapor-${data.academicYear}-${data.semester}-Akhir-${data.fullName.replace(
+              /\s+/g,
+              '_'
+            )}.pdf`}
           >
             {({ loading }) => (
               <Button disabled={loading} variant="outline">

@@ -7,16 +7,16 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const groups = await prisma.group.findMany({
+    const data = await prisma.group.findMany({
       where: {
         classroom: {
           isActive: true,
         },
       },
-      orderBy: [ { classroom: { name: 'asc' } }, { name: 'asc' } ],
+      orderBy: [{ classroom: { name: 'asc' } }, { name: 'asc' }],
       select: {
         id: true,
         name: true,
@@ -45,7 +45,7 @@ export async function GET() {
       },
     });
 
-    const formattedGroups = groups.map((g) => ({
+    const formattedData = data.map((g) => ({
       groupId: g.id,
       groupName: g.name,
       classroomName: g.classroom.name,
@@ -59,7 +59,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: 'Berhasil mengambil data kelompok',
-      data: formattedGroups,
+      data: formattedData,
     });
   } catch (error) {
     console.error('Gagal mengambil data kelompok:', error);
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => null);
@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // const { groupName, classroomName, classroomAcademicYear, classroomSemester, teacherId } = body;
     const { groupName, classroomId, teacherId } = body;
 
     if (!groupName || !classroomId || !teacherId) {
@@ -97,13 +96,6 @@ export async function POST(req: NextRequest) {
     }
 
     const classroom = await prisma.classroom.findUnique({
-      // where: {
-      //   name_academicYear_semester: {
-      //     name: classroomName,
-      //     academicYear: classroomAcademicYear,
-      //     semester: classroomSemester,
-      //   },
-      // },
       where: { id: classroomId },
     });
 

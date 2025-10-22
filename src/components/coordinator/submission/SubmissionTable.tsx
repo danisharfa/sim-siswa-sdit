@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2Icon,
   MinusCircle,
@@ -30,10 +29,11 @@ import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
-import { ExportToPDFButton } from '@/components/teacher/submission/ExportToPDFButton';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { type DateRange } from 'react-day-picker';
-import { Calendar23 } from '@/components/calendar/calendar-23';
+import { Calendar23 } from '@/components/layout/calendar/calendar-23';
+import { ExportToPDFButton } from '@/components/coordinator/submission/ExportToPDFButton';
 
 export type Submission = {
   id: string;
@@ -80,64 +80,111 @@ export function SubmissionTable({ data, title }: Props) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-  } = useDataTableState<Submission, never>();
+  } = useDataTableState<Submission, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedSubmissionType, setSelectedSubmissionType] = useState('all');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const { data: setting } = useSWR('/api/academicSetting', fetcher);
+  const { data: academicSetting } = useSWR('/api/academicSetting', fetcher);
 
-  const academicPeriods = useMemo(() => {
-    return Array.from(
-      new Set(data.map((d) => `${d.group.classroom.academicYear}-${d.group.classroom.semester}`))
-    );
-  }, [data]);
+  const defaultPeriod = academicSetting
+    ? `${academicSetting.currentYear}-${academicSetting.currentSemester}`
+    : '';
 
-  const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : '';
+  const academicPeriods = useMemo(
+    () =>
+      Array.from(
+        new Set(data.map((d) => `${d.group.classroom.academicYear}-${d.group.classroom.semester}`))
+      ),
+    [data]
+  );
 
-  useEffect(() => {
-    if (defaultPeriod && !selectedPeriod) {
-      if (academicPeriods.includes(defaultPeriod)) {
-        setSelectedPeriod(defaultPeriod);
-      } else if (academicPeriods.length > 0) {
-        setSelectedPeriod(academicPeriods[0]);
-      }
-    }
-  }, [defaultPeriod, academicPeriods, selectedPeriod]);
-
-  const filteredData = useMemo(() => {
+  const filteredByPeriod = useMemo(() => {
     if (!selectedPeriod) return data;
-
-    const [academicYear, semester] = selectedPeriod.split('-');
+    const [year, semester] = selectedPeriod.split('-');
     return data.filter(
-      (submission) =>
-        submission.group.classroom.academicYear === academicYear &&
-        submission.group.classroom.semester === semester
+      (item) =>
+        item.group.classroom.academicYear === year && item.group.classroom.semester === semester
     );
   }, [data, selectedPeriod]);
 
-  const groupList = useMemo(() => {
-    const map = new Map<string, Submission['group']>();
-    for (const d of filteredData) {
-      if (!map.has(d.group.id)) {
-        map.set(d.group.id, d.group);
+  const availableGroups = useMemo(() => {
+    const groupMap = new Map<string, Submission['group']>();
+    filteredByPeriod.forEach((item) => {
+      if (!groupMap.has(item.group.id)) {
+        groupMap.set(item.group.id, item.group);
       }
-    }
-    return Array.from(map.values());
-  }, [filteredData]);
+    });
+    return Array.from(groupMap.values());
+  }, [filteredByPeriod]);
 
-  const studentByGroup = useMemo(() => {
+  const availableStudents = useMemo(() => {
     if (selectedGroupId === 'all') return [];
     return Array.from(
       new Set(
-        filteredData
-          .filter((d) => d.group.id === selectedGroupId)
-          .map((d) => d.student.user.fullName)
+        filteredByPeriod
+          .filter((item) => item.group.id === selectedGroupId)
+          .map((item) => item.student.user.fullName)
       )
     );
-  }, [selectedGroupId, filteredData]);
+  }, [filteredByPeriod, selectedGroupId]);
+
+  const availableSubmissionTypes = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.submissionType))),
+    [filteredByPeriod]
+  );
+
+  useEffect(() => {
+    if (defaultPeriod && !selectedPeriod && academicPeriods.length > 0) {
+      const targetPeriod = academicPeriods.includes(defaultPeriod)
+        ? defaultPeriod
+        : academicPeriods[0];
+      setSelectedPeriod(targetPeriod);
+    }
+  }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedGroupId('all');
+    setSelectedStudent('all');
+    // Clear table filters
+    table.getColumn('Kelompok')?.setFilterValue(undefined);
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+  };
+
+  const handleGroupChange = (value: string) => {
+    setSelectedGroupId(value);
+    setSelectedStudent('all');
+
+    if (value === 'all') {
+      table.getColumn('Kelompok')?.setFilterValue(undefined);
+    } else {
+      const group = availableGroups.find((g) => g.id === value);
+      if (group) {
+        table.getColumn('Kelompok')?.setFilterValue(`${group.name} - ${group.classroom.name}`);
+      }
+    }
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+  };
+
+  const handleStudentChange = (value: string) => {
+    setSelectedStudent(value);
+    table.getColumn('Siswa')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleSubmissionTypeChange = (value: string) => {
+    setSelectedSubmissionType(value);
+    table.getColumn('Jenis Setoran')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    table.getColumn('Tanggal')?.setFilterValue('custom');
+  };
 
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
@@ -147,12 +194,10 @@ export function SubmissionTable({ data, title }: Props) {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
           if (!dateRange?.from && !dateRange?.to) return true;
-
           const date = new Date(row.getValue(columnId));
-          const isAfterOrOnStart = !dateRange.from || date >= dateRange.from;
-          const isBeforeOrOnEnd = !dateRange.to || date <= dateRange.to;
-
-          return isAfterOrOnStart && isBeforeOrOnEnd;
+          const isAfterStart = !dateRange.from || date >= dateRange.from;
+          const isBeforeEnd = !dateRange.to || date <= dateRange.to;
+          return isAfterStart && isBeforeEnd;
         },
         cell: ({ row }) => (
           <span>
@@ -192,34 +237,40 @@ export function SubmissionTable({ data, title }: Props) {
         id: 'Surah',
         header: 'Surah',
         accessorFn: (row) => row.surah?.name ?? '-',
-        cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.surah?.name ? (
-              <>
-                <div className="font-medium">{`${row.original.surah.name} (Ayat ${row.original.startVerse} - ${row.original.endVerse})`}</div>
-                <div className="text-muted-foreground">{row.original.juz?.name}</div>
-              </>
-            ) : (
-              <span>-</span>
-            )}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const { surah, startVerse, endVerse, juz } = row.original;
+          return (
+            <div className="text-sm">
+              {surah ? (
+                <>
+                  <div className="font-medium">
+                    {`${surah.name} (Ayat ${startVerse} - ${endVerse})`}
+                  </div>
+                  <div className="text-muted-foreground">{juz?.name}</div>
+                </>
+              ) : (
+                <span>-</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: 'Wafa',
         header: 'Wafa',
         accessorFn: (row) => row.wafa?.name ?? '-',
-        cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.wafa?.name ? (
-              <>
-                <div className="font-medium">{`${row.original.wafa.name} (Hal ${row.original.startPage} - ${row.original.endPage})`}</div>
-              </>
-            ) : (
-              <span>-</span>
-            )}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const { wafa, startPage, endPage } = row.original;
+          return (
+            <div className="text-sm">
+              {wafa ? (
+                <div className="font-medium">{`${wafa.name} (Hal ${startPage} - ${endPage})`}</div>
+              ) : (
+                <span>-</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'submissionStatus',
@@ -227,17 +278,17 @@ export function SubmissionTable({ data, title }: Props) {
         header: 'Status',
         cell: ({ row }) => {
           const status = row.original.submissionStatus;
-          const icon =
-            status === SubmissionStatus.LULUS ? (
-              <CheckCircle2Icon className="text-green-500" />
-            ) : status === SubmissionStatus.MENGULANG ? (
-              <RefreshCcw className="text-yellow-500" />
-            ) : (
-              <XCircle className="text-red-500" />
-            );
+          const statusConfig = {
+            [SubmissionStatus.LULUS]: { icon: CheckCircle2Icon, color: 'text-green-500' },
+            [SubmissionStatus.MENGULANG]: { icon: RefreshCcw, color: 'text-yellow-500' },
+            [SubmissionStatus.TIDAK_LULUS]: { icon: XCircle, color: 'text-red-500' },
+          };
+
+          const { icon: Icon, color } = statusConfig[status];
+
           return (
             <Badge variant="outline" className="flex gap-1 text-muted-foreground">
-              {icon}
+              <Icon className={color} />
               {status.replaceAll('_', ' ')}
             </Badge>
           );
@@ -248,17 +299,17 @@ export function SubmissionTable({ data, title }: Props) {
         header: 'Adab',
         cell: ({ row }) => {
           const adab = row.original.adab;
-          const icon =
-            adab === Adab.BAIK ? (
-              <ThumbsUp className="text-green-500" />
-            ) : adab === Adab.KURANG_BAIK ? (
-              <MinusCircle className="text-yellow-500" />
-            ) : (
-              <ThumbsDown className="text-red-500" />
-            );
+          const adabConfig = {
+            [Adab.BAIK]: { icon: ThumbsUp, color: 'text-green-500' },
+            [Adab.KURANG_BAIK]: { icon: MinusCircle, color: 'text-yellow-500' },
+            [Adab.TIDAK_BAIK]: { icon: ThumbsDown, color: 'text-red-500' },
+          };
+
+          const { icon: Icon, color } = adabConfig[adab];
+
           return (
             <Badge variant="outline" className="flex gap-1 text-muted-foreground">
-              {icon}
+              <Icon className={color} />
               {adab.replaceAll('_', ' ')}
             </Badge>
           );
@@ -268,17 +319,16 @@ export function SubmissionTable({ data, title }: Props) {
         accessorKey: 'note',
         id: 'Catatan',
         header: 'Catatan',
-        cell: ({ row }) => {
-          const note = row.original.note;
-          return <span className="text-muted-foreground">{note ? note : '-'}</span>;
-        },
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.note || '-'}</span>
+        ),
       },
     ],
     [dateRange]
   );
 
   const table = useReactTable({
-    data: filteredData,
+    data: filteredByPeriod,
     columns,
     state: {
       sorting,
@@ -287,130 +337,82 @@ export function SubmissionTable({ data, title }: Props) {
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
     <>
       <div className="flex flex-wrap gap-4 items-end">
-        <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(val) => {
-              setSelectedPeriod(val);
-              setSelectedGroupId('all');
-              setSelectedStudent('all');
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
-            </SelectTrigger>
-            <SelectContent>
-              {academicPeriods.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p.replace('-', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+        <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Tahun Akademik" />
+          </SelectTrigger>
+          <SelectContent>
+            {academicPeriods.map((period) => (
+              <SelectItem key={period} value={period}>
+                {period.replace('-', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Kelompok</Label>
-          <Select
-            value={selectedGroupId}
-            onValueChange={(val) => {
-              setSelectedGroupId(val);
-              setSelectedStudent('all');
-              const group = groupList.find((g) => g.id === val);
-              if (group) {
-                table
-                  .getColumn('Kelompok')
-                  ?.setFilterValue(`${group.name} - ${group.classroom.name}`);
-              } else {
-                table.getColumn('Kelompok')?.setFilterValue(undefined);
-              }
-              table.getColumn('Siswa')?.setFilterValue(undefined);
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[250px]">
-              <SelectValue placeholder="Pilih Kelompok" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Kelompok</SelectItem>
-              {groupList.map((g) => (
-                <SelectItem key={g.id} value={g.id}>
-                  {`${g.name} - ${g.classroom.name}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+          <Label className="mb-2 block sr-only">Filter Kelompok</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Kelompok" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Kelompok</SelectItem>
+            {availableGroups.map((group) => (
+              <SelectItem key={group.id} value={group.id}>
+                {`${group.name} - ${group.classroom.name}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Siswa</Label>
-          <Select
-            disabled={selectedGroupId === 'all'}
-            value={selectedStudent}
-            onValueChange={(val) => {
-              setSelectedStudent(val);
-              table.getColumn('Siswa')?.setFilterValue(val === 'all' ? undefined : val);
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
-              <SelectValue placeholder="Pilih Siswa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Siswa</SelectItem>
-              {studentByGroup.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          disabled={selectedGroupId === 'all'}
+          value={selectedStudent}
+          onValueChange={handleStudentChange}
+        >
+          <Label className="mb-2 block sr-only">Filter Siswa</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Siswa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Siswa</SelectItem>
+            {availableStudents.map((student) => (
+              <SelectItem key={student} value={student}>
+                {student}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Jenis Setoran</Label>
-          <Select
-            onValueChange={(val) =>
-              table.getColumn('Jenis Setoran')?.setFilterValue(val === 'all' ? undefined : val)
-            }
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[180px]">
-              <SelectValue placeholder="Pilih Jenis Setoran" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Jenis</SelectItem>
-              {Array.from(new Set(filteredData.map((d) => d.submissionType))).map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st.replaceAll('_', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedSubmissionType} onValueChange={handleSubmissionTypeChange}>
+          <Label className="mb-2 block sr-only">Filter Jenis Setoran</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Jenis Setoran" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Jenis Setoran</SelectItem>
+            {availableSubmissionTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Calendar23
-            value={dateRange}
-            onChange={(range) => {
-              setDateRange(range);
-              table.getColumn('Tanggal')?.setFilterValue('custom');
-            }}
-            label="Filter Tanggal"
-          />
-        </div>
+        <Calendar23 value={dateRange} onChange={handleDateRangeChange} />
 
-        <div>
-          <ExportToPDFButton table={table} />
-        </div>
+        <ExportToPDFButton table={table} />
       </div>
 
       <DataTable title={title} table={table} filterColumn="Tanggal" />

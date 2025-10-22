@@ -66,7 +66,7 @@ export function SchoolInfoForm({ data, onSave }: Props) {
   }
 
   return (
-    <Card className="max-w-md h-full flex flex-col">
+    <Card className="">
       <CardHeader>
         <CardTitle>Informasi Sekolah</CardTitle>
       </CardHeader>

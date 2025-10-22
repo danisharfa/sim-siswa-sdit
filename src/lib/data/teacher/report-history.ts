@@ -28,8 +28,8 @@ export interface StudentReportHistoryData {
     description: string;
   }[];
   report: {
-    endTahfidzScore: number | null;
-    endTahsinScore: number | null;
+    tahfidzScore: number | null;
+    tahsinScore: number | null;
     lastTahsinMaterial: string | null;
   };
 }
@@ -145,8 +145,8 @@ export async function getStudentReportHistoryData(
       description: s.description ?? '-',
     })),
     report: {
-      endTahfidzScore: report?.endTahfidzScore ?? null,
-      endTahsinScore: report?.endTahsinScore ?? null,
+      tahfidzScore: report?.tahfidzScore ?? null,
+      tahsinScore: report?.tahsinScore ?? null,
       lastTahsinMaterial: report?.lastTahsinMaterial ?? null,
     },
   };

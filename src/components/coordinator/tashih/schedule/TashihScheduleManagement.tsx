@@ -22,7 +22,7 @@ export function TashihScheduleManagement() {
   if (error) return <p>Gagal memuat data jadwal ujian</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <AddTashihScheduleForm onScheduleAdded={mutate} />
       <TashihScheduleTable data={data.data} title="Jadwal Ujian Siswa" />
     </div>

@@ -14,11 +14,15 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ success: true, data: setting });
+    return NextResponse.json({
+      success: true,
+      message: 'Academic Setting berhasil diambil',
+      data: setting,
+    });
   } catch (error) {
-    console.error('Gagal mengambil AcademicSetting:', error);
+    console.error('Gagal mengambil Academic Setting:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil AcademicSetting' },
+      { success: false, message: 'Gagal mengambil Academic Setting' },
       { status: 500 }
     );
   }

@@ -13,7 +13,7 @@ import {
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import { Pencil, ScrollText } from 'lucide-react';
+import { FileCheck, FilePen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Student {
@@ -66,7 +66,7 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
                   router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/score`)
                 }
               >
-                <Pencil />
+                <FilePen />
                 Nilai
               </Button>
 
@@ -77,7 +77,7 @@ export function GroupMembersTable({ data, title, groupId }: Props) {
                   router.push(`/dashboard/teacher/group/${groupId}/student/${siswa.id}/report`)
                 }
               >
-                <ScrollText />
+                <FileCheck />
                 Rapor
               </Button>
             </div>

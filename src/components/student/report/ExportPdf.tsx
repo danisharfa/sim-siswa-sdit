@@ -86,7 +86,7 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
   }
 
   const {
-    period: { className, academicYear, semester, teacherName, assessmentPeriod },
+    period: { className, academicYear, semester, teacherName },
     tahsin,
     tahfidz,
     report,
@@ -95,9 +95,8 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
   const leftLogo = '/logo-sekolah.png';
   const rightLogo = '/logo-wafa.png';
 
-  // Dynamic assessment period text
-  const assessmentPeriodText =
-    assessmentPeriod === 'MID_SEMESTER' ? 'ASESMEN TENGAH SEMESTER' : 'ASESMEN AKHIR SEMESTER';
+  // Static assessment period text for final semester
+  const assessmentPeriodText = 'ASESMEN AKHIR SEMESTER';
 
   const today = new Date().toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -204,7 +203,7 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahsin</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.endTahsinScore?.toFixed(1) ?? '-'}
+                {report.tahsinScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>
@@ -261,7 +260,7 @@ export function ExportPdf({ data, selectedPeriodIndex = 0 }: ExportPdfProps) {
             <Text style={[styles.cellTopic, { fontWeight: 'bold' }]}>Rata-rata Tahfidz</Text>
             <View style={styles.cellScoreDouble}>
               <Text style={[styles.scoreText, { fontWeight: 'bold' }]}>
-                {report.endTahfidzScore?.toFixed(1) ?? '-'}
+                {report.tahfidzScore?.toFixed(1) ?? '-'}
               </Text>
               <Text style={styles.scoreText}></Text>
             </View>

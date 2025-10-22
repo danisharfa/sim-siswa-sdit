@@ -1,16 +1,21 @@
 'use client';
 
 import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AcademicPeriodForm } from './AcademicPeriodForm';
 import { SchoolInfoForm } from './SchoolInfoForm';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function ConfigurationManagement() {
-  const { data, isLoading, mutate } = useSWR('/api/academicSetting', fetcher);
+  const { data, error, isLoading, mutate } = useSWR('/api/academicSetting', fetcher);
 
-  if (isLoading || !data) {
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
+
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-70 w-full" />
@@ -19,22 +24,20 @@ export function ConfigurationManagement() {
     );
   }
 
-  const academicSetting = data.data;
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <AcademicPeriodForm
         data={{
-          currentYear: academicSetting.currentYear,
-          currentSemester: academicSetting.currentSemester,
+          currentYear: data.data.currentYear,
+          currentSemester: data.data.currentSemester,
         }}
         onSave={mutate}
       />
       <SchoolInfoForm
         data={{
-          currentPrincipalName: academicSetting.currentPrincipalName ?? '',
-          schoolName: academicSetting.schoolName ?? '',
-          schoolAddress: academicSetting.schoolAddress ?? '',
+          currentPrincipalName: data.data.currentPrincipalName ?? '',
+          schoolName: data.data.schoolName ?? '',
+          schoolAddress: data.data.schoolAddress ?? '',
         }}
         onSave={mutate}
       />

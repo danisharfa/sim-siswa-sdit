@@ -4,14 +4,12 @@ import { useState, useEffect, use } from 'react';
 import { notFound } from 'next/navigation';
 import { TeacherReportTable } from '@/components/teacher/report/TeacherReportTable';
 import { BackButton } from '@/components/ui/back-button';
-import { AssessmentPeriod } from '@prisma/client';
 import type { StudentReportData } from '@/lib/data/teacher/report';
 
 type Params = Promise<{ groupId: string; studentId: string }>;
 
 export default function HistoryReportPage({ params }: { params: Params }) {
   const { groupId, studentId } = use(params);
-  const [period, setPeriod] = useState<AssessmentPeriod>('FINAL');
   const [data, setData] = useState<StudentReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -19,9 +17,7 @@ export default function HistoryReportPage({ params }: { params: Params }) {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `/api/teacher/report/${studentId}?groupId=${groupId}&period=${period}`
-        );
+        const response = await fetch(`/api/teacher/report/${studentId}?groupId=${groupId}`);
         if (!response.ok) {
           throw new Error('Data not found');
         }
@@ -36,7 +32,7 @@ export default function HistoryReportPage({ params }: { params: Params }) {
     }
 
     fetchData();
-  }, [studentId, groupId, period]);
+  }, [studentId, groupId]);
 
   if (isLoading) {
     return (
@@ -59,12 +55,7 @@ export default function HistoryReportPage({ params }: { params: Params }) {
         <h1 className="text-2xl font-bold ml-4">Rapor Al-Qur&apos;an</h1>
       </div>
 
-      <TeacherReportTable
-        data={data}
-        title="Detail Nilai"
-        period={period}
-        onPeriodChange={setPeriod}
-      />
+      <TeacherReportTable data={data} title="Detail Nilai" />
     </div>
   );
 }

@@ -64,7 +64,7 @@ export function TahfidzChart({ academicYear, semester, groupId }: TahfidzChartPr
 
   const apiUrl = `/api/coordinator/chart/${period}/${group}/tahfidz`;
 
-  console.log('TahfidzChart render:', { academicYear, semester, groupId, period, group, apiUrl });
+  // console.log('TahfidzChart render:', { academicYear, semester, groupId, period, group, apiUrl });
 
   const { data, isLoading, error } = useSWR<ChartResponse>(apiUrl, fetcher, {
     revalidateOnFocus: false,

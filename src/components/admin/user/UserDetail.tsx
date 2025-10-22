@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import { Calendar22 } from '@/components/calendar/calendar-22';
+import { Calendar22 } from '@/components/layout/calendar/calendar-22';
 import { toast } from 'sonner';
 import { Role, Gender, BloodType } from '@prisma/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -123,7 +123,7 @@ export function UserDetail({ userId, role }: { userId: string; role: Role }) {
 
       <CardContent>
         <FieldSet>
-          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <Field>
                 <FieldLabel>Nama Lengkap</FieldLabel>

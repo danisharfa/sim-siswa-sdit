@@ -8,7 +8,7 @@ export function GroupManagement() {
   const groupHistory = use(fetchTeacherGroupHistory());
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <GroupTable data={groups} title="Daftar Kelompok" />
       <GroupHistoryTable data={groupHistory} title="Riwayat Kelompok" />
     </div>

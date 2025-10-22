@@ -15,14 +15,14 @@ export function GroupHistoryManagement({ groupId }: GroupHistoryManagementProps)
 
   if (isLoading || !data) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-[400px] w-full" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <CoordinatorGroupHistoryMembersTable
         data={data.data || []}
         title="Daftar Siswa"

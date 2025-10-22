@@ -8,8 +8,7 @@ type Params = Promise<{ id: string }>;
 // untuk hapus nilai tahfidz
 export async function DELETE(req: NextRequest, segmentData: { params: Params }) {
   try {
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {

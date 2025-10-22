@@ -8,8 +8,8 @@ export default async function TeacherProfilePage() {
   return (
     <div className="p-4">
       <div className="flex items-baseline gap-2 mb-4">
-        <h1 className="text-2xl font-bold">{user.fullName}</h1>
-        <span className="text-muted-foreground">Biodata</span>
+        <h1 className="text-2xl font-bold">Biodata</h1>
+        <span className="text-muted-foreground">{user.username}</span>
       </div>
       <TeacherProfileDetail userId={user.id} />
     </div>

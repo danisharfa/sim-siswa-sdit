@@ -15,7 +15,7 @@ import {
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { Calendar22 } from '@/components/calendar/calendar-22';
+import { Calendar22 } from '@/components/layout/calendar/calendar-22';
 import { toast } from 'sonner';
 import { Role, Gender, BloodType } from '@prisma/client';
 
@@ -126,7 +126,7 @@ export default function StudentProfileDetail({ userId }: { userId: string }) {
     <Card>
       <CardContent>
         <FieldSet>
-          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <Field>
                 <FieldLabel>Nama Lengkap</FieldLabel>

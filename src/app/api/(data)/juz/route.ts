@@ -15,11 +15,11 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil mengambil daftar Juz',
+      message: 'Daftar Juz berhasil diambil',
       data,
     });
   } catch (error) {
-    console.error('[JUZ_GET]', error);
+    console.error('Gagal mengambil daftar Juz:', error);
     return NextResponse.json(
       { success: false, message: 'Gagal mengambil daftar Juz' },
       { status: 500 }

@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     const session = await auth();
 
     if (!session || session.user.role !== Role.student) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const activity = await prisma.homeActivity.findUnique({
@@ -84,7 +84,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
     const session = await auth();
 
     if (!session || session.user.role !== Role.student) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const activity = await prisma.homeActivity.findUnique({

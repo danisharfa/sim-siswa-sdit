@@ -205,7 +205,7 @@ export function TashihRequestForm() {
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Kelompok dan Siswa */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 min-w-0">

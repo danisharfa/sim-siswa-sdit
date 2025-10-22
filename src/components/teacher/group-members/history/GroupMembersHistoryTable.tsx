@@ -13,7 +13,7 @@ import {
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import { ScrollText } from 'lucide-react';
+import { FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Student {
@@ -66,7 +66,7 @@ export function GroupMembersHistoryTable({ data, title, groupId }: Props) {
                 )
               }
             >
-              <ScrollText />
+              <FileCheck />
               Rapor
             </Button>
           );

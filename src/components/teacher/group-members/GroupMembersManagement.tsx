@@ -6,7 +6,7 @@ export function GroupMembersManagement({ groupId }: { groupId: string }) {
   const members = use(fetchGroupMembers(groupId));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <GroupMembersTable data={members} title="Daftar Siswa" groupId={groupId} />
     </div>
   );

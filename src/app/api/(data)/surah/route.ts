@@ -14,13 +14,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil mengambil daftar surah',
+      message: 'Daftar Surah berhasil diambil',
       data,
     });
   } catch (error) {
-    console.error('[SURAH_GET]', error);
+    console.error('Gagal mengambil daftar Surah:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil daftar surah' },
+      { success: false, message: 'Gagal mengambil daftar Surah' },
       { status: 500 }
     );
   }

@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
     const session = await auth();
 
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -74,6 +74,66 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
       submissionStatus,
       note,
     } = body;
+
+    // ===== BASIC VALIDATION =====
+    if (!submissionType || !submissionStatus || !adab) {
+      return NextResponse.json(
+        { success: false, message: 'Data dasar tidak lengkap' },
+        { status: 400 }
+      );
+    }
+
+    // ===== CONDITIONAL VALIDATION BASED ON SUBMISSION TYPE =====
+    if (submissionType === 'TAHFIDZ' || submissionType === 'TAHSIN_ALQURAN') {
+      if (!juzId) {
+        return NextResponse.json(
+          { success: false, message: "Juz harus diisi untuk Tahfidz/Tahsin Al-Qur'an" },
+          { status: 400 }
+        );
+      }
+      if (!surahId) {
+        return NextResponse.json(
+          { success: false, message: "Surah harus diisi untuk Tahfidz/Tahsin Al-Qur'an" },
+          { status: 400 }
+        );
+      }
+      if (!startVerse || !endVerse) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Ayat mulai dan selesai harus diisi untuk Tahfidz/Tahsin Al-Qur'an",
+          },
+          { status: 400 }
+        );
+      }
+      if (startVerse > endVerse) {
+        return NextResponse.json(
+          { success: false, message: 'Ayat mulai tidak boleh lebih besar dari ayat selesai' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (submissionType === 'TAHSIN_WAFA') {
+      if (!wafaId) {
+        return NextResponse.json(
+          { success: false, message: 'Materi Wafa harus diisi untuk Tahsin Wafa' },
+          { status: 400 }
+        );
+      }
+      if (!startPage || !endPage) {
+        return NextResponse.json(
+          { success: false, message: 'Halaman mulai dan selesai harus diisi untuk Tahsin Wafa' },
+          { status: 400 }
+        );
+      }
+      if (startPage > endPage) {
+        return NextResponse.json(
+          { success: false, message: 'Halaman mulai tidak boleh lebih besar dari halaman selesai' },
+          { status: 400 }
+        );
+      }
+    }
 
     const dataToUpdate: Prisma.SubmissionUpdateInput = {
       submissionType,
@@ -168,7 +228,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
 
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({

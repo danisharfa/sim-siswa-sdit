@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
@@ -40,9 +40,7 @@ export async function GET() {
 
     const filtered = schedules.filter((s) => {
       const resultRequestIds = new Set(s.results.map((r) => r.requestId));
-      const unscoredExists = s.scheduleRequests.some(
-        (sr) => !resultRequestIds.has(sr.request.id)
-      );
+      const unscoredExists = s.scheduleRequests.some((sr) => !resultRequestIds.has(sr.request.id));
       return unscoredExists;
     });
 

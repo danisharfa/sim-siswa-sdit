@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { convertToLetter } from '@/lib/data/score-converter';
-import { GradeLetter, TahsinType, AssessmentPeriod } from '@prisma/client';
+import { GradeLetter, TahsinType } from '@prisma/client';
 
 interface ScoreFormProps {
   groupId: string;
@@ -41,7 +41,6 @@ interface TahsinEntry {
   score: number;
   grade: GradeLetter;
   description: string;
-  period: AssessmentPeriod;
 }
 
 interface TahfidzEntry {
@@ -51,7 +50,6 @@ interface TahfidzEntry {
   score: number;
   grade: GradeLetter;
   description: string;
-  period: AssessmentPeriod;
 }
 
 interface SurahJuz {
@@ -96,19 +94,16 @@ function generateTahfidzDescription(grade: GradeLetter, surahName: string): stri
 }
 
 interface ExistingScoreResponse {
-  tahsin: (Omit<TahsinEntry, 'type'> & { tahsinType: TahsinType; period: AssessmentPeriod })[];
-  tahfidz: (Omit<TahfidzEntry, 'topic'> & { surah: { name: string }; period: AssessmentPeriod })[];
+  tahsin: (Omit<TahsinEntry, 'type'> & { tahsinType: TahsinType })[];
+  tahfidz: (Omit<TahfidzEntry, 'topic'> & { surah: { name: string } })[];
   lastMaterial: string | null;
   averageScores: {
     tahsin: number | null;
     tahfidz: number | null;
-    midTahsin: number | null;
-    midTahfidz: number | null;
   };
 }
 
 export function ScoreForm({ groupId, student }: ScoreFormProps) {
-  const [currentPeriod, setCurrentPeriod] = useState<AssessmentPeriod>('FINAL');
   const [tahsinEntries, setTahsinEntries] = useState<TahsinEntry[]>([]);
   const [tahfidzEntries, setTahfidzEntries] = useState<TahfidzEntry[]>([]);
   const [selectedJuz, setSelectedJuz] = useState<Record<number, number>>({});
@@ -125,7 +120,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
   const surahJuzList = surahJuzData?.data || [];
 
   const { data: existingScores, isLoading } = useSWR<ExistingScoreResponse>(
-    `/api/teacher/score/${student.userId}?period=${currentPeriod}`,
+    `/api/teacher/score/${student.userId}`,
     fetcher
   );
 
@@ -140,7 +135,6 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
             score: t.score,
             grade: t.grade,
             description: generateTahsinDescription(t.grade, t.topic),
-            period: t.period,
           }))
         );
       }
@@ -154,7 +148,6 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
             score: score.score,
             grade: score.grade,
             description: generateTahfidzDescription(score.grade, score.surah.name),
-            period: score.period,
           }))
         );
       }
@@ -163,7 +156,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
         setLastMaterial(existingScores.lastMaterial);
       }
     }
-  }, [existingScores, isLoading, lastMaterial, currentPeriod]);
+  }, [existingScores, isLoading, lastMaterial]);
 
   function handleAddTahsin(type: TahsinType) {
     setTahsinEntries([
@@ -174,7 +167,6 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
         score: 0,
         grade: 'D',
         description: '',
-        period: currentPeriod,
       },
     ]);
   }
@@ -242,7 +234,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
     }
     setTahfidzEntries([
       ...tahfidzEntries,
-      { surahId, topic, score: 0, grade: 'D', description: '', period: currentPeriod },
+      { surahId, topic, score: 0, grade: 'D', description: '' },
     ]);
   }
 
@@ -316,7 +308,6 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
       tahsin: tahsinEntries,
       tahfidz: tahfidzEntries,
       lastMaterial,
-      assessmentPeriod: currentPeriod,
     };
 
     try {
@@ -339,31 +330,7 @@ export function ScoreForm({ groupId, student }: ScoreFormProps) {
   }
 
   return (
-    <div className="space-y-6 mt-4">
-      {/* Period Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Periode Penilaian</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={currentPeriod}
-            onValueChange={(value: AssessmentPeriod) => {
-              setCurrentPeriod(value);
-              setTahsinEntries([]);
-              setTahfidzEntries([]);
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Pilih Periode Penilaian" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MID_SEMESTER">Tengah Semester</SelectItem>
-              <SelectItem value="FINAL">Akhir Semester</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+    <div className="space-y-4 mt-4">
       {/* Card Tahsin */}
       <Card>
         <CardHeader>

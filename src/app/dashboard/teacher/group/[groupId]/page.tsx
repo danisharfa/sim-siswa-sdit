@@ -31,7 +31,7 @@ export default async function GroupDetailPage({ params }: { params: Params }) {
 
       <Suspense
         fallback={
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Skeleton className="h-[100px] w-full" />
             <Skeleton className="h-[400px] w-full" />
           </div>

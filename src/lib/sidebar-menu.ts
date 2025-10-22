@@ -7,7 +7,7 @@ import {
   ClipboardCheck,
   CalendarCheck2,
   BookPlus,
-  ScrollText,
+  FileCheck,
   Target,
   GraduationCap,
 } from 'lucide-react';
@@ -133,12 +133,12 @@ export const menuData = {
       items: [
         {
           title: 'Input Target Setoran',
-          url: '/dashboard/teacher/submission/target/input',
+          url: '/dashboard/teacher/weekly-target/input',
           icon: Target,
         },
         {
           title: 'Riwayat Target Setoran',
-          url: '/dashboard/teacher/submission/target/history',
+          url: '/dashboard/teacher/weekly-target/history',
           icon: BookOpenIcon,
         },
         {
@@ -214,7 +214,7 @@ export const menuData = {
     {
       title: 'Rapor',
       url: '/dashboard/student/report',
-      icon: ScrollText,
+      icon: FileCheck,
     },
     {
       label: 'Setoran',

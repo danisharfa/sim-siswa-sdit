@@ -8,7 +8,7 @@ export async function GET() {
     const session = await auth();
 
     if (!session?.user || session.user.role !== Role.student) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const student = await prisma.studentProfile.findUnique({
@@ -114,12 +114,12 @@ export async function GET() {
       ? `${encodeURIComponent(academicSetting.currentYear)}-${academicSetting.currentSemester}`
       : periods[0]?.value || '';
 
-    console.log('Student filter data:', {
-      studentId: student.userId,
-      studentName: student.user.fullName,
-      periods,
-      defaultPeriod,
-    });
+    // console.log('Student filter data:', {
+    //   studentId: student.userId,
+    //   studentName: student.user.fullName,
+    //   periods,
+    //   defaultPeriod,
+    // });
 
     return NextResponse.json({
       periods,

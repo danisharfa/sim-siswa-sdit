@@ -21,7 +21,7 @@ export function MunaqasyahRequestManagement() {
   if (error) return <p>Gagal memuat data permintaan munaqasyah</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <MunaqasyahRequestTable data={data.data} title="Daftar Permintaan Ujian" onRefresh={mutate} />
     </div>
   );

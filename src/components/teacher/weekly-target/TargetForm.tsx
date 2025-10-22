@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import {
   Card,
@@ -26,7 +26,7 @@ import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { SubmissionType } from '@prisma/client';
 import { type DateRange } from 'react-day-picker';
-import { Calendar23 } from '@/components/calendar/calendar-23';
+import { Calendar23 } from '@/components/layout/calendar/calendar-23';
 
 interface SurahJuz {
   id: number;
@@ -37,44 +37,17 @@ interface SurahJuz {
   juz: { id: number; name: string };
 }
 
-interface Wafa {
-  id: number;
-  name: string;
-}
-
-interface Group {
-  groupId: string;
-  groupName: string;
-  classroomName: string;
-  classroomAcademicYear: string;
-  classroomSemester: string;
-  totalMember: number;
-}
-
-interface Student {
-  id: string;
-  nis: string;
-  fullName: string;
-}
-
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function TargetInputForm() {
+export function TargetForm() {
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [type, setType] = useState<SubmissionType>('TAHFIDZ');
   const [description, setDescription] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>();
   const [isForAllStudents, setIsForAllStudents] = useState(false);
-
-  const [groupList, setGroupList] = useState<Group[]>([]);
-  const [studentList, setStudentList] = useState<Student[]>([]);
-  const [juzList, setJuzList] = useState<{ id: number; name: string }[]>([]);
   const [startJuzId, setStartJuzId] = useState('');
   const [endJuzId, setEndJuzId] = useState('');
-  const [surahJuzList, setSurahJuzList] = useState<SurahJuz[]>([]);
-  const [wafaList, setWafaList] = useState<Wafa[]>([]);
-
   const [surahStartId, setSurahStartId] = useState('');
   const [surahEndId, setSurahEndId] = useState('');
   const [startAyat, setStartAyat] = useState('');
@@ -84,77 +57,58 @@ export function TargetInputForm() {
   const [endPage, setEndPage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ===== SWR DATA FETCHING =====
   const { data: academicSetting } = useSWR('/api/academicSetting', fetcher);
+  const { data: groupResponse } = useSWR('/api/teacher/group', fetcher);
+  const { data: studentResponse } = useSWR(
+    selectedGroupId ? `/api/teacher/group/${selectedGroupId}/member` : null,
+    fetcher
+  );
+  const { data: juzResponse } = useSWR('/api/juz', fetcher);
+  const { data: surahJuzResponse } = useSWR('/api/surahJuz', fetcher);
+  const { data: wafaResponse } = useSWR('/api/wafa', fetcher);
+
+  // ===== COMPUTED VALUES =====
+  const groupList = useMemo(() => {
+    return groupResponse?.success ? groupResponse.data : [];
+  }, [groupResponse]);
+
+  const studentList = useMemo(() => {
+    return studentResponse?.success ? studentResponse.data : [];
+  }, [studentResponse]);
+
+  const juzList = useMemo(() => {
+    return juzResponse?.success ? juzResponse.data : [];
+  }, [juzResponse]);
+
+  const surahJuzList = useMemo(() => {
+    return surahJuzResponse?.success ? surahJuzResponse.data : [];
+  }, [surahJuzResponse]);
+
+  const wafaList = useMemo(() => {
+    return wafaResponse?.success ? wafaResponse.data : [];
+  }, [wafaResponse]);
 
   const filteredGroupList = useMemo(() => {
     if (!academicSetting?.success || !academicSetting?.data || groupList.length === 0) return [];
     const { currentYear, currentSemester } = academicSetting.data;
     return groupList.filter(
-      (g) => g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
+      (g: { classroomAcademicYear: string; classroomSemester: string }) =>
+        g.classroomAcademicYear === currentYear && g.classroomSemester === currentSemester
     );
   }, [groupList, academicSetting]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [juzRes, surahJuzRes, wafaRes] = await Promise.all([
-        fetch('/api/juz'),
-        fetch('/api/surahJuz'),
-        fetch('/api/wafa'),
-      ]);
-      const [juzData, surahJuzData, wafaData] = await Promise.all([
-        juzRes.json(),
-        surahJuzRes.json(),
-        wafaRes.json(),
-      ]);
-      if (juzData.success) setJuzList(juzData.data);
-      if (surahJuzData.success) setSurahJuzList(surahJuzData.data);
-      if (wafaData.success) setWafaList(wafaData.data);
-    };
-    fetchData();
-  }, []);
+  const filteredSurahStart = useMemo(() => {
+    return surahJuzList
+      .filter((s: SurahJuz) => s.juzId.toString() === startJuzId)
+      .sort((a: SurahJuz, b: SurahJuz) => a.surah.id - b.surah.id);
+  }, [surahJuzList, startJuzId]);
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const res = await fetch('/api/teacher/group');
-        const json = await res.json();
-        setGroupList(json.success && Array.isArray(json.data) ? json.data : []);
-      } catch (e) {
-        console.error(e);
-        toast.error('Gagal memuat data kelompok');
-        setGroupList([]);
-      }
-    };
-    fetchGroups();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedGroupId) {
-      setStudentList([]);
-      setSelectedStudentId('');
-      return;
-    }
-    const fetchMembers = async () => {
-      try {
-        const res = await fetch(`/api/teacher/group/${selectedGroupId}/member`);
-        const json = await res.json();
-        setStudentList(json.success && Array.isArray(json.data) ? json.data : []);
-      } catch (e) {
-        console.error(e);
-        toast.error('Gagal mengambil siswa');
-        setStudentList([]);
-      }
-    };
-    fetchMembers();
-  }, [selectedGroupId]);
-
-  const filteredSurahStart = surahJuzList
-    .filter((s) => s.juzId.toString() === startJuzId)
-    .sort((a, b) => a.surah.id - b.surah.id);
-
-  const filteredSurahEnd = surahJuzList
-    .filter((s) => s.juzId.toString() === endJuzId)
-    .sort((a, b) => a.surah.id - b.surah.id);
+  const filteredSurahEnd = useMemo(() => {
+    return surahJuzList
+      .filter((s: SurahJuz) => s.juzId.toString() === endJuzId)
+      .sort((a: SurahJuz, b: SurahJuz) => a.surah.id - b.surah.id);
+  }, [surahJuzList, endJuzId]);
 
   const resetForm = () => {
     setType('TAHFIDZ');
@@ -176,15 +130,52 @@ export function TargetInputForm() {
 
   const handleSubmit = async () => {
     if (!academicSetting?.data) return;
+
+    // Basic validations
+    if (!dateRange?.from || !dateRange?.to)
+      return toast.error('Silakan pilih tanggal awal dan akhir target');
     if (!selectedGroupId) return toast.error('Silakan pilih kelompok');
     if (!isForAllStudents && !selectedStudentId)
       return toast.error('Silakan pilih siswa atau centang "Untuk semua siswa"');
-    if (!dateRange?.from || !dateRange?.to)
-      return toast.error('Silakan pilih tanggal awal dan akhir target');
+    if (!type) return toast.error('Silakan pilih jenis setoran');
+
+    // Type-specific validations
+    if (type === 'TAHFIDZ' || type === 'TAHSIN_ALQURAN') {
+      if (!startJuzId) return toast.error('Silakan pilih juz awal');
+      if (!endJuzId) return toast.error('Silakan pilih juz akhir');
+      if (!surahStartId) return toast.error('Silakan pilih surah awal');
+      if (!surahEndId) return toast.error('Silakan pilih surah akhir');
+      if (!startAyat) return toast.error('Silakan isi ayat awal');
+      if (!endAyat) return toast.error('Silakan isi ayat akhir');
+
+      const startAyatNum = parseInt(startAyat);
+      const endAyatNum = parseInt(endAyat);
+      if (isNaN(startAyatNum) || startAyatNum < 1)
+        return toast.error('Ayat awal harus berupa angka positif');
+      if (isNaN(endAyatNum) || endAyatNum < 1)
+        return toast.error('Ayat akhir harus berupa angka positif');
+      if (endAyatNum < startAyatNum)
+        return toast.error('Ayat akhir tidak boleh kurang dari ayat awal');
+    }
+
+    if (type === 'TAHSIN_WAFA') {
+      if (!wafaId) return toast.error('Silakan pilih materi Wafa');
+      if (!startPage) return toast.error('Silakan isi halaman mulai');
+      if (!endPage) return toast.error('Silakan isi halaman akhir');
+
+      const startPageNum = parseInt(startPage);
+      const endPageNum = parseInt(endPage);
+      if (isNaN(startPageNum) || startPageNum < 1)
+        return toast.error('Halaman mulai harus berupa angka positif');
+      if (isNaN(endPageNum) || endPageNum < 1)
+        return toast.error('Halaman akhir harus berupa angka positif');
+      if (endPageNum < startPageNum)
+        return toast.error('Halaman akhir tidak boleh kurang dari halaman mulai');
+    }
 
     const targetStudents = isForAllStudents
       ? studentList
-      : studentList.filter((s) => s.id === selectedStudentId);
+      : studentList.filter((s: { id: string }) => s.id === selectedStudentId);
 
     if (targetStudents.length === 0) return toast.error('Tidak ada siswa yang dipilih');
 
@@ -207,7 +198,7 @@ export function TargetInputForm() {
     setLoading(true);
     try {
       const responses = await Promise.all(
-        targetStudents.map((student) =>
+        targetStudents.map((student: { id: string }) =>
           fetch('/api/teacher/weekly-target', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -234,20 +225,26 @@ export function TargetInputForm() {
       <CardHeader>
         <CardTitle>Form Target Setoran</CardTitle>
         <CardDescription>
-          {academicSetting?.data && (
+          {academicSetting?.success && (
             <span className="text-sm text-muted-foreground">
-              Tahun Ajaran: <strong>{academicSetting.data.currentYear}</strong> - Semester:{' '}
+              Tahun Ajaran: <strong>{academicSetting.data.currentYear}</strong> – Semester:{' '}
               <strong>{academicSetting.data.currentSemester}</strong>
             </span>
           )}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         <FieldSet>
+          <Field>
+            <Calendar23 value={dateRange} onChange={setDateRange} label="Rentang Target" />
+          </Field>
+
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
-              <FieldLabel>Kelompok</FieldLabel>
+              <FieldLabel>
+                Kelompok
+              </FieldLabel>
               <Select
                 value={selectedGroupId}
                 onValueChange={(value) => {
@@ -260,18 +257,22 @@ export function TargetInputForm() {
                   <SelectValue placeholder="Pilih kelompok" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredGroupList.map((group) => (
-                    <SelectItem key={group.groupId} value={group.groupId}>
-                      {group.groupName} - {group.classroomName}
-                    </SelectItem>
-                  ))}
+                  {filteredGroupList.map(
+                    (group: { groupId: string; groupName: string; classroomName: string }) => (
+                      <SelectItem key={group.groupId} value={group.groupId}>
+                        {group.groupName} - {group.classroomName}
+                      </SelectItem>
+                    )
+                  )}
                 </SelectContent>
               </Select>
             </Field>
 
             <Field className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <FieldLabel>Siswa</FieldLabel>
+                <FieldLabel>
+                  Siswa
+                </FieldLabel>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -297,7 +298,7 @@ export function TargetInputForm() {
                     <SelectValue placeholder="Pilih siswa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {studentList.map((s) => (
+                    {studentList.map((s: { id: string; fullName: string; nis: string }) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.fullName} ({s.nis})
                       </SelectItem>
@@ -313,12 +314,25 @@ export function TargetInputForm() {
           </FieldGroup>
 
           <Field>
-            <Calendar23 value={dateRange} onChange={setDateRange} />
-          </Field>
-
-          <Field>
-            <FieldLabel>Jenis Setoran</FieldLabel>
-            <Select value={type} onValueChange={(v) => setType(v as SubmissionType)}>
+            <FieldLabel>
+              Jenis Setoran
+            </FieldLabel>
+            <Select
+              value={type}
+              onValueChange={(v) => {
+                setType(v as SubmissionType);
+                // Reset related fields when type changes
+                setStartJuzId('');
+                setEndJuzId('');
+                setSurahStartId('');
+                setSurahEndId('');
+                setStartAyat('');
+                setEndAyat('');
+                setWafaId('');
+                setStartPage('');
+                setEndPage('');
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih jenis" />
               </SelectTrigger>
@@ -334,13 +348,15 @@ export function TargetInputForm() {
             <>
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Juz Awal</FieldLabel>
+                  <FieldLabel>
+                    Juz Awal
+                  </FieldLabel>
                   <Select value={startJuzId} onValueChange={setStartJuzId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Juz Awal" />
                     </SelectTrigger>
                     <SelectContent>
-                      {juzList.map((j) => (
+                      {juzList.map((j: { id: number; name: string }) => (
                         <SelectItem key={j.id} value={j.id.toString()}>
                           {j.name}
                         </SelectItem>
@@ -350,13 +366,15 @@ export function TargetInputForm() {
                 </Field>
 
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Juz Akhir</FieldLabel>
+                  <FieldLabel>
+                    Juz Akhir
+                  </FieldLabel>
                   <Select value={endJuzId} onValueChange={setEndJuzId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Juz Akhir" />
                     </SelectTrigger>
                     <SelectContent>
-                      {juzList.map((j) => (
+                      {juzList.map((j: { id: number; name: string }) => (
                         <SelectItem key={j.id} value={j.id.toString()}>
                           {j.name}
                         </SelectItem>
@@ -368,13 +386,15 @@ export function TargetInputForm() {
 
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Surah Awal</FieldLabel>
+                  <FieldLabel>
+                    Surah Awal
+                  </FieldLabel>
                   <Select value={surahStartId} onValueChange={setSurahStartId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Surah Awal" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredSurahStart.map((s) => (
+                      {filteredSurahStart.map((s: SurahJuz) => (
                         <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
                           {s.surah.name}
                         </SelectItem>
@@ -384,13 +404,15 @@ export function TargetInputForm() {
                 </Field>
 
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Surah Akhir</FieldLabel>
+                  <FieldLabel>
+                    Surah Akhir
+                  </FieldLabel>
                   <Select value={surahEndId} onValueChange={setSurahEndId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Surah Akhir" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredSurahEnd.map((s) => (
+                      {filteredSurahEnd.map((s: SurahJuz) => (
                         <SelectItem key={s.surah.id} value={s.surah.id.toString()}>
                           {s.surah.name}
                         </SelectItem>
@@ -402,7 +424,9 @@ export function TargetInputForm() {
 
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Ayat Awal</FieldLabel>
+                  <FieldLabel>
+                    Ayat Awal
+                  </FieldLabel>
                   <Input
                     type="number"
                     value={startAyat}
@@ -411,7 +435,9 @@ export function TargetInputForm() {
                   />
                 </Field>
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Ayat Akhir</FieldLabel>
+                  <FieldLabel>
+                    Ayat Akhir
+                  </FieldLabel>
                   <Input
                     type="number"
                     value={endAyat}
@@ -426,13 +452,15 @@ export function TargetInputForm() {
           {type === SubmissionType.TAHSIN_WAFA && (
             <>
               <Field>
-                <FieldLabel>Materi Wafa</FieldLabel>
+                <FieldLabel>
+                  Materi Wafa
+                </FieldLabel>
                 <Select value={wafaId} onValueChange={setWafaId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Wafa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {wafaList.map((w) => (
+                    {wafaList.map((w: { id: number; name: string }) => (
                       <SelectItem key={w.id} value={w.id.toString()}>
                         {w.name}
                       </SelectItem>
@@ -443,7 +471,9 @@ export function TargetInputForm() {
 
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Halaman Mulai</FieldLabel>
+                  <FieldLabel>
+                    Halaman Mulai
+                  </FieldLabel>
                   <Input
                     type="number"
                     value={startPage}
@@ -452,7 +482,9 @@ export function TargetInputForm() {
                   />
                 </Field>
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>Halaman Selesai</FieldLabel>
+                  <FieldLabel>
+                    Halaman Selesai
+                  </FieldLabel>
                   <Input
                     type="number"
                     value={endPage}
@@ -469,18 +501,14 @@ export function TargetInputForm() {
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Tambahkan deskripsi atau catatan untuk target ini..."
+              placeholder="Tambahkan deskripsi untuk target ini..."
             />
           </Field>
         </FieldSet>
       </CardContent>
 
       <CardFooter className="flex items-center justify-center">
-        <Button
-          onClick={handleSubmit}
-          disabled={loading || !selectedGroupId || (!isForAllStudents && !selectedStudentId)}
-          className="w-48"
-        >
+        <Button onClick={handleSubmit} disabled={loading} className="w-48">
           {loading ? (
             <>
               <Spinner />

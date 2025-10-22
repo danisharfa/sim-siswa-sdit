@@ -6,7 +6,7 @@ export function MunaqasyahScheduleManagement() {
   const schedules = use(fetchMunaqasyahSchedule());
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4">
       <MunaqasyahScheduleTable data={schedules} />
     </div>
   );

@@ -53,7 +53,7 @@ export function Management() {
   }, [filterData?.defaultPeriod, selectedPeriod]);
 
   const handlePeriodChange = (newPeriod: string) => {
-    console.log('Period changed from', selectedPeriod, 'to', newPeriod);
+    // console.log('Period changed from', selectedPeriod, 'to', newPeriod);
     setSelectedPeriod(newPeriod);
   };
 

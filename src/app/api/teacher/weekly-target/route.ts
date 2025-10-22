@@ -4,11 +4,92 @@ import { prisma } from '@/lib/prisma';
 import { evaluateTargetAchievement } from '@/lib/data/teacher/evaluate-target';
 import { Role } from '@prisma/client';
 
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== Role.teacher) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!teacher) {
+      return NextResponse.json(
+        { success: false, message: 'Profil guru tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    const teacherGroups = await prisma.group.findMany({
+      where: { teacherId: teacher.userId },
+      select: { id: true },
+    });
+
+    const groupIds = teacherGroups.map((item) => item.id);
+
+    if (groupIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'Belum ada kelompok bimbingan Anda',
+        data: [],
+      });
+    }
+
+    const data = await prisma.weeklyTarget.findMany({
+      where: {
+        teacherId: teacher.userId,
+        groupId: {
+          in: groupIds,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        student: {
+          select: {
+            userId: true,
+            nis: true,
+            user: { select: { fullName: true } },
+          },
+        },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            classroom: {
+              select: {
+                name: true,
+                academicYear: true,
+                semester: true,
+              },
+            },
+          },
+        },
+        surahStart: { select: { id: true, name: true } },
+        surahEnd: { select: { id: true, name: true } },
+        wafa: { select: { id: true, name: true } },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Daftar Target berhasil diambil',
+      data,
+    });
+  } catch (error) {
+    console.error('Gagal mengambil daftar Target:', error);
+    return NextResponse.json(
+      { success: false, error: 'Gagal mengambil daftar Target' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({

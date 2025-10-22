@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { ThemeToggle } from '@/components/layout/theme/theme-toggle';
 import { signOut, useSession } from 'next-auth/react';
 
 interface MenuItem {

@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest, segment: { params: Params }) {
 
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     // Ambil data target yang sudah ada
@@ -143,7 +143,7 @@ export async function DELETE(req: NextRequest, segment: { params: Params }) {
 
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const target = await prisma.weeklyTarget.findUnique({

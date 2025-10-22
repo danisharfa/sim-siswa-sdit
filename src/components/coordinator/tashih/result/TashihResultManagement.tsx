@@ -24,7 +24,7 @@ export function TashihResultManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <AddTashihResultForm onSaved={mutate} />
       <TashihResultTable data={data.data} title="Daftar Hasil Ujian" />
     </div>

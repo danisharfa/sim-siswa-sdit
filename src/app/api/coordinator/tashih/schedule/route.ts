@@ -8,7 +8,7 @@ export async function GET() {
     const session = await auth();
 
     if (!session || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const schedules = await prisma.tashihSchedule.findMany({
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({

@@ -8,7 +8,7 @@ export async function GET() {
     const session = await auth();
 
     if (!session?.user || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({
@@ -16,7 +16,10 @@ export async function GET() {
     });
 
     if (!coordinator) {
-      return NextResponse.json({ success: false, error: 'Koordinator tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'Koordinator tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
     const academicSetting = await prisma.academicSetting.findUnique({
@@ -113,7 +116,7 @@ export async function GET() {
       ? `${academicSetting.currentYear}|${academicSetting.currentSemester}`
       : periods[0]?.value || '';
 
-    console.log('Coordinator filter data:', { periods, groups: allGroups, defaultPeriod });
+    // console.log('Coordinator filter data:', { periods, groups: allGroups, defaultPeriod });
 
     return NextResponse.json({
       periods,

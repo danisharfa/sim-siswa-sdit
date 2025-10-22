@@ -6,7 +6,7 @@ export function GroupMembersHistoryManagement({ groupId }: { groupId: string }) 
   const members = use(fetchGroupHistoryMembers(groupId));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <GroupMembersHistoryTable data={members} title="Daftar Siswa" groupId={groupId} />
     </div>
   );

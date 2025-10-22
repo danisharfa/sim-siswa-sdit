@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Role, Semester, AssessmentPeriod } from '@prisma/client';
+import { Role, Semester } from '@prisma/client';
 
 export interface StudentReportData {
   fullName: string;
@@ -28,19 +28,15 @@ export interface StudentReportData {
     description: string;
   }[];
   report: {
-    endTahfidzScore: number | null;
-    endTahsinScore: number | null;
-    midTahfidzScore: number | null;
-    midTahsinScore: number | null;
+    tahfidzScore: number | null;
+    tahsinScore: number | null;
     lastTahsinMaterial: string | null;
   };
-  period: AssessmentPeriod;
 }
 
 export async function getStudentReportData(
   studentId: string,
-  groupId: string,
-  period: AssessmentPeriod = 'FINAL'
+  groupId: string
 ): Promise<StudentReportData | null> {
   const student = await prisma.studentProfile.findUnique({
     where: { userId: studentId },
@@ -74,10 +70,10 @@ export async function getStudentReportData(
       },
     }),
     prisma.tahsinScore.findMany({
-      where: { studentId, groupId, period },
+      where: { studentId, groupId },
     }),
     prisma.tahfidzScore.findMany({
-      where: { studentId, groupId, period },
+      where: { studentId, groupId },
       include: { surah: true },
     }),
     prisma.report.findUnique({
@@ -121,12 +117,9 @@ export async function getStudentReportData(
       description: s.description ?? '-',
     })),
     report: {
-      endTahfidzScore: report?.endTahfidzScore ?? null,
-      endTahsinScore: report?.endTahsinScore ?? null,
-      midTahfidzScore: report?.midTahfidzScore ?? null,
-      midTahsinScore: report?.midTahsinScore ?? null,
+      tahfidzScore: report?.tahfidzScore ?? null,
+      tahsinScore: report?.tahsinScore ?? null,
       lastTahsinMaterial: report?.lastTahsinMaterial ?? null,
     },
-    period,
   };
 }

@@ -11,7 +11,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ScrollText, Trash2 } from 'lucide-react';
+import { FileCheck, Trash2 } from 'lucide-react';
 import { MemberAlertDialog } from '@/components/coordinator/group-members/MemberAlertDialog';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
@@ -92,7 +92,7 @@ export function GroupMembersTable({ data, title, groupId, onRefresh }: Props) {
                   )
                 }
               >
-                <ScrollText />
+                <FileCheck />
                 Rapor
               </Button>
             </div>

@@ -57,24 +57,27 @@ export async function GET(req: Request, segmentData: { params: Params }) {
         { status: 400 }
       );
     }
-    
+
     const groupId = group === 'all' ? null : group;
 
     const session = await auth();
     if (!session?.user || session.user.role !== Role.coordinator) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const coordinator = await prisma.coordinatorProfile.findUnique({
       where: { userId: session.user.id },
     });
     if (!coordinator) {
-      return NextResponse.json({ success: false, error: 'Koordinator tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'Koordinator tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
     let students: StudentData[] = [];
 
-    console.log('Fetching data for specific period:', { academicYear, semester });
+    // console.log('Fetching data for specific period:', { academicYear, semester });
 
     // Ambil siswa dari GroupHistory untuk periode spesifik
     const groupHistories = await prisma.groupHistory.findMany({
@@ -126,13 +129,13 @@ export async function GET(req: Request, segmentData: { params: Params }) {
     }, [] as StudentData[]);
 
     students = uniqueStudents;
-    
-    console.log('Students found for period:', {
-      totalStudents: students.length,
-      fromHistory: groupHistories.length,
-      fromActiveGroups: activeGroups.length,
-      studentIds: students.map((s) => s.userId),
-    });
+
+    // console.log('Students found for period:', {
+    //   totalStudents: students.length,
+    //   fromHistory: groupHistories.length,
+    //   fromActiveGroups: activeGroups.length,
+    //   studentIds: students.map((s) => s.userId),
+    // });
 
     const allJuz = await prisma.juz.findMany({
       include: {
@@ -182,18 +185,18 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       },
     });
 
-    console.log('Tahfidz requests found for cumulative period:', {
-      academicYear,
-      semester,
-      requestCount: tashihRequests.length,
-      uniqueStudents: new Set(tashihRequests.map((r) => r.studentId)).size,
-      requestDetails: tashihRequests.slice(0, 5).map((r) => ({
-        studentId: r.studentId,
-        surahName: r.surah?.name,
-        juzId: r.juzId,
-        classroomPeriod: `${r.group.classroom.academicYear}-${r.group.classroom.semester}`,
-      })),
-    });
+    // console.log('Tahfidz requests found for cumulative period:', {
+    //   academicYear,
+    //   semester,
+    //   requestCount: tashihRequests.length,
+    //   uniqueStudents: new Set(tashihRequests.map((r) => r.studentId)).size,
+    //   requestDetails: tashihRequests.slice(0, 5).map((r) => ({
+    //     studentId: r.studentId,
+    //     surahName: r.surah?.name,
+    //     juzId: r.juzId,
+    //     classroomPeriod: `${r.group.classroom.academicYear}-${r.group.classroom.semester}`,
+    //   })),
+    // });
 
     const result: ChartResponseItem[] = [];
 
@@ -254,7 +257,7 @@ export async function GET(req: Request, segmentData: { params: Params }) {
       });
     }
 
-    console.log('Final result count:', result.length);
+    // console.log('Final result count:', result.length);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching chart data:', error);

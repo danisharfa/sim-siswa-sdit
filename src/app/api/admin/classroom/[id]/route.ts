@@ -9,11 +9,10 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.admin) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     const { name, academicYear, semester } = await req.json();
 
@@ -62,11 +61,10 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.admin) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const params = await segmentData.params;
-    const id = params.id;
+    const { id } = await segmentData.params;
 
     const existingClass = await prisma.classroom.findUnique({
       where: { id },

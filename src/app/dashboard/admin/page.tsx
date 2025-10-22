@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { DashboardStats } from '@/components/admin/stats/DashboardStats';
 import { Role } from '@prisma/client';
+import { DashboardStats } from '@/components/admin/stats/DashboardStats';
 
 export default async function AdminDashboardPage() {
   const [
@@ -35,6 +35,7 @@ export default async function AdminDashboardPage() {
   };
 
   return (
+    <div className="p-4">
       <DashboardStats
         totalCoordinator={totalCoordinator}
         totalTeachers={totalTeachers}
@@ -43,5 +44,6 @@ export default async function AdminDashboardPage() {
         totalGroups={totalGroups}
         currentPeriod={currentPeriod}
       />
+    </div>
   );
 }

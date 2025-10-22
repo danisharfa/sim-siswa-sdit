@@ -21,25 +21,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Calendar01 } from '@/components/calendar/calendar-01';
+import { Calendar01 } from '@/components/layout/calendar/calendar-01';
 import { SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
+import { Submission } from '@/components/teacher/submission/SubmissionTable';
+
 
 interface Props {
-  submission: {
-    id: string;
-    date: string;
-    submissionType: SubmissionType;
-    juz?: { id: number; name: string };
-    surah?: { id: number; name: string };
-    startVerse?: number;
-    endVerse?: number;
-    wafa?: { id: number; name: string };
-    startPage?: number;
-    endPage?: number;
-    submissionStatus: SubmissionStatus;
-    adab: Adab;
-    note?: string;
-  };
+  submission: Submission;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;

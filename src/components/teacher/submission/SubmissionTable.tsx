@@ -17,11 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2Icon,
   MinusCircle,
-  MoreVertical,
   Pencil,
   RefreshCcw,
   ThumbsDown,
@@ -29,23 +27,18 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
-import { type DateRange } from 'react-day-picker';
 import { Semester, SubmissionType, SubmissionStatus, Adab } from '@prisma/client';
+import { type DateRange } from 'react-day-picker';
+import { Calendar23 } from '@/components/layout/calendar/calendar-23';
 import { ExportToPDFButton } from './ExportToPDFButton';
-import { Calendar23 } from '@/components/calendar/calendar-23';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { SubmissionEditDialog } from './SubmissionEditDialog';
 import { SubmissionAlertDialog } from './SubmissionAlertDialog';
-import { Label } from '@/components/ui/label';
 
 export type Submission = {
   id: string;
@@ -99,11 +92,108 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
   } = useDataTableState<Submission, 'edit' | 'delete'>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedSubmissionType, setSelectedSubmissionType] = useState('all');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState('all');
-  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const { data: setting } = useSWR('/api/academicSetting', fetcher);
+  const { data: academicSetting } = useSWR('/api/academicSetting', fetcher);
+
+  const defaultPeriod = academicSetting
+    ? `${academicSetting.currentYear}-${academicSetting.currentSemester}`
+    : '';
+
+  const academicPeriods = useMemo(
+    () =>
+      Array.from(
+        new Set(data.map((d) => `${d.group.classroom.academicYear}-${d.group.classroom.semester}`))
+      ),
+    [data]
+  );
+
+  const filteredByPeriod = useMemo(() => {
+    if (!selectedPeriod) return data;
+    const [year, semester] = selectedPeriod.split('-');
+    return data.filter(
+      (item) =>
+        item.group.classroom.academicYear === year && item.group.classroom.semester === semester
+    );
+  }, [data, selectedPeriod]);
+
+  const availableGroups = useMemo(() => {
+    const groupMap = new Map<string, Submission['group']>();
+    filteredByPeriod.forEach((item) => {
+      if (!groupMap.has(item.group.id)) {
+        groupMap.set(item.group.id, item.group);
+      }
+    });
+    return Array.from(groupMap.values());
+  }, [filteredByPeriod]);
+
+  const availableStudents = useMemo(() => {
+    if (selectedGroupId === 'all') return [];
+    return Array.from(
+      new Set(
+        filteredByPeriod
+          .filter((item) => item.group.id === selectedGroupId)
+          .map((item) => item.student.user.fullName)
+      )
+    );
+  }, [filteredByPeriod, selectedGroupId]);
+
+  const availableSubmissionTypes = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.submissionType))),
+    [filteredByPeriod]
+  );
+
+  useEffect(() => {
+    if (defaultPeriod && !selectedPeriod && academicPeriods.length > 0) {
+      const targetPeriod = academicPeriods.includes(defaultPeriod)
+        ? defaultPeriod
+        : academicPeriods[0];
+      setSelectedPeriod(targetPeriod);
+    }
+  }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedGroupId('all');
+    setSelectedStudent('all');
+    // Clear table filters
+    table.getColumn('Kelompok')?.setFilterValue(undefined);
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+  };
+
+  const handleGroupChange = (value: string) => {
+    setSelectedGroupId(value);
+    setSelectedStudent('all');
+
+    if (value === 'all') {
+      table.getColumn('Kelompok')?.setFilterValue(undefined);
+    } else {
+      const group = availableGroups.find((g) => g.id === value);
+      if (group) {
+        table.getColumn('Kelompok')?.setFilterValue(`${group.name} - ${group.classroom.name}`);
+      }
+    }
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+  };
+
+  const handleStudentChange = (value: string) => {
+    setSelectedStudent(value);
+    table.getColumn('Siswa')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleSubmissionTypeChange = (value: string) => {
+    setSelectedSubmissionType(value);
+    table.getColumn('Jenis Setoran')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    table.getColumn('Tanggal')?.setFilterValue('custom');
+  };
 
   const handleOpenEditDialog = useCallback(
     (submission: Submission) => {
@@ -121,56 +211,6 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     [setSelectedSubmission, setDialogType]
   );
 
-  const academicPeriods = useMemo(() => {
-    return Array.from(
-      new Set(data.map((d) => `${d.group.classroom.academicYear}-${d.group.classroom.semester}`))
-    );
-  }, [data]);
-
-  const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : '';
-
-  useEffect(() => {
-    if (defaultPeriod && !selectedPeriod) {
-      if (academicPeriods.includes(defaultPeriod)) {
-        setSelectedPeriod(defaultPeriod);
-      } else if (academicPeriods.length > 0) {
-        setSelectedPeriod(academicPeriods[0]);
-      }
-    }
-  }, [defaultPeriod, academicPeriods, selectedPeriod]);
-
-  const filteredData = useMemo(() => {
-    if (!selectedPeriod) return data;
-
-    const [academicYear, semester] = selectedPeriod.split('-');
-    return data.filter(
-      (submission) =>
-        submission.group.classroom.academicYear === academicYear &&
-        submission.group.classroom.semester === semester
-    );
-  }, [data, selectedPeriod]);
-
-  const groupList = useMemo(() => {
-    const map = new Map<string, Submission['group']>();
-    for (const d of filteredData) {
-      if (!map.has(d.group.id)) {
-        map.set(d.group.id, d.group);
-      }
-    }
-    return Array.from(map.values());
-  }, [filteredData]);
-
-  const studentByGroup = useMemo(() => {
-    if (selectedGroupId === 'all') return [];
-    return Array.from(
-      new Set(
-        filteredData
-          .filter((d) => d.group.id === selectedGroupId)
-          .map((d) => d.student.user.fullName)
-      )
-    );
-  }, [selectedGroupId, filteredData]);
-
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
@@ -178,20 +218,11 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
-          if (!selectedDateRange) return true;
-
+          if (!dateRange?.from && !dateRange?.to) return true;
           const date = new Date(row.getValue(columnId));
-          const { from, to } = selectedDateRange;
-
-          if (from && to) {
-            return date >= from && date <= to;
-          } else if (from) {
-            return date >= from;
-          } else if (to) {
-            return date <= to;
-          }
-
-          return true;
+          const isAfterStart = !dateRange.from || date >= dateRange.from;
+          const isBeforeEnd = !dateRange.to || date <= dateRange.to;
+          return isAfterStart && isBeforeEnd;
         },
         cell: ({ row }) => (
           <span>
@@ -218,6 +249,12 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) => `${row.group.name} - ${row.group.classroom.name}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.group.name}</div>
+            <div className="text-muted-foreground">{row.original.group.classroom.name}</div>
+          </div>
+        ),
       },
       {
         accessorKey: 'submissionType',
@@ -231,34 +268,40 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         id: 'Surah',
         header: 'Surah',
         accessorFn: (row) => row.surah?.name ?? '-',
-        cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.surah?.name ? (
-              <>
-                <div className="font-medium">{`${row.original.surah.name} (Ayat ${row.original.startVerse} - ${row.original.endVerse})`}</div>
-                <div className="text-muted-foreground">{row.original.juz?.name}</div>
-              </>
-            ) : (
-              <span>-</span>
-            )}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const { surah, startVerse, endVerse, juz } = row.original;
+          return (
+            <div className="text-sm">
+              {surah ? (
+                <>
+                  <div className="font-medium">
+                    {`${surah.name} (Ayat ${startVerse} - ${endVerse})`}
+                  </div>
+                  <div className="text-muted-foreground">{juz?.name}</div>
+                </>
+              ) : (
+                <span>-</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: 'Wafa',
         header: 'Wafa',
         accessorFn: (row) => row.wafa?.name ?? '-',
-        cell: ({ row }) => (
-          <div className="text-sm">
-            {row.original.wafa?.name ? (
-              <>
-                <div className="font-medium">{`${row.original.wafa.name} (Hal ${row.original.startPage} - ${row.original.endPage})`}</div>
-              </>
-            ) : (
-              <span>-</span>
-            )}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const { wafa, startPage, endPage } = row.original;
+          return (
+            <div className="text-sm">
+              {wafa ? (
+                <div className="font-medium">{`${wafa.name} (Hal ${startPage} - ${endPage})`}</div>
+              ) : (
+                <span>-</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'submissionStatus',
@@ -266,17 +309,17 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         header: 'Status',
         cell: ({ row }) => {
           const status = row.original.submissionStatus;
-          const icon =
-            status === SubmissionStatus.LULUS ? (
-              <CheckCircle2Icon className="text-green-500" />
-            ) : status === SubmissionStatus.MENGULANG ? (
-              <RefreshCcw className="text-yellow-500" />
-            ) : (
-              <XCircle className="text-red-500" />
-            );
+          const statusConfig = {
+            [SubmissionStatus.LULUS]: { icon: CheckCircle2Icon, color: 'text-green-500' },
+            [SubmissionStatus.MENGULANG]: { icon: RefreshCcw, color: 'text-yellow-500' },
+            [SubmissionStatus.TIDAK_LULUS]: { icon: XCircle, color: 'text-red-500' },
+          };
+
+          const { icon: Icon, color } = statusConfig[status];
+
           return (
             <Badge variant="outline" className="flex gap-1 text-muted-foreground">
-              {icon}
+              <Icon className={color} />
               {status.replaceAll('_', ' ')}
             </Badge>
           );
@@ -287,17 +330,17 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         header: 'Adab',
         cell: ({ row }) => {
           const adab = row.original.adab;
-          const icon =
-            adab === Adab.BAIK ? (
-              <ThumbsUp className="text-green-500" />
-            ) : adab === Adab.KURANG_BAIK ? (
-              <MinusCircle className="text-yellow-500" />
-            ) : (
-              <ThumbsDown className="text-red-500" />
-            );
+          const adabConfig = {
+            [Adab.BAIK]: { icon: ThumbsUp, color: 'text-green-500' },
+            [Adab.KURANG_BAIK]: { icon: MinusCircle, color: 'text-yellow-500' },
+            [Adab.TIDAK_BAIK]: { icon: ThumbsDown, color: 'text-red-500' },
+          };
+
+          const { icon: Icon, color } = adabConfig[adab];
+
           return (
             <Badge variant="outline" className="flex gap-1 text-muted-foreground">
-              {icon}
+              <Icon className={color} />
               {adab.replaceAll('_', ' ')}
             </Badge>
           );
@@ -307,10 +350,9 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         accessorKey: 'note',
         id: 'Catatan',
         header: 'Catatan',
-        cell: ({ row }) => {
-          const note = row.original.note;
-          return <span className="text-muted-foreground">{note ? note : '-'}</span>;
-        },
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.note || '-'}</span>
+        ),
       },
       {
         id: 'actions',
@@ -319,42 +361,26 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex size-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Target Option</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-50 z-50">
-                  <DropdownMenuItem
-                    onClick={() => handleOpenEditDialog(user)}
-                    className="flex items-center gap-2"
-                  >
-                    <Pencil />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleOpenDeleteDialog(user)}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(user)}>
+                <Pencil />
+                Edit
+              </Button>
+
+              <Button variant="destructive" size="sm" onClick={() => handleOpenDeleteDialog(user)}>
+                <Trash2 />
+                Delete
+              </Button>
+            </div>
           );
         },
       },
     ],
-    [selectedDateRange, handleOpenEditDialog, handleOpenDeleteDialog]
+    [dateRange, handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
-    data: filteredData,
+    data: filteredByPeriod,
     columns,
     state: {
       sorting,
@@ -363,170 +389,89 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
     <>
       <div className="flex flex-wrap gap-4 items-end">
-        <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(val) => {
-              setSelectedPeriod(val);
-              setSelectedGroupId('all');
-              setSelectedStudent('all');
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
-              <SelectValue placeholder="Pilih Tahun Akademik" />
-            </SelectTrigger>
-            <SelectContent>
-              {academicPeriods.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p.replace('-', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+        <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Tahun Akademik" />
+          </SelectTrigger>
+          <SelectContent>
+            {academicPeriods.map((period) => (
+              <SelectItem key={period} value={period}>
+                {period.replace('-', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Kelompok</Label>
-          <Select
-            value={selectedGroupId}
-            onValueChange={(val) => {
-              setSelectedGroupId(val);
-              setSelectedStudent('all');
-              const group = groupList.find((g) => g.id === val);
-              if (group) {
-                table
-                  .getColumn('Kelompok')
-                  ?.setFilterValue(`${group.name} - ${group.classroom.name}`);
-              } else {
-                table.getColumn('Kelompok')?.setFilterValue(undefined);
-              }
-              table.getColumn('Siswa')?.setFilterValue(undefined);
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[250px]">
-              <SelectValue placeholder="Pilih Kelompok" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Kelompok</SelectItem>
-              {groupList.map((g) => (
-                <SelectItem key={g.id} value={g.id}>
-                  {`${g.name} - ${g.classroom.name}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+          <Label className="mb-2 block sr-only">Filter Kelompok</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Kelompok" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Kelompok</SelectItem>
+            {availableGroups.map((group) => (
+              <SelectItem key={group.id} value={group.id}>
+                {`${group.name} - ${group.classroom.name}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Siswa</Label>
-          <Select
-            disabled={selectedGroupId === 'all'}
-            value={selectedStudent}
-            onValueChange={(val) => {
-              setSelectedStudent(val);
-              table.getColumn('Siswa')?.setFilterValue(val === 'all' ? undefined : val);
-            }}
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[220px]">
-              <SelectValue placeholder="Pilih Siswa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Siswa</SelectItem>
-              {studentByGroup.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          disabled={selectedGroupId === 'all'}
+          value={selectedStudent}
+          onValueChange={handleStudentChange}
+        >
+          <Label className="mb-2 block sr-only">Filter Siswa</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Siswa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Siswa</SelectItem>
+            {availableStudents.map((student) => (
+              <SelectItem key={student} value={student}>
+                {student}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Jenis Setoran</Label>
-          <Select
-            onValueChange={(val) =>
-              table.getColumn('Jenis Setoran')?.setFilterValue(val === 'all' ? undefined : val)
-            }
-          >
-            <SelectTrigger className="min-w-0 w-full sm:min-w-[180px]">
-              <SelectValue placeholder="Jenis Setoran" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Jenis</SelectItem>
-              {Array.from(new Set(filteredData.map((d) => d.submissionType))).map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st.replaceAll('_', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedSubmissionType} onValueChange={handleSubmissionTypeChange}>
+          <Label className="mb-2 block sr-only">Filter Jenis Setoran</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Jenis Setoran" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Jenis Setoran</SelectItem>
+            {availableSubmissionTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Calendar23
-            value={selectedDateRange}
-            onChange={(range) => {
-              setSelectedDateRange(range);
-              table.getColumn('Tanggal')?.setFilterValue('custom');
-            }}
-            label="Filter Tanggal"
-            placeholder="Pilih Rentang Tanggal"
-            className="min-w-0 w-full sm:min-w-[250px]"
-          />
-        </div>
+        <Calendar23 value={dateRange} onChange={handleDateRangeChange} />
 
-        <div>
-          <ExportToPDFButton table={table} />
-        </div>
+        <ExportToPDFButton table={table} />
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Tanggal" />
+      <DataTable title={title} table={table} showColumnFilter={false} />
 
       {dialogType === 'edit' && selectedSubmission && (
         <SubmissionEditDialog
-          submission={{
-            ...selectedSubmission,
-            juz:
-              selectedSubmission.juz === null
-                ? undefined
-                : {
-                    id: selectedSubmission.juz.id,
-                    name: selectedSubmission.juz.name,
-                  },
-            surah:
-              selectedSubmission.surah === null
-                ? undefined
-                : {
-                    id: selectedSubmission.surah.id,
-                    name: selectedSubmission.surah.name,
-                  },
-            wafa:
-              selectedSubmission.wafa === null
-                ? undefined
-                : {
-                    id: selectedSubmission.wafa.id,
-                    name: selectedSubmission.wafa.name,
-                  },
-            startVerse:
-              selectedSubmission.startVerse === null ? undefined : selectedSubmission.startVerse,
-            endVerse:
-              selectedSubmission.endVerse === null ? undefined : selectedSubmission.endVerse,
-            startPage:
-              selectedSubmission.startPage === null ? undefined : selectedSubmission.startPage,
-            endPage: selectedSubmission.endPage === null ? undefined : selectedSubmission.endPage,
-            note: selectedSubmission.note === null ? undefined : selectedSubmission.note,
-          }}
+          submission={selectedSubmission}
           open={true}
           onOpenChange={(open) => {
             if (!open) {

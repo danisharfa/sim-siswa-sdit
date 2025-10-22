@@ -155,6 +155,6 @@ export async function evaluateTargetAchievement(studentId: string, from: Date, t
       });
     }
 
-    console.log(`[TARGET] ${target.id} = ${matched}/${total} (${progress}%) → ${status}`);
+    // console.log(`[TARGET] ${target.id} = ${matched}/${total} (${progress}%) → ${status}`);
   }
 }

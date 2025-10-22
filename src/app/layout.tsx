@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { ThemeProvider } from '@/components/theme/theme-provider';
+import { ThemeProvider } from '@/components/layout/theme/theme-provider';
 import { SessionProvider } from '@/lib/providers/session-provider';
 import { Toaster } from '@/components/ui/sonner';
 

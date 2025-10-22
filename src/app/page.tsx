@@ -6,7 +6,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       {/* Left Side - Login Form */}
-      <div className="flex flex-col gap-6 p-6 md:p-10">
+      <div className="flex flex-col gap-4 p-4 md:p-10">
         <div>
           <Link href="/" className="flex items-center gap-3 font-medium">
             <div className="relative flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 p-1">
@@ -28,20 +28,16 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-sm space-y-6">
+          <div className="w-full max-w-sm space-y-4">
             <div className="space-y-2 text-center">
               <h1 className="text-3xl font-bold tracking-tight">Selamat Datang</h1>
-              <p className="text-muted-foreground">
-                Masuk untuk mengakses SIM-Qur&apos;an
-              </p>
+              <p className="text-muted-foreground">Masuk untuk mengakses SIM-Qur&apos;an</p>
             </div>
 
             <LoginForm />
 
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Butuh bantuan? Hubungi admin sekolah
-              </p>
+              <p className="text-sm text-muted-foreground">Butuh bantuan? Hubungi admin sekolah</p>
             </div>
           </div>
         </div>
@@ -59,7 +55,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
 
         <div className="relative flex h-full flex-col items-center justify-center p-8 text-center">
-          <div className="max-w-md space-y-6">
+          <div className="max-w-md space-y-4">
             <div className="mx-auto flex items-center justify-center gap-3">
               <div className="flex size-24 items-center justify-center rounded-full bg-primary/10 backdrop-blur-sm">
                 <Image
