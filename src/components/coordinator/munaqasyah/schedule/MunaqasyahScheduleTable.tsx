@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -18,12 +18,16 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
 import useSWR from 'swr';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { MunaqasyahBatch, MunaqasyahStage, Semester } from '@prisma/client';
 import { ExportToPDFButton } from './ExportToPDFButton';
+import { MunaqasyahScheduleAlertDialog } from './MunaqasyahScheduleAlertDialog';
+import { MunaqasyahScheduleEditDialog } from './MunaqasyahScheduleEditDialog';
 
 // Batch and Stage label mappings
 const batchLabels: Record<MunaqasyahBatch, string> = {
@@ -45,7 +49,8 @@ export type MunaqasyahSchedule = {
   startTime: string;
   endTime: string;
   location: string;
-  examiner?: { user?: { fullName: string } };
+  examiner?: { userId: string; user?: { fullName: string } };
+  hasResults?: boolean;
   scheduleRequests: {
     request: {
       batch: MunaqasyahBatch;
@@ -71,9 +76,10 @@ export type MunaqasyahSchedule = {
 interface Props {
   data: MunaqasyahSchedule[];
   title: string;
+  onRefresh: () => void;
 }
 
-export function MunaqasyahScheduleTable({ data, title }: Props) {
+export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
   const {
     sorting,
     setSorting,
@@ -81,7 +87,11 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
     setColumnVisibility,
     columnFilters,
     setColumnFilters,
-  } = useDataTableState<MunaqasyahSchedule, string>();
+    selectedItem: selectedSchedule,
+    setSelectedItem: setSelectedSchedule,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<MunaqasyahSchedule, 'edit' | 'delete'>();
 
   // Filter state
   const [selectedPeriod, setSelectedPeriod] = useState('');
@@ -210,6 +220,22 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
   }, [selectedPeriod]);
 
   // ===== EVENT HANDLERS =====
+  const handleOpenEditDialog = useCallback(
+    (schedule: MunaqasyahSchedule) => {
+      setSelectedSchedule(schedule);
+      setDialogType('edit');
+    },
+    [setDialogType, setSelectedSchedule]
+  );
+
+  const handleOpenDeleteDialog = useCallback(
+    (schedule: MunaqasyahSchedule) => {
+      setSelectedSchedule(schedule);
+      setDialogType('delete');
+    },
+    [setDialogType, setSelectedSchedule]
+  );
+
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
     setSelectedGroupId('all');
@@ -405,8 +431,39 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
           </div>
         ),
       },
+      {
+        id: 'actions',
+        enableHiding: false,
+        header: 'Aksi',
+        cell: ({ row }) => {
+          const schedule = row.original;
+          const isAssessed = schedule.hasResults;
+
+          if (isAssessed) {
+            return <div className="text-sm text-muted-foreground">Sudah dinilai</div>;
+          }
+
+          return (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(schedule)}>
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleOpenDeleteDialog(schedule)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Hapus
+              </Button>
+            </div>
+          );
+        },
+      },
     ],
-    []
+    [handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -548,6 +605,42 @@ export function MunaqasyahScheduleTable({ data, title }: Props) {
             Tidak ada jadwal munaqasyah untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
           </p>
         </div>
+      )}
+
+      {dialogType === 'edit' && selectedSchedule && (
+        <MunaqasyahScheduleEditDialog
+          schedule={selectedSchedule}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedSchedule(null);
+            }
+          }}
+          onSave={() => {
+            setDialogType(null);
+            setSelectedSchedule(null);
+            onRefresh();
+          }}
+        />
+      )}
+
+      {dialogType === 'delete' && selectedSchedule && (
+        <MunaqasyahScheduleAlertDialog
+          schedule={selectedSchedule}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedSchedule(null);
+            }
+          }}
+          onConfirm={() => {
+            setDialogType(null);
+            setSelectedSchedule(null);
+            onRefresh();
+          }}
+        />
       )}
     </>
   );

@@ -4,7 +4,7 @@ import useSWR from 'swr';
 import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MunaqasyahScheduleTable } from './MunaqasyahScheduleTable';
-import { AddMunaqasyahScheduleForm } from './AddMunaqasyahScheduleForm';
+import { MunaqasyahScheduleForm } from './MunaqasyahScheduleForm';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -29,8 +29,12 @@ export function MunaqasyahScheduleManagement() {
 
   return (
     <div className="space-y-4">
-      <AddMunaqasyahScheduleForm onScheduleAdded={mutate} />
-      <MunaqasyahScheduleTable data={data.data} title="Daftar Jadwal Munaqasyah Semua Siswa" />
+      <MunaqasyahScheduleForm onScheduleAdded={mutate} />
+      <MunaqasyahScheduleTable
+        data={data.data}
+        title="Daftar Jadwal Munaqasyah Semua Siswa"
+        onRefresh={mutate}
+      />
     </div>
   );
 }

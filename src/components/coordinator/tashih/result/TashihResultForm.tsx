@@ -44,7 +44,7 @@ interface StudentRequest {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function AddTashihResultForm({ onSaved }: { onSaved: () => void }) {
+export function TashihResultForm({ onSaved }: { onSaved: () => void }) {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [passed, setPassed] = useState<boolean | null>(null);
@@ -78,14 +78,14 @@ export function AddTashihResultForm({ onSaved }: { onSaved: () => void }) {
 
     const json = await res.json();
     if (json.success) {
-      toast.success('Hasil ujian berhasil disimpan');
+      toast.success('Hasil tashih berhasil disimpan');
       setSelectedRequestId(null);
       setPassed(null);
       setNotes('');
       onSaved();
       mutate();
     } else {
-      toast.error(json.message || 'Gagal menyimpan hasil ujian');
+      toast.error(json.message || 'Gagal menyimpan hasil tashih');
     }
   };
 
@@ -103,10 +103,10 @@ export function AddTashihResultForm({ onSaved }: { onSaved: () => void }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="mb-2 block">Pilih Jadwal Ujian</Label>
+            <Label className="mb-2 block">Pilih Jadwal Tashih</Label>
             <Select onValueChange={setSelectedScheduleId}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih sesi ujian" />
+                <SelectValue placeholder="Pilih sesi tashih" />
               </SelectTrigger>
               <SelectContent>
                 {schedules?.data?.map((s: TashihSchedule) => (

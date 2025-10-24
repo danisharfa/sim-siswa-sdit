@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
 import {
   ColumnDef,
@@ -10,7 +10,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ExportToPDFButton } from './ExportToPDFButton';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
@@ -24,6 +26,8 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { TashihResultAlertDialog } from './TashihResultAlertDialog';
+import { TashihResultEditDialog } from './TashihResultEditDialog';
 
 export type TashihResult = {
   id: string;
@@ -64,9 +68,10 @@ export type TashihResult = {
 interface TashihResultTableProps {
   data: TashihResult[];
   title: string;
+  onRefresh: () => void;
 }
 
-export function TashihResultTable({ data, title }: TashihResultTableProps) {
+export function TashihResultTable({ data, title, onRefresh }: TashihResultTableProps) {
   const {
     sorting,
     setSorting,
@@ -74,7 +79,11 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     setColumnFilters,
     columnVisibility,
     setColumnVisibility,
-  } = useDataTableState<TashihResult, string>();
+    selectedItem: selectedResult,
+    setSelectedItem: setSelectedResult,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<TashihResult, 'edit' | 'delete'>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
@@ -196,6 +205,22 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
     table.getColumn('Status')?.setFilterValue(value === 'all' ? undefined : value);
   };
 
+  const handleOpenEditDialog = useCallback(
+    (result: TashihResult) => {
+      setSelectedResult(result);
+      setDialogType('edit');
+    },
+    [setDialogType, setSelectedResult]
+  );
+
+  const handleOpenDeleteDialog = useCallback(
+    (result: TashihResult) => {
+      setSelectedResult(result);
+      setDialogType('delete');
+    },
+    [setDialogType, setSelectedResult]
+  );
+
   const columns = useMemo<ColumnDef<TashihResult>[]>(
     () => [
       {
@@ -291,8 +316,34 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
           </Badge>
         ),
       },
+      {
+        id: 'actions',
+        enableHiding: false,
+        header: 'Aksi',
+        cell: ({ row }) => {
+          const result = row.original;
+
+          return (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(result)}>
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleOpenDeleteDialog(result)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Hapus
+              </Button>
+            </div>
+          );
+        },
+      },
     ],
-    []
+    [handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -399,6 +450,42 @@ export function TashihResultTable({ data, title }: TashihResultTableProps) {
             Tidak ada hasil tashih untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
           </p>
         </div>
+      )}
+
+      {dialogType === 'edit' && selectedResult && (
+        <TashihResultEditDialog
+          result={selectedResult}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedResult(null);
+            }
+          }}
+          onSave={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedResult(null);
+          }}
+        />
+      )}
+
+      {dialogType === 'delete' && selectedResult && (
+        <TashihResultAlertDialog
+          result={selectedResult}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedResult(null);
+            }
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedResult(null);
+          }}
+        />
       )}
     </>
   );

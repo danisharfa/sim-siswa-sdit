@@ -68,10 +68,7 @@ export async function DELETE(req: NextRequest, segmentData: { params: Params }) 
 
     await prisma.group.delete({ where: { id } });
 
-    return NextResponse.json(
-      { success: true, message: 'Kelompok berhasil dihapus' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: 'Kelompok berhasil dihapus' });
   } catch (error) {
     console.error('Error deleting kelompok:', error);
     return NextResponse.json(

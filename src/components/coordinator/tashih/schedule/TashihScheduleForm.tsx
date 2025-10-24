@@ -33,7 +33,7 @@ interface Props {
   onScheduleAdded: () => void;
 }
 
-export function AddTashihScheduleForm({ onScheduleAdded }: Props) {
+export function TashihScheduleForm({ onScheduleAdded }: Props) {
   const [date, setDate] = useState<Date>();
   const [sessionName, setSessionName] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -126,11 +126,11 @@ export function AddTashihScheduleForm({ onScheduleAdded }: Props) {
               />
             </div>
             <div>
-              <Label className="mb-2 block">Jam Mulai</Label>
+              <Label className="mb-2 block">Waktu Mulai</Label>
               <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </div>
             <div>
-              <Label className="mb-2 block">Jam Selesai</Label>
+              <Label className="mb-2 block">Waktu Selesai</Label>
               <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
             <div>

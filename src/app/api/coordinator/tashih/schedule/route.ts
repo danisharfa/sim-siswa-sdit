@@ -14,6 +14,7 @@ export async function GET() {
     const schedules = await prisma.tashihSchedule.findMany({
       orderBy: { date: 'desc' },
       include: {
+        results: true, // Include results to check if assessed
         schedules: {
           include: {
             tashihRequest: {
@@ -54,10 +55,16 @@ export async function GET() {
       },
     });
 
+    // Transform data to include hasResults flag
+    const transformedSchedules = schedules.map((schedule) => ({
+      ...schedule,
+      hasResults: schedule.results.length > 0,
+    }));
+
     return NextResponse.json({
       success: true,
       message: 'Berhasil mengambil jadwal tashih',
-      data: schedules,
+      data: transformedSchedules,
     });
   } catch (error) {
     console.error('Gagal mengambil jadwal tashih', error);

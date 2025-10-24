@@ -19,7 +19,6 @@ import { MunaqasyahBatch, MunaqasyahStage } from '@prisma/client';
 import {
   TasmiDetailInput,
   MunaqasyahDetailInput,
-  calculateTasmiRawTotal,
   calculateTasmiPercentage,
   calculateMunaqasyahRawTotal,
   calculateMunaqasyahPercentage,
@@ -295,7 +294,7 @@ export function AssessmentForm({ onSaved }: { onSaved: () => void }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="mb-2 block">Pilih Jadwal Ujian</Label>
+            <Label className="mb-2 block">Pilih Jadwal Munaqasyah</Label>
             <Select onValueChange={setSelectedScheduleId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih sesi munaqasyah" />
@@ -378,7 +377,6 @@ export function AssessmentForm({ onSaved }: { onSaved: () => void }) {
                         const surahName =
                           allSurahJuz.find((sj) => sj.surahId === row.surahId)?.surah.name ??
                           `Surah ${row.surahId}`;
-                        const total = calculateTasmiRawTotal(row);
                         const percent = calculateTasmiPercentage(row);
 
                         return (
@@ -468,8 +466,8 @@ export function AssessmentForm({ onSaved }: { onSaved: () => void }) {
                                 />
                               </div>
                               <div className="md:col-span-1">
-                                <Label>Total (Raw / %)</Label>
-                                <Input value={`${total} / ${percent.toFixed(1)}%`} readOnly />
+                                <Label>Total (%)</Label>
+                                <Input value={`${percent.toFixed(1)}%`} readOnly />
                               </div>
                             </div>
                           </div>

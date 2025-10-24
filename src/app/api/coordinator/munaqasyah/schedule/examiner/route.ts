@@ -20,11 +20,15 @@ export async function GET() {
       role: 'teacher' as const,
     }));
 
-    return NextResponse.json({ success: true, data: examiners });
+    return NextResponse.json({
+      success: true,
+      message: 'Daftar penguji berhasil diambil',
+      data: examiners,
+    });
   } catch (error) {
-    console.error('[GET_MUNAQASYAH_EXAMINER]', error);
+    console.error('Gagal mengambil daftar penguji:', error);
     return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan saat mengambil daftar penguji' },
+      { success: false, message: 'Gagal mengambil daftar penguji' },
       { status: 500 }
     );
   }

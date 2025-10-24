@@ -27,7 +27,11 @@ export function MunaqasyahResultManagement() {
   return (
     <div className="space-y-4">
       <MunaqasyahResultForm onSaved={mutate} />
-      <MunaqasyahResultTable data={data.data} title="Daftar Hasil Munaqasyah Semua Siswa" />
+      <MunaqasyahResultTable
+        data={data.data}
+        title="Daftar Hasil Munaqasyah Semua Siswa"
+        onRefresh={mutate}
+      />
     </div>
   );
 }

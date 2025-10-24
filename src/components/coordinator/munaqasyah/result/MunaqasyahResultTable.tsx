@@ -10,6 +10,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
 import {
@@ -24,6 +25,10 @@ import useSWR from 'swr';
 import { Semester, MunaqasyahBatch, MunaqasyahStage } from '@prisma/client';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { ExportToPDFButton } from './ExportToPDFButton';
+import { MunaqasyahResultAlertDialog } from './MunaqasyahResultAlertDialog';
+import { MunaqasyahResultEditDialog } from './MunaqasyahResultEditDialog';
+// import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
 export type MunaqasyahResult = {
   id: string;
@@ -67,6 +72,7 @@ export type MunaqasyahResult = {
 interface MunaqasyahResultTableProps {
   data: MunaqasyahResult[];
   title: string;
+  onRefresh?: () => void;
 }
 
 const gradeLabels: Record<string, string> = {
@@ -88,7 +94,19 @@ const batchLabels: Record<MunaqasyahBatch, string> = {
   [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
 };
 
-export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProps) {
+export function MunaqasyahResultTable({ data, title, onRefresh }: MunaqasyahResultTableProps) {
+  // Dialog states
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    result: MunaqasyahResult | null;
+  }>({
+    open: false,
+    result: null,
+  });
+  const [editDialog, setEditDialog] = useState<{ open: boolean; result: MunaqasyahResult | null }>({
+    open: false,
+    result: null,
+  });
   const {
     sorting,
     setSorting,
@@ -429,6 +447,59 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
           );
         },
       },
+      {
+        id: 'actions',
+        header: 'Aksi',
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const result = row.original;
+
+          return (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                setEditDialog({
+                  open: true,
+                  result,
+                })
+              }
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+            //   <div className="flex gap-2">
+            //   <Button
+            //     variant="secondary"
+            //     size="sm"
+            //     onClick={() =>
+            //       setEditDialog({
+            //         open: true,
+            //         result,
+            //       })
+            //     }
+            //   >
+            //     <Pencil className="h-4 w-4" />
+            //     Edit
+            //   </Button>
+            //   <Button
+            //     variant="destructive"
+            //     size="sm"
+            //     onClick={() =>
+            //       setDeleteDialog({
+            //         open: true,
+            //         result,
+            //       })
+            //     }
+            //   >
+            //     <Trash2 className="h-4 w-4" />
+            //     Hapus
+            //   </Button>
+            // </div>
+          );
+        },
+      },
     ],
     []
   );
@@ -449,6 +520,19 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
     getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
   });
+
+  // Dialog handlers
+  const handleRefresh = () => {
+    onRefresh?.();
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialog({ open: false, result: null });
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditDialog({ open: false, result: null });
+  };
 
   return (
     <>
@@ -589,6 +673,26 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
             Tidak ada hasil munaqasyah untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
           </p>
         </div>
+      )}
+
+      {/* Delete Dialog */}
+      {deleteDialog.result && (
+        <MunaqasyahResultAlertDialog
+          result={deleteDialog.result}
+          open={deleteDialog.open}
+          onOpenChange={handleCloseDeleteDialog}
+          onConfirm={handleRefresh}
+        />
+      )}
+
+      {/* Edit Dialog */}
+      {editDialog.result && (
+        <MunaqasyahResultEditDialog
+          result={editDialog.result}
+          open={editDialog.open}
+          onOpenChange={handleCloseEditDialog}
+          onSave={handleRefresh}
+        />
       )}
     </>
   );

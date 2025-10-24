@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
 import {
   ColumnDef,
@@ -10,6 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { Pencil, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectTrigger,
@@ -19,11 +20,14 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester, TashihType } from '@prisma/client';
 import { ExportToPDFButton } from './ExportToPDFButton';
+import { TashihScheduleAlertDialog } from './TashihScheduleAlertDialog';
+import { TashihScheduleEditDialog } from './TashihScheduleEditDialog';
 
 export type TashihSchedule = {
   id: string;
@@ -32,6 +36,7 @@ export type TashihSchedule = {
   startTime: string;
   endTime: string;
   location: string;
+  hasResults?: boolean;
   schedules: {
     tashihRequest: {
       tashihType?: TashihType;
@@ -57,14 +62,15 @@ export type TashihSchedule = {
       };
     };
   }[];
-}
+};
 
 interface Props {
   data: TashihSchedule[];
   title: string;
+  onRefresh: () => void;
 }
 
-export function TashihScheduleTable({ data, title }: Props) {
+export function TashihScheduleTable({ data, title, onRefresh }: Props) {
   const {
     sorting,
     setSorting,
@@ -72,7 +78,11 @@ export function TashihScheduleTable({ data, title }: Props) {
     setColumnVisibility,
     columnFilters,
     setColumnFilters,
-  } = useDataTableState<TashihSchedule, string>();
+    selectedItem: selectedSchedule,
+    setSelectedItem: setSelectedSchedule,
+    dialogType,
+    setDialogType,
+  } = useDataTableState<TashihSchedule, 'edit' | 'delete'>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
@@ -186,6 +196,22 @@ export function TashihScheduleTable({ data, title }: Props) {
     table.getColumn('Siswa')?.setFilterValue(value === 'all' ? undefined : value);
   };
 
+  const handleOpenEditDialog = useCallback(
+    (schedule: TashihSchedule) => {
+      setSelectedSchedule(schedule);
+      setDialogType('edit');
+    },
+    [setDialogType, setSelectedSchedule]
+  );
+
+  const handleOpenDeleteDialog = useCallback(
+    (schedule: TashihSchedule) => {
+      setSelectedSchedule(schedule);
+      setDialogType('delete');
+    },
+    [setDialogType, setSelectedSchedule]
+  );
+
   const columns = useMemo<ColumnDef<TashihSchedule>[]>(
     () => [
       {
@@ -276,8 +302,39 @@ export function TashihScheduleTable({ data, title }: Props) {
           </div>
         ),
       },
+      {
+        id: 'actions',
+        enableHiding: false,
+        header: 'Aksi',
+        cell: ({ row }) => {
+          const schedule = row.original;
+          const isAssessed = schedule.hasResults;
+
+          if (isAssessed) {
+            return <div className="text-sm text-muted-foreground">Sudah dinilai</div>;
+          }
+
+          return (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(schedule)}>
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleOpenDeleteDialog(schedule)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Hapus
+              </Button>
+            </div>
+          );
+        },
+      },
     ],
-    []
+    [handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -368,6 +425,42 @@ export function TashihScheduleTable({ data, title }: Props) {
             Tidak ada jadwal tashih untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
           </p>
         </div>
+      )}
+
+      {dialogType === 'edit' && selectedSchedule && (
+        <TashihScheduleEditDialog
+          schedule={selectedSchedule}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedSchedule(null);
+            }
+          }}
+          onSave={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedSchedule(null);
+          }}
+        />
+      )}
+
+      {dialogType === 'delete' && selectedSchedule && (
+        <TashihScheduleAlertDialog
+          schedule={selectedSchedule}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDialogType(null);
+              setSelectedSchedule(null);
+            }
+          }}
+          onConfirm={() => {
+            onRefresh();
+            setDialogType(null);
+            setSelectedSchedule(null);
+          }}
+        />
       )}
     </>
   );

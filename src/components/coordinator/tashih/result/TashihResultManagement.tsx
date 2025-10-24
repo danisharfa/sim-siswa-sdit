@@ -3,14 +3,13 @@
 import useSWR from 'swr';
 import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddTashihResultForm } from './AddTashihResultForm';
+import { TashihResultForm } from './TashihResultForm';
 import { TashihResultTable } from './TashihResultTable';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function TashihResultManagement() {
   const { data, error, isLoading, mutate } = useSWR('/api/coordinator/tashih/result', fetcher);
-
 
   if (error) {
     return <ErrorState onRetry={() => mutate()} />;
@@ -26,8 +25,12 @@ export function TashihResultManagement() {
 
   return (
     <div className="space-y-4">
-      <AddTashihResultForm onSaved={mutate} />
-      <TashihResultTable data={data.data} title="Daftar Hasil Tashih Semua Siswa" />
+      <TashihResultForm onSaved={mutate} />
+      <TashihResultTable
+        data={data.data}
+        title="Daftar Hasil Tashih Semua Siswa"
+        onRefresh={mutate}
+      />
     </div>
   );
 }

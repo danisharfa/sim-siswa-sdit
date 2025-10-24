@@ -338,7 +338,7 @@ export function MunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="mb-2 block">Pilih Jadwal Ujian</Label>
+            <Label className="mb-2 block">Pilih Jadwal Munaqasyah</Label>
             <Select onValueChange={setSelectedScheduleId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih sesi munaqasyah" />
@@ -421,7 +421,6 @@ export function MunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
                         const surahName =
                           allSurahJuz.find((sj) => sj.surahId === row.surahId)?.surah.name ??
                           `Surah ${row.surahId}`;
-                        const total = calcTasmiRowTotal(row);
                         const percent = calcTasmiRowPercent(row);
 
                         return (
@@ -511,8 +510,8 @@ export function MunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
                                 />
                               </div>
                               <div className="md:col-span-1">
-                                <Label>Total (Raw / %)</Label>
-                                <Input value={`${total} / ${percent.toFixed(1)}%`} readOnly />
+                                <Label>Total (%)</Label>
+                                <Input value={`${percent.toFixed(1)}%`} readOnly />
                               </div>
                             </div>
                           </div>

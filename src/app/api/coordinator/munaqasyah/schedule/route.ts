@@ -13,8 +13,10 @@ export async function GET() {
     const schedules = await prisma.munaqasyahSchedule.findMany({
       orderBy: { date: 'desc' },
       include: {
+        results: true, // Include results to check if assessed
         examiner: {
           select: {
+            userId: true,
             user: { select: { fullName: true } },
           },
         },
@@ -67,7 +69,13 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ success: true, data: schedules });
+    // Transform data to include hasResults flag
+    const transformedSchedules = schedules.map((schedule) => ({
+      ...schedule,
+      hasResults: schedule.results.length > 0,
+    }));
+
+    return NextResponse.json({ success: true, data: transformedSchedules });
   } catch (error) {
     console.error('[MUNAQASYAH_SCHEDULE_GET]', error);
     return NextResponse.json(
