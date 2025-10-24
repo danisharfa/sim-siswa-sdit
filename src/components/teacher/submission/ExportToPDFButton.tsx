@@ -1,6 +1,6 @@
 'use client';
 
-import { Submission } from '@/components/teacher/submission/SubmissionTable';
+import type { Submission } from '@/components/teacher/submission/SubmissionTable';
 import { Table } from '@tanstack/react-table';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';

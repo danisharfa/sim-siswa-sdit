@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -20,19 +20,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Semester, MunaqasyahBatch } from '@prisma/client';
+import useSWR from 'swr';
+import { Semester, MunaqasyahBatch, MunaqasyahStage } from '@prisma/client';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
-interface MunaqasyahResult {
+export type MunaqasyahResult = {
   id: string;
   score: number;
-  grade: string; // Changed to string to support MunaqasyahGrade enum values
+  grade: string;
   passed: boolean;
   academicYear: string;
   semester: Semester;
   classroomName: string;
   groupName: string;
   batch: MunaqasyahBatch;
-  stage: string; // Changed to string to support MunaqasyahStage enum values
+  stage: MunaqasyahStage;
   juz: { name: string };
   schedule: {
     date: string;
@@ -40,6 +43,7 @@ interface MunaqasyahResult {
     startTime: string;
     endTime: string;
     location: string;
+    examiner?: { user?: { fullName: string } };
   };
   student: {
     nis: string;
@@ -53,13 +57,12 @@ interface MunaqasyahResult {
       totalScore: number;
     } | null;
   };
-  // Add final result data if this result is part of a completed final result
   finalResult?: {
     finalScore: number;
     finalGrade: string;
     passed: boolean;
   } | null;
-}
+};
 
 interface MunaqasyahResultTableProps {
   data: MunaqasyahResult[];
@@ -73,9 +76,9 @@ const gradeLabels: Record<string, string> = {
   TIDAK_LULUS: 'Tidak Lulus',
 };
 
-const stageLabels: Record<string, string> = {
-  TASMI: 'Tasmi',
-  MUNAQASYAH: 'Munaqasyah',
+const stageLabels: Record<MunaqasyahStage, string> = {
+  [MunaqasyahStage.TASMI]: 'Tasmi',
+  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
 };
 
 const batchLabels: Record<MunaqasyahBatch, string> = {
@@ -95,34 +98,211 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
     setColumnVisibility,
   } = useDataTableState<MunaqasyahResult, string>();
 
-  const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
+  // Filter state
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState('all');
+  const [selectedBatch, setSelectedBatch] = useState('all');
+  const [selectedStage, setSelectedStage] = useState('all');
+  const [selectedJuz, setSelectedJuz] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+
+  // Academic settings integration
+  const { data: academicSetting } = useSWR('/api/academicSetting', (url: string) =>
+    fetch(url).then((res) => res.json())
+  );
+
+  const defaultPeriod = academicSetting
+    ? `${academicSetting.currentYear}-${academicSetting.currentSemester}`
+    : '';
+
+  // Academic periods from data
+  const academicPeriods = useMemo(() => {
+    const set = new Set<string>();
+    for (const result of data) {
+      set.add(`${result.academicYear}-${result.semester}`);
+    }
+    return Array.from(set);
+  }, [data]);
+
+  // Filter by academic period first
+  const filteredByPeriod = useMemo(() => {
+    if (!selectedPeriod) return data;
+    const [year, semester] = selectedPeriod.split('-');
+    return data.filter((result) => {
+      return result.academicYear === year && result.semester === semester;
+    });
+  }, [data, selectedPeriod]);
+
+  // Available groups from filtered data
+  const availableGroups = useMemo(() => {
+    const groupMap = new Map<string, { id: string; name: string; classroom: { name: string } }>();
+    filteredByPeriod.forEach((result) => {
+      const groupKey = `${result.groupName}-${result.classroomName}`;
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, {
+          id: groupKey,
+          name: result.groupName,
+          classroom: { name: result.classroomName },
+        });
+      }
+    });
+    return Array.from(groupMap.values());
+  }, [filteredByPeriod]);
+
+  // Available students from selected group
+  const availableStudents = useMemo(() => {
+    if (selectedGroupId === 'all') return [];
+    const students = new Set<string>();
+    filteredByPeriod.forEach((result) => {
+      const groupKey = `${result.groupName}-${result.classroomName}`;
+      if (groupKey === selectedGroupId) {
+        students.add(result.student.user.fullName);
+      }
+    });
+    return Array.from(students).sort();
+  }, [filteredByPeriod, selectedGroupId]);
+
+  // Available batches from data
+  const availableBatches = useMemo(() => {
+    const batches = new Set<MunaqasyahBatch>();
+    filteredByPeriod.forEach((result) => {
+      batches.add(result.batch);
+    });
+    return Array.from(batches);
+  }, [filteredByPeriod]);
+
+  // Available stages from data
+  const availableStages = useMemo(() => {
+    const stages = new Set<MunaqasyahStage>();
+    filteredByPeriod.forEach((result) => {
+      stages.add(result.stage);
+    });
+    return Array.from(stages);
+  }, [filteredByPeriod]);
+
+  // Available juz from data
+  const availableJuz = useMemo(() => {
+    const juz = new Set<string>();
+    filteredByPeriod.forEach((result) => {
+      juz.add(result.juz.name);
+    });
+    return Array.from(juz).sort();
+  }, [filteredByPeriod]);
+
+  // Available statuses
+  const availableStatuses = useMemo(() => {
+    const statuses = new Set<string>();
+    filteredByPeriod.forEach((result) => {
+      statuses.add(result.passed ? 'Lulus' : 'Tidak Lulus');
+    });
+    return Array.from(statuses);
+  }, [filteredByPeriod]);
+
+  // Set default period on mount
+  useEffect(() => {
+    if (defaultPeriod && !selectedPeriod && academicPeriods.length > 0) {
+      const targetPeriod = academicPeriods.includes(defaultPeriod)
+        ? defaultPeriod
+        : academicPeriods[0];
+      setSelectedPeriod(targetPeriod);
+    }
+  }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // Academic year for export
+  const academicYearForExport = useMemo(() => {
+    if (!selectedPeriod) return '';
+    const [year, semester] = selectedPeriod.split('-');
+    return `${year} ${semester}`;
+  }, [selectedPeriod]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedGroupId('all');
+    setSelectedStudent('all');
+    setSelectedBatch('all');
+    setSelectedStage('all');
+    setSelectedJuz('all');
+    setSelectedStatus('all');
+    // Clear table filters
+    table.getColumn('Kelompok')?.setFilterValue(undefined);
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+    table.getColumn('Batch')?.setFilterValue(undefined);
+    table.getColumn('Tahap')?.setFilterValue(undefined);
+    table.getColumn('Juz')?.setFilterValue(undefined);
+    table.getColumn('Status')?.setFilterValue(undefined);
+  };
+
+  const handleGroupChange = (value: string) => {
+    setSelectedGroupId(value);
+    setSelectedStudent('all');
+
+    if (value === 'all') {
+      table.getColumn('Kelompok')?.setFilterValue(undefined);
+    } else {
+      const group = availableGroups.find((g) => g.id === value);
+      if (group) {
+        table.getColumn('Kelompok')?.setFilterValue(`${group.name} - ${group.classroom.name}`);
+      }
+    }
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+  };
+
+  const handleStudentChange = (value: string) => {
+    setSelectedStudent(value);
+    table.getColumn('Siswa')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleBatchChange = (value: string) => {
+    setSelectedBatch(value);
+    table
+      .getColumn('Batch')
+      ?.setFilterValue(value === 'all' ? undefined : batchLabels[value as MunaqasyahBatch]);
+  };
+
+  const handleStageChange = (value: string) => {
+    setSelectedStage(value);
+    table
+      .getColumn('Tahap')
+      ?.setFilterValue(value === 'all' ? undefined : stageLabels[value as MunaqasyahStage]);
+  };
+
+  const handleJuzChange = (value: string) => {
+    setSelectedJuz(value);
+    table.getColumn('Juz')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    table.getColumn('Status')?.setFilterValue(value === 'all' ? undefined : value);
+  };
 
   const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
     () => [
       {
         id: 'Tanggal',
-        header: 'Tanggal',
+        accessorKey: 'date',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => {
           const s = row.original.schedule;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
+            weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric',
           });
           return (
-            <div className="text-sm">
+            <div className="text-sm min-w-[180px]">
               <div className="font-medium">{date}</div>
-              <div className="text-muted-foreground">
-                {s.sessionName} ({s.startTime} - {s.endTime})
+              <div className="text-muted-foreground">{s.sessionName}</div>
+              <div className="text-muted-foreground text-xs">
+                {s.startTime} - {s.endTime}
               </div>
+              <div className="text-muted-foreground text-xs">📍 {s.location}</div>
             </div>
           );
         },
-      },
-      {
-        accessorKey: 'schedule.location',
-        id: 'Lokasi',
-        header: 'Lokasi',
       },
       {
         id: 'Siswa',
@@ -136,34 +316,60 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         ),
       },
       {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.academicYear} ${row.semester}`,
+        id: 'Kelompok',
+        header: 'Kelompok',
+        accessorFn: (row) => `${row.groupName} - ${row.classroomName}`,
         cell: ({ row }) => (
           <div className="text-sm">
-            <div className="font-medium">
-              {row.original.academicYear} {row.original.semester}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.groupName} - {row.original.classroomName}
-            </div>
+            <div className="font-medium">{row.original.groupName}</div>
+            <div className="text-muted-foreground">{row.original.classroomName}</div>
           </div>
         ),
       },
       {
-        id: 'Juz',
-        header: 'Juz',
-        cell: ({ row }) => <Badge variant="outline">{row.original.juz.name}</Badge>,
-      },
-      {
         id: 'Batch',
         header: 'Batch',
+        accessorFn: (row) => batchLabels[row.batch],
         cell: ({ row }) => <Badge variant="secondary">{batchLabels[row.original.batch]}</Badge>,
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
       },
       {
         id: 'Tahap',
         header: 'Tahap',
+        accessorFn: (row) => stageLabels[row.stage],
         cell: ({ row }) => <Badge variant="default">{stageLabels[row.original.stage]}</Badge>,
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
+      },
+      {
+        id: 'Juz',
+        header: 'Juz',
+        accessorFn: (row) => row.juz.name,
+        cell: ({ row }) => <Badge variant="outline">{row.original.juz.name}</Badge>,
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value === filterValue;
+        },
+      },
+      {
+        id: 'Penguji',
+        header: 'Penguji',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {row.original.schedule.examiner ? (
+              <div>
+                <div className="font-medium">{row.original.schedule.examiner.user?.fullName}</div>
+              </div>
+            ) : (
+              <span className="text-medium">Koordinator Al-Qur&apos;an</span>
+            )}
+          </div>
+        ),
       },
       {
         id: 'Nilai',
@@ -174,24 +380,13 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
               {(row.original.score ?? 0).toFixed(1)} (
               {gradeLabels[row.original.grade] || row.original.grade})
             </div>
-            {row.original.scoreDetails && (
-              <div className="text-xs text-muted-foreground space-y-1">
-                {row.original.scoreDetails.tasmi && (
-                  <div>Tasmi: {(row.original.scoreDetails.tasmi.totalScore ?? 0).toFixed(1)}</div>
-                )}
-                {row.original.scoreDetails.munaqasyah && (
-                  <div>
-                    Munaqasyah: {(row.original.scoreDetails.munaqasyah.totalScore ?? 0).toFixed(1)}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         ),
       },
       {
         id: 'Status',
         header: 'Status',
+        accessorFn: (row) => (row.passed ? 'Lulus' : 'Tidak Lulus'),
         cell: ({ row }) => (
           <Badge
             variant="outline"
@@ -204,6 +399,10 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
             {row.original.passed ? 'Lulus' : 'Tidak Lulus'}
           </Badge>
         ),
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value === filterValue;
+        },
       },
       {
         id: 'Nilai Final',
@@ -230,45 +429,12 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
           );
         },
       },
-      {
-        id: 'Detail',
-        header: 'Detail',
-        cell: ({ row }) => {
-          const { scoreDetails } = row.original;
-          if (!scoreDetails) return '-';
-
-          return (
-            <div className="text-xs space-y-1">
-              {scoreDetails.tasmi && (
-                <div className="space-y-0.5">
-                  <div className="font-medium">Tasmi:</div>
-                  <div>Total Score: {(scoreDetails.tasmi.totalScore ?? 0).toFixed(1)}</div>
-                </div>
-              )}
-              {scoreDetails.munaqasyah && (
-                <div className="space-y-0.5">
-                  <div className="font-medium">Munaqasyah:</div>
-                  <div>Total Score: {(scoreDetails.munaqasyah.totalScore ?? 0).toFixed(1)}</div>
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
     ],
     []
   );
 
-  const yearSemesterOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const d of data) {
-      set.add(`${d.academicYear}__${d.semester}`);
-    }
-    return Array.from(set);
-  }, [data]);
-
   const table = useReactTable({
-    data,
+    data: filteredByPeriod,
     columns,
     state: {
       sorting,
@@ -286,35 +452,144 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
 
   return (
     <>
-      <div className="mb-4">
-        <Label className="mb-2 block">Filter Tahun Akademik</Label>
-        <Select
-          value={selectedYearSemester}
-          onValueChange={(value) => {
-            setSelectedYearSemester(value);
-            table
-              .getColumn('Tahun Ajaran')
-              ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
-          }}
-        >
-          <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Pilih Tahun Ajaran" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua</SelectItem>
-            {yearSemesterOptions.map((val) => {
-              const [year, sem] = val.split('__');
-              return (
-                <SelectItem key={val} value={val}>
-                  {year} {sem}
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Tahun Akademik" />
+            </SelectTrigger>
+            <SelectContent>
+              {academicPeriods.map((period) => {
+                const [year, semester] = period.split('-');
+                return (
+                  <SelectItem key={period} value={period}>
+                    {year} {semester}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Kelompok</Label>
+          <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Kelompok" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Kelompok</SelectItem>
+              {availableGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name} - {group.classroom.name}
                 </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Siswa</Label>
+          <Select
+            disabled={selectedGroupId === 'all'}
+            value={selectedStudent}
+            onValueChange={handleStudentChange}
+          >
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Siswa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Siswa</SelectItem>
+              {availableStudents.map((student) => (
+                <SelectItem key={student} value={student}>
+                  {student}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Batch</Label>
+          <Select value={selectedBatch} onValueChange={handleBatchChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Batch" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Batch</SelectItem>
+              {availableBatches.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batchLabels[batch]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Tahap</Label>
+          <Select value={selectedStage} onValueChange={handleStageChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Tahap" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Tahap</SelectItem>
+              {availableStages.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stageLabels[stage]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Juz</Label>
+          <Select value={selectedJuz} onValueChange={handleJuzChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Juz" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Juz</SelectItem>
+              {availableJuz.map((juz) => (
+                <SelectItem key={juz} value={juz}>
+                  {juz}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Status</Label>
+          <Select value={selectedStatus} onValueChange={handleStatusChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              {availableStatuses.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ExportToPDFButton table={table} academicYear={academicYearForExport} />
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Siswa" />
+      <DataTable title={title} table={table} showColumnFilter={false} />
+
+      {selectedPeriod && filteredByPeriod.length === 0 && (
+        <div className="rounded-lg border bg-card p-8 text-center mt-4">
+          <p className="text-muted-foreground">
+            Tidak ada hasil munaqasyah untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
+          </p>
+        </div>
+      )}
     </>
   );
 }

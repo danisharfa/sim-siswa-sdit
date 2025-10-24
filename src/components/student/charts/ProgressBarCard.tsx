@@ -125,12 +125,11 @@ export function ProgressBarCard({
     <Card className="h-fit">
       <CardHeader className="pb-3">
         <CardTitle>{title}</CardTitle>
-        <div className="flex gap-2 mt-3">
+        <div className="flex flex-col gap-2 mt-3">
           <Button
             variant={dataFilter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setDataFilter('all')}
-            className="text-xs h-7"
           >
             Semua ({items.length})
           </Button>
@@ -138,7 +137,6 @@ export function ProgressBarCard({
             variant={dataFilter === 'progress' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setDataFilter('progress')}
-            className="text-xs h-7"
           >
             Sedang Dijalani ({items.filter(i => i.status === 'SEDANG_DIJALANI' || i.percent > 0).length})
           </Button>
@@ -146,7 +144,6 @@ export function ProgressBarCard({
             variant={dataFilter === 'completed' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setDataFilter('completed')}
-            className="text-xs h-7"
           >
             Selesai ({items.filter(i => i.status === 'SELESAI').length})
           </Button>

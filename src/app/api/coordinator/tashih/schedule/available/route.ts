@@ -22,10 +22,21 @@ export async function GET() {
             },
           },
         },
+        results: {
+          select: { requestId: true },
+        },
       },
     });
 
-    const formatted = schedules.map((s) => ({
+    const filtered = schedules.filter((s) => {
+      const requestIdsWithResult = new Set(s.results.map((r) => r.requestId));
+      const unscoredExists = s.schedules.some(
+        (sr) => !requestIdsWithResult.has(sr.tashihRequest.id)
+      );
+      return unscoredExists;
+    });
+
+    const formatted = filtered.map((s) => ({
       id: s.id,
       date: s.date,
       sessionName: s.sessionName,
@@ -33,9 +44,16 @@ export async function GET() {
       endTime: s.endTime,
     }));
 
-    return NextResponse.json({ success: true, data: formatted });
+    return NextResponse.json({
+      success: true,
+      message: 'Tashih yang belum dinilai berhasil diambil',
+      data: formatted,
+    });
   } catch (error) {
-    console.error('[GET_AVAILABLE_SCHEDULES]', error);
-    return NextResponse.json({ success: false, message: 'Gagal memuat data' }, { status: 500 });
+    console.error('Gagal mengambil Tashih yang belum dinilai:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Tashih yang belum dinilai' },
+      { status: 500 }
+    );
   }
 }

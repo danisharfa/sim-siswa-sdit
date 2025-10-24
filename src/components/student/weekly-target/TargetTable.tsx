@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import {
   useReactTable,
@@ -23,9 +23,11 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { DataTable } from '@/components/ui/data-table';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { StudentTargetData } from '@/lib/data/student/target';
 import { Card, CardContent } from '@/components/ui/card';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
 export type TargetItem = {
   id: string;
@@ -56,7 +58,10 @@ export function TargetTable({ data, title }: Props) {
     setColumnVisibility,
   } = useDataTableState<TargetItem, string>();
 
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedTargetType, setSelectedTargetType] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedTargetPeriod, setSelectedTargetPeriod] = useState('all');
 
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
@@ -65,18 +70,26 @@ export function TargetTable({ data, title }: Props) {
     return periods;
   }, [data.allTargets]);
 
-  const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : 'all';
+  const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : '';
 
-  useEffect(() => {
-    if (defaultPeriod !== 'all' && academicPeriods.includes(defaultPeriod)) {
-      setSelectedPeriod(defaultPeriod);
-    } else if (academicPeriods.length > 0) {
-      setSelectedPeriod(academicPeriods[0]);
+  // Set default period without useEffect
+  const initialPeriod = useMemo(() => {
+    if (!selectedPeriod && academicPeriods.length > 0) {
+      if (defaultPeriod && academicPeriods.includes(defaultPeriod)) {
+        return defaultPeriod;
+      }
+      return academicPeriods[0];
     }
-  }, [defaultPeriod, academicPeriods]);
+    return selectedPeriod;
+  }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // Update selectedPeriod if it's empty and we have a valid initialPeriod
+  if (!selectedPeriod && initialPeriod) {
+    setSelectedPeriod(initialPeriod);
+  }
 
   const currentPeriodInfo = useMemo(() => {
-    if (selectedPeriod === 'all') {
+    if (!selectedPeriod) {
       return data.allTargets[0] || null;
     }
 
@@ -86,6 +99,64 @@ export function TargetTable({ data, title }: Props) {
     );
     return foundData || null;
   }, [selectedPeriod, data.allTargets]);
+
+  // Get available filter options
+  const filteredByPeriod = useMemo(() => {
+    if (!currentPeriodInfo) return [];
+    return currentPeriodInfo.targets;
+  }, [currentPeriodInfo]);
+
+  const availableTargetTypes = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((target) => target.type))),
+    [filteredByPeriod]
+  );
+
+  const availableStatuses = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((target) => target.status))),
+    [filteredByPeriod]
+  );
+
+  const availableTargetPeriods = useMemo(() => {
+    const periods = new Set<string>();
+    filteredByPeriod.forEach((target) => {
+      const periodKey = `${format(target.startDate, 'yyyy-MM-dd')}|${format(
+        target.endDate,
+        'yyyy-MM-dd'
+      )}`;
+      periods.add(periodKey);
+    });
+    return Array.from(periods).map((period) => {
+      const [startDate, endDate] = period.split('|');
+      return { startDate, endDate, key: period };
+    });
+  }, [filteredByPeriod]);
+
+  // Event handlers
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedTargetType('all');
+    setSelectedStatus('all');
+    setSelectedTargetPeriod('all');
+    // Clear table filters
+    table.getColumn('Jenis')?.setFilterValue(undefined);
+    table.getColumn('Status')?.setFilterValue(undefined);
+    table.getColumn('Periode Target')?.setFilterValue(undefined);
+  };
+
+  const handleTargetTypeChange = (value: string) => {
+    setSelectedTargetType(value);
+    table.getColumn('Jenis')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    table.getColumn('Status')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleTargetPeriodChange = (value: string) => {
+    setSelectedTargetPeriod(value);
+    table.getColumn('Periode Target')?.setFilterValue(value === 'all' ? undefined : value);
+  };
 
   const tableData = useMemo<TargetItem[]>(() => {
     if (!currentPeriodInfo) return [];
@@ -164,57 +235,65 @@ export function TargetTable({ data, title }: Props) {
     }
   };
 
-  const getTypeVariant = (type: string) => {
-    switch (type) {
-      case 'TAHFIDZ':
-        return 'default';
-      case 'TAHSIN_ALQURAN':
-        return 'secondary';
-      case 'TAHSIN_WAFA':
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
-
   const columns = useMemo<ColumnDef<TargetItem>[]>(
     () => [
       {
+        id: 'Periode Target',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Periode Target" />,
+        accessorFn: (row) => row.deadline,
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const rowPeriod = `${format(row.original.startDate, 'yyyy-MM-dd')}|${format(
+            row.original.endDate,
+            'yyyy-MM-dd'
+          )}`;
+          return rowPeriod === value;
+        },
+        cell: ({ row }) => <div className="text-sm">{row.original.deadline}</div>,
+      },
+      {
         accessorKey: 'type',
-        header: 'Jenis',
+        id: 'Jenis',
+        header: 'Jenis Target',
         cell: ({ row }) => (
-          <Badge variant={getTypeVariant(row.original.type)}>
-            {getTypeLabel(row.original.type)}
-          </Badge>
+          <Badge variant="secondary">{row.original.type.replaceAll('_', ' ')}</Badge>
         ),
       },
       {
-        accessorKey: 'description',
-        header: 'Deskripsi',
-      },
-      {
         accessorKey: 'material',
-        header: 'Materi',
-      },
-      {
-        accessorKey: 'deadline',
-        header: 'Rentang Waktu',
+        id: 'Detail Target',
+        header: 'Detail Target',
+        cell: ({ row }) => (
+          <div className="max-w-xs">
+            <div className="font-medium">{row.original.material}</div>
+            {row.original.description && (
+              <div className="text-sm text-muted-foreground truncate">
+                {row.original.description}
+              </div>
+            )}
+          </div>
+        ),
       },
       {
         accessorKey: 'progressPercent',
+        id: 'Progress',
         header: 'Progress',
         cell: ({ row }) => (
-          <div className="flex items-center gap-2 min-w-[120px]">
-            <Progress value={row.original.progressPercent} className="h-2 flex-1" />
-            <span className="text-sm font-medium min-w-[35px]">
-              {row.original.progressPercent}%
-            </span>
+          <div className="space-y-1">
+            <Progress value={row.original.progressPercent || 0} className="w-20" />
+            <div className="text-xs text-center">{row.original.progressPercent || 0}%</div>
           </div>
         ),
       },
       {
         accessorKey: 'status',
+        id: 'Status',
         header: 'Status',
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const status = row.getValue(columnId);
+          return status === value;
+        },
         cell: ({ row }) => (
           <Badge variant={getStatusVariant(row.original.status)}>
             {getStatusLabel(row.original.status)}
@@ -259,26 +338,86 @@ export function TargetTable({ data, title }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <div className="flex flex-wrap gap-4 items-end">
-        <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
-            </SelectTrigger>
-            <SelectContent>
-              {academicPeriods.map((period) => {
-                const [year, semester] = period.split('-');
-                return (
-                  <SelectItem key={period} value={period}>
-                    {year} {semester}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+        <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+        <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Tahun Akademik" />
+          </SelectTrigger>
+          <SelectContent>
+            {academicPeriods.map((period) => {
+              const [year, semester] = period.split('-');
+              return (
+                <SelectItem key={period} value={period}>
+                  {year} {semester}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedTargetType} onValueChange={handleTargetTypeChange}>
+          <Label className="mb-2 block sr-only">Filter Jenis Target</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Jenis Target" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Jenis Target</SelectItem>
+            {availableTargetTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {getTypeLabel(type)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedStatus} onValueChange={handleStatusChange}>
+          <Label className="mb-2 block sr-only">Filter Status</Label>
+          <SelectTrigger className="min-w-[180px]">
+            <SelectValue placeholder="Pilih Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Status</SelectItem>
+            {availableStatuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {getStatusLabel(status)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedTargetPeriod} onValueChange={handleTargetPeriodChange}>
+          <Label className="mb-2 block sr-only">Filter Periode Target</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Periode Target" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Periode Target</SelectItem>
+            {availableTargetPeriods.map((period) => (
+              <SelectItem key={period.key} value={period.key}>
+                {new Date(period.startDate).toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}{' '}
+                -{' '}
+                {new Date(period.endDate).toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <ExportToPDFButton
+          table={table}
+          studentName={data.fullName}
+          studentNis={data.nis}
+          academicYear={selectedPeriod ? selectedPeriod.replace('-', ' ') : ''}
+        />
       </div>
 
       {currentPeriodInfo && (
@@ -286,21 +425,21 @@ export function TargetTable({ data, title }: Props) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <h4 className="font-medium text-muted-foreground">Periode</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Tahun Akademik</h4>
                 <p className="font-semibold">
                   {currentPeriodInfo.period.academicYear} {currentPeriodInfo.period.semester}
                 </p>
               </div>
               <div>
-                <h4 className="font-medium text-muted-foreground">Kelas</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelas</h4>
                 <p className="font-semibold">{currentPeriodInfo.period.className}</p>
               </div>
               <div>
-                <h4 className="font-medium text-muted-foreground">Kelompok</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelompok</h4>
                 <p className="font-semibold">{currentPeriodInfo.period.groupName}</p>
               </div>
               <div>
-                <h4 className="font-medium text-muted-foreground">Guru Pembimbing</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Guru Pembimbing</h4>
                 <p className="font-semibold">{currentPeriodInfo.period.teacherName}</p>
               </div>
             </div>
@@ -340,6 +479,6 @@ export function TargetTable({ data, title }: Props) {
           </p>
         </div>
       )}
-    </div>
+    </>
   );
 }

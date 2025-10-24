@@ -24,8 +24,9 @@ import { DataTable } from '@/components/ui/data-table';
 import { Semester, TashihType } from '@prisma/client';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { Card, CardContent } from '@/components/ui/card';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
-interface TashihResult {
+export type TashihResult = {
   id: string;
   passed: boolean;
   notes: string | null;
@@ -36,6 +37,12 @@ interface TashihResult {
     wafa: { name: string } | null;
     startPage: number | null;
     endPage: number | null;
+    student: {
+      nis: string;
+      user: {
+        fullName: string;
+      };
+    };
     teacher: { user: { fullName: string } | null };
     group: {
       name: string;
@@ -57,11 +64,12 @@ interface TashihResult {
 
 interface Props {
   data: TashihResult[];
+  title: string;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function TashihResultTable({ data }: Props) {
+export function TashihResultTable({ data, title }: Props) {
   const {
     sorting,
     setSorting,
@@ -73,6 +81,7 @@ export function TashihResultTable({ data }: Props) {
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedTashihType, setSelectedTashihType] = useState<TashihType | 'ALL'>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<'ALL' | 'LULUS' | 'TIDAK_LULUS'>('ALL');
 
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
@@ -97,6 +106,18 @@ export function TashihResultTable({ data }: Props) {
     return Array.from(set);
   }, [data]);
 
+  const tashihStatusOptions = useMemo(() => {
+    const set = new Set<'LULUS' | 'TIDAK_LULUS'>();
+    for (const result of data) {
+      if (result.passed) {
+        set.add('LULUS');
+      } else {
+        set.add('TIDAK_LULUS');
+      }
+    }
+    return Array.from(set);
+  }, [data]);
+
   useEffect(() => {
     if (defaultPeriod && !selectedPeriod) {
       if (academicPeriods.includes(defaultPeriod)) {
@@ -106,6 +127,26 @@ export function TashihResultTable({ data }: Props) {
       }
     }
   }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedTashihType('ALL');
+    setSelectedStatus('ALL');
+    // Clear table filters
+    table.getColumn('Jenis Tashih')?.setFilterValue(undefined);
+    table.getColumn('Status')?.setFilterValue(undefined);
+  };
+
+  const handleTashihTypeChange = (value: string) => {
+    setSelectedTashihType(value as TashihType | 'ALL');
+    table.getColumn('Jenis Tashih')?.setFilterValue(value === 'ALL' ? undefined : value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value as 'ALL' | 'LULUS' | 'TIDAK_LULUS');
+    table.getColumn('Status')?.setFilterValue(value === 'ALL' ? undefined : value);
+  };
 
   const currentPeriodInfo = useMemo(() => {
     if (!selectedPeriod) return null;
@@ -184,7 +225,7 @@ export function TashihResultTable({ data }: Props) {
       },
       {
         id: 'Materi',
-        header: 'Materi Ujian',
+        header: 'Materi',
         cell: ({ row }) => {
           const r = row.original.tashihRequest;
           const materi =
@@ -200,6 +241,11 @@ export function TashihResultTable({ data }: Props) {
         id: 'Status',
         accessorKey: 'passed',
         header: 'Hasil',
+        filterFn: (row) => {
+          if (selectedStatus === 'ALL') return true;
+          const passed = row.original.passed;
+          return selectedStatus === 'LULUS' ? passed : !passed;
+        },
         cell: ({ row }) => (
           <Badge
             variant="outline"
@@ -222,7 +268,7 @@ export function TashihResultTable({ data }: Props) {
         ),
       },
     ],
-    [selectedTashihType]
+    [selectedTashihType, selectedStatus]
   );
 
   const table = useReactTable({
@@ -246,13 +292,8 @@ export function TashihResultTable({ data }: Props) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(val) => {
-              setSelectedPeriod(val);
-            }}
-          >
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
             <SelectTrigger className="min-w-[200px]">
               <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
@@ -267,19 +308,13 @@ export function TashihResultTable({ data }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Jenis Tashih</Label>
-          <Select
-            value={selectedTashihType}
-            onValueChange={(value) => {
-              setSelectedTashihType(value as TashihType | 'ALL');
-              table.getColumn('Jenis Tashih')?.setFilterValue(value === 'ALL' ? undefined : value);
-            }}
-          >
+          <Label className="mb-2 block sr-only">Filter Jenis Tashih</Label>
+          <Select value={selectedTashihType} onValueChange={handleTashihTypeChange}>
             <SelectTrigger className="min-w-[180px]">
               <SelectValue placeholder="Pilih Jenis Tashih" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Jenis</SelectItem>
+              <SelectItem value="ALL">Semua Jenis Tashih</SelectItem>
               {tashihTypeOptions.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type.replaceAll('_', ' ')}
@@ -288,6 +323,30 @@ export function TashihResultTable({ data }: Props) {
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Status</Label>
+          <Select value={selectedStatus} onValueChange={handleStatusChange}>
+            <SelectTrigger className="min-w-[150px]">
+              <SelectValue placeholder="Pilih Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Status</SelectItem>
+              {tashihStatusOptions.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status === 'LULUS' ? 'Lulus' : 'Tidak Lulus'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ExportToPDFButton
+          table={table}
+          studentName={data[0]?.tashihRequest?.student?.user?.fullName}
+          studentNis={data[0]?.tashihRequest?.student?.nis}
+          academicYear={selectedPeriod ? selectedPeriod.replace('-', ' ') : ''}
+        />
       </div>
 
       {currentPeriodInfo && (
@@ -317,7 +376,7 @@ export function TashihResultTable({ data }: Props) {
         </Card>
       )}
 
-      <DataTable title="Hasil Tashih Saya" table={table} showColumnFilter={false} />
+      <DataTable title={title} table={table} showColumnFilter={false} />
 
       {selectedPeriod && filteredData.length === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center mt-4">

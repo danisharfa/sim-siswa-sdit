@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MunaqasyahResultForm } from './MunaqasyahResultForm';
 import { MunaqasyahResultTable } from './MunaqasyahResultTable';
@@ -9,6 +10,10 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function MunaqasyahResultManagement() {
   const { data, error, isLoading, mutate } = useSWR('/api/coordinator/munaqasyah/result', fetcher);
+
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
 
   if (isLoading) {
     return (
@@ -19,14 +24,10 @@ export function MunaqasyahResultManagement() {
     );
   }
 
-  if (error || !data?.success) {
-    return <p>Gagal memuat hasil ujian</p>;
-  }
-
   return (
     <div className="space-y-4">
       <MunaqasyahResultForm onSaved={mutate} />
-      <MunaqasyahResultTable data={data.data} title="Daftar Munaqasyah Ujian" />
+      <MunaqasyahResultTable data={data.data} title="Daftar Hasil Munaqasyah Semua Siswa" />
     </div>
   );
 }

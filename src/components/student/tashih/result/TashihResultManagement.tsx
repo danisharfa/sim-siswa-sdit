@@ -1,12 +1,31 @@
-import { fetchTashihResult } from '@/lib/data/student/tashih-result';
+'use client';
+
+import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
+import { Skeleton } from '@/components/ui/skeleton';
 import { TashihResultTable } from './TashihResultTable';
-import { use } from 'react';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function TashihResultManagement() {
-  const results = use(fetchTashihResult());
+  const { data, error, isLoading, mutate } = useSWR('/api/student/tashih/result', fetcher);
+
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-70 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <TashihResultTable data={results} />
+      <TashihResultTable data={data.data} title="Daftar Hasil Tashih" />
     </div>
   );
 }

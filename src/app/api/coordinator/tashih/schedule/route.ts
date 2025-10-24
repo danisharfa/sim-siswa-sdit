@@ -60,9 +60,9 @@ export async function GET() {
       data: schedules,
     });
   } catch (error) {
-    console.error('[GET_TASHIH_SCHEDULES]', error);
+    console.error('Gagal mengambil jadwal tashih', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data jadwal tashih' },
+      { success: false, message: 'Gagal mengambil jadwal tashih' },
       { status: 500 }
     );
   }

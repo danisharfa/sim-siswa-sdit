@@ -7,32 +7,95 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
     if (!teacher) {
-      return NextResponse.json({ error: 'Guru tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: 'Guru tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    const schedules = await prisma.munaqasyahSchedule.findMany({
-      where: { examinerId: teacher.userId },
+    const data = await prisma.munaqasyahSchedule.findMany({
       orderBy: { date: 'desc' },
-      select: {
-        id: true,
-        date: true,
-        sessionName: true,
-        startTime: true,
-        endTime: true,
-        location: true,
+      where: {
+        OR: [
+          { examinerId: teacher.userId },
+          {
+            scheduleRequests: {
+              some: {
+                request: {
+                  teacherId: teacher.userId,
+                },
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        examiner: {
+          include: {
+            user: { select: { fullName: true } },
+          },
+        },
+        coordinator: {
+          include: {
+            user: { select: { fullName: true } },
+          },
+        },
+        scheduleRequests: {
+          include: {
+            request: {
+              select: {
+                id: true,
+                batch: true,
+                stage: true,
+                juz: { select: { name: true } },
+                student: {
+                  select: {
+                    nis: true,
+                    user: { select: { fullName: true } },
+                  },
+                },
+                teacher: {
+                  select: {
+                    nip: true,
+                    user: { select: { fullName: true } },
+                  },
+                },
+                group: {
+                  select: {
+                    name: true,
+                    classroom: {
+                      select: {
+                        name: true,
+                        academicYear: true,
+                        semester: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
-    return NextResponse.json({ success: true, data: schedules });
+    return NextResponse.json({
+      success: true,
+      message: 'Berhasil mengambil jadwal Munaqasyah Siswa Bimbingan',
+      data,
+    });
   } catch (error) {
-    console.error('[TEACHER_MUNAQASYAH_SCHEDULE]', error);
-    return NextResponse.json({ success: false, message: 'Gagal memuat data' }, { status: 500 });
+    console.error('Gagal mengambil jadwal Munaqasyah Siswa Bimbingan:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil jadwal Munaqasyah Siswa Bimbingan' },
+      { status: 500 }
+    );
   }
 }

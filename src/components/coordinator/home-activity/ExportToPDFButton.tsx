@@ -1,11 +1,11 @@
 'use client';
 
+import type { HomeActivity } from '@/components/coordinator/home-activity/HomeActivityTable';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Table } from '@tanstack/react-table';
-import { HomeActivity } from '@/components/coordinator/home-activity/HomeActivityTable';
 
 interface Props {
   table: Table<HomeActivity>;
@@ -19,6 +19,12 @@ export function ExportToPDFButton({ table }: Props) {
       alert('Tidak ada data untuk diekspor.');
       return;
     }
+
+    // Ambil tahun ajaran dari data pertama untuk header
+    const firstRow = filteredRows[0]?.original;
+    const academicYear = firstRow
+      ? `${firstRow.group.classroom.academicYear} ${firstRow.group.classroom.semester}`
+      : '';
 
     const formattedData = filteredRows.map((row, index) => {
       const d = row.original;
@@ -38,7 +44,6 @@ export function ExportToPDFButton({ table }: Props) {
         formattedDate,
         `${d.student.user.fullName}\n${d.student.nis}`,
         `${d.group.name}\n${d.group.classroom.name}`,
-        `${d.group.classroom.academicYear} ${d.group.classroom.semester}`,
         activityTypeText,
         materi,
         d.note?.trim() || '-',
@@ -55,6 +60,13 @@ export function ExportToPDFButton({ table }: Props) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
     doc.text('LAPORAN AKTIVITAS RUMAH SISWA', doc.internal.pageSize.width / 2, 28, {
+      align: 'center',
+    });
+
+    // Tahun ajaran
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Tahun Ajaran: ${academicYear}`, doc.internal.pageSize.width / 2, 36, {
       align: 'center',
     });
 
@@ -75,20 +87,9 @@ export function ExportToPDFButton({ table }: Props) {
     doc.line(14, 48, doc.internal.pageSize.width - 14, 48);
 
     autoTable(doc, {
-      head: [
-        [
-          'No',
-          'Tanggal',
-          'Siswa',
-          'Kelompok',
-          'Tahun\nAjaran',
-          'Jenis\nAktivitas',
-          'Materi',
-          'Catatan',
-        ],
-      ],
+      head: [['No', 'Tanggal', 'Siswa', 'Kelompok', 'Jenis\nAktivitas', 'Materi', 'Catatan']],
       body: formattedData,
-      startY: 52,
+      startY: 58,
       styles: {
         fontSize: 8,
         cellPadding: 3,
@@ -106,18 +107,17 @@ export function ExportToPDFButton({ table }: Props) {
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 15 }, // No
-        1: { halign: 'center', cellWidth: 25 }, // Tanggal
-        2: { halign: 'center', cellWidth: 35 }, // Siswa
-        3: { halign: 'center', cellWidth: 35 }, // Kelompok
-        4: { halign: 'center', cellWidth: 25 }, // Tahun Ajaran
-        5: { halign: 'center', cellWidth: 25 }, // Jenis Aktivitas
-        6: { halign: 'center', cellWidth: 45 }, // Materi
-        7: { halign: 'center', cellWidth: 40 }, // Catatan
+        1: { halign: 'center', cellWidth: 30 }, // Tanggal
+        2: { halign: 'center', cellWidth: 40 }, // Siswa
+        3: { halign: 'center', cellWidth: 40 }, // Kelompok
+        4: { halign: 'center', cellWidth: 30 }, // Jenis Aktivitas
+        5: { halign: 'center', cellWidth: 50 }, // Materi
+        6: { halign: 'center', cellWidth: 45 }, // Catatan
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245], // Abu-abu muda untuk baris ganjil
       },
-      margin: { top: 52, left: 14, right: 14, bottom: 20 },
+      margin: { top: 58, left: 14, right: 14, bottom: 20 },
       didDrawPage: (data) => {
         // Footer dengan nomor halaman
         const pageNumber = data.pageNumber;

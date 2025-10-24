@@ -1,11 +1,11 @@
 'use client';
 
+import type { Submission } from '@/components/coordinator/submission/SubmissionTable';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Table } from '@tanstack/react-table';
-import { Submission } from '@/components/coordinator/submission/SubmissionTable';
 
 interface Props {
   table: Table<Submission>;
@@ -19,6 +19,12 @@ export function ExportToPDFButton({ table }: Props) {
       alert('Tidak ada data untuk diekspor.');
       return;
     }
+
+    // Ambil tahun ajaran dari data pertama untuk header
+    const firstRow = filteredRows[0]?.original;
+    const academicYear = firstRow
+      ? `${firstRow.group.classroom.academicYear} ${firstRow.group.classroom.semester}`
+      : '';
 
     const formattedData = filteredRows.map((row, index) => {
       const d = row.original;
@@ -66,6 +72,13 @@ export function ExportToPDFButton({ table }: Props) {
       align: 'center',
     });
 
+    // Tahun ajaran
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Tahun Ajaran: ${academicYear}`, doc.internal.pageSize.width / 2, 36, {
+      align: 'center',
+    });
+
     // Informasi tanggal cetak
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -97,7 +110,7 @@ export function ExportToPDFButton({ table }: Props) {
         ],
       ],
       body: formattedData,
-      startY: 52,
+      startY: 58,
       styles: {
         fontSize: 8,
         cellPadding: 3,
@@ -127,7 +140,7 @@ export function ExportToPDFButton({ table }: Props) {
       alternateRowStyles: {
         fillColor: [245, 245, 245], // Abu-abu muda untuk baris ganjil
       },
-      margin: { top: 52, left: 14, right: 14, bottom: 20 },
+      margin: { top: 58, left: 14, right: 14, bottom: 20 },
       didDrawPage: (data) => {
         // Footer dengan nomor halaman
         const pageNumber = data.pageNumber;

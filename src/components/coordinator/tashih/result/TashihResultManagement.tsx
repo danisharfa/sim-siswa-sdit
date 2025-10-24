@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddTashihResultForm } from './AddTashihResultForm';
 import { TashihResultTable } from './TashihResultTable';
@@ -10,6 +11,10 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function TashihResultManagement() {
   const { data, error, isLoading, mutate } = useSWR('/api/coordinator/tashih/result', fetcher);
 
+
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
   if (isLoading) {
     return (
       <div className="p-4">
@@ -19,14 +24,10 @@ export function TashihResultManagement() {
     );
   }
 
-  if (error || !data?.success) {
-    return <p>Gagal memuat hasil ujian</p>;
-  }
-
   return (
     <div className="space-y-4">
       <AddTashihResultForm onSaved={mutate} />
-      <TashihResultTable data={data.data} title="Daftar Hasil Ujian" />
+      <TashihResultTable data={data.data} title="Daftar Hasil Tashih Semua Siswa" />
     </div>
   );
 }

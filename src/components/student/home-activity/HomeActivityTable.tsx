@@ -27,7 +27,10 @@ import { DataTable } from '@/components/ui/data-table';
 import { Semester, HomeActivityType } from '@prisma/client';
 import { HomeActivityEditDialog } from './HomeActivityEditDialog';
 import { HomeActivityAlertDialog } from './HomeActivityAlertDialog';
-// import { ExportToPDFButton } from './export-to-pdf-button';
+import { type DateRange } from 'react-day-picker';
+import { Calendar23 } from '@/components/layout/calendar/calendar-23';
+import { ExportToPDFButton } from './ExportToPDFButton';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type HomeActivity = {
   id: string;
@@ -36,6 +39,12 @@ export type HomeActivity = {
   startVerse: number;
   endVerse: number;
   note: string | null;
+  student: {
+    nis: string;
+    user: {
+      fullName: string;
+    };
+  };
   group: {
     name: string;
     classroom: {
@@ -81,9 +90,8 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
   } = useDataTableState<HomeActivity, 'edit' | 'delete'>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
-  const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
-  const [selectedActivityType, setSelectedActivityType] = useState<HomeActivityType | 'ALL'>('ALL');
+  const [selectedActivityType, setSelectedActivityType] = useState('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const handleOpenEditDialog = useCallback(
     (activity: HomeActivity) => {
@@ -111,13 +119,39 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
 
   const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : '';
 
+  const filteredData = useMemo(() => {
+    if (!selectedPeriod) return data;
+
+    const [academicYear, semester] = selectedPeriod.split('-');
+    return data.filter(
+      (activity) =>
+        activity.group.classroom.academicYear === academicYear &&
+        activity.group.classroom.semester === semester
+    );
+  }, [data, selectedPeriod]);
+
   const activityTypeOptions = useMemo(() => {
     const set = new Set<HomeActivityType>();
-    for (const activity of data) {
+    for (const activity of filteredData) {
       set.add(activity.activityType);
     }
     return Array.from(set);
-  }, [data]);
+  }, [filteredData]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+  };
+
+  const handleActivityTypeChange = (value: string) => {
+    setSelectedActivityType(value);
+    table.getColumn('Jenis Aktivitas')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    table.getColumn('Tanggal')?.setFilterValue('custom');
+  };
 
   useEffect(() => {
     if (defaultPeriod && !selectedPeriod) {
@@ -129,7 +163,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     }
   }, [defaultPeriod, academicPeriods, selectedPeriod]);
 
-  const currentPeriodData = useMemo(() => {
+  const currentPeriodInfo = useMemo(() => {
     if (!selectedPeriod) return null;
 
     const [academicYear, semester] = selectedPeriod.split('-');
@@ -156,22 +190,6 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     return null;
   }, [selectedPeriod, data]);
 
-  const filteredData = useMemo(() => {
-    if (!selectedPeriod) return data;
-
-    const [academicYear, semester] = selectedPeriod.split('-');
-    return data.filter(
-      (activity) =>
-        activity.group.classroom.academicYear === academicYear &&
-        activity.group.classroom.semester === semester
-    );
-  }, [data, selectedPeriod]);
-
-  function getWeekOfMonth(date: Date): number {
-    const adjustedDate = date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil(adjustedDate / 7);
-  }
-
   const columns = useMemo<ColumnDef<HomeActivity>[]>(
     () => [
       {
@@ -179,10 +197,11 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
+          if (!dateRange?.from && !dateRange?.to) return true;
           const date = new Date(row.getValue(columnId));
-          const matchMonth = selectedMonth === 'all' || date.getMonth() === selectedMonth;
-          const matchWeek = selectedWeek === 'all' || getWeekOfMonth(date) === selectedWeek;
-          return matchMonth && matchWeek;
+          const isAfterStart = !dateRange.from || date >= dateRange.from;
+          const isBeforeEnd = !dateRange.to || date <= dateRange.to;
+          return isAfterStart && isBeforeEnd;
         },
         cell: ({ row }) => (
           <span>
@@ -242,7 +261,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
         },
       },
     ],
-    [selectedMonth, selectedWeek, handleOpenEditDialog, handleOpenDeleteDialog]
+    [dateRange, handleOpenEditDialog, handleOpenDeleteDialog]
   );
 
   const table = useReactTable({
@@ -266,13 +285,8 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(val) => {
-              setSelectedPeriod(val);
-            }}
-          >
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
             <SelectTrigger className="min-w-[200px]">
               <SelectValue placeholder="Pilih Tahun Ajaran" />
             </SelectTrigger>
@@ -287,67 +301,13 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Bulan</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedMonth(val);
-              table.getColumn('date')?.setFilterValue('custom');
-            }}
-          >
-            <SelectTrigger className="min-w-[160px]">
-              <SelectValue placeholder="Pilih Bulan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bulan</SelectItem>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SelectItem key={i} value={i.toString()}>
-                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Filter Minggu</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedWeek(val);
-              table.getColumn('date')?.setFilterValue('custom');
-            }}
-          >
-            <SelectTrigger className="min-w-[160px]">
-              <SelectValue placeholder="Pilih Minggu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Minggu</SelectItem>
-              {[1, 2, 3, 4, 5].map((w) => (
-                <SelectItem key={w} value={w.toString()}>
-                  Minggu ke-{w}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Filter Jenis Aktivitas</Label>
-          <Select
-            value={selectedActivityType}
-            onValueChange={(value) => {
-              setSelectedActivityType(value as HomeActivityType | 'ALL');
-              table
-                .getColumn('Jenis Aktivitas')
-                ?.setFilterValue(value === 'ALL' ? undefined : value);
-            }}
-          >
+          <Label className="mb-2 block sr-only">Filter Jenis Aktivitas</Label>
+          <Select value={selectedActivityType} onValueChange={handleActivityTypeChange}>
             <SelectTrigger className="min-w-[200px]">
               <SelectValue placeholder="Pilih Jenis Aktivitas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Jenis</SelectItem>
+              <SelectItem value="all">Semua Jenis</SelectItem>
               {activityTypeOptions.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
@@ -356,37 +316,44 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
             </SelectContent>
           </Select>
         </div>
+
+        <Calendar23 value={dateRange} onChange={handleDateRangeChange} />
+
+        <ExportToPDFButton
+          table={table}
+          studentName={data[0]?.student?.user?.fullName}
+          studentNis={data[0]?.student?.nis}
+          academicYear={selectedPeriod ? selectedPeriod.replace('-', ' ') : ''}
+        />
       </div>
 
       {/* Student Info Header */}
-      {currentPeriodData && (
-        <div className="rounded-lg border bg-card p-4 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-muted-foreground">Periode:</span>
-              <p className="font-medium">
-                {currentPeriodData.period.academicYear} {currentPeriodData.period.semester}
-              </p>
+      {currentPeriodInfo && (
+        <Card>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Tahun Akademik</h4>
+                <p className="font-semibold">
+                  {currentPeriodInfo.period.academicYear} {currentPeriodInfo.period.semester}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelas</h4>
+                <p className="font-semibold">{currentPeriodInfo.period.className}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Kelompok</h4>
+                <p className="font-semibold">{currentPeriodInfo.period.groupName}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Guru Pembimbing</h4>
+                <p className="font-semibold">{currentPeriodInfo.period.teacherName}</p>
+              </div>
             </div>
-            <div>
-              <span className="font-medium text-muted-foreground">Kelas:</span>
-              <p className="font-medium">{currentPeriodData.period.className}</p>
-            </div>
-            <div>
-              <span className="font-medium text-muted-foreground">Kelompok:</span>
-              <p className="font-medium">{currentPeriodData.period.groupName}</p>
-            </div>
-            <div>
-              <span className="font-medium text-muted-foreground">Guru Pembimbing:</span>
-              <p className="font-medium">{currentPeriodData.period.teacherName}</p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
-
-      {/* <div className="flex justify-end mb-4">
-        <ExportToPDFButton table={table} />
-      </div> */}
 
       <DataTable title={title} table={table} filterColumn="Surah" showColumnFilter={false} />
 

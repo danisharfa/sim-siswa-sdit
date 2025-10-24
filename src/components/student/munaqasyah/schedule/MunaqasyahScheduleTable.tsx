@@ -23,8 +23,9 @@ import { DataTable } from '@/components/ui/data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { Semester, MunaqasyahStage, MunaqasyahBatch } from '@prisma/client';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
-interface MunaqasyahSchedule {
+export type MunaqasyahSchedule = {
   id: string;
   date: string;
   sessionName: string;
@@ -58,25 +59,14 @@ interface MunaqasyahSchedule {
       };
     };
   }[];
-}
+};
 
 interface MunaqasyahScheduleTableProps {
   data: MunaqasyahSchedule[];
+  title: string;
 }
 
-const batchLabels: Record<MunaqasyahBatch, string> = {
-  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
-  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
-  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
-  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
-};
-
-const stageLabels: Record<MunaqasyahStage, string> = {
-  [MunaqasyahStage.TASMI]: 'Tasmi',
-  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
-};
-
-export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) {
+export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTableProps) {
   const {
     sorting,
     setSorting,
@@ -87,7 +77,9 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
   } = useDataTableState<MunaqasyahSchedule, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState<string | 'ALL'>('ALL');
+  const [selectedBatch, setSelectedBatch] = useState<string | 'ALL'>('ALL');
   const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
+  const [selectedJuz, setSelectedJuz] = useState<string | 'ALL'>('ALL');
 
   const academicPeriods = useMemo(() => {
     const set = new Set<string>();
@@ -98,6 +90,17 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
       }
     }
     return Array.from(set).sort();
+  }, [data]);
+
+  // Extract unique batches
+  const batchOptions = useMemo(() => {
+    const set = new Set<MunaqasyahBatch>();
+    for (const schedule of data) {
+      for (const sr of schedule.scheduleRequests) {
+        set.add(sr.request.batch);
+      }
+    }
+    return Array.from(set);
   }, [data]);
 
   // Extract unique stages
@@ -111,7 +114,40 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     return Array.from(set);
   }, [data]);
 
-  // Filter data berdasarkan Tahun Akademik dan stage yang dipilih
+  // Extract unique juz
+  const juzOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const schedule of data) {
+      for (const sr of schedule.scheduleRequests) {
+        set.add(sr.request.juz.name);
+      }
+    }
+    return Array.from(set).sort();
+  }, [data]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedBatch('ALL');
+    setSelectedStage('ALL');
+    setSelectedJuz('ALL');
+    // Clear table filters
+    table.getColumn('Tanggal dan Waktu')?.setFilterValue(undefined);
+  };
+
+  const handleBatchChange = (value: string) => {
+    setSelectedBatch(value);
+  };
+
+  const handleStageChange = (value: string) => {
+    setSelectedStage(value);
+  };
+
+  const handleJuzChange = (value: string) => {
+    setSelectedJuz(value);
+  };
+
+  // Filter data berdasarkan periode, batch, stage, juz yang dipilih
   const filteredData = useMemo(() => {
     return data.filter((schedule) => {
       // Filter by period
@@ -124,6 +160,14 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         if (!periodMatch) return false;
       }
 
+      // Filter by batch
+      if (selectedBatch !== 'ALL') {
+        const batchMatch = schedule.scheduleRequests.some(
+          (sr) => sr.request.batch === selectedBatch
+        );
+        if (!batchMatch) return false;
+      }
+
       // Filter by stage
       if (selectedStage !== 'ALL') {
         const stageMatch = schedule.scheduleRequests.some(
@@ -132,9 +176,17 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         if (!stageMatch) return false;
       }
 
+      // Filter by juz
+      if (selectedJuz !== 'ALL') {
+        const juzMatch = schedule.scheduleRequests.some(
+          (sr) => sr.request.juz.name === selectedJuz
+        );
+        if (!juzMatch) return false;
+      }
+
       return true;
     });
-  }, [data, selectedPeriod, selectedStage]);
+  }, [data, selectedPeriod, selectedStage, selectedBatch, selectedJuz]);
 
   const currentPeriodInfo = useMemo(() => {
     if (filteredData.length === 0) return null;
@@ -155,9 +207,9 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
   const columns = useMemo<ColumnDef<MunaqasyahSchedule>[]>(
     () => [
       {
-        id: 'Tanggal dan Waktu',
+        id: 'Tanggal',
         accessorKey: 'date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal dan Waktu" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => {
           const s = row.original;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
@@ -179,27 +231,28 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         },
       },
       {
-        id: 'Materi Ujian',
-        header: 'Materi Ujian',
+        id: 'Batch',
+        header: 'Batch',
         cell: ({ row }) => (
-          <div className="flex flex-col gap-1 min-w-[140px]">
-            {row.original.scheduleRequests.map((sr) => {
-              const r = sr.request;
-              return (
-                <div key={r.id} className="flex flex-col gap-1">
-                  <Badge variant="secondary" className="text-xs w-fit">
-                    {batchLabels[r.batch]}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs w-fit">
-                    {stageLabels[r.stage]}
-                  </Badge>
-                  <Badge variant="default" className="text-xs w-fit">
-                    {r.juz.name}
-                  </Badge>
-                </div>
-              );
-            })}
-          </div>
+          <Badge variant="secondary">
+            {row.original.scheduleRequests[0].request.batch.replaceAll('_', ' ')}
+          </Badge>
+        ),
+      },
+      {
+        id: 'Stage',
+        header: 'Tahap',
+        cell: ({ row }) => (
+          <Badge variant="default">
+            {row.original.scheduleRequests[0].request.stage.replaceAll('_', ' ')}
+          </Badge>
+        ),
+      },
+      {
+        id: 'Juz',
+        header: 'Juz',
+        cell: ({ row }) => (
+          <Badge variant="outline">{row.original.scheduleRequests[0].request.juz.name}</Badge>
         ),
       },
       {
@@ -243,8 +296,8 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
             <SelectTrigger className="w-[250px]">
               <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
@@ -263,21 +316,68 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Jenis Munaqasyah</Label>
-          <Select value={selectedStage} onValueChange={setSelectedStage}>
+          <Label className="mb-2 block sr-only">Filter Batch Munaqasyah</Label>
+          <Select value={selectedBatch} onValueChange={handleBatchChange}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Pilih Jenis" />
+              <SelectValue placeholder="Pilih Batch" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Jenis</SelectItem>
-              {stageOptions.map((stage) => (
-                <SelectItem key={stage} value={stage}>
-                  {stageLabels[stage]}
+              <SelectItem value="ALL">Semua Batch</SelectItem>
+              {batchOptions.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batch.replaceAll('_', ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Tahap Munaqasyah</Label>
+          <Select value={selectedStage} onValueChange={handleStageChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Tahap" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Tahap</SelectItem>
+              {stageOptions.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stage.replaceAll('_', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Juz</Label>
+          <Select value={selectedJuz} onValueChange={handleJuzChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Pilih Juz" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Juz</SelectItem>
+              {juzOptions.map((juz) => (
+                <SelectItem key={juz} value={juz}>
+                  {juz}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ExportToPDFButton
+          table={table}
+          studentName={data[0]?.scheduleRequests[0]?.request?.student?.user?.fullName}
+          studentNis={data[0]?.scheduleRequests[0]?.request?.student?.nis}
+          academicYear={
+            selectedPeriod !== 'ALL'
+              ? selectedPeriod.replace('__', ' ')
+              : currentPeriodInfo
+              ? `${currentPeriodInfo.academicYear} ${currentPeriodInfo.semester}`
+              : ''
+          }
+        />
       </div>
 
       {currentPeriodInfo && (
@@ -307,7 +407,7 @@ export function MunaqasyahScheduleTable({ data }: MunaqasyahScheduleTableProps) 
         </Card>
       )}
 
-      <DataTable title="Jadwal Munaqasyah Saya" table={table} showColumnFilter={false} />
+      <DataTable title={title} table={table} showColumnFilter={false} />
     </>
   );
 }

@@ -25,7 +25,7 @@ export function SubmissionManagement() {
 
   return (
     <div className="space-y-4">
-      <SubmissionTable data={data.data} title="Daftar Setoran Siswa" onRefresh={mutate} />
+      <SubmissionTable data={data.data} title="Daftar Setoran Siswa" />
     </div>
   );
 }

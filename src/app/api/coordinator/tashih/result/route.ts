@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const results = await prisma.tashihResult.findMany({
+    const data = await prisma.tashihResult.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         tashihRequest: {
@@ -63,11 +63,11 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ success: true, data: results });
+    return NextResponse.json({ success: true, message: 'Hasil Tashih berhasil diambil', data });
   } catch (error) {
-    console.error('[GET_TASHIH_RESULTS]', error);
+    console.error('Gagal mengambil Hasil Tashih:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal memuat hasil ujian' },
+      { success: false, message: 'Gagal mengambil Hasil Tashih' },
       { status: 500 }
     );
   }

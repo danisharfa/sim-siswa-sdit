@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { TashihResultManagement } from '@/components/teacher/tashih/result/TashihResultManagement';
 
 export const dynamic = 'force-dynamic';
@@ -7,16 +5,8 @@ export const dynamic = 'force-dynamic';
 export default function TeacherTashihFormPage() {
   return (
     <div className="p-4">
-      <Suspense
-        fallback={
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-1/3" />
-            <Skeleton className="h-[400px] w-full" />
-          </div>
-        }
-      >
-        <TashihResultManagement />
-      </Suspense>
+      <h1 className="text-2xl font-bold mb-4">Hasil Tashih Siswa</h1>
+      <TashihResultManagement />
     </div>
   );
 }

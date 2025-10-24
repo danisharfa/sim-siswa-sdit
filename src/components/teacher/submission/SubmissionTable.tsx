@@ -95,6 +95,8 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
   const [selectedSubmissionType, setSelectedSubmissionType] = useState('all');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedAdab, setSelectedAdab] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const { data: academicSetting } = useSWR('/api/academicSetting', fetcher);
@@ -146,6 +148,16 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     [filteredByPeriod]
   );
 
+  const availableStatuses = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.submissionStatus))),
+    [filteredByPeriod]
+  );
+
+  const availableAdabs = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.adab))),
+    [filteredByPeriod]
+  );
+
   useEffect(() => {
     if (defaultPeriod && !selectedPeriod && academicPeriods.length > 0) {
       const targetPeriod = academicPeriods.includes(defaultPeriod)
@@ -160,9 +172,15 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
     setSelectedPeriod(value);
     setSelectedGroupId('all');
     setSelectedStudent('all');
+    setSelectedSubmissionType('all');
+    setSelectedStatus('all');
+    setSelectedAdab('all');
     // Clear table filters
     table.getColumn('Kelompok')?.setFilterValue(undefined);
     table.getColumn('Siswa')?.setFilterValue(undefined);
+    table.getColumn('Jenis Setoran')?.setFilterValue(undefined);
+    table.getColumn('Status')?.setFilterValue(undefined);
+    table.getColumn('Adab')?.setFilterValue(undefined);
   };
 
   const handleGroupChange = (value: string) => {
@@ -188,6 +206,16 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
   const handleSubmissionTypeChange = (value: string) => {
     setSelectedSubmissionType(value);
     table.getColumn('Jenis Setoran')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    table.getColumn('Status')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleAdabChange = (value: string) => {
+    setSelectedAdab(value);
+    table.getColumn('Adab')?.setFilterValue(value === 'all' ? undefined : value);
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -307,6 +335,11 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
         accessorKey: 'submissionStatus',
         id: 'Status',
         header: 'Status',
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const status = row.getValue(columnId);
+          return status === value;
+        },
         cell: ({ row }) => {
           const status = row.original.submissionStatus;
           const statusConfig = {
@@ -327,7 +360,13 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
       },
       {
         accessorKey: 'adab',
+        id: 'Adab',
         header: 'Adab',
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const adab = row.getValue(columnId);
+          return adab === value;
+        },
         cell: ({ row }) => {
           const adab = row.original.adab;
           const adabConfig = {
@@ -457,6 +496,36 @@ export function SubmissionTable({ data, title, onRefresh }: Props) {
             {availableSubmissionTypes.map((type) => (
               <SelectItem key={type} value={type}>
                 {type.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedStatus} onValueChange={handleStatusChange}>
+          <Label className="mb-2 block sr-only">Filter Status</Label>
+          <SelectTrigger className="min-w-[180px]">
+            <SelectValue placeholder="Pilih Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Status</SelectItem>
+            {availableStatuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedAdab} onValueChange={handleAdabChange}>
+          <Label className="mb-2 block sr-only">Filter Adab</Label>
+          <SelectTrigger className="min-w-[180px]">
+            <SelectValue placeholder="Pilih Adab" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Adab</SelectItem>
+            {availableAdabs.map((adab) => (
+              <SelectItem key={adab} value={adab}>
+                {adab.replaceAll('_', ' ')}
               </SelectItem>
             ))}
           </SelectContent>

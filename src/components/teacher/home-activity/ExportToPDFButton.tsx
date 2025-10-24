@@ -1,6 +1,6 @@
 'use client';
 
-import { HomeActivity } from '@/components/teacher/home-activity/HomeActivityTable';
+import type { HomeActivity } from '@/components/teacher/home-activity/HomeActivityTable';
 import { Table } from '@tanstack/react-table';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';

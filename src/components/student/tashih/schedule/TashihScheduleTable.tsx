@@ -24,8 +24,9 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { Semester, TashihType } from '@prisma/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
-interface TashihSchedule {
+export interface TashihSchedule {
   id: string;
   date: string;
   sessionName: string;
@@ -41,6 +42,12 @@ interface TashihSchedule {
       wafa: { name: string } | null;
       startPage: number | null;
       endPage: number | null;
+      student: {
+        nis: string;
+        user: {
+          fullName: string;
+        };
+      };
       teacher: {
         user: { fullName: string };
       };
@@ -58,11 +65,12 @@ interface TashihSchedule {
 
 interface TashihScheduleTableProps {
   data: TashihSchedule[];
+  title: string;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
+export function TashihScheduleTable({ data, title }: TashihScheduleTableProps) {
   const {
     sorting,
     setSorting,
@@ -73,7 +81,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
   } = useDataTableState<TashihSchedule, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [selectedTashihType, setSelectedTashihType] = useState<TashihType | 'ALL'>('ALL');
+  const [selectedTashihType, setSelectedTashihType] = useState('all');
 
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
@@ -110,6 +118,19 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
       }
     }
   }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedTashihType('all');
+    // Clear table filters
+    table.getColumn('Jenis Tashih')?.setFilterValue(undefined);
+  };
+
+  const handleTashihTypeChange = (value: string) => {
+    setSelectedTashihType(value);
+    table.getColumn('Jenis Tashih')?.setFilterValue(value === 'all' ? undefined : value);
+  };
 
   const currentPeriodInfo = useMemo(() => {
     if (!selectedPeriod) return null;
@@ -190,7 +211,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         id: 'Jenis Tashih',
         header: 'Jenis Tashih',
         filterFn: (row) => {
-          if (selectedTashihType === 'ALL') return true;
+          if (selectedTashihType === 'all') return true;
           return row.original.schedules.some(
             (s) => s.tashihRequest.tashihType === selectedTashihType
           );
@@ -252,13 +273,8 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(val) => {
-              setSelectedPeriod(val);
-            }}
-          >
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
             <SelectTrigger className="min-w-[200px]">
               <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
@@ -273,19 +289,13 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Jenis Tashih</Label>
-          <Select
-            value={selectedTashihType}
-            onValueChange={(value) => {
-              setSelectedTashihType(value as TashihType | 'ALL');
-              table.getColumn('Jenis Tashih')?.setFilterValue(value === 'ALL' ? undefined : value);
-            }}
-          >
+          <Label className="mb-2 block sr-only">Filter Jenis Tashih</Label>
+          <Select value={selectedTashihType} onValueChange={handleTashihTypeChange}>
             <SelectTrigger className="min-w-[180px]">
               <SelectValue placeholder="Pilih Jenis Tashih" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Jenis</SelectItem>
+              <SelectItem value="all">Semua Jenis Tashih</SelectItem>
               {tashihTypeOptions.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type.replaceAll('_', ' ')}
@@ -294,6 +304,13 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
             </SelectContent>
           </Select>
         </div>
+
+        <ExportToPDFButton
+          table={table}
+          studentName={data[0]?.schedules[0]?.tashihRequest?.student?.user?.fullName}
+          studentNis={data[0]?.schedules[0]?.tashihRequest?.student?.nis}
+          academicYear={selectedPeriod ? selectedPeriod.replace('-', ' ') : ''}
+        />
       </div>
 
       {currentPeriodInfo && (
@@ -323,7 +340,7 @@ export function TashihScheduleTable({ data }: TashihScheduleTableProps) {
         </Card>
       )}
 
-      <DataTable title="Jadwal Tashih Saya" table={table} showColumnFilter={false} />
+      <DataTable title={title} table={table} showColumnFilter={false} />
 
       {selectedPeriod && filteredData.length === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center mt-4">

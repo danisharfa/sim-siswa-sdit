@@ -24,6 +24,12 @@ export async function GET() {
       where: { studentId: student.userId },
       orderBy: { date: 'desc' },
       include: {
+        student: {
+          select: {
+            nis: true,
+            user: { select: { fullName: true } },
+          },
+        },
         group: {
           select: {
             id: true,
@@ -45,11 +51,15 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ success: true, data: activities });
+    return NextResponse.json({
+      success: true,
+      message: 'Daftar Aktivitas berhasil diambil',
+      data: activities,
+    });
   } catch (error) {
-    console.error('[HOME_ACTIVITY_GET]', error);
+    console.error('Gagal mengambil daftar Aktivitas:', error);
     return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan mengambil data' },
+      { success: false, message: 'Gagal mengambil daftar Aktivitas' },
       { status: 500 }
     );
   }

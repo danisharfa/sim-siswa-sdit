@@ -23,8 +23,9 @@ import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTable } from '@/components/ui/data-table';
 import { Semester, MunaqasyahBatch } from '@prisma/client';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
-interface MunaqasyahResult {
+export type MunaqasyahResult = {
   id: string;
   score: number | null;
   grade: string;
@@ -102,6 +103,7 @@ interface MunaqasyahResult {
 
 interface Props {
   data: MunaqasyahResult[];
+  title: string;
 }
 
 const gradeLabels: Record<string, string> = {
@@ -111,19 +113,7 @@ const gradeLabels: Record<string, string> = {
   TIDAK_LULUS: 'Tidak Lulus',
 };
 
-const stageLabels: Record<string, string> = {
-  TASMI: 'Tasmi',
-  MUNAQASYAH: 'Munaqasyah',
-};
-
-const batchLabels: Record<MunaqasyahBatch, string> = {
-  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
-  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
-  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
-  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
-};
-
-export function MunaqasyahResultTable({ data }: Props) {
+export function MunaqasyahResultTable({ data, title }: Props) {
   const {
     sorting,
     setSorting,
@@ -134,7 +124,9 @@ export function MunaqasyahResultTable({ data }: Props) {
   } = useDataTableState<MunaqasyahResult, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState<string | 'ALL'>('ALL');
+  const [selectedBatch, setSelectedBatch] = useState<string | 'ALL'>('ALL');
   const [selectedStage, setSelectedStage] = useState<string | 'ALL'>('ALL');
+  const [selectedJuz, setSelectedJuz] = useState<string | 'ALL'>('ALL');
 
   const academicPeriods = useMemo(() => {
     const set = new Set<string>();
@@ -142,6 +134,14 @@ export function MunaqasyahResultTable({ data }: Props) {
       set.add(`${d.request.group.classroom.academicYear}__${d.request.group.classroom.semester}`);
     }
     return Array.from(set).sort();
+  }, [data]);
+
+  const batchOptions = useMemo(() => {
+    const set = new Set<MunaqasyahBatch>();
+    for (const d of data) {
+      set.add(d.request.batch);
+    }
+    return Array.from(set);
   }, [data]);
 
   const stageOptions = useMemo(() => {
@@ -152,6 +152,34 @@ export function MunaqasyahResultTable({ data }: Props) {
     return Array.from(set);
   }, [data]);
 
+  const juzOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of data) {
+      set.add(d.request.juz.name);
+    }
+    return Array.from(set).sort();
+  }, [data]);
+
+  // Event handlers untuk filter
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedBatch('ALL');
+    setSelectedStage('ALL');
+    setSelectedJuz('ALL');
+  };
+
+  const handleBatchChange = (value: string) => {
+    setSelectedBatch(value);
+  };
+
+  const handleStageChange = (value: string) => {
+    setSelectedStage(value);
+  };
+
+  const handleJuzChange = (value: string) => {
+    setSelectedJuz(value);
+  };
+
   const filteredData = useMemo(() => {
     return data.filter((result) => {
       // Filter by period
@@ -160,13 +188,24 @@ export function MunaqasyahResultTable({ data }: Props) {
         if (periodKey !== selectedPeriod) return false;
       }
 
+      // Filter by batch
+      if (selectedBatch !== 'ALL') {
+        if (result.request.batch !== selectedBatch) return false;
+      }
+
+      // Filter by stage
       if (selectedStage !== 'ALL') {
         if (result.request.stage !== selectedStage) return false;
       }
 
+      // Filter by juz
+      if (selectedJuz !== 'ALL') {
+        if (result.request.juz.name !== selectedJuz) return false;
+      }
+
       return true;
     });
-  }, [data, selectedPeriod, selectedStage]);
+  }, [data, selectedPeriod, selectedBatch, selectedStage, selectedJuz]);
 
   const currentPeriodInfo = useMemo(() => {
     if (filteredData.length === 0) return null;
@@ -184,9 +223,9 @@ export function MunaqasyahResultTable({ data }: Props) {
   const columns = useMemo<ColumnDef<MunaqasyahResult>[]>(
     () => [
       {
-        id: 'Tanggal dan Waktu',
+        id: 'Tanggal',
         accessorKey: 'schedule.date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal dan Waktu" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) => {
           const s = row.original.schedule;
           const date = new Date(s.date).toLocaleDateString('id-ID', {
@@ -208,21 +247,23 @@ export function MunaqasyahResultTable({ data }: Props) {
         },
       },
       {
-        id: 'Materi Ujian',
-        header: 'Materi Ujian',
+        id: 'Batch',
+        header: 'Batch',
         cell: ({ row }) => (
-          <div className="flex flex-col gap-1 min-w-[140px]">
-            <Badge variant="secondary" className="text-xs w-fit">
-              {batchLabels[row.original.request.batch]}
-            </Badge>
-            <Badge variant="outline" className="text-xs w-fit">
-              {stageLabels[row.original.request.stage]}
-            </Badge>
-            <Badge variant="default" className="text-xs w-fit">
-              {row.original.request.juz.name}
-            </Badge>
-          </div>
+          <Badge variant="secondary">{row.original.request.batch.replaceAll('_', ' ')}</Badge>
         ),
+      },
+      {
+        id: 'Stage',
+        header: 'Tahap',
+        cell: ({ row }) => (
+          <Badge variant="default">{row.original.request.stage.replaceAll('_', ' ')}</Badge>
+        ),
+      },
+      {
+        id: 'Juz',
+        header: 'Juz',
+        cell: ({ row }) => <Badge variant="outline">{row.original.request.juz.name}</Badge>,
       },
       {
         id: 'Penguji',
@@ -243,22 +284,12 @@ export function MunaqasyahResultTable({ data }: Props) {
       {
         id: 'Nilai',
         accessorKey: 'score',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Nilai" />,
+        header: 'Nilai',
         cell: ({ row }) => (
           <div className="text-sm">
             <div className="font-medium">
               {row.original.score?.toFixed(1) || '0.0'} (
               {gradeLabels[row.original.grade] || row.original.grade})
-            </div>
-            <div className="text-xs text-muted-foreground space-y-1">
-              {row.original.scoreDetails?.tasmi && (
-                <div>Tasmi: {row.original.scoreDetails.tasmi.totalScore?.toFixed(1) || '0.0'}</div>
-              )}
-              {row.original.scoreDetails?.munaqasyah && (
-                <div>
-                  Munaqasyah: {row.original.scoreDetails.munaqasyah.totalScore?.toFixed(1) || '0.0'}
-                </div>
-              )}
             </div>
           </div>
         ),
@@ -305,43 +336,6 @@ export function MunaqasyahResultTable({ data }: Props) {
           );
         },
       },
-      {
-        id: 'Detail',
-        header: 'Detail',
-        cell: ({ row }) => {
-          const { scoreDetails } = row.original;
-          if (!scoreDetails || (!scoreDetails.tasmi && !scoreDetails.munaqasyah)) return '-';
-
-          return (
-            <div className="text-xs space-y-1">
-              {scoreDetails.tasmi && (
-                <div className="space-y-0.5">
-                  <div className="font-medium">Tasmi:</div>
-                  <div>Total Score: {scoreDetails.tasmi.totalScore.toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {scoreDetails.tasmi.details.length} surah dinilai
-                  </div>
-                  {scoreDetails.tasmi.details.some((d) => d.note) && (
-                    <div className="text-muted-foreground">Catatan tersedia</div>
-                  )}
-                </div>
-              )}
-              {scoreDetails.munaqasyah && (
-                <div className="space-y-0.5">
-                  <div className="font-medium">Munaqasyah:</div>
-                  <div>Total Score: {scoreDetails.munaqasyah.totalScore.toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {scoreDetails.munaqasyah.details.length} soal dijawab
-                  </div>
-                  {scoreDetails.munaqasyah.details.some((d) => d.note) && (
-                    <div className="text-muted-foreground">Catatan tersedia</div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
     ],
     []
   );
@@ -367,9 +361,9 @@ export function MunaqasyahResultTable({ data }: Props) {
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[250px]">
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+            <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
@@ -387,21 +381,62 @@ export function MunaqasyahResultTable({ data }: Props) {
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Jenis Munaqasyah</Label>
-          <Select value={selectedStage} onValueChange={setSelectedStage}>
+          <Label className="mb-2 block sr-only">Filter Batch</Label>
+          <Select value={selectedBatch} onValueChange={handleBatchChange}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Pilih Jenis" />
+              <SelectValue placeholder="Pilih Batch" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Jenis</SelectItem>
-              {stageOptions.map((stage) => (
-                <SelectItem key={stage} value={stage}>
-                  {stageLabels[stage]}
+              <SelectItem value="ALL">Semua Batch</SelectItem>
+              {batchOptions.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batch.replaceAll('_', ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Tahap Munaqasyah</Label>
+          <Select value={selectedStage} onValueChange={handleStageChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Pilih Tahap" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Tahap</SelectItem>
+              {stageOptions.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stage.replaceAll('_', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Juz</Label>
+          <Select value={selectedJuz} onValueChange={handleJuzChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Pilih Juz" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Juz</SelectItem>
+              {juzOptions.map((juz) => (
+                <SelectItem key={juz} value={juz}>
+                  {juz}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ExportToPDFButton
+          table={table}
+          studentName={filteredData[0]?.request?.student?.user?.fullName}
+          studentNis={filteredData[0]?.request?.student?.nis}
+          academicYear={currentPeriodInfo ? `${currentPeriodInfo.academicYear} ${currentPeriodInfo.semester}` : ''}
+        />
       </div>
 
       {currentPeriodInfo && (
@@ -431,7 +466,7 @@ export function MunaqasyahResultTable({ data }: Props) {
         </Card>
       )}
 
-      <DataTable title="Hasil Munaqasyah Saya" table={table} showColumnFilter={false} />
+      <DataTable title={title} table={table} showColumnFilter={false} />
     </>
   );
 }

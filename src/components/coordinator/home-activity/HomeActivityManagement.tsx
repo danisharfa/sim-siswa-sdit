@@ -25,7 +25,7 @@ export function HomeActivityManagement() {
 
   return (
     <div className="space-y-4">
-      <HomeActivityTable data={data.data} title="Daftar Aktivitas Rumah Siswa" onRefresh={mutate} />
+      <HomeActivityTable data={data.data} title="Daftar Aktivitas Rumah Siswa" />
     </div>
   );
 }

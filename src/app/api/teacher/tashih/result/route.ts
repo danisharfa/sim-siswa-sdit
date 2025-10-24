@@ -1,22 +1,26 @@
+import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
-export async function fetchTashihResult() {
+export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.teacher) {
-      throw new Error('Unauthorized');
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
     if (!teacher) {
-      throw new Error('Profil guru tidak ditemukan');
+      return NextResponse.json(
+        { success: false, message: 'Guru tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    const results = await prisma.tashihResult.findMany({
+    const data = await prisma.tashihResult.findMany({
       where: {
         tashihRequest: {
           teacherId: teacher.userId,
@@ -48,6 +52,11 @@ export async function fetchTashihResult() {
                 user: { select: { fullName: true } },
               },
             },
+            teacher: {
+              select: {
+                user: { select: { fullName: true } },
+              },
+            },
             group: {
               select: {
                 name: true,
@@ -65,21 +74,16 @@ export async function fetchTashihResult() {
       },
     });
 
-    const mappedResults = results.map((result) => ({
-      ...result,
-      tashihSchedule: {
-        ...result.tashihSchedule,
-        date:
-          typeof result.tashihSchedule?.date === 'object' &&
-          result.tashihSchedule?.date instanceof Date
-            ? result.tashihSchedule.date.toISOString()
-            : result.tashihSchedule?.date,
-      },
-    }));
-
-    return mappedResults;
+    return NextResponse.json({
+      success: true,
+      message: 'Berhasil mengambil hasil Tashih Siswa Bimbingan',
+      data,
+    });
   } catch (error) {
-    console.error('[FETCH_TASHIH_RESULT]', error);
-    throw new Error('Gagal mengambil data hasil tashih');
+    console.error('Gagal mengambil hasil Tashih Siswa Bimbingan:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil hasil Tashih Siswa Bimbingan' },
+      { status: 500 }
+    );
   }
 }

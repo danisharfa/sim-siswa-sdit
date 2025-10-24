@@ -1,22 +1,27 @@
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export async function fetchTashihResult() {
+export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
-      throw new Error('Unauthorized');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
+
     if (!student) {
-      throw new Error('Profil siswa tidak ditemukan');
+      return NextResponse.json(
+        { success: false, error: 'Profil siswa tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    const results = await prisma.tashihResult.findMany({
+    const data = await prisma.tashihResult.findMany({
       where: {
         tashihRequest: {
           studentId: student.userId,
@@ -39,6 +44,12 @@ export async function fetchTashihResult() {
             tashihType: true,
             startPage: true,
             endPage: true,
+            student: {
+              select: {
+                nis: true,
+                user: { select: { fullName: true } },
+              },
+            },
             teacher: {
               select: {
                 user: { select: { fullName: true } },
@@ -64,15 +75,16 @@ export async function fetchTashihResult() {
       },
     });
 
-    return results.map((r) => ({
-      ...r,
-      tashihSchedule: {
-        ...r.tashihSchedule,
-        date: new Date(r.tashihSchedule.date).toISOString(),
-      },
-    }));
+    return NextResponse.json({
+      success: true,
+      message: 'Hasil Tashih berhasil diambil',
+      data,
+    });
   } catch (error) {
-    console.error('[FETCH_TASHIH_RESULT]', error);
-    throw new Error('Gagal mengambil data hasil tashih');
+    console.error('Gagal mengambil Hasil Tashih:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Hasil Tashih' },
+      { status: 500 }
+    );
   }
 }

@@ -53,7 +53,6 @@ export type HomeActivity = {
 interface Props {
   data: HomeActivity[];
   title: string;
-  onRefresh: () => void;
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -218,6 +217,12 @@ export function HomeActivityTable({ data, title }: Props) {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) => `${row.group.name} - ${row.group.classroom.name}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.group.name}</div>
+            <div className="text-muted-foreground">{row.original.group.classroom.name}</div>
+          </div>
+        ),
       },
       {
         id: 'Jenis Aktivitas',
@@ -343,7 +348,7 @@ export function HomeActivityTable({ data, title }: Props) {
         <ExportToPDFButton table={table} />
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Tanggal" />
+      <DataTable title={title} table={table} showColumnFilter={false} />
     </>
   );
 }

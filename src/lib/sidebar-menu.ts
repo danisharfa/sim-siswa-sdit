@@ -221,7 +221,7 @@ export const menuData = {
       items: [
         {
           title: 'Target Setoran',
-          url: '/dashboard/student/submission/target',
+          url: '/dashboard/student/weekly-target',
           icon: Target,
         },
         {

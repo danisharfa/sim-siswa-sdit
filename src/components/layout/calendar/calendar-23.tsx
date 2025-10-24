@@ -5,13 +5,13 @@ import { CalendarIcon, ChevronDownIcon } from 'lucide-react';
 import { type DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Label } from '@/components/ui/label';
+// import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Props {
   value?: DateRange;
   onChange?: (range: DateRange | undefined) => void;
-  label?: string;
+  // label?: string;
   placeholder?: string;
   className?: string;
 }
@@ -19,7 +19,7 @@ interface Props {
 export function Calendar23({
   value,
   onChange,
-  label = '',
+  // label = '',
   placeholder = 'Pilih Rentang Tanggal',
   className,
 }: Props) {
@@ -30,10 +30,10 @@ export function Calendar23({
   };
 
   return (
-    <div className={`flex flex-col gap-3 ${className || ''}`}>
-      <Label htmlFor="date" className="px-1">
+    <div className={`flex flex-col ${className || ''}`}>
+      {/* <Label htmlFor="date" className="pb-1">
         {label}
-      </Label>
+      </Label> */}
       <Popover>
         <PopoverTrigger asChild>
           <Button

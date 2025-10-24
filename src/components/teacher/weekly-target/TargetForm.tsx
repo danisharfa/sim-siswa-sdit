@@ -237,14 +237,13 @@ export function TargetForm() {
       <CardContent className="space-y-4">
         <FieldSet>
           <Field>
-            <Calendar23 value={dateRange} onChange={setDateRange} label="Rentang Target" />
+            <FieldLabel>Rentang Target</FieldLabel>
+            <Calendar23 value={dateRange} onChange={setDateRange} />
           </Field>
 
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
-              <FieldLabel>
-                Kelompok
-              </FieldLabel>
+              <FieldLabel>Kelompok</FieldLabel>
               <Select
                 value={selectedGroupId}
                 onValueChange={(value) => {
@@ -270,9 +269,7 @@ export function TargetForm() {
 
             <Field className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <FieldLabel>
-                  Siswa
-                </FieldLabel>
+                <FieldLabel>Siswa</FieldLabel>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -314,9 +311,7 @@ export function TargetForm() {
           </FieldGroup>
 
           <Field>
-            <FieldLabel>
-              Jenis Setoran
-            </FieldLabel>
+            <FieldLabel>Jenis Setoran</FieldLabel>
             <Select
               value={type}
               onValueChange={(v) => {
@@ -348,9 +343,7 @@ export function TargetForm() {
             <>
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Juz Awal
-                  </FieldLabel>
+                  <FieldLabel>Juz Awal</FieldLabel>
                   <Select value={startJuzId} onValueChange={setStartJuzId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Juz Awal" />
@@ -366,9 +359,7 @@ export function TargetForm() {
                 </Field>
 
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Juz Akhir
-                  </FieldLabel>
+                  <FieldLabel>Juz Akhir</FieldLabel>
                   <Select value={endJuzId} onValueChange={setEndJuzId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Juz Akhir" />
@@ -386,9 +377,7 @@ export function TargetForm() {
 
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Surah Awal
-                  </FieldLabel>
+                  <FieldLabel>Surah Awal</FieldLabel>
                   <Select value={surahStartId} onValueChange={setSurahStartId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Surah Awal" />
@@ -404,9 +393,7 @@ export function TargetForm() {
                 </Field>
 
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Surah Akhir
-                  </FieldLabel>
+                  <FieldLabel>Surah Akhir</FieldLabel>
                   <Select value={surahEndId} onValueChange={setSurahEndId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Surah Akhir" />
@@ -424,9 +411,7 @@ export function TargetForm() {
 
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Ayat Awal
-                  </FieldLabel>
+                  <FieldLabel>Ayat Awal</FieldLabel>
                   <Input
                     type="number"
                     value={startAyat}
@@ -435,9 +420,7 @@ export function TargetForm() {
                   />
                 </Field>
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Ayat Akhir
-                  </FieldLabel>
+                  <FieldLabel>Ayat Akhir</FieldLabel>
                   <Input
                     type="number"
                     value={endAyat}
@@ -452,9 +435,7 @@ export function TargetForm() {
           {type === SubmissionType.TAHSIN_WAFA && (
             <>
               <Field>
-                <FieldLabel>
-                  Materi Wafa
-                </FieldLabel>
+                <FieldLabel>Materi Wafa</FieldLabel>
                 <Select value={wafaId} onValueChange={setWafaId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Wafa" />
@@ -471,9 +452,7 @@ export function TargetForm() {
 
               <FieldGroup className="flex flex-col md:flex-row gap-4">
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Halaman Mulai
-                  </FieldLabel>
+                  <FieldLabel>Halaman Mulai</FieldLabel>
                   <Input
                     type="number"
                     value={startPage}
@@ -482,9 +461,7 @@ export function TargetForm() {
                   />
                 </Field>
                 <Field className="flex-1 min-w-0">
-                  <FieldLabel>
-                    Halaman Selesai
-                  </FieldLabel>
+                  <FieldLabel>Halaman Selesai</FieldLabel>
                   <Input
                     type="number"
                     value={endPage}

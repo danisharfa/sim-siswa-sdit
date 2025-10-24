@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import useSWR from 'swr';
 import {
   ColumnDef,
@@ -33,6 +33,8 @@ import { ExportToPDFButton } from './ExportToPDFButton';
 import { Semester, SubmissionStatus, SubmissionType, Adab } from '@prisma/client';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { type DateRange } from 'react-day-picker';
+import { Calendar23 } from '@/components/layout/calendar/calendar-23';
 
 export type Submission = {
   id: string;
@@ -49,6 +51,12 @@ export type Submission = {
   adab: Adab;
   note: string | null;
   teacher: {
+    user: {
+      fullName: string;
+    };
+  };
+  student: {
+    nis: string;
     user: {
       fullName: string;
     };
@@ -81,11 +89,10 @@ export function SubmissionTable({ data, title }: Props) {
   } = useDataTableState<Submission, string>();
 
   const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
-  const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
-  const [selectedSubmissionType, setSelectedSubmissionType] = useState<SubmissionType | 'ALL'>(
-    'ALL'
-  );
+  const [selectedSubmissionType, setSelectedSubmissionType] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedAdab, setSelectedAdab] = useState('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const { data: setting } = useSWR('/api/academicSetting', fetcher);
 
@@ -97,23 +104,71 @@ export function SubmissionTable({ data, title }: Props) {
 
   const defaultPeriod = setting ? `${setting.currentYear}-${setting.currentSemester}` : '';
 
-  const submissionTypeOptions = useMemo(() => {
-    const set = new Set<SubmissionType>();
-    for (const submission of data) {
-      set.add(submission.submissionType);
-    }
-    return Array.from(set);
-  }, [data]);
+  const filteredByPeriod = useMemo(() => {
+    if (!selectedPeriod) return data;
+    const [academicYear, semester] = selectedPeriod.split('-');
+    return data.filter(
+      (submission) =>
+        submission.group.classroom.academicYear === academicYear &&
+        submission.group.classroom.semester === semester
+    );
+  }, [data, selectedPeriod]);
+
+  const availableSubmissionTypes = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.submissionType))),
+    [filteredByPeriod]
+  );
+
+  const availableStatuses = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.submissionStatus))),
+    [filteredByPeriod]
+  );
+
+  const availableAdabs = useMemo(
+    () => Array.from(new Set(filteredByPeriod.map((item) => item.adab))),
+    [filteredByPeriod]
+  );
 
   useEffect(() => {
-    if (defaultPeriod && !selectedPeriod) {
-      if (academicPeriods.includes(defaultPeriod)) {
-        setSelectedPeriod(defaultPeriod);
-      } else if (academicPeriods.length > 0) {
-        setSelectedPeriod(academicPeriods[0]);
-      }
+    if (defaultPeriod && !selectedPeriod && academicPeriods.length > 0) {
+      const targetPeriod = academicPeriods.includes(defaultPeriod)
+        ? defaultPeriod
+        : academicPeriods[0];
+      setSelectedPeriod(targetPeriod);
     }
   }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  // Event handlers
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedSubmissionType('all');
+    setSelectedStatus('all');
+    setSelectedAdab('all');
+    // Clear table filters
+    table.getColumn('Jenis Setoran')?.setFilterValue(undefined);
+    table.getColumn('Status')?.setFilterValue(undefined);
+    table.getColumn('Adab')?.setFilterValue(undefined);
+  };
+
+  const handleSubmissionTypeChange = (value: string) => {
+    setSelectedSubmissionType(value);
+    table.getColumn('Jenis Setoran')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    table.getColumn('Status')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleAdabChange = (value: string) => {
+    setSelectedAdab(value);
+    table.getColumn('Adab')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    table.getColumn('Tanggal')?.setFilterValue('custom');
+  };
 
   const currentPeriodInfo = useMemo(() => {
     if (!selectedPeriod) return null;
@@ -140,22 +195,6 @@ export function SubmissionTable({ data, title }: Props) {
     return null;
   }, [selectedPeriod, data]);
 
-  const filteredData = useMemo(() => {
-    if (!selectedPeriod) return data;
-
-    const [academicYear, semester] = selectedPeriod.split('-');
-    return data.filter(
-      (submission) =>
-        submission.group.classroom.academicYear === academicYear &&
-        submission.group.classroom.semester === semester
-    );
-  }, [data, selectedPeriod]);
-
-  function getWeekOfMonth(date: Date): number {
-    const adjustedDate = date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil(adjustedDate / 7);
-  }
-
   const columns = useMemo<ColumnDef<Submission>[]>(
     () => [
       {
@@ -163,10 +202,11 @@ export function SubmissionTable({ data, title }: Props) {
         id: 'Tanggal',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         filterFn: (row, columnId) => {
+          if (!dateRange?.from && !dateRange?.to) return true;
           const date = new Date(row.getValue(columnId));
-          const matchMonth = selectedMonth === 'all' || date.getMonth() === selectedMonth;
-          const matchWeek = selectedWeek === 'all' || getWeekOfMonth(date) === selectedWeek;
-          return matchMonth && matchWeek;
+          const isAfterStart = !dateRange.from || date >= dateRange.from;
+          const isBeforeEnd = !dateRange.to || date <= dateRange.to;
+          return isAfterStart && isBeforeEnd;
         },
         cell: ({ row }) => (
           <span>
@@ -182,9 +222,10 @@ export function SubmissionTable({ data, title }: Props) {
         accessorKey: 'submissionType',
         id: 'Jenis Setoran',
         header: 'Jenis Setoran',
-        filterFn: (row, columnId) => {
-          if (selectedSubmissionType === 'ALL') return true;
-          return row.getValue(columnId) === selectedSubmissionType;
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const submissionType = row.getValue(columnId);
+          return submissionType === value;
         },
         cell: ({ row }) => (
           <Badge variant="secondary">{row.original.submissionType.replaceAll('_', ' ')}</Badge>
@@ -230,6 +271,11 @@ export function SubmissionTable({ data, title }: Props) {
         id: 'Status',
         header: 'Status',
         accessorFn: (row) => row.submissionStatus,
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const status = row.getValue(columnId);
+          return status === value;
+        },
         cell: ({ row }) => {
           const status = row.original.submissionStatus;
           const icon =
@@ -249,8 +295,14 @@ export function SubmissionTable({ data, title }: Props) {
         },
       },
       {
+        id: 'Adab',
         header: 'Adab',
         accessorFn: (row) => row.adab,
+        filterFn: (row, columnId, value) => {
+          if (!value || value === 'all') return true;
+          const adab = row.getValue(columnId);
+          return adab === value;
+        },
         cell: ({ row }) => {
           const adab = row.original.adab;
           const icon =
@@ -279,11 +331,11 @@ export function SubmissionTable({ data, title }: Props) {
         },
       },
     ],
-    [selectedMonth, selectedWeek, selectedSubmissionType]
+    [dateRange]
   );
 
   const table = useReactTable({
-    data: filteredData,
+    data: filteredByPeriod,
     columns,
     state: {
       sorting,
@@ -301,98 +353,73 @@ export function SubmissionTable({ data, title }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedPeriod}
-            onValueChange={(val) => {
-              setSelectedPeriod(val);
-            }}
-          >
-            <SelectTrigger className="min-w-[200px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
-            </SelectTrigger>
-            <SelectContent>
-              {academicPeriods.map((period) => (
-                <SelectItem key={period} value={period}>
-                  {period.replace('-', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex flex-wrap gap-4 items-end">
+        <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+        <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Tahun Akademik" />
+          </SelectTrigger>
+          <SelectContent>
+            {academicPeriods.map((period) => (
+              <SelectItem key={period} value={period}>
+                {period.replace('-', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Bulan</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedMonth(val);
-              table.getColumn('Tanggal')?.setFilterValue('custom');
-            }}
-          >
-            <SelectTrigger className="min-w-[160px]">
-              <SelectValue placeholder="Pilih Bulan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bulan</SelectItem>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SelectItem key={i} value={i.toString()}>
-                  {new Date(0, i).toLocaleString('id-ID', { month: 'long' })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedSubmissionType} onValueChange={handleSubmissionTypeChange}>
+          <Label className="mb-2 block sr-only">Filter Jenis Setoran</Label>
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Pilih Jenis Setoran" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Jenis Setoran</SelectItem>
+            {availableSubmissionTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Minggu</Label>
-          <Select
-            onValueChange={(value) => {
-              const val = value === 'all' ? 'all' : parseInt(value);
-              setSelectedWeek(val);
-              table.getColumn('Tanggal')?.setFilterValue('custom');
-            }}
-          >
-            <SelectTrigger className="min-w-[160px]">
-              <SelectValue placeholder="Pilih Minggu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Minggu</SelectItem>
-              {[1, 2, 3, 4, 5].map((w) => (
-                <SelectItem key={w} value={w.toString()}>
-                  Minggu ke-{w}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedStatus} onValueChange={handleStatusChange}>
+          <Label className="mb-2 block sr-only">Filter Status</Label>
+          <SelectTrigger className="min-w-[180px]">
+            <SelectValue placeholder="Pilih Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Status</SelectItem>
+            {availableStatuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label className="mb-2 block">Filter Jenis Setoran</Label>
-          <Select
-            value={selectedSubmissionType}
-            onValueChange={(value) => {
-              setSelectedSubmissionType(value as SubmissionType | 'ALL');
-              table
-                .getColumn('submissionType')
-                ?.setFilterValue(value === 'ALL' ? undefined : value);
-            }}
-          >
-            <SelectTrigger className="min-w-[180px]">
-              <SelectValue placeholder="Pilih Jenis Setoran" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Semua Jenis</SelectItem>
-              {submissionTypeOptions.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type.replaceAll('_', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedAdab} onValueChange={handleAdabChange}>
+          <Label className="mb-2 block sr-only">Filter Adab</Label>
+          <SelectTrigger className="min-w-[180px]">
+            <SelectValue placeholder="Pilih Adab" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Adab</SelectItem>
+            {availableAdabs.map((adab) => (
+              <SelectItem key={adab} value={adab}>
+                {adab.replaceAll('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Calendar23 value={dateRange} onChange={handleDateRangeChange} />
+
+        <ExportToPDFButton
+          table={table}
+          studentName={data[0]?.student?.user?.fullName}
+          studentNis={data[0]?.student?.nis}
+        />
       </div>
 
       {currentPeriodInfo && (
@@ -400,7 +427,7 @@ export function SubmissionTable({ data, title }: Props) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Periode</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Tahun Akademik</h4>
                 <p className="font-semibold">
                   {currentPeriodInfo.period.academicYear} {currentPeriodInfo.period.semester}
                 </p>
@@ -422,13 +449,9 @@ export function SubmissionTable({ data, title }: Props) {
         </Card>
       )}
 
-      <div className="flex justify-end mb-4">
-        <ExportToPDFButton table={table} />
-      </div>
+      <DataTable title={title} table={table} showColumnFilter={false} />
 
-      <DataTable title={title} table={table} />
-
-      {selectedPeriod && filteredData.length === 0 && (
+      {selectedPeriod && filteredByPeriod.length === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center mt-4">
           <p className="text-muted-foreground">
             Tidak ada data setoran untuk periode {selectedPeriod.replace('-', ' ')}.

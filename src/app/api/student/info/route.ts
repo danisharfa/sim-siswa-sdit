@@ -84,7 +84,10 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching student info:', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    console.error('Gagal mengambil Informasi Siswa:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Informasi Siswa' },
+      { status: 500 }
+    );
   }
 }

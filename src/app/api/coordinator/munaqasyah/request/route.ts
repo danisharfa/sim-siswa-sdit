@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const munaqasyah = await prisma.munaqasyahRequest.findMany({
+    const data = await prisma.munaqasyahRequest.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         scheduleRequests: true,
@@ -43,17 +43,19 @@ export async function GET() {
             name: true,
           },
         },
-        // scheduleRequests: {
-        //   select: {
-        //     id: true,
-        //   },
-        // },
       },
     });
 
-    return NextResponse.json({ success: true, data: munaqasyah });
+    return NextResponse.json({
+      success: true,
+      message: 'Permintaan Munaqasyah berhasil diambil',
+      data,
+    });
   } catch (error) {
-    console.error('[MUNAQASYAH_REQUEST_GET]', error);
-    return NextResponse.json({ success: false, message: 'Gagal mengambil data' }, { status: 500 });
+    console.error('Gagal mengambil Permintaan Munaqasyah:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Permintaan Munaqasyah' },
+      { status: 500 }
+    );
   }
 }

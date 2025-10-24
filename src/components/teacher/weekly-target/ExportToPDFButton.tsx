@@ -1,6 +1,6 @@
 'use client';
 
-import { WeeklyTarget } from '@/components/teacher/weekly-target/TargetTable';
+import type { WeeklyTarget } from '@/components/teacher/weekly-target/TargetTable';
 import { Table } from '@tanstack/react-table';
 import { toast } from 'sonner';
 import { SubmissionType } from '@prisma/client';

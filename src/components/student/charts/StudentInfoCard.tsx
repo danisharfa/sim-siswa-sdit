@@ -42,11 +42,7 @@ export function StudentInfoCard() {
     data: response,
     error,
     isLoading,
-  } = useSWR<ApiResponse>('/api/student/info', fetcher, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    refreshInterval: 0,
-  });
+  } = useSWR<ApiResponse>('/api/student/info', fetcher);
 
   if (error) {
     return (
@@ -125,7 +121,7 @@ export function StudentInfoCard() {
           {/* Current Period */}
           <div className="flex items-center gap-2 mb-2">
             <School className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Periode Saat Ini</span>
+            <span className="font-medium">Tahun Akademik</span>
           </div>
           <div className="pl-6">
             <div className="font-medium">{currentPeriod.label}</div>

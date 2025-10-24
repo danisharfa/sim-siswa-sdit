@@ -42,9 +42,16 @@ export async function GET() {
       endTime: s.endTime,
     }));
 
-    return NextResponse.json({ success: true, data: formatted });
+    return NextResponse.json({
+      success: true,
+      message: 'Munaqasyah yang belum dinilai berhasil diambil',
+      data: formatted,
+    });
   } catch (error) {
-    console.error('[GET_AVAILABLE_MUNAQASYAH_SCHEDULES]', error);
-    return NextResponse.json({ success: false, message: 'Gagal memuat data' }, { status: 500 });
+    console.error('Gagal mengambil Munaqasyah yang belum dinilai:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Munaqasyah yang belum dinilai' },
+      { status: 500 }
+    );
   }
 }

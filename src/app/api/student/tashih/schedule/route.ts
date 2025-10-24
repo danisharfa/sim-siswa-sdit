@@ -1,28 +1,33 @@
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { Role } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export async function fetchTashihSchedule() {
+export async function GET() {
   try {
     const session = await auth();
-    if (!session || session.user.role !== Role.teacher) {
-      throw new Error('Unauthorized');
+    if (!session || session.user.role !== Role.student) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const teacher = await prisma.teacherProfile.findUnique({
+    const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
-    if (!teacher) {
-      throw new Error('Profil guru tidak ditemukan');
+
+    if (!student) {
+      return NextResponse.json(
+        { success: false, error: 'Profil siswa tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    const schedules = await prisma.tashihSchedule.findMany({
+    const data = await prisma.tashihSchedule.findMany({
       orderBy: { date: 'desc' },
       where: {
         schedules: {
           some: {
             tashihRequest: {
-              teacherId: teacher.userId,
+              studentId: student.userId,
             },
           },
         },
@@ -31,7 +36,7 @@ export async function fetchTashihSchedule() {
         schedules: {
           where: {
             tashihRequest: {
-              teacherId: teacher.userId,
+              studentId: student.userId,
             },
           },
           include: {
@@ -39,14 +44,19 @@ export async function fetchTashihSchedule() {
               select: {
                 id: true,
                 tashihType: true,
-                startPage: true,
-                endPage: true,
                 surah: { select: { name: true } },
                 juz: { select: { name: true } },
                 wafa: { select: { name: true } },
+                startPage: true,
+                endPage: true,
                 student: {
                   select: {
                     nis: true,
+                    user: { select: { fullName: true } },
+                  },
+                },
+                teacher: {
+                  select: {
                     user: { select: { fullName: true } },
                   },
                 },
@@ -69,12 +79,16 @@ export async function fetchTashihSchedule() {
       },
     });
 
-    return schedules.map((s) => ({
-      ...s,
-      date: s.date.toISOString(),
-    }));
+    return NextResponse.json({
+      success: true,
+      message: 'Jadwal Tashih berhasil diambil',
+      data,
+    });
   } catch (error) {
-    console.error('[FETCH_TASHIH_SCHEDULE]', error);
-    throw new Error('Gagal mengambil data jadwal tashih');
+    console.error('Gagal mengambil Jadwal Tashih:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Jadwal Tashih' },
+      { status: 500 }
+    );
   }
 }

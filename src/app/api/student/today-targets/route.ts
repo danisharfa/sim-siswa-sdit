@@ -88,16 +88,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
+      message: 'Target Hari Ini berhasil diambil',
       data: targets,
     });
   } catch (error) {
-    console.error('API Error:', error);
-
+    console.error('Gagal mengambil Target Hari Ini:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Terjadi kesalahan',
-      },
+      { success: false, message: 'Gagal mengambil Target Hari Ini' },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MunaqasyahScheduleTable } from './MunaqasyahScheduleTable';
 import { AddMunaqasyahScheduleForm } from './AddMunaqasyahScheduleForm';
@@ -13,6 +14,10 @@ export function MunaqasyahScheduleManagement() {
     fetcher
   );
 
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
+
   if (isLoading) {
     return (
       <div className="p-4">
@@ -22,12 +27,10 @@ export function MunaqasyahScheduleManagement() {
     );
   }
 
-  if (error) return <p>Gagal memuat data jadwal munaqasyah</p>;
-
   return (
     <div className="space-y-4">
       <AddMunaqasyahScheduleForm onScheduleAdded={mutate} />
-      <MunaqasyahScheduleTable data={data.data} title="Jadwal Munaqasyah Siswa" />
+      <MunaqasyahScheduleTable data={data.data} title="Daftar Jadwal Munaqasyah Semua Siswa" />
     </div>
   );
 }

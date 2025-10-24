@@ -1,22 +1,27 @@
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { Role } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export async function fetchMunaqasyahSchedule() {
+export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
-      throw new Error('Unauthorized');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
+
     if (!student) {
-      throw new Error('Profil siswa tidak ditemukan');
+      return NextResponse.json(
+        { success: false, error: 'Profil siswa tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    const schedules = await prisma.munaqasyahSchedule.findMany({
+    const data = await prisma.munaqasyahSchedule.findMany({
       orderBy: { date: 'desc' },
       where: {
         scheduleRequests: {
@@ -76,16 +81,16 @@ export async function fetchMunaqasyahSchedule() {
       },
     });
 
-    return schedules.map((schedule) => ({
-      ...schedule,
-      date: schedule.date.toISOString(),
-      scheduleRequests: schedule.scheduleRequests.map((sr) => ({
-        id: sr.requestId, // Menggunakan requestId sebagai id
-        request: sr.request,
-      })),
-    }));
+    return NextResponse.json({
+      success: true,
+      message: 'Jadwal Munaqasyah berhasil diambil',
+      data,
+    });
   } catch (error) {
-    console.error('[FETCH_MUNAQASYAH_SCHEDULE]', error);
-    throw new Error('Gagal mengambil data jadwal munaqasyah');
+    console.error('Gagal mengambil Jadwal Munaqasyah:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Jadwal Munaqasyah' },
+      { status: 500 }
+    );
   }
 }

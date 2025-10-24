@@ -6,7 +6,6 @@ import { Role } from '@prisma/client';
 export async function GET() {
   try {
     const session = await auth();
-
     if (!session || session.user.role !== Role.teacher) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
@@ -14,7 +13,6 @@ export async function GET() {
     const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: session.user.id },
     });
-
     if (!teacher) {
       return NextResponse.json(
         { success: false, message: 'Guru tidak ditemukan' },
@@ -22,7 +20,7 @@ export async function GET() {
       );
     }
 
-    const schedules = await prisma.tashihSchedule.findMany({
+    const data = await prisma.tashihSchedule.findMany({
       orderBy: { date: 'desc' },
       where: {
         schedules: {
@@ -44,24 +42,31 @@ export async function GET() {
             tashihRequest: {
               select: {
                 id: true,
-                status: true,
                 tashihType: true,
+                startPage: true,
+                endPage: true,
                 surah: { select: { name: true } },
                 juz: { select: { name: true } },
                 wafa: { select: { name: true } },
-                startPage: true,
-                endPage: true,
                 student: {
                   select: {
                     nis: true,
                     user: { select: { fullName: true } },
-                    group: {
+                  },
+                },
+                teacher: {
+                  select: {
+                    user: { select: { fullName: true } },
+                  },
+                },
+                group: {
+                  select: {
+                    name: true,
+                    classroom: {
                       select: {
-                        id: true,
                         name: true,
-                        classroom: {
-                          select: { name: true, academicYear: true, semester: true },
-                        },
+                        academicYear: true,
+                        semester: true,
                       },
                     },
                   },
@@ -75,13 +80,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil mengambil jadwal ujian bimbingan',
-      data: schedules,
+      message: 'Berhasil mengambil jadwal Tashih Siswa Bimbingan',
+      data,
     });
   } catch (error) {
-    console.error('[TEACHER_EXAM_RESULT_GET]', error);
+    console.error('Gagal mengambil jadwal Tashih Siswa Bimbingan:', error);
     return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan saat mengambil data hasil ujian' },
+      { success: false, message: 'Gagal mengambil jadwal Tashih Siswa Bimbingan' },
       { status: 500 }
     );
   }

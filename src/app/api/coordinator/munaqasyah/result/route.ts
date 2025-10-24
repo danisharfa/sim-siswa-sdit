@@ -39,7 +39,18 @@ export async function GET() {
           },
         },
         schedule: {
-          select: { date: true, sessionName: true, startTime: true, endTime: true, location: true },
+          select: {
+            date: true,
+            sessionName: true,
+            startTime: true,
+            endTime: true,
+            location: true,
+            examiner: {
+              select: {
+                user: { select: { fullName: true } },
+              },
+            },
+          },
         },
         // ⬇️ include initialScore untuk persentase
         tasmiScores: { select: { initialScore: true, totalScore: true, note: true } },

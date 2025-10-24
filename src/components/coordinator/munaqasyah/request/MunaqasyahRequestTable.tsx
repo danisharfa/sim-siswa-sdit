@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
+import useSWR from 'swr';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -28,8 +29,10 @@ import {
   MunaqasyahStage,
   MunaqasyahBatch,
 } from '@prisma/client';
+import { DataTableColumnHeader } from '@/components/ui/table-column-header';
+import { ExportToPDFButton } from './ExportToPDFButton';
 
-interface MunaqasyahRequest {
+export type MunaqasyahRequest = {
   id: string;
   batch: MunaqasyahBatch;
   stage: MunaqasyahStage;
@@ -51,7 +54,19 @@ interface MunaqasyahRequest {
     };
   };
   juz: { name: string };
-}
+};
+
+const batchLabels: Record<MunaqasyahBatch, string> = {
+  [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
+  [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
+  [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
+  [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
+};
+
+const stageLabels: Record<MunaqasyahStage, string> = {
+  [MunaqasyahStage.TASMI]: 'Tasmi',
+  [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
+};
 
 interface MunaqasyahRequestTableProps {
   data: MunaqasyahRequest[];
@@ -73,28 +88,178 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
     setDialogType,
   } = useDataTableState<MunaqasyahRequest, 'accept' | 'reject'>();
 
-  const [selectedYearSemester, setSelectedYearSemester] = useState<string | 'ALL'>('ALL');
-  const [selectedGroup, setSelectedGroup] = useState<string | 'ALL'>('ALL');
-  const [selectedStatus, setSelectedStatus] = useState<MunaqasyahRequestStatus | 'ALL'>('ALL');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState('all');
+  const [selectedBatch, setSelectedBatch] = useState('all');
+  const [selectedStage, setSelectedStage] = useState('all');
+  const [selectedJuz, setSelectedJuz] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
 
-  const yearSemesterOptions = useMemo(() => {
+  const { data: academicSetting } = useSWR('/api/academicSetting', (url: string) =>
+    fetch(url).then((res) => res.json())
+  );
+
+  const defaultPeriod = academicSetting
+    ? `${academicSetting.currentYear}-${academicSetting.currentSemester}`
+    : '';
+
+  const academicPeriods = useMemo(() => {
     const set = new Set<string>();
-    for (const d of data) {
-      set.add(`${d.group.classroom.academicYear}__${d.group.classroom.semester}`);
+    for (const request of data) {
+      const r = request;
+      set.add(`${r.group.classroom.academicYear}-${r.group.classroom.semester}`);
     }
     return Array.from(set);
   }, [data]);
 
-  const groupOptions = useMemo(() => {
-    if (selectedYearSemester === 'ALL') return [];
-    return data
-      .filter(
-        (d) =>
-          `${d.group.classroom.academicYear}__${d.group.classroom.semester}` ===
-          selectedYearSemester
-      )
-      .map((d) => `${d.group.name} - ${d.group.classroom.name}`);
-  }, [data, selectedYearSemester]);
+  const filteredByPeriod = useMemo(() => {
+    if (!selectedPeriod) return data;
+    const [year, semester] = selectedPeriod.split('-');
+    return data.filter(
+      (request) =>
+        request.group.classroom.academicYear === year &&
+        request.group.classroom.semester === semester
+    );
+  }, [data, selectedPeriod]);
+
+  const availableGroups = useMemo(() => {
+    const groupMap = new Map<string, { id: string; name: string; classroom: { name: string } }>();
+    filteredByPeriod.forEach((request) => {
+      const r = request;
+      const groupKey = `${r.group.name}-${r.group.classroom.name}`;
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, {
+          id: groupKey,
+          name: r.group.name,
+          classroom: { name: r.group.classroom.name },
+        });
+      }
+    });
+    return Array.from(groupMap.values());
+  }, [filteredByPeriod]);
+
+  const availableStudents = useMemo(() => {
+    if (selectedGroupId === 'all') return [];
+    const students = new Set<string>();
+    filteredByPeriod.forEach((request) => {
+      const r = request;
+      const groupKey = `${r.group.name}-${r.group.classroom.name}`;
+      if (groupKey === selectedGroupId) {
+        students.add(r.student.user.fullName);
+      }
+    });
+    return Array.from(students).sort();
+  }, [filteredByPeriod, selectedGroupId]);
+
+  const availableBatches = useMemo(() => {
+    const batches = new Set<MunaqasyahBatch>();
+    filteredByPeriod.forEach((request) => {
+      batches.add(request.batch);
+    });
+    return Array.from(batches);
+  }, [filteredByPeriod]);
+
+  const availableStages = useMemo(() => {
+    const stages = new Set<MunaqasyahStage>();
+    filteredByPeriod.forEach((request) => {
+      stages.add(request.stage);
+    });
+    return Array.from(stages);
+  }, [filteredByPeriod]);
+
+  const availableJuz = useMemo(() => {
+    const juzSet = new Set<string>();
+    filteredByPeriod.forEach((request) => {
+      juzSet.add(request.juz.name);
+    });
+    return Array.from(juzSet).sort();
+  }, [filteredByPeriod]);
+
+  const availableStatuses = useMemo(() => {
+    const statuses = new Set<MunaqasyahRequestStatus>();
+    filteredByPeriod.forEach((request) => {
+      statuses.add(request.status);
+    });
+    return Array.from(statuses);
+  }, [filteredByPeriod]);
+
+  useEffect(() => {
+    if (defaultPeriod && !selectedPeriod && academicPeriods.length > 0) {
+      const targetPeriod = academicPeriods.includes(defaultPeriod)
+        ? defaultPeriod
+        : academicPeriods[0];
+      setSelectedPeriod(targetPeriod);
+    }
+  }, [defaultPeriod, academicPeriods, selectedPeriod]);
+
+  const academicYearForExport = useMemo(() => {
+    if (!selectedPeriod) return '';
+    const [year, semester] = selectedPeriod.split('-');
+    return `${year} ${semester}`;
+  }, [selectedPeriod]);
+
+  // ===== EVENT HANDLERS =====
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    setSelectedGroupId('all');
+    setSelectedStudent('all');
+    setSelectedBatch('all');
+    setSelectedStage('all');
+    setSelectedJuz('all');
+    setSelectedStatus('all');
+    // Clear table filters
+    table.getColumn('Kelompok')?.setFilterValue(undefined);
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+    table.getColumn('Batch')?.setFilterValue(undefined);
+    table.getColumn('Tahapan')?.setFilterValue(undefined);
+    table.getColumn('Juz')?.setFilterValue(undefined);
+    table.getColumn('status')?.setFilterValue(undefined);
+  };
+
+  const handleGroupChange = (value: string) => {
+    setSelectedGroupId(value);
+    setSelectedStudent('all');
+
+    if (value === 'all') {
+      table.getColumn('Kelompok')?.setFilterValue(undefined);
+    } else {
+      const group = availableGroups.find((g) => g.id === value);
+      if (group) {
+        table.getColumn('Kelompok')?.setFilterValue(`${group.name} - ${group.classroom.name}`);
+      }
+    }
+    table.getColumn('Siswa')?.setFilterValue(undefined);
+  };
+
+  const handleStudentChange = (value: string) => {
+    setSelectedStudent(value);
+    table.getColumn('Siswa')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleBatchChange = (value: string) => {
+    setSelectedBatch(value);
+    table
+      .getColumn('Batch')
+      ?.setFilterValue(value === 'all' ? undefined : batchLabels[value as MunaqasyahBatch]);
+  };
+
+  const handleStageChange = (value: string) => {
+    setSelectedStage(value);
+    table
+      .getColumn('Tahap')
+      ?.setFilterValue(value === 'all' ? undefined : stageLabels[value as MunaqasyahStage]);
+  };
+
+  const handleJuzChange = (value: string) => {
+    setSelectedJuz(value);
+    table.getColumn('Juz')?.setFilterValue(value === 'all' ? undefined : value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    table.getColumn('status')?.setFilterValue(value === 'all' ? undefined : value);
+  };
 
   const handleOpenAcceptDialog = useCallback(
     (req: MunaqasyahRequest) => {
@@ -117,7 +282,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
       {
         accessorKey: 'createdAt',
         id: 'Tanggal',
-        header: 'Tanggal',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tanggal" />,
         cell: ({ row }) =>
           new Date(row.original.createdAt).toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -140,11 +305,12 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) => `${row.group.name} - ${row.group.classroom.name}`,
-      },
-      {
-        id: 'Tahun Ajaran',
-        header: 'Tahun Ajaran',
-        accessorFn: (row) => `${row.group.classroom.academicYear} ${row.group.classroom.semester}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.group.name}</div>
+            <div className="text-muted-foreground">{row.original.group.classroom.name}</div>
+          </div>
+        ),
       },
       {
         accessorKey: 'teacher.user.fullName',
@@ -157,31 +323,34 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         ),
       },
       {
-        accessorKey: 'juz.name',
-        id: 'Juz',
-        header: 'Juz',
-        cell: ({ row }) =>
-          row.original.juz?.name ? (
-            <Badge variant="outline">{row.original.juz.name}</Badge>
-          ) : (
-            <span>-</span>
-          ),
-      },
-      {
-        accessorKey: 'batch',
         id: 'Batch',
         header: 'Batch',
-        cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
-            {row.original.batch.replace('_', ' ')}
-          </Badge>
-        ),
+        accessorFn: (row) => batchLabels[row.batch],
+        cell: ({ row }) => <Badge variant="secondary">{batchLabels[row.original.batch]}</Badge>,
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
       },
       {
-        accessorKey: 'stage',
         id: 'Tahap',
         header: 'Tahap',
-        cell: ({ row }) => row.original.stage.replace('_', ' '),
+        accessorFn: (row) => stageLabels[row.stage],
+        cell: ({ row }) => <Badge variant="default">{stageLabels[row.original.stage]}</Badge>,
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value.includes(filterValue);
+        },
+      },
+      {
+        id: 'Juz',
+        header: 'Juz',
+        accessorFn: (row) => row.juz.name,
+        cell: ({ row }) => <Badge variant="outline">{row.original.juz.name}</Badge>,
+        filterFn: (row, columnId, filterValue) => {
+          const value = row.getValue(columnId) as string;
+          return value === filterValue;
+        },
       },
       {
         accessorKey: 'status',
@@ -228,7 +397,7 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
   );
 
   const table = useReactTable({
-    data,
+    data: filteredByPeriod,
     columns,
     state: {
       sorting,
@@ -248,28 +417,17 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
     <>
       <div className="flex flex-wrap gap-4 mb-4">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
-          <Select
-            value={selectedYearSemester}
-            onValueChange={(value) => {
-              setSelectedYearSemester(value);
-              table
-                .getColumn('Tahun Ajaran')
-                ?.setFilterValue(value === 'ALL' ? undefined : value.replace('__', ' '));
-              setSelectedGroup('ALL');
-              table.getColumn('Kelompok')?.setFilterValue(undefined);
-            }}
-          >
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Pilih Tahun Ajaran" />
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Tahun Akademik" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua</SelectItem>
-              {yearSemesterOptions.map((val) => {
-                const [year, sem] = val.split('__');
+              {academicPeriods.map((period) => {
+                const [year, semester] = period.split('-');
                 return (
-                  <SelectItem key={val} value={val}>
-                    {year} {sem}
+                  <SelectItem key={period} value={period}>
+                    {year} {semester}
                   </SelectItem>
                 );
               })}
@@ -278,23 +436,16 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Kelompok</Label>
-          <Select
-            value={selectedGroup}
-            disabled={selectedYearSemester === 'ALL'}
-            onValueChange={(value) => {
-              setSelectedGroup(value);
-              table.getColumn('Kelompok')?.setFilterValue(value === 'ALL' ? undefined : value);
-            }}
-          >
-            <SelectTrigger className="w-[250px]">
+          <Label className="mb-2 block sr-only">Filter Kelompok</Label>
+          <Select value={selectedGroupId} onValueChange={handleGroupChange}>
+            <SelectTrigger className="min-w-[200px]">
               <SelectValue placeholder="Pilih Kelompok" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua</SelectItem>
-              {Array.from(new Set(groupOptions)).map((val) => (
-                <SelectItem key={val} value={val}>
-                  {val}
+              <SelectItem value="all">Semua Kelompok</SelectItem>
+              {availableGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name} - {group.classroom.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -302,28 +453,106 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
         </div>
 
         <div>
-          <Label className="mb-2 block">Filter Status</Label>
+          <Label className="mb-2 block sr-only">Filter Siswa</Label>
           <Select
-            value={selectedStatus}
-            onValueChange={(value) => {
-              setSelectedStatus(value as typeof selectedStatus);
-              table.getColumn('status')?.setFilterValue(value === 'ALL' ? undefined : value);
-            }}
+            disabled={selectedGroupId === 'all'}
+            value={selectedStudent}
+            onValueChange={handleStudentChange}
           >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Pilih Status" />
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Siswa" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="MENUNGGU">Menunggu</SelectItem>
-              <SelectItem value="DITERIMA">Diterima</SelectItem>
-              <SelectItem value="DITOLAK">Ditolak</SelectItem>
+              <SelectItem value="all">Semua Siswa</SelectItem>
+              {availableStudents.map((student) => (
+                <SelectItem key={student} value={student}>
+                  {student}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Batch</Label>
+          <Select value={selectedBatch} onValueChange={handleBatchChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Batch" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Batch</SelectItem>
+              {availableBatches.map((batch) => (
+                <SelectItem key={batch} value={batch}>
+                  {batchLabels[batch]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Tahap</Label>
+          <Select value={selectedStage} onValueChange={handleStageChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Tahap" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Tahap</SelectItem>
+              {availableStages.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stageLabels[stage]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Juz</Label>
+          <Select value={selectedJuz} onValueChange={handleJuzChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Juz" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Juz</SelectItem>
+              {availableJuz.map((juz) => (
+                <SelectItem key={juz} value={juz}>
+                  {juz}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-2 block sr-only">Filter Status</Label>
+          <Select value={selectedStatus} onValueChange={handleStatusChange}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Pilih Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              {availableStatuses.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ExportToPDFButton table={table} academicYear={academicYearForExport} />
       </div>
 
-      <DataTable title={title} table={table} filterColumn="Siswa" />
+      <DataTable title={title} table={table} showColumnFilter={false} />
+
+      {selectedPeriod && filteredByPeriod.length === 0 && (
+        <div className="rounded-lg border bg-card p-8 text-center mt-4">
+          <p className="text-muted-foreground">
+            Tidak ada permintaan munaqasyah untuk Tahun Akademik {selectedPeriod.replace('-', ' ')}.
+          </p>
+        </div>
+      )}
 
       {dialogType === 'accept' && selectedRequest && (
         <RequestStatusAlertDialog

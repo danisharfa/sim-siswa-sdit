@@ -181,6 +181,7 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
         </DialogHeader>
 
         <div className="space-y-4">
+          <Label className="mb-2 block">Rentang Target</Label>
           <Calendar23
             value={dateRange}
             onChange={(range) => {
@@ -188,7 +189,6 @@ export function TargetEditDialog({ target, open, onOpenChange, onSave }: TargetE
                 setDateRange(range);
               }
             }}
-            label="Rentang Tanggal Target"
           />
 
           <div>

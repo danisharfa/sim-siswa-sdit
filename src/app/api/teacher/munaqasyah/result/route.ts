@@ -180,11 +180,15 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ success: true, data: formatted });
+    return NextResponse.json({
+      success: true,
+      message: 'Hasil Munaqasyah berhasil diambil',
+      data: formatted,
+    });
   } catch (error) {
-    console.error('[GET_MUNAQASYAH_RESULT]', error);
+    console.error('Gagal mengambil Hasil Munaqasyah:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil data hasil munaqasyah' },
+      { success: false, message: 'Gagal mengambil Hasil Munaqasyah' },
       { status: 500 }
     );
   }

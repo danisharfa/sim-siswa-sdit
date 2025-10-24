@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { ErrorState } from '@/components/layout/error/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MunaqasyahRequestTable } from './MunaqasyahRequestTable';
 
@@ -8,6 +9,10 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function MunaqasyahRequestManagement() {
   const { data, error, isLoading, mutate } = useSWR('/api/coordinator/munaqasyah/request', fetcher);
+
+  if (error) {
+    return <ErrorState onRetry={() => mutate()} />;
+  }
 
   if (isLoading) {
     return (
@@ -18,11 +23,9 @@ export function MunaqasyahRequestManagement() {
     );
   }
 
-  if (error) return <p>Gagal memuat data permintaan munaqasyah</p>;
-
   return (
     <div className="space-y-4">
-      <MunaqasyahRequestTable data={data.data} title="Daftar Permintaan Ujian" onRefresh={mutate} />
+      <MunaqasyahRequestTable data={data.data} title="Daftar Permintaan Munaqasyah Siswa" onRefresh={mutate} />
     </div>
   );
 }

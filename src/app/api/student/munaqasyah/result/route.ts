@@ -1,22 +1,27 @@
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { Role } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export async function fetchMunaqasyahResult() {
+export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== Role.student) {
-      throw new Error('Unauthorized');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const student = await prisma.studentProfile.findUnique({
       where: { userId: session.user.id },
     });
+
     if (!student) {
-      throw new Error('Profil siswa tidak ditemukan');
+      return NextResponse.json(
+        { success: false, error: 'Profil siswa tidak ditemukan' },
+        { status: 404 }
+      );
     }
 
-    const results = await prisma.munaqasyahResult.findMany({
+    const data = await prisma.munaqasyahResult.findMany({
       orderBy: { createdAt: 'desc' },
       where: {
         request: {
@@ -114,36 +119,36 @@ export async function fetchMunaqasyahResult() {
       },
     });
 
-    return results.map((result) => {
+    const formattedData = data.map((d) => {
       // Use the totalScore directly from the result
-      const score = result.totalScore;
+      const score = d.totalScore;
 
       // Get final result (if any)
-      const finalResult = result.tasmiForFinal || result.munaqasyahForFinal;
+      const finalResult = d.tasmiForFinal || d.munaqasyahForFinal;
 
       // Aggregate scores for display
       const tasmiScoreDetails =
-        result.tasmiScores.length > 0
+        d.tasmiScores.length > 0
           ? {
               totalScore:
-                result.tasmiScores.reduce((sum, detail) => sum + detail.totalScore, 0) /
-                result.tasmiScores.length,
-              details: result.tasmiScores,
+                d.tasmiScores.reduce((sum, detail) => sum + detail.totalScore, 0) /
+                d.tasmiScores.length,
+              details: d.tasmiScores,
             }
           : null;
 
       const munaqasyahScoreDetails =
-        result.munaqasyahScores.length > 0
+        d.munaqasyahScores.length > 0
           ? {
               totalScore:
-                result.munaqasyahScores.reduce((sum, detail) => sum + detail.totalScore, 0) /
-                result.munaqasyahScores.length,
-              details: result.munaqasyahScores,
+                d.munaqasyahScores.reduce((sum, detail) => sum + detail.totalScore, 0) /
+                d.munaqasyahScores.length,
+              details: d.munaqasyahScores,
             }
           : null;
 
       return {
-        ...result,
+        ...d,
         score,
         scoreDetails: {
           tasmi: tasmiScoreDetails,
@@ -156,16 +161,25 @@ export async function fetchMunaqasyahResult() {
               passed: finalResult.passed,
             }
           : null,
-        createdAt: result.createdAt.toISOString(),
-        updatedAt: result.updatedAt.toISOString(),
+        createdAt: d.createdAt.toISOString(),
+        updatedAt: d.updatedAt.toISOString(),
         schedule: {
-          ...result.schedule,
-          date: result.schedule.date.toISOString(),
+          ...d.schedule,
+          date: d.schedule.date.toISOString(),
         },
       };
     });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Hasil Munaqasyah berhasil diambil',
+      data: formattedData,
+    });
   } catch (error) {
-    console.error('[FETCH_MUNAQASYAH_RESULT]', error);
-    throw new Error('Gagal mengambil data hasil munaqasyah');
+    console.error('Gagal mengambil Hasil Munaqasyah:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal mengambil Hasil Munaqasyah' },
+      { status: 500 }
+    );
   }
 }
