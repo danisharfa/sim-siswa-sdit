@@ -195,7 +195,7 @@ export function TashihRequestForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Form Permintaan Tashih</CardTitle>
+        <CardTitle>Form Pendaftaran Tashih</CardTitle>
         <CardDescription>
           {settingData?.success && (
             <span className="text-sm text-muted-foreground">
