@@ -38,6 +38,11 @@ interface Juz {
   name: string;
 }
 
+interface SurahJuz {
+  surah: Surah;
+  juz: Juz;
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function HomeActivityForm() {
@@ -52,7 +57,7 @@ export function HomeActivityForm() {
 
   // ===== SWR DATA FETCHING =====
   const { data: juzResponse } = useSWR('/api/juz', fetcher);
-  const { data: surahResponse } = useSWR('/api/surah', fetcher);
+  const { data: surahJuzResponse } = useSWR('/api/surahJuz', fetcher);
   const { data: academic } = useSWR('/api/academicSetting', fetcher);
 
   // ===== COMPUTED VALUES =====
@@ -60,9 +65,21 @@ export function HomeActivityForm() {
     return juzResponse?.success ? juzResponse.data : [];
   }, [juzResponse]);
 
-  const surahList = useMemo(() => {
-    return surahResponse?.success ? surahResponse.data : [];
-  }, [surahResponse]);
+  const surahJuzList = useMemo(() => {
+    return surahJuzResponse?.success ? surahJuzResponse.data : [];
+  }, [surahJuzResponse]);
+
+  const filteredSurahJuz = useMemo(() => {
+    return surahJuzList
+      .filter((s: SurahJuz) => s.juz.id.toString() === juzId)
+      .sort((a: SurahJuz, b: SurahJuz) => a.surah.id - b.surah.id);
+  }, [surahJuzList, juzId]);
+
+  // ===== EVENT HANDLERS =====
+  const handleJuzChange = (newJuzId: string) => {
+    setJuzId(newJuzId);
+    setSurahId(''); // Reset surah when juz changes
+  };
 
   const resetForm = () => {
     setDate(new Date());
@@ -98,9 +115,13 @@ export function HomeActivityForm() {
     }
 
     // Find selected surah to validate verse count
-    const selectedSurah = surahList.find((s: Surah) => s.id.toString() === surahId);
-    if (selectedSurah && endVerseNum > selectedSurah.verseCount) {
-      return toast.error(`Ayat selesai melebihi jumlah ayat surah (${selectedSurah.verseCount})`);
+    const selectedSurahJuz = filteredSurahJuz.find(
+      (sj: SurahJuz) => sj.surah.id.toString() === surahId
+    );
+    if (selectedSurahJuz && endVerseNum > selectedSurahJuz.surah.verseCount) {
+      return toast.error(
+        `Ayat selesai melebihi jumlah ayat surah (${selectedSurahJuz.surah.verseCount})`
+      );
     }
 
     const payload = {
@@ -158,9 +179,7 @@ export function HomeActivityForm() {
           </Field>
 
           <Field>
-            <FieldLabel>
-              Jenis Aktivitas
-            </FieldLabel>
+            <FieldLabel>Jenis Aktivitas</FieldLabel>
             <Select
               value={activityType}
               onValueChange={(newType) => {
@@ -185,10 +204,8 @@ export function HomeActivityForm() {
 
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
-              <FieldLabel>
-                Juz
-              </FieldLabel>
-              <Select value={juzId} onValueChange={setJuzId}>
+              <FieldLabel>Juz</FieldLabel>
+              <Select value={juzId} onValueChange={handleJuzChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Juz" />
                 </SelectTrigger>
@@ -203,17 +220,15 @@ export function HomeActivityForm() {
             </Field>
 
             <Field className="flex-1 min-w-0">
-              <FieldLabel>
-                Surah
-              </FieldLabel>
-              <Select value={surahId} onValueChange={setSurahId}>
+              <FieldLabel>Surah</FieldLabel>
+              <Select value={surahId} onValueChange={setSurahId} disabled={!juzId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Surah" />
                 </SelectTrigger>
                 <SelectContent>
-                  {surahList.map((s: Surah) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
+                  {filteredSurahJuz.map((sj: SurahJuz) => (
+                    <SelectItem key={sj.surah.id} value={sj.surah.id.toString()}>
+                      {sj.surah.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -223,9 +238,7 @@ export function HomeActivityForm() {
 
           <FieldGroup className="flex flex-col md:flex-row gap-4">
             <Field className="flex-1 min-w-0">
-              <FieldLabel>
-                Ayat Mulai
-              </FieldLabel>
+              <FieldLabel>Ayat Mulai</FieldLabel>
               <Input
                 type="number"
                 value={startVerse}
@@ -236,9 +249,7 @@ export function HomeActivityForm() {
             </Field>
 
             <Field className="flex-1 min-w-0">
-              <FieldLabel>
-                Ayat Selesai
-              </FieldLabel>
+              <FieldLabel>Ayat Selesai</FieldLabel>
               <Input
                 type="number"
                 value={endVerse}
