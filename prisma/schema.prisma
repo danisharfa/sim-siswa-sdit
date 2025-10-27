@@ -446,7 +446,6 @@ model TahfidzScore {
   id          String           @id @default(uuid())
   studentId   String
   groupId     String
-  // period      AssessmentPeriod @default(FINAL)
   surahId     Int
   score       Int
   grade       GradeLetter
@@ -468,7 +467,6 @@ model TahsinScore {
   id          String           @id @default(uuid())
   studentId   String
   groupId     String
-  // period      AssessmentPeriod @default(FINAL)
   tahsinType  TahsinType
   topic       String
   score       Int
@@ -481,7 +479,6 @@ model TahsinScore {
   student StudentProfile @relation(fields: [studentId], references: [userId], onDelete: Cascade)
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  // @@unique([studentId, groupId, tahsinType, topic, period])
   @@unique([studentId, groupId, tahsinType, topic])
   @@map("tahsin_scores")
 }
@@ -492,10 +489,6 @@ model Report {
   groupId            String
   academicYear       String
   semester           Semester
-  // midTahfidzScore    Float?
-  // midTahsinScore     Float?
-  // endTahfidzScore    Float?
-  // endTahsinScore     Float?
   tahfidzScore    Float?
   tahsinScore     Float?
   lastTahsinMaterial String?
