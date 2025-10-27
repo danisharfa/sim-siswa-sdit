@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  User2Icon,
   UserCog,
   BookOpenIcon,
   ClipboardList,
@@ -209,7 +208,7 @@ export const menuData = {
     {
       title: 'Siswa',
       url: '/dashboard/student/profile',
-      icon: User2Icon,
+      icon: ImProfile,
     },
     {
       title: 'Rapor',

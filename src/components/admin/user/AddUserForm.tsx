@@ -101,7 +101,7 @@ export function AddUserForm({ onUserAdded }: Props) {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="role-select">Role</FieldLabel>
+                    <FieldLabel htmlFor="role-select">Peran</FieldLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger
                         id="role-select"
