@@ -44,6 +44,9 @@ export type TashihResult = {
       nis: string;
       user: { fullName: string };
     };
+    teacher: {
+        user: { fullName: string };
+      };
     group: {
       name: string;
       classroom: {

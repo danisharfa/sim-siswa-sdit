@@ -27,6 +27,11 @@ export async function GET() {
                 user: { select: { fullName: true } },
               },
             },
+            teacher: {
+              select: {
+                user: { select: { fullName: true } },
+              },
+            },
             group: {
               select: {
                 name: true,
