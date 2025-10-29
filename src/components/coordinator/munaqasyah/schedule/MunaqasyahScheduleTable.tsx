@@ -53,6 +53,7 @@ export type MunaqasyahSchedule = {
   hasResults?: boolean;
   scheduleRequests: {
     request: {
+      id: string;
       batch: MunaqasyahBatch;
       stage: MunaqasyahStage;
       student: {
@@ -317,47 +318,35 @@ export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
         },
       },
       {
+        accessorKey: 'scheduleRequests.student.user.fullName',
         id: 'Siswa',
         header: 'Siswa',
-        accessorFn: (row) => row.scheduleRequests[0]?.request.student.user.fullName,
-        cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.scheduleRequests[0]?.request.student.user.fullName}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.scheduleRequests[0]?.request.student.nis}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        accessorFn: (row) =>
-          `${row.scheduleRequests[0]?.request.group.name} - ${row.scheduleRequests[0]?.request.group.classroom.name}`,
-        cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.scheduleRequests[0]?.request.group.name}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.scheduleRequests[0]?.request.group.classroom.name}
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'scheduleRequests.request.teacher.user.fullName',
-        id: 'Guru Pembimbing',
-        header: 'Guru Pembimbing',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="secondary" className="w-fit">
-                {s.request.teacher.user.fullName}
+              <Badge key={i} variant="outline" className="w-fit ">
+                {s.request.student.user.fullName} ({s.request.student.nis})
               </Badge>
             ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'scheduleRequests.request.group.name',
+        id: 'Kelompok',
+        header: 'Kelompok',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => {
+              const r = s.request;
+              return (
+                <Badge key={i} variant="outline" className="w-fit">
+                  {r.group.name && r.group.classroom.name
+                    ? `${r.group.name} - ${r.group.classroom.name}`
+                    : 'Tidak terdaftar'}
+                </Badge>
+              );
+            })}
           </div>
         ),
       },
@@ -368,7 +357,7 @@ export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+              <Badge key={i} variant="secondary" className="w-fit">
                 {batchLabels[s.request.batch]}
               </Badge>
             ))}
@@ -404,7 +393,7 @@ export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+              <Badge key={i} variant="outline" className="w-fit">
                 {s.request.juz?.name ?? '-'}
               </Badge>
             ))}

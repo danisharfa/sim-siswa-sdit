@@ -143,7 +143,7 @@ export function MunaqasyahScheduleForm({ onScheduleAdded }: Props) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Buat Jadwal Munaqasyah</h2>
+        <h2 className="text-xl font-semibold">Form Penjadwalan Munaqasyah</h2>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

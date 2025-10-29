@@ -110,7 +110,7 @@ export function TashihScheduleForm({ onScheduleAdded }: Props) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Buat Jadwal Tashih</h2>
+        <h2 className="text-xl font-semibold">Form Penjadwalan Tashih</h2>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

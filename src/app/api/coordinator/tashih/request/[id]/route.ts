@@ -40,15 +40,15 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     return NextResponse.json({
       success: true,
-      message: `Permintaan ujian berhasil di${
-        status === TashihRequestStatus.DITERIMA ? 'terima' : 'tolak'
+      message: `Permintaan tashih berhasil ${
+        status === TashihRequestStatus.DITERIMA ? 'diterima' : 'ditolak'
       }`,
       data: updated,
     });
   } catch (error) {
-    console.error('[EXAM_REQUEST_UPDATE]', error);
+    console.error('Gagal memperbarui status permintaan tashih:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal memperbarui status permintaan' },
+      { success: false, message: 'Gagal memperbarui status permintaan tashih' },
       { status: 500 }
     );
   }

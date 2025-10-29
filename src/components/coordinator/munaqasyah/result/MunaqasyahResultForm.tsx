@@ -528,7 +528,7 @@ export function MunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
                       </div>
 
                       {munaqasyahRows.map((row, idx) => {
-                        const total = calcMunaRowTotal(row);
+                        // const total = calcMunaRowTotal(row);
                         const percent = calcMunaRowPercent(row);
                         return (
                           <div
@@ -597,8 +597,10 @@ export function MunaqasyahResultForm({ onSaved }: { onSaved: () => void }) {
                               />
                             </div>
                             <div>
-                              <Label>Total (Raw / %)</Label>
-                              <Input value={`${total} / ${percent.toFixed(1)}%`} readOnly />
+                              {/* <Label>Total (Raw / %)</Label>
+                              <Input value={`${total} / ${percent.toFixed(1)}%`} readOnly /> */}
+                              <Label>Total (%)</Label>
+                                <Input value={`${percent.toFixed(1)}%`} readOnly />
                             </div>
                             <div className="md:col-span-7">
                               <Label>Catatan</Label>

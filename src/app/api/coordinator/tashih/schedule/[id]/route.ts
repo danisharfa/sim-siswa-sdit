@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const { id } = await segmentData.params;
 
-    const { date, sessionName, startTime, endTime, location } = await req.json();
+    const { date, sessionName, startTime, endTime, location, studentsToRemove } = await req.json();
     if (!date || !sessionName || !startTime || !endTime || !location) {
       return NextResponse.json(
         { success: false, message: 'Semua field harus diisi' },
@@ -66,21 +66,39 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       );
     }
 
-    const updatedSchedule = await prisma.tashihSchedule.update({
-      where: { id },
-      data: {
-        date: new Date(date),
-        sessionName,
-        startTime,
-        endTime,
-        location,
-      },
+    // Update jadwal dan hapus siswa yang dipilih dalam satu transaksi
+    await prisma.$transaction(async (tx) => {
+      // Update jadwal tashih
+      await tx.tashihSchedule.update({
+        where: { id },
+        data: {
+          date: new Date(date),
+          sessionName,
+          startTime,
+          endTime,
+          location,
+        },
+      });
+
+      // Hapus siswa yang dipilih dari jadwal (berdasarkan requestId)
+      if (studentsToRemove && Array.isArray(studentsToRemove) && studentsToRemove.length > 0) {
+        // Hapus satu per satu menggunakan composite key
+        for (const requestId of studentsToRemove) {
+          await tx.tashihScheduleRequest.delete({
+            where: {
+              scheduleId_requestId: {
+                scheduleId: id,
+                requestId: requestId,
+              },
+            },
+          });
+        }
+      }
     });
 
     return NextResponse.json({
       success: true,
       message: 'Jadwal Tashih berhasil diperbarui',
-      data: updatedSchedule,
     });
   } catch (error) {
     console.error('Gagal memperbarui Jadwal Tashih:', error);

@@ -170,9 +170,9 @@ export function TashihRequestForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (json.success) {
-        toast.success('Berhasil mendaftarkan ujian');
+      const result = await res.json();
+      if (result.success) {
+        toast.success(result.message ?? 'Berhasil mendaftarkan tashih');
         setSelectedGroupId('');
         setSelectedStudentId('');
         setSelectedJuzId(null);
@@ -182,7 +182,7 @@ export function TashihRequestForm() {
         setEndPage('');
         setNotes('');
       } else {
-        toast.error(json.message ?? 'Gagal mendaftar ujian');
+        toast.error(result.message ?? 'Gagal mendaftar tashih');
       }
     } catch (error) {
       console.error('[TASHIH_REQUEST_SUBMIT]', error);
@@ -368,7 +368,7 @@ export function TashihRequestForm() {
           ) : (
             <>
               <Save className="w-4 h-4 mr-2" />
-              Daftarkan Ujian
+              Daftarkan Tashih
             </>
           )}
         </Button>

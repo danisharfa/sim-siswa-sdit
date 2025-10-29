@@ -130,7 +130,7 @@ export function TahsinAlquranChart({ academicYear, semester, groupId }: TahsinAl
   return (
     <ChartCard
       title="Progres Tahsin Al-Qur'an Siswa"
-      description="Progres kumulatif tahsin Al-Qur'an siswa sampai dengan periode yang dipilih"
+      description="Progres kumulatif tahsin Al-Qur'an siswa sampai dengan tahun akademik yang dipilih"
       data={chartData}
       xAxisKey="juz"
       isLoading={isLoading}

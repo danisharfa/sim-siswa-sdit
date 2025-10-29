@@ -312,6 +312,12 @@ export async function POST(req: NextRequest) {
         })),
       });
 
+      // Update status request menjadi SELESAI
+      await prisma.munaqasyahRequest.update({
+        where: { id: requestId },
+        data: { status: MunaqasyahRequestStatus.SELESAI },
+      });
+
       // Opsional: auto-create next request (MUNAQASYAH) bila lulus
       if (passed) {
         const existNext = await prisma.munaqasyahRequest.findFirst({
@@ -383,6 +389,12 @@ export async function POST(req: NextRequest) {
           totalScore: c.totalScore, // tetap raw basis 50
           note: c.note ?? null,
         })),
+      });
+
+      // Update status request menjadi SELESAI
+      await prisma.munaqasyahRequest.update({
+        where: { id: requestId },
+        data: { status: MunaqasyahRequestStatus.SELESAI },
       });
 
       // Buat FINAL jika TASMI sudah ada

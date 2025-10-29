@@ -81,15 +81,15 @@ function generateTahsinDescription(grade: GradeLetter, topic: string): string {
 function generateTahfidzDescription(grade: GradeLetter, surahName: string): string {
   switch (grade) {
     case 'A':
-      return `Sangat baik dalam memahami ${surahName}`;
+      return `Sangat baik dalam menghafal ${surahName}`;
     case 'B':
-      return `Baik dalam memahami ${surahName}`;
+      return `Baik dalam menghafal ${surahName}`;
     case 'C':
-      return `Cukup dalam memahami ${surahName}`;
+      return `Cukup dalam menghafal ${surahName}`;
     case 'D':
-      return `Kurang dalam memahami ${surahName}`;
+      return `Kurang dalam menghafal ${surahName}`;
     default:
-      return `Perlu evaluasi lebih lanjut dalam memahami ${surahName}`;
+      return `Perlu evaluasi lebih lanjut dalam menghafal ${surahName}`;
   }
 }
 

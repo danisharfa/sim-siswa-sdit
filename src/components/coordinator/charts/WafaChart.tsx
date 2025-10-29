@@ -149,7 +149,7 @@ export function WafaChart({ academicYear, semester, groupId }: WafaChartProps) {
   return (
     <ChartCard
       title="Progres Tahsin Wafa Siswa"
-      description="Progres kumulatif tahsin Wafa siswa sampai dengan periode yang dipilih"
+      description="Progres kumulatif tahsin Wafa siswa sampai dengan tahun akademik yang dipilih"
       data={chartData}
       xAxisKey="wafa"
       isLoading={isLoading}

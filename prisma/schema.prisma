@@ -458,7 +458,6 @@ model TahfidzScore {
   group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   surah   Surah          @relation(fields: [surahId], references: [id])
 
-  // @@unique([studentId, groupId, surahId, period])
   @@unique([studentId, groupId, surahId])
   @@map("tahfidz_scores")
 }
@@ -731,11 +730,6 @@ enum TashihRequestStatus {
   DITOLAK
   SELESAI
 }
-
-// enum AssessmentPeriod {
-//   MID_SEMESTER
-//   FINAL
-// }
 
 enum GradeLetter {
   A // 92–100 (Sangat Baik)

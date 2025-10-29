@@ -3,7 +3,7 @@ import { MunaqasyahScheduleManagement } from '@/components/coordinator/munaqasya
 export default function CoordinatorMunaqasyahSchedulePage() {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Manajemen Jadwal Munaqasyah</h1>
+      <h1 className="text-2xl font-bold mb-4">Penjadwalan Munaqasyah</h1>
       <MunaqasyahScheduleManagement />
     </div>
   );

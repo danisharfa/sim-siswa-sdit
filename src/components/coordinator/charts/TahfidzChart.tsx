@@ -144,7 +144,7 @@ export function TahfidzChart({ academicYear, semester, groupId }: TahfidzChartPr
   return (
     <ChartCard
       title="Progres Tahfidz Siswa"
-      description="Progres kumulatif tahfidz siswa sampai dengan periode yang dipilih"
+      description="Progres kumulatif tahfidz siswa sampai dengan tahun akademik yang dipilih"
       data={chartData}
       xAxisKey="juz"
       isLoading={isLoading}

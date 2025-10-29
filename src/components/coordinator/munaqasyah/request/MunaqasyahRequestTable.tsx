@@ -363,6 +363,8 @@ export function MunaqasyahRequestTable({ data, title, onRefresh }: MunaqasyahReq
                 ? 'text-green-500 border-green-500'
                 : row.original.status === 'DITOLAK'
                 ? 'text-red-500 border-red-500'
+                : row.original.status === 'SELESAI'
+                ? 'text-blue-500 border-blue-500'
                 : 'text-yellow-500 border-yellow-500'
             }
           >

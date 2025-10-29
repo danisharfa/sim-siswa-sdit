@@ -14,7 +14,7 @@ export async function GET() {
     const schedules = await prisma.tashihSchedule.findMany({
       orderBy: { date: 'desc' },
       include: {
-        results: true, // Include results to check if assessed
+        results: true,
         schedules: {
           include: {
             tashihRequest: {
@@ -55,7 +55,6 @@ export async function GET() {
       },
     });
 
-    // Transform data to include hasResults flag
     const transformedSchedules = schedules.map((schedule) => ({
       ...schedule,
       hasResults: schedule.results.length > 0,

@@ -31,6 +31,7 @@ export async function GET() {
             requestId: true,
             request: {
               select: {
+                id: true,
                 batch: true,
                 stage: true,
                 student: {

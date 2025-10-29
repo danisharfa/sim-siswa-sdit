@@ -50,7 +50,7 @@ export function ClassroomManagement() {
         defaultAcademicYear={settingData?.data?.currentYear ?? ''}
         defaultSemester={settingData?.data?.currentSemester ?? 'GANJIL'}
       />
-      <ClassroomTable data={classData.data} title="Daftar Kelas" onRefresh={mutate} />
+      <ClassroomTable data={classData.data} title="Daftar Kelas Aktif" onRefresh={mutate} />
       <ClassroomHistoryTable data={historyData.data} title="Riwayat Kelas" />
     </div>
   );

@@ -11,8 +11,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Calendar01 } from '@/components/layout/calendar/calendar-01';
 import { toast } from 'sonner';
+import { X } from 'lucide-react';
+import { TashihType } from '@prisma/client';
 
 interface TashihScheduleEditDialogProps {
   schedule: {
@@ -23,6 +26,33 @@ interface TashihScheduleEditDialogProps {
     endTime: string;
     location: string;
     hasResults?: boolean;
+    schedules: {
+      requestId: string;
+      tashihRequest: {
+        id: string;
+        tashihType?: TashihType;
+        surah?: { name: string };
+        juz?: { name: string };
+        wafa?: { name: string };
+        startPage?: number;
+        endPage?: number;
+        student: {
+          nis: string;
+          user: { fullName: string };
+        };
+        teacher: {
+          user: { fullName: string };
+        };
+        group: {
+          name: string;
+          classroom: {
+            name: string;
+            academicYear: string;
+            semester: string;
+          };
+        };
+      };
+    }[];
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,6 +73,7 @@ export function TashihScheduleEditDialog({
     location: '',
   });
   const [loading, setLoading] = useState(false);
+  const [studentsToRemove, setStudentsToRemove] = useState<string[]>([]);
 
   useEffect(() => {
     if (schedule) {
@@ -54,6 +85,7 @@ export function TashihScheduleEditDialog({
         endTime: schedule.endTime,
         location: schedule.location,
       });
+      setStudentsToRemove([]);
     }
   }, [schedule]);
 
@@ -62,6 +94,14 @@ export function TashihScheduleEditDialog({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleRemoveStudent = (requestId: string) => {
+    setStudentsToRemove((prev) => [...prev, requestId]);
+  };
+
+  const handleUndoRemove = (requestId: string) => {
+    setStudentsToRemove((prev) => prev.filter((id) => id !== requestId));
   };
 
   async function handleSave() {
@@ -76,6 +116,7 @@ export function TashihScheduleEditDialog({
       const requestData = {
         ...formData,
         date: selectedDate.toISOString(),
+        studentsToRemove,
       };
 
       const res = await fetch(`/api/coordinator/tashih/schedule/${schedule.id}`, {
@@ -104,7 +145,7 @@ export function TashihScheduleEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Jadwal Tashih</DialogTitle>
         </DialogHeader>
@@ -152,6 +193,89 @@ export function TashihScheduleEditDialog({
               onChange={(e) => handleInputChange('location', e.target.value)}
               placeholder="Contoh: Aula, Kelas 6A, dll."
             />
+          </div>
+
+          {/* Daftar Siswa yang Terdaftar */}
+          <div className="space-y-2">
+            <Label>Siswa yang Terdaftar ({schedule.schedules.length})</Label>
+            <div className="border rounded-md p-3 space-y-2 max-h-[300px] overflow-y-auto">
+              {schedule.schedules.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Tidak ada siswa terdaftar
+                </p>
+              ) : (
+                schedule.schedules.map((s) => {
+                  const isMarkedForRemoval = studentsToRemove.includes(s.tashihRequest.id);
+                  const req = s.tashihRequest;
+
+                  return (
+                    <div
+                      key={s.tashihRequest.id}
+                      className={`flex items-start justify-between gap-3 p-3 rounded-md border transition-all ${
+                        isMarkedForRemoval
+                          ? 'bg-destructive/10 border-destructive/50 opacity-60'
+                          : 'bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="font-medium">
+                            {req.student.user.fullName}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            NIS: {req.student.nis}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <div>
+                            Kelompok: {req.group.name} - {req.group.classroom.name}
+                          </div>
+                          <div>Guru: {req.teacher.user.fullName}</div>
+                          <div>
+                            Materi:{' '}
+                            {req.tashihType === TashihType.ALQURAN
+                              ? `${req.surah?.name ?? '-'} (${req.juz?.name ?? '-'})`
+                              : `${req.wafa?.name ?? '-'} (Hal ${req.startPage ?? '-'}${
+                                  req.startPage !== req.endPage ? `–${req.endPage}` : ''
+                                })`}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {isMarkedForRemoval ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUndoRemove(s.tashihRequest.id)}
+                            className="text-xs"
+                          >
+                            Batal
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveStudent(s.tashihRequest.id)}
+                            className="text-xs"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Keluarkan
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {studentsToRemove.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {studentsToRemove.length} siswa akan dikeluarkan dari jadwal ini dan dapat
+                di-reschedule ulang.
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>

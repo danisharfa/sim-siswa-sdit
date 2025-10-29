@@ -44,9 +44,6 @@ export type TashihResult = {
       nis: string;
       user: { fullName: string };
     };
-    teacher: {
-      user: { fullName: string };
-    };
     group: {
       name: string;
       classroom: {
@@ -270,16 +267,6 @@ export function TashihResultTable({ data, title, onRefresh }: TashihResultTableP
               {row.original.tashihRequest.group.classroom.name}
             </div>
           </div>
-        ),
-      },
-      {
-        accessorKey: 'tashihRequest.teacher.user.fullName',
-        id: 'Guru Pembimbing',
-        header: 'Guru Pembimbing',
-        cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
-            {row.original.tashihRequest.teacher.user.fullName}
-          </Badge>
         ),
       },
       {

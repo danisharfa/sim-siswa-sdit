@@ -98,7 +98,7 @@ export function TashihResultForm({ onSaved }: { onSaved: () => void }) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">Form Penilaian</h2>
+        <h2 className="text-xl font-semibold">Form Penilaian Tashih</h2>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

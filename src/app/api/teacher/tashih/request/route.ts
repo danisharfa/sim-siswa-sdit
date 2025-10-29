@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
       data: newRequest,
     });
   } catch (error) {
-    console.error('[TASHIH_REQUEST_POST]', error);
+    console.error('Gagal mendaftarkan permintaan tashih:', error);
     return NextResponse.json(
       { success: false, message: 'Gagal mendaftarkan permintaan tashih' },
       { status: 500 }

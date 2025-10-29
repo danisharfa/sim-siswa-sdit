@@ -38,7 +38,9 @@ export type TashihSchedule = {
   location: string;
   hasResults?: boolean;
   schedules: {
+    requestId: string;
     tashihRequest: {
+      id: string;
       tashihType?: TashihType;
       surah?: { name: string };
       juz?: { name: string };
@@ -239,45 +241,35 @@ export function TashihScheduleTable({ data, title, onRefresh }: Props) {
         },
       },
       {
+        accessorKey: 'schedules.tashihRequest.student.user.fullName',
         id: 'Siswa',
         header: 'Siswa',
-        accessorFn: (row) => row.schedules[0]?.tashihRequest.student.user.fullName,
-        cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.schedules[0]?.tashihRequest.student.user.fullName}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.schedules[0]?.tashihRequest.student.nis}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: 'Kelompok',
-        header: 'Kelompok',
-        accessorFn: (row) =>
-          `${row.schedules[0]?.tashihRequest.group.name} - ${row.schedules[0]?.tashihRequest.group.classroom.name}`,
-        cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">{row.original.schedules[0]?.tashihRequest.group.name}</div>
-            <div className="text-muted-foreground">
-              {row.original.schedules[0]?.tashihRequest.group.classroom.name}
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'schedules.tashihRequest.teacher.user.fullName',
-        id: 'Guru Pembimbing',
-        header: 'Guru Pembimbing',
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.schedules.map((s, i) => (
-              <Badge key={i} variant="secondary" className="w-fit">
-                {s.tashihRequest.teacher.user.fullName}
+              <Badge key={i} variant="outline" className="w-fit">
+                {s.tashihRequest.student.user.fullName} ({s.tashihRequest.student.nis})
               </Badge>
             ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'schedules.tashihRequest.group.name',
+        id: 'Kelompok',
+        header: 'Kelompok',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => {
+              const r = s.tashihRequest;
+              return (
+                <Badge key={i} variant="outline" className="w-fit">
+                  {r.group.name && r.group.classroom.name
+                    ? `${r.group.name} - ${r.group.classroom.name}`
+                    : 'Tidak terdaftar'}
+                </Badge>
+              );
+            })}
           </div>
         ),
       },
@@ -290,7 +282,7 @@ export function TashihScheduleTable({ data, title, onRefresh }: Props) {
             {row.original.schedules.map((s, i) => {
               const r = s.tashihRequest;
               return (
-                <Badge key={i} variant="outline" className="w-fit text-muted-foreground">
+                <Badge key={i} variant="outline" className="w-fit">
                   {r.tashihType === TashihType.ALQURAN
                     ? `${r.surah?.name ?? '-'} (${r.juz?.name ?? '-'})`
                     : `${r.wafa?.name ?? '-'} (Hal ${r.startPage ?? '-'}${

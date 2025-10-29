@@ -121,7 +121,7 @@ export function StudentInfoCard() {
           {/* Current Period */}
           <div className="flex items-center gap-2 mb-2">
             <School className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Tahun Akademik</span>
+            <span className="font-medium">Tahun Akademik Saat Ini</span>
           </div>
           <div className="pl-6">
             <div className="font-medium">{currentPeriod.label}</div>

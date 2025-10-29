@@ -43,7 +43,7 @@ export async function GET() {
       currentPeriod: {
         academicYear: currentSetting.currentYear,
         semester: currentSetting.currentSemester,
-        label: `${currentSetting.currentYear} - Semester ${currentSetting.currentSemester}`,
+        label: `${currentSetting.currentYear} ${currentSetting.currentSemester}`,
       },
     };
 

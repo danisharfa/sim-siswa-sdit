@@ -186,7 +186,7 @@ export function ReportTable({ data, title }: Props) {
   if (academicPeriods.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
-        <p className="text-muted-foreground">Tidak ada data periode akademik ditemukan.</p>
+        <p className="text-muted-foreground">Tidak ada data tahun akademik ditemukan.</p>
       </div>
     );
   }
@@ -195,7 +195,7 @@ export function ReportTable({ data, title }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <Label className="mb-2 block">Filter Tahun Akademik</Label>
+          <Label className="mb-2 block sr-only">Filter Tahun Akademik</Label>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="min-w-[200px]">
               <SelectValue placeholder="Pilih Tahun Akademik" />
@@ -221,7 +221,7 @@ export function ReportTable({ data, title }: Props) {
         <div className="rounded-lg border bg-card p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="font-medium text-muted-foreground">Periode:</span>
+              <span className="font-medium text-muted-foreground">Tahun Akademik:</span>
               <p className="font-medium">
                 {currentPeriodData.period.academicYear} {currentPeriodData.period.semester}
               </p>
@@ -293,7 +293,7 @@ export function ReportTable({ data, title }: Props) {
             >
               {({ loading }) => (
                 <Button disabled={loading} variant="outline">
-                  <Download className="mr-2" /> {loading ? 'Menyetak...' : 'Cetak'}
+                  <Download className="mr-2" /> {loading ? 'Menyetak...' : 'Export PDF'}
                 </Button>
               )}
             </PDFDownloadLink>

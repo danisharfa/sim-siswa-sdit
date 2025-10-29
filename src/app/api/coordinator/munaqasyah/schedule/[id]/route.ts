@@ -14,7 +14,8 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
 
     const { id } = await segmentData.params;
 
-    const { date, sessionName, startTime, endTime, location, examinerId } = await req.json();
+    const { date, sessionName, startTime, endTime, location, examinerId, studentsToRemove } =
+      await req.json();
     if (!date || !sessionName || !startTime || !endTime || !location) {
       return NextResponse.json(
         { success: false, message: 'Semua field harus diisi' },
@@ -87,9 +88,36 @@ export async function PUT(req: NextRequest, segmentData: { params: Params }) {
       updateData.examinerId = examinerId;
     }
 
-    const updatedSchedule = await prisma.munaqasyahSchedule.update({
-      where: { id },
-      data: updateData,
+    // Use transaction to update schedule and handle student removal
+    const updatedSchedule = await prisma.$transaction(async (tx) => {
+      // Update the schedule
+      const schedule = await tx.munaqasyahSchedule.update({
+        where: { id },
+        data: updateData,
+      });
+
+      // Remove students if specified
+      if (studentsToRemove && Array.isArray(studentsToRemove) && studentsToRemove.length > 0) {
+        // Delete schedule-request relations
+        await tx.munaqasyahScheduleRequest.deleteMany({
+          where: {
+            scheduleId: id,
+            requestId: { in: studentsToRemove },
+          },
+        });
+
+        // Update requests back to DITERIMA status so they can be rescheduled
+        await tx.munaqasyahRequest.updateMany({
+          where: {
+            id: { in: studentsToRemove },
+          },
+          data: {
+            status: 'DITERIMA', // Back to accepted status for rescheduling
+          },
+        });
+      }
+
+      return schedule;
     });
 
     return NextResponse.json({

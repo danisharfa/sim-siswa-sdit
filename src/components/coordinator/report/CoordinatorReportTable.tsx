@@ -183,12 +183,10 @@ export function CoordinatorReportTable({ data, title }: Props) {
             <p className="font-medium">{semesterLabel}</p>
           </div>
           <div>
-            <span className="font-medium text-muted-foreground">Tahun Ajaran:</span>
-            <p className="font-medium">{data.academicYear}</p>
-          </div>
-          <div>
-            <span className="font-medium text-muted-foreground">Periode:</span>
-            <p className="font-medium">Akhir Semester</p>
+            <span className="font-medium text-muted-foreground">Tahun Akademik:</span>
+            <p className="font-medium">
+              {data.academicYear} {data.semester}
+            </p>
           </div>
           <div>
             <span className="font-medium text-muted-foreground">Guru Pembimbing:</span>
@@ -239,7 +237,7 @@ export function CoordinatorReportTable({ data, title }: Props) {
           >
             {({ loading }) => (
               <Button disabled={loading} variant="outline">
-                <Download className="mr-2" /> {loading ? 'Menyetak...' : 'Cetak PDF'}
+                <Download className="mr-2" /> {loading ? 'Menyetak...' : 'Export PDF'}
               </Button>
             )}
           </PDFDownloadLink>

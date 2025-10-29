@@ -18,9 +18,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Calendar01 } from '@/components/layout/calendar/calendar-01';
 import { toast } from 'sonner';
+import { X } from 'lucide-react';
 import useSWR from 'swr';
+import { MunaqasyahBatch, MunaqasyahStage } from '@prisma/client';
 
 interface Examiner {
   id: string;
@@ -38,6 +41,27 @@ interface MunaqasyahScheduleEditDialogProps {
     location: string;
     examiner?: { userId?: string; user?: { fullName: string } };
     hasResults?: boolean;
+    scheduleRequests: {
+      request: {
+        id: string;
+        batch: MunaqasyahBatch;
+        stage: MunaqasyahStage;
+        student: {
+          nis: string;
+          user: { fullName: string };
+        };
+        teacher: { user: { fullName: string } };
+        group: {
+          name: string;
+          classroom: {
+            name: string;
+            academicYear: string;
+            semester: string;
+          };
+        };
+        juz: { name: string };
+      };
+    }[];
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,6 +83,7 @@ export function MunaqasyahScheduleEditDialog({
   });
   const [examinerId, setExaminerId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [studentsToRemove, setStudentsToRemove] = useState<string[]>([]);
 
   // Fetch examiners data
   const { data: examinersData } = useSWR<{ success: boolean; data: Examiner[] }>(
@@ -67,6 +92,19 @@ export function MunaqasyahScheduleEditDialog({
   );
 
   const examiners = examinersData?.data || [];
+
+  // Label mappings
+  const batchLabels: Record<MunaqasyahBatch, string> = {
+    [MunaqasyahBatch.TAHAP_1]: 'Tahap 1',
+    [MunaqasyahBatch.TAHAP_2]: 'Tahap 2',
+    [MunaqasyahBatch.TAHAP_3]: 'Tahap 3',
+    [MunaqasyahBatch.TAHAP_4]: 'Tahap 4',
+  };
+
+  const stageLabels: Record<MunaqasyahStage, string> = {
+    [MunaqasyahStage.TASMI]: 'Tasmi',
+    [MunaqasyahStage.MUNAQASYAH]: 'Munaqasyah',
+  };
 
   useEffect(() => {
     if (schedule) {
@@ -80,6 +118,7 @@ export function MunaqasyahScheduleEditDialog({
       });
       // Initialize examiner selection
       setExaminerId(schedule.examiner?.userId || 'coordinator');
+      setStudentsToRemove([]);
     }
   }, [schedule]);
 
@@ -88,6 +127,14 @@ export function MunaqasyahScheduleEditDialog({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleRemoveStudent = (requestId: string) => {
+    setStudentsToRemove((prev) => [...prev, requestId]);
+  };
+
+  const handleUndoRemove = (requestId: string) => {
+    setStudentsToRemove((prev) => prev.filter((id) => id !== requestId));
   };
 
   async function handleSave() {
@@ -103,6 +150,7 @@ export function MunaqasyahScheduleEditDialog({
         ...formData,
         date: selectedDate.toISOString(),
         examinerId: examinerId === 'coordinator' ? null : examinerId,
+        studentsToRemove,
       };
 
       const res = await fetch(`/api/coordinator/munaqasyah/schedule/${schedule.id}`, {
@@ -131,7 +179,7 @@ export function MunaqasyahScheduleEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Jadwal Munaqasyah</DialogTitle>
         </DialogHeader>
@@ -195,6 +243,92 @@ export function MunaqasyahScheduleEditDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Daftar Siswa yang Terdaftar */}
+          <div className="space-y-2">
+            <Label>Siswa yang Terdaftar ({schedule.scheduleRequests.length})</Label>
+            <div className="border rounded-md p-3 space-y-2 max-h-[300px] overflow-y-auto">
+              {schedule.scheduleRequests.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Tidak ada siswa terdaftar
+                </p>
+              ) : (
+                schedule.scheduleRequests.map((s) => {
+                  const isMarkedForRemoval = studentsToRemove.includes(s.request.id);
+                  const req = s.request;
+
+                  return (
+                    <div
+                      key={req.id}
+                      className={`flex items-start justify-between gap-3 p-3 rounded-md border transition-all ${
+                        isMarkedForRemoval
+                          ? 'bg-destructive/10 border-destructive/50 opacity-60'
+                          : 'bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="font-medium">
+                            {req.student.user.fullName}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            NIS: {req.student.nis}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <div>
+                            Kelompok: {req.group.name} - {req.group.classroom.name}
+                          </div>
+                          <div>Guru: {req.teacher.user.fullName}</div>
+                          <div className="flex items-center gap-2 flex-wrap mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {batchLabels[req.batch]}
+                            </Badge>
+                            <Badge variant="default" className="text-xs">
+                              {stageLabels[req.stage]}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {req.juz.name}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {isMarkedForRemoval ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUndoRemove(req.id)}
+                            className="text-xs"
+                          >
+                            Batal
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveStudent(req.id)}
+                            className="text-xs"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Keluarkan
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {studentsToRemove.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {studentsToRemove.length} siswa akan dikeluarkan dari jadwal ini dan dapat
+                di-reschedule ulang.
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>

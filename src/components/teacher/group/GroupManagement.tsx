@@ -9,7 +9,7 @@ export function GroupManagement() {
 
   return (
     <div className="space-y-4">
-      <GroupTable data={groups} title="Daftar Kelompok" />
+      <GroupTable data={groups} title="Daftar Kelompok Aktif" />
       <GroupHistoryTable data={groupHistory} title="Riwayat Kelompok" />
     </div>
   );

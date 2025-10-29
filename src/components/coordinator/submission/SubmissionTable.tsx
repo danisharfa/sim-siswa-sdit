@@ -251,6 +251,12 @@ export function SubmissionTable({ data, title }: Props) {
         id: 'Kelompok',
         header: 'Kelompok',
         accessorFn: (row) => `${row.group.name} - ${row.group.classroom.name}`,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <div className="font-medium">{row.original.group.name}</div>
+            <div className="text-muted-foreground">{row.original.group.classroom.name}</div>
+          </div>
+        ),
       },
       {
         accessorKey: 'submissionType',

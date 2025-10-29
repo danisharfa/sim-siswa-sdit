@@ -127,7 +127,7 @@ export function MunaqasyahRequestForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Form Permintaan Munaqasyah</CardTitle>
+        <CardTitle>Form Pendaftaran Munaqasyah</CardTitle>
         <CardDescription>
           {settingData?.success && (
             <span className="text-sm text-muted-foreground">
