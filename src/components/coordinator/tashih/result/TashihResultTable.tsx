@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExportToPDFButton } from './ExportToPDFButton';
@@ -213,13 +213,13 @@ export function TashihResultTable({ data, title, onRefresh }: TashihResultTableP
     [setDialogType, setSelectedResult]
   );
 
-  const handleOpenDeleteDialog = useCallback(
-    (result: TashihResult) => {
-      setSelectedResult(result);
-      setDialogType('delete');
-    },
-    [setDialogType, setSelectedResult]
-  );
+  // const handleOpenDeleteDialog = useCallback(
+  //   (result: TashihResult) => {
+  //     setSelectedResult(result);
+  //     setDialogType('delete');
+  //   },
+  //   [setDialogType, setSelectedResult]
+  // );
 
   const columns = useMemo<ColumnDef<TashihResult>[]>(
     () => [
@@ -314,26 +314,31 @@ export function TashihResultTable({ data, title, onRefresh }: TashihResultTableP
           const result = row.original;
 
           return (
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(result)}>
+            <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(result)}>
                 <Pencil className="h-4 w-4" />
                 Edit
               </Button>
+            // <div className="flex gap-2">
+            //   <Button variant="secondary" size="sm" onClick={() => handleOpenEditDialog(result)}>
+            //     <Pencil className="h-4 w-4" />
+            //     Edit
+            //   </Button>
 
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleOpenDeleteDialog(result)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Hapus
-              </Button>
-            </div>
+            //   <Button
+            //     variant="destructive"
+            //     size="sm"
+            //     onClick={() => handleOpenDeleteDialog(result)}
+            //   >
+            //     <Trash2 className="h-4 w-4" />
+            //     Hapus
+            //   </Button>
+            // </div>
           );
         },
       },
     ],
-    [handleOpenEditDialog, handleOpenDeleteDialog]
+    // [handleOpenEditDialog, handleOpenDeleteDialog]
+    [handleOpenEditDialog]
   );
 
   const table = useReactTable({
