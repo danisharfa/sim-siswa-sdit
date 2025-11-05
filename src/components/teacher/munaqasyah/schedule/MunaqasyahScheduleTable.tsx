@@ -297,13 +297,12 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
         header: 'Siswa',
         accessorFn: (row) => row.scheduleRequests[0].request.student.user.fullName,
         cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.scheduleRequests[0].request.student.user.fullName}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.scheduleRequests[0].request.student.nis}
-            </div>
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit ">
+                {s.request.student.user.fullName} ({s.request.student.nis})
+              </Badge>
+            ))}
           </div>
         ),
         filterFn: (row, columnId, filterValue) => {
@@ -317,11 +316,17 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
         accessorFn: (row) =>
           `${row.scheduleRequests[0].request.group.name}-${row.scheduleRequests[0].request.group.classroom.name}`,
         cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">{row.original.scheduleRequests[0].request.group.name}</div>
-            <div className="text-muted-foreground">
-              {row.original.scheduleRequests[0].request.group.classroom.name}
-            </div>
+          <div className="flex flex-col gap-1">
+            {row.original.scheduleRequests.map((s, i) => {
+              const r = s.request;
+              return (
+                <Badge key={i} variant="outline" className="w-fit">
+                  {r.group.name && r.group.classroom.name
+                    ? `${r.group.name} - ${r.group.classroom.name}`
+                    : 'Tidak terdaftar'}
+                </Badge>
+              );
+            })}
           </div>
         ),
         filterFn: (row, columnId, filterValue) => {

@@ -237,13 +237,12 @@ export function TashihScheduleTable({ data, title }: TashihScheduleTableProps) {
         header: 'Siswa',
         accessorFn: (row) => row.schedules[0].tashihRequest.student.user.fullName,
         cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">
-              {row.original.schedules[0].tashihRequest.student.user.fullName}
-            </div>
-            <div className="text-muted-foreground">
-              {row.original.schedules[0].tashihRequest.student.nis}
-            </div>
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => (
+              <Badge key={i} variant="outline" className="w-fit">
+                {s.tashihRequest.student.user.fullName} ({s.tashihRequest.student.nis})
+              </Badge>
+            ))}
           </div>
         ),
       },
@@ -253,11 +252,17 @@ export function TashihScheduleTable({ data, title }: TashihScheduleTableProps) {
         accessorFn: (row) =>
           `${row.schedules[0].tashihRequest.group.name} - ${row.schedules[0].tashihRequest.group.classroom.name}`,
         cell: ({ row }) => (
-          <div className="text-sm">
-            <div className="font-medium">{row.original.schedules[0].tashihRequest.group.name}</div>
-            <div className="text-muted-foreground">
-              {row.original.schedules[0].tashihRequest.group.classroom.name}
-            </div>
+          <div className="flex flex-col gap-1">
+            {row.original.schedules.map((s, i) => {
+              const r = s.tashihRequest;
+              return (
+                <Badge key={i} variant="outline" className="w-fit">
+                  {r.group.name && r.group.classroom.name
+                    ? `${r.group.name} - ${r.group.classroom.name}`
+                    : 'Tidak terdaftar'}
+                </Badge>
+              );
+            })}
           </div>
         ),
       },
