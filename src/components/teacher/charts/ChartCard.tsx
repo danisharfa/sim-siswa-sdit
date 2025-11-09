@@ -140,7 +140,7 @@ export function ChartCard({
                 onClick={() => setDataFilter('active')}
                 className="text-xs"
               >
-                Ada Progress
+                Sedang Dijalani
               </Button>
             </div>
           </div>
@@ -150,7 +150,13 @@ export function ChartCard({
             <BarChart data={filteredData} onClick={handleBarClick}>
               <CartesianGrid vertical={false} />
               <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                allowDecimals={false}
+                label={{ value: 'Jumlah Siswa', angle: -90, position: 'insideBottomLeft' }}
+              />
               <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
               <Bar dataKey="selesai" fill={chartConfig.selesai.color} radius={4} />
               <Bar dataKey="proses" fill={chartConfig.proses.color} radius={4} />

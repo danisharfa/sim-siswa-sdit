@@ -234,16 +234,16 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
         id: 'Batch',
         header: 'Batch',
         cell: ({ row }) => (
-          <Badge variant="secondary">
+          <Badge variant="outline">
             {row.original.scheduleRequests[0].request.batch.replaceAll('_', ' ')}
           </Badge>
         ),
       },
       {
         id: 'Stage',
-        header: 'Tahap',
+        header: 'Tahapan Ujian',
         cell: ({ row }) => (
-          <Badge variant="default">
+          <Badge variant="outline">
             {row.original.scheduleRequests[0].request.stage.replaceAll('_', ' ')}
           </Badge>
         ),
@@ -263,7 +263,7 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
           return (
             <div className="text-sm">
               {examiner ? (
-                <Badge variant="secondary">{examiner.user.fullName}</Badge>
+                <Badge variant="outline">{examiner.user.fullName}</Badge>
               ) : (
                 <span className="text-muted-foreground text-xs">Koordinator Al-Qur&apos;an</span>
               )}
@@ -339,7 +339,7 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
               <SelectValue placeholder="Pilih Tahap" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Tahap</SelectItem>
+              <SelectItem value="ALL">Semua Tahapan Ujian</SelectItem>
               {stageOptions.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stage.replaceAll('_', ' ')}

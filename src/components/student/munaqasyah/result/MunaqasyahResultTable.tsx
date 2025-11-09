@@ -250,14 +250,14 @@ export function MunaqasyahResultTable({ data, title }: Props) {
         id: 'Batch',
         header: 'Batch',
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.request.batch.replaceAll('_', ' ')}</Badge>
+          <Badge variant="outline">{row.original.request.batch.replaceAll('_', ' ')}</Badge>
         ),
       },
       {
         id: 'Stage',
-        header: 'Tahap',
+        header: 'Tahapan Ujian',
         cell: ({ row }) => (
-          <Badge variant="default">{row.original.request.stage.replaceAll('_', ' ')}</Badge>
+          <Badge variant="outline">{row.original.request.stage.replaceAll('_', ' ')}</Badge>
         ),
       },
       {
@@ -273,7 +273,7 @@ export function MunaqasyahResultTable({ data, title }: Props) {
           return (
             <div className="text-sm">
               {examiner ? (
-                <Badge variant="secondary">{examiner.user.fullName}</Badge>
+                <Badge variant="outline">{examiner.user.fullName}</Badge>
               ) : (
                 <span className="text-muted-foreground text-xs">Koordinator Al-Qur&apos;an</span>
               )}
@@ -404,7 +404,7 @@ export function MunaqasyahResultTable({ data, title }: Props) {
               <SelectValue placeholder="Pilih Tahap" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Semua Tahap</SelectItem>
+              <SelectItem value="ALL">Semua Tahapan Ujian</SelectItem>
               {stageOptions.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stage.replaceAll('_', ' ')}

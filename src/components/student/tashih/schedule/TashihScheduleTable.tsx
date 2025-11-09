@@ -221,7 +221,7 @@ export function TashihScheduleTable({ data, title }: TashihScheduleTableProps) {
             {row.original.schedules.map((s) => {
               const r = s.tashihRequest;
               return (
-                <Badge key={r.id + '-type'} variant="secondary" className="w-fit">
+                <Badge key={r.id + '-type'} variant="outline" className="w-fit">
                   {r.tashihType.replaceAll('_', ' ')}
                 </Badge>
               );

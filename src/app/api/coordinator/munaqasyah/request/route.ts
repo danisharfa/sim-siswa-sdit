@@ -48,13 +48,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Permintaan Munaqasyah berhasil diambil',
+      message: 'Berhasil mengambil daftar permintaan munaqasyah',
       data,
     });
   } catch (error) {
-    console.error('Gagal mengambil Permintaan Munaqasyah:', error);
+    console.error('Gagal mengambil daftar permintaan munaqasyah:', error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil Permintaan Munaqasyah' },
+      { success: false, message: 'Gagal mengambil daftar permintaan munaqasyah' },
       { status: 500 }
     );
   }

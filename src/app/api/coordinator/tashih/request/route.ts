@@ -70,13 +70,13 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Berhasil mengambil permintaan ujian',
+      message: 'Berhasil mengambil daftar permintaan tashih',
       data: tashih,
     });
   } catch (error) {
-    console.error('[COORDINATOR_EXAM_REQUEST_GET]', error);
+    console.error('Gagal mengambil daftar permintaan tashih:', error);
     return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan saat mengambil data permintaan ujian' },
+      { success: false, message: 'Gagal mengambil daftar permintaan tashih' },
       { status: 500 }
     );
   }

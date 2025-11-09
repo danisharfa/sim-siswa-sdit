@@ -22,7 +22,6 @@ import { DataTableColumnHeader } from '@/components/ui/table-column-header';
 import { DataTable } from '@/components/ui/data-table';
 import { HomeActivityType, Semester } from '@prisma/client';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { type DateRange } from 'react-day-picker';
 import { Calendar23 } from '@/components/layout/calendar/calendar-23';
 import { ExportToPDFButton } from '@/components/coordinator/home-activity/ExportToPDFButton';
@@ -229,9 +228,7 @@ export function HomeActivityTable({ data, title }: Props) {
         header: 'Jenis Aktivitas',
         accessorFn: (row) => row.activityType,
         cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
-            {row.original.activityType}
-          </Badge>
+          <div className="font-medium">{row.original.activityType}</div>
         ),
       },
       {

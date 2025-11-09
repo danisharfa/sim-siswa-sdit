@@ -91,15 +91,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Permintaan berhasil dikirim',
+      message: 'Berhasil mendaftarkan permintaan munaqasyah',
       data: request,
     });
   } catch (error) {
-    console.error('[MUNAQASYAH_REQUEST_POST]', error);
+    console.error('Gagal mendaftarkan permintaan munaqasyah:', error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Terjadi kesalahan saat mengirim permintaan',
+        message: 'Gagal mendaftarkan permintaan munaqasyah',
       },
       { status: 500 }
     );

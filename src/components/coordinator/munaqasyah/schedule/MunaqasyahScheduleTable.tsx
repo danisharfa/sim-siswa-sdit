@@ -357,7 +357,7 @@ export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="secondary" className="w-fit">
+              <Badge key={i} variant="outline" className="w-fit">
                 {batchLabels[s.request.batch]}
               </Badge>
             ))}
@@ -369,13 +369,13 @@ export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
         },
       },
       {
-        id: 'Tahap',
-        header: 'Tahap',
+        id: 'Tahapan Ujian',
+        header: 'Tahapan Ujian',
         accessorFn: (row) => stageLabels[row.scheduleRequests[0]?.request.stage],
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.scheduleRequests.map((s, i) => (
-              <Badge key={i} variant="default" className="w-fit">
+              <Badge key={i} variant="outline" className="w-fit">
                 {stageLabels[s.request.stage]}
               </Badge>
             ))}
@@ -556,7 +556,7 @@ export function MunaqasyahScheduleTable({ data, title, onRefresh }: Props) {
               <SelectValue placeholder="Pilih Tahapan" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua Tahapan</SelectItem>
+              <SelectItem value="all">Semua Tahapan Ujian </SelectItem>
               {availableStages.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stageLabels[stage]}

@@ -256,7 +256,7 @@ export function TargetTable({ data, title }: Props) {
         id: 'Jenis',
         header: 'Jenis Target',
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.type.replaceAll('_', ' ')}</Badge>
+          <div className="font-medium">{row.original.type.replaceAll('_', ' ')}</div>
         ),
       },
       {

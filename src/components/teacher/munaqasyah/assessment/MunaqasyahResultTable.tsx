@@ -328,17 +328,17 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         id: 'Batch',
         header: 'Batch',
         accessorFn: (row) => batchLabels[row.batch],
-        cell: ({ row }) => <Badge variant="secondary">{batchLabels[row.original.batch]}</Badge>,
+        cell: ({ row }) => <div className="font-medium">{batchLabels[row.original.batch]}</div>,
         filterFn: (row, columnId, filterValue) => {
           const value = row.getValue(columnId) as string;
           return value === filterValue;
         },
       },
       {
-        id: 'Tahap',
-        header: 'Tahap',
+        id: 'Tahapan Ujian',
+        header: 'Tahapan Ujian',
         accessorFn: (row) => stageLabels[row.stage],
-        cell: ({ row }) => <Badge variant="default">{stageLabels[row.original.stage]}</Badge>,
+        cell: ({ row }) => <div className="font-medium">{stageLabels[row.original.stage]}</div>,
         filterFn: (row, columnId, filterValue) => {
           const value = row.getValue(columnId) as string;
           return value === filterValue;
@@ -348,7 +348,7 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         id: 'Juz',
         header: 'Juz',
         accessorFn: (row) => row.juz.name,
-        cell: ({ row }) => <Badge variant="outline">{row.original.juz.name}</Badge>,
+        cell: ({ row }) => <div className="font-medium">{row.original.juz.name}</div>,
         filterFn: (row, columnId, filterValue) => {
           const value = row.getValue(columnId) as string;
           return value === filterValue;
@@ -510,11 +510,11 @@ export function MunaqasyahResultTable({ data, title }: MunaqasyahResultTableProp
         <div>
           <Label className="mb-2 block sr-only">Filter Tahapan</Label>
           <Select value={selectedStage} onValueChange={handleStageChange}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Pilih Tahapan" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua Tahap</SelectItem>
+              <SelectItem value="all">Semua Tahapan Ujian</SelectItem>
               {availableStages.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stageLabels[stage]}

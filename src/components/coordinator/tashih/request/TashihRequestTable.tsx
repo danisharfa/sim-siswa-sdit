@@ -268,9 +268,7 @@ export function TashihRequestTable({ data, title, onRefresh }: TashihRequestTabl
         id: 'Guru Pembimbing',
         header: 'Guru Pembimbing',
         cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
-            {row.original.teacher.user.fullName}
-          </Badge>
+          <div className='font-medium'>{row.original.teacher.user.fullName}</div>
         ),
       },
       {

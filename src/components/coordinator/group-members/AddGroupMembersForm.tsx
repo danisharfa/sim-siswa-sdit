@@ -22,7 +22,7 @@ interface StudentOption {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function AddGroupMembersForm({ groupId, classroomId, onMemberAdded }: Props) {
-  const { data, isLoading } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     `/api/coordinator/student/available?classroomId=${classroomId}`,
     fetcher
   );
@@ -59,6 +59,7 @@ export function AddGroupMembersForm({ groupId, classroomId, onMemberAdded }: Pro
       toast.success(result.message || 'Siswa berhasil ditambahkan');
       setSelectedNis([]);
       onMemberAdded();
+      mutate();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan');
     } finally {

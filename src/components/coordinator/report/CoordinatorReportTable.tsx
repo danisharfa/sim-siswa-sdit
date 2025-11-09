@@ -67,11 +67,6 @@ export function CoordinatorReportTable({ data, title }: Props) {
         accessorKey: 'subject',
         id: 'Mata Pelajaran',
         header: 'Mata Pelajaran',
-        cell: ({ row }) => (
-          <Badge variant={row.original.subject === 'Tahfidz' ? 'default' : 'secondary'}>
-            {row.original.subject}
-          </Badge>
-        ),
       },
       {
         accessorKey: 'topic',

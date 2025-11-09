@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
@@ -217,7 +216,7 @@ export function HomeActivityTable({ data, title, onRefresh }: Props) {
         accessorKey: 'activityType',
         id: 'Jenis Aktivitas',
         header: 'Jenis Aktivitas',
-        cell: ({ row }) => <Badge variant="secondary">{row.original.activityType}</Badge>,
+        cell: ({ row }) => <div className="font-medium">{row.original.activityType}</div>,
       },
       {
         header: 'Surah',

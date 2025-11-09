@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { useDataTableState } from '@/lib/hooks/use-data-table';
 import { DataTableColumnHeader } from '@/components/ui/table-column-header';
@@ -226,11 +225,7 @@ export function HomeActivityTable({ data, title }: Props) {
         id: 'Jenis Aktivitas',
         header: 'Jenis Aktivitas',
         accessorFn: (row) => row.activityType,
-        cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
-            {row.original.activityType}
-          </Badge>
-        ),
+        cell: ({ row }) => <div className="font-medium">{row.original.activityType}</div>,
       },
       {
         id: 'Surah',

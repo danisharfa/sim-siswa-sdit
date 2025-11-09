@@ -332,7 +332,7 @@ export function TargetTable({ data, title, onRefresh }: Props) {
         id: 'Jenis Target',
         header: 'Jenis Target',
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.type.replaceAll('_', ' ')}</Badge>
+          <div className="font-medium">{row.original.type.replaceAll('_', ' ')}</div>
         ),
       },
       {

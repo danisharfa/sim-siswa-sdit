@@ -275,9 +275,9 @@ export function TashihResultTable({ data, title }: Props) {
           return row.original.tashihRequest.tashihType === selectedTashihType;
         },
         cell: ({ row }) => (
-          <Badge variant="secondary" className="w-fit">
+          <div className="font-medium">
             {row.original.tashihRequest.tashihType.replaceAll('_', ' ')}
-          </Badge>
+          </div>
         ),
       },
       {

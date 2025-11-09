@@ -228,7 +228,7 @@ export function SubmissionTable({ data, title }: Props) {
           return submissionType === value;
         },
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.submissionType.replaceAll('_', ' ')}</Badge>
+          <div className="font-medium">{row.original.submissionType.replaceAll('_', ' ')}</div>
         ),
       },
       {

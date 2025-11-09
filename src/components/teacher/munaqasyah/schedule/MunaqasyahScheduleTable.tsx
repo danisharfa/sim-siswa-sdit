@@ -341,7 +341,7 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
           return row.scheduleRequests.map((sr) => batchLabels[sr.request.batch]).join(', ');
         },
         cell: ({ row }) => (
-          <Badge variant="secondary">
+          <Badge variant="outline">
             {batchLabels[row.original.scheduleRequests[0].request.batch]}
           </Badge>
         ),
@@ -351,13 +351,13 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
         },
       },
       {
-        id: 'Tahapan',
-        header: 'Tahapan',
+        id: 'Tahapan Ujian',
+        header: 'Tahapan Ujian',
         accessorFn: (row) => {
           return row.scheduleRequests.map((sr) => stageLabels[sr.request.stage]).join(', ');
         },
         cell: ({ row }) => (
-          <Badge variant="default">
+          <Badge variant="outline">
             {stageLabels[row.original.scheduleRequests[0].request.stage]}
           </Badge>
         ),
@@ -386,7 +386,7 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
           return (
             <div className="text-sm">
               {examiner ? (
-                <Badge variant="secondary">{examiner.user.fullName}</Badge>
+                <Badge variant="outline">{examiner.user.fullName}</Badge>
               ) : (
                 <span className="text-muted-foreground text-xs">Koordinator Al-Qur&apos;an</span>
               )}
@@ -491,11 +491,11 @@ export function MunaqasyahScheduleTable({ data, title }: MunaqasyahScheduleTable
         <div>
           <Label className="mb-2 block sr-only">Filter Tahapan</Label>
           <Select value={selectedStage} onValueChange={handleStageChange}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Pilih Tahapan" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua Tahap</SelectItem>
+              <SelectItem value="all">Semua Tahapan Ujian</SelectItem>
               {availableStages.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stageLabels[stage]}
