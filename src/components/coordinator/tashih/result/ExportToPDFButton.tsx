@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { TashihType } from '@prisma/client';
 import type { TashihResult } from './TashihResultTable';
+import { toast } from 'sonner';
 
 interface Props {
   table: Table<TashihResult>;
@@ -18,7 +19,7 @@ export function ExportToPDFButton({ table, academicYear }: Props) {
     const filteredRows = table.getFilteredRowModel().rows;
 
     if (filteredRows.length === 0) {
-      alert('Tidak ada data untuk diekspor.');
+      toast('Tidak ada data untuk diekspor.');
       return;
     }
 

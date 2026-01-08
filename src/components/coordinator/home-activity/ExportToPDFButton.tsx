@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Table } from '@tanstack/react-table';
+import { toast } from 'sonner';
 
 interface Props {
   table: Table<HomeActivity>;
@@ -16,7 +17,7 @@ export function ExportToPDFButton({ table }: Props) {
     const filteredRows = table.getFilteredRowModel().rows;
 
     if (filteredRows.length === 0) {
-      alert('Tidak ada data untuk diekspor.');
+      toast('Tidak ada data untuk diekspor.');
       return;
     }
 
