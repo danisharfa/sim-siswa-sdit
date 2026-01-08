@@ -1,12 +1,13 @@
 import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import type { Adapter } from 'next-auth/adapters';
 import { prisma } from '@/lib/prisma';
 import Credentials from 'next-auth/providers/credentials';
 import { LogInSchema } from '@/lib/validations/auth';
 import { compare } from 'bcryptjs';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as Adapter,
   secret: process.env.AUTH_SECRET,
   session: {
     strategy: 'jwt',
@@ -44,12 +45,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.log('Password mismatch');
           return null;
         }
-
-        // console.log('AUTHORIZATION START');
-        // console.log('Authorize called with:', credentials);
-        // console.log('Validated fields:', validatedFields);
-        // console.log('User from DB:', user);
-        // console.log('Password match:', passwordMatch);
 
         return user;
       },

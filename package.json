@@ -12,7 +12,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.9.0",
+    "@auth/prisma-adapter": "^2.11.1",
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "^6.8.2",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -40,7 +40,7 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.483.0",
     "next": "15.5.9",
-    "next-auth": "5.0.0-beta.30",
+    "next-auth": "^5.0.0-beta.30",
     "next-themes": "^0.4.6",
     "postcss": "^8.5.3",
     "react": "19.1.1",
